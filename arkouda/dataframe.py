@@ -727,7 +727,12 @@ class DataFrame(UserDict):
                 self._set_index(arange(self._nrows))
             else:
                 self._set_index(index)
+
             self.update_nrows()
+        self.column_index = Index(self._columns)
+
+    def _update_column_index(self):
+        self.column_index = Index(self._columns)
 
     def __getattr__(self, key):
         if key not in self.columns:
@@ -1532,12 +1537,12 @@ class DataFrame(UserDict):
     @property
     def columns(self):
         """
-        A list of column names of the dataframe.
+        An Index of column names of the dataframe.
 
         Returns
         -------
-        list of str
-            A list of column names of the dataframe.
+        arkouda.index.Index
+            An index with string values, a list of column names of the dataframe.
 
         Examples
         --------
@@ -1556,9 +1561,10 @@ class DataFrame(UserDict):
         +----+--------+--------+
 
         >>> df.columns
-        ['col1', 'col2']
+        Index(array(['col1', 'col2']), dtype='<U0')
         """
-        return self._columns
+        self._update_column_index()
+        return self.column_index
 
     @property
     def index(self):
@@ -2713,8 +2719,8 @@ class DataFrame(UserDict):
                     "file_format": _file_type_to_int(file_type),
                     "write_mode": _mode_str_to_int(mode),
                     "objType": self.objType,
-                    "num_cols": len(self.columns),
-                    "column_names": self.columns,
+                    "num_cols": len(self.columns.to_list()),
+                    "column_names": self.columns.to_list(),
                     "column_objTypes": col_objTypes,
                     "column_dtypes": dtypes,
                     "columns": column_data,
@@ -3184,7 +3190,7 @@ class DataFrame(UserDict):
         # columns load backwards
         df = cls(_dict_recombine_segarrays_categoricals(load_all(prefix_path, file_format=filetype)))
         # if parquet, return reversed dataframe to match what was saved
-        return df if filetype == "HDF5" else df[df.columns[::-1]]
+        return df if filetype == "HDF5" else df[df.columns.to_list()[::-1]]
 
     def argsort(self, key, ascending=True):
         """
@@ -3948,7 +3954,7 @@ class DataFrame(UserDict):
 
         args = {
             "size": len(self.columns),
-            "columns": self.columns,
+            "columns": self.columns.to_list(),
             "data_names": [numeric_help(self[c]) for c in self.columns],
         }
 
@@ -4179,8 +4185,8 @@ class DataFrame(UserDict):
                 "name": user_defined_name,
                 "objType": self.objType,
                 "idx": self.index.values.name,
-                "num_cols": len(self.columns),
-                "column_names": self.columns,
+                "num_cols": len(self.columns.to_list()),
+                "column_names": self.columns.to_list(),
                 "columns": column_data,
                 "col_objTypes": col_objTypes,
             },
@@ -4746,7 +4752,7 @@ def _inner_join_merge(
     arkouda.dataframe.DataFrame
         Inner-Joined Arkouda DataFrame
     """
-    left_cols, right_cols = left.columns.copy(), right.columns.copy()
+    left_cols, right_cols = left.columns.to_list().copy(), right.columns.to_list().copy()
     if isinstance(on, str):
         left_inds, right_inds = inner_join(left[on], right[on])
         new_dict = {on: left[on][left_inds]}
@@ -4804,7 +4810,7 @@ def _right_join_merge(
         Right-Joined Arkouda DataFrame
     """
     in_left = _inner_join_merge(left, right, on, col_intersect, left_suffix, right_suffix)
-    in_left_cols, left_cols = in_left.columns.copy(), left.columns.copy()
+    in_left_cols, left_cols = in_left.columns.to_list().copy(), left.columns.to_list().copy()
     if isinstance(on, str):
         left_at_on = left[on]
         right_at_on = right[on]

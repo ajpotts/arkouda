@@ -218,7 +218,7 @@ class DataFrameTest(ArkoudaTest):
         bad_labels2 = good_labels + ["five"]
 
         df = ak.DataFrame(unlabeled_data, columns=good_labels)
-        self.assertListEqual(df.columns, good_labels)
+        self.assertListEqual(df.columns.to_list(), good_labels)
         self.assertEqual(df["one1"][0], 1)
         self.assertEqual(df["three3"][0], "foo")
         self.assertEqual(df["four4"][1], -1.8)
@@ -852,7 +852,7 @@ class DataFrameTest(ArkoudaTest):
             akdf.to_parquet(f"{tmp_dirname}/testName")
 
             ak_loaded = ak.DataFrame.load(f"{tmp_dirname}/testName")
-            self.assertTrue(validation_df.equals(ak_loaded[akdf.columns].to_pandas()))
+            self.assertTrue(validation_df.equals(ak_loaded[akdf.columns.to_list()].to_pandas()))
 
             # test save with index true
             akdf.to_parquet(f"{tmp_dirname}/testName_with_index.pq", index=True)
@@ -1002,7 +1002,7 @@ class DataFrameTest(ArkoudaTest):
             }
         )
         df2 = df[["a", "b"]]
-        self.assertListEqual(["a", "b"], df2.columns)
+        self.assertListEqual(["a", "b"], df2.columns.to_list())
         self.assertListEqual(df.index.to_list(), df2.index.to_list())
         self.assertListEqual(df["a"].to_list(), df2["a"].to_list())
         self.assertListEqual(df["b"].to_list(), df2["b"].to_list())
@@ -1034,7 +1034,7 @@ class DataFrameTest(ArkoudaTest):
 
         ij_merged_df = ak.merge(df1, df2, how="inner", on="key")
 
-        self.assertListEqual(ij_expected_df.columns, ij_merged_df.columns)
+        self.assertListEqual(ij_expected_df.columns.to_list(), ij_merged_df.columns.to_list())
         self.assertListEqual(ij_expected_df["key"].to_list(), ij_merged_df["key"].to_list())
         self.assertListEqual(ij_expected_df["value1_x"].to_list(), ij_merged_df["value1_x"].to_list())
         self.assertListEqual(ij_expected_df["value1_y"].to_list(), ij_merged_df["value1_y"].to_list())
@@ -1051,7 +1051,7 @@ class DataFrameTest(ArkoudaTest):
 
         rj_merged_df = ak.merge(df1, df2, how="right", on="key")
 
-        self.assertListEqual(rj_expected_df.columns, rj_merged_df.columns)
+        self.assertListEqual(rj_expected_df.columns.to_list(), rj_merged_df.columns.to_list())
         self.assertListEqual(rj_expected_df["key"].to_list(), rj_merged_df["key"].to_list())
         self.assertListEqual(rj_expected_df["value1_x"].to_list(), rj_merged_df["value1_x"].to_list())
         self.assertListEqual(rj_expected_df["value1_y"].to_list(), rj_merged_df["value1_y"].to_list())
@@ -1068,7 +1068,7 @@ class DataFrameTest(ArkoudaTest):
 
         lj_merged_df = ak.merge(df1, df2, how="left", on="key")
 
-        self.assertListEqual(lj_expected_df.columns, lj_merged_df.columns)
+        self.assertListEqual(lj_expected_df.columns.to_list(), lj_merged_df.columns.to_list())
         self.assertListEqual(lj_expected_df["key"].to_list(), lj_merged_df["key"].to_list())
         self.assertListEqual(lj_expected_df["value1_x"].to_list(), lj_merged_df["value1_x"].to_list())
         self.assertListEqual(lj_expected_df["value1_y"].to_list(), lj_merged_df["value1_y"].to_list())

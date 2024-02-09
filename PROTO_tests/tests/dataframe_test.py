@@ -255,7 +255,7 @@ class TestDataFrame:
         assert isinstance(df.index, ak.Index)
         assert df.index.to_list() == ref_df.index.to_list()
 
-        for cname in df.columns:
+        for cname in df.columns.to_list():
             col, ref_col = getattr(df, cname), getattr(ref_df, cname)
             assert isinstance(col, ak.Series)
             assert col.to_list() == ref_col.to_list()
@@ -285,11 +285,11 @@ class TestDataFrame:
             "c_6": ak.arange(2**200, 2**200 + 3),
         }
         akdf = ak.DataFrame(df_dict)
-        assert len(akdf.columns) == len(akdf.dtypes)
+        assert len(akdf.columns.to_list()) == len(akdf.dtypes)
         # dtypes returns objType for categorical, segarray. We should probably fix
         # this and add a df.objTypes property. pdarrays return actual dtype
         for ref_type, c in zip(
-            ["int64", "int64", "int64", "str", "Categorical", "SegArray", "bigint"], akdf.columns
+            ["int64", "int64", "int64", "str", "Categorical", "SegArray", "bigint"], akdf.columns.to_list()
         ):
             assert ref_type == str(akdf.dtypes[c])
 
@@ -372,21 +372,21 @@ class TestDataFrame:
 
         # Test out of Place - column
         df_rename = df.rename(rename, axis=1)
-        assert "user_id" in df_rename.columns
-        assert "name_col" in df_rename.columns
-        assert "userName" not in df_rename.columns
-        assert "userID" not in df_rename.columns
-        assert "userID" in df.columns
-        assert "userName" in df.columns
-        assert "user_id" not in df.columns
-        assert "name_col" not in df.columns
+        assert "user_id" in df_rename.columns.to_list()
+        assert "name_col" in df_rename.columns.to_list()
+        assert "userName" not in df_rename.columns.to_list()
+        assert "userID" not in df_rename.columns.to_list()
+        assert "userID" in df.columns.to_list()
+        assert "userName" in df.columns.to_list()
+        assert "user_id" not in df.columns.to_list()
+        assert "name_col" not in df.columns.to_list()
 
         # Test in place - column
         df.rename(column=rename, inplace=True)
-        assert "user_id" in df.columns
-        assert "name_col" in df.columns
-        assert "userName" not in df.columns
-        assert "userID" not in df.columns
+        assert "user_id" in df.columns.to_list()
+        assert "name_col" in df.columns.to_list()
+        assert "userName" not in df.columns.to_list()
+        assert "userID" not in df.columns.to_list()
 
         # prep for index renaming
         rename_idx = {1: 17, 2: 93}
@@ -505,12 +505,12 @@ class TestDataFrame:
         df = self.build_ak_df()
         pd_df = self.build_pd_df()
         # remove strings col because many aggregations don't support it
-        cols_without_str = list(set(df.columns) - {"userName"})
+        cols_without_str = list(set(df.columns.to_list()) - {"userName"})
         df = df[cols_without_str]
         pd_df = pd_df[cols_without_str]
 
         group_on = "userID"
-        for col in df.columns:
+        for col in df.columns.to_list:
             if col == group_on:
                 # pandas groupby doesn't return the column used to group
                 continue
@@ -519,7 +519,7 @@ class TestDataFrame:
             assert ak_ans.to_list() == pd_ans.to_list()
 
         # pandas groupby doesn't return the column used to group
-        cols_without_group_on = list(set(df.columns) - {group_on})
+        cols_without_group_on = list(set(df.columns.to_list()) - {group_on})
         ak_ans = getattr(df.groupby(group_on), agg)()[cols_without_group_on]
         pd_ans = getattr(pd_df.groupby(group_on), agg)()[cols_without_group_on]
         assert_frame_equal(pd_ans, ak_ans.to_pandas(retain_index=True))
@@ -557,12 +557,12 @@ class TestDataFrame:
         assert_frame_equal(
             ak_df.groupby("gb_id").sum().to_pandas(retain_index=True), pd_df.groupby("gb_id").sum()
         )
-        assert set(ak_df.groupby("gb_id").sum().columns) == set(pd_df.groupby("gb_id").sum().columns)
+        assert set(ak_df.groupby("gb_id").sum().columns.to_list()) == set(pd_df.groupby("gb_id").sum().columns.to_list())
 
         assert_frame_equal(
             ak_df.groupby(["gb_id"]).sum().to_pandas(retain_index=True), pd_df.groupby(["gb_id"]).sum()
         )
-        assert set(ak_df.groupby(["gb_id"]).sum().columns) == set(pd_df.groupby(["gb_id"]).sum().columns)
+        assert set(ak_df.groupby(["gb_id"]).sum().columns.to_list()) == set(pd_df.groupby(["gb_id"]).sum().columns.to_list())
 
     def test_gb_count_single(self):
         ak_df = self.build_ak_df_example_numeric_types()
@@ -890,7 +890,7 @@ class TestDataFrame:
             }
         )
         df2 = df[["a", "b"]]
-        assert ["a", "b"] == df2.columns
+        assert ["a", "b"] == df2.columns.to_list()
         assert df.index.to_list() == df2.index.to_list()
         assert df["a"].to_list() == df2["a"].to_list()
         assert df["b"].to_list() == df2["b"].to_list()
@@ -916,7 +916,7 @@ class TestDataFrame:
                     ak_merge = ak.merge(left_df, right_df, on=on, how=how)
                     pd_merge = pd.merge(l_pd, r_pd, on=on, how=how)
 
-                    sorted_columns = sorted(ak_merge.columns)
+                    sorted_columns = sorted(ak_merge.columns.to_list())
                     assert sorted_columns == sorted(pd_merge.columns.to_list())
                     for col in sorted_columns:
                         from_ak = ak_merge[col].to_ndarray()

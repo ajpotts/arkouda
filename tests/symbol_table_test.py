@@ -298,7 +298,7 @@ class RegistrationTest(ArkoudaTest):
         self.assertTrue(attach_df.is_registered())
         self.assertEqual(df.registered_name, attach_df.registered_name)
         # need to index the attached to ensure same columns order
-        self.assertTrue(assert_frame_equal(df.to_pandas(), attach_df[df.columns].to_pandas()) is None)
+        self.assertTrue(assert_frame_equal(df.to_pandas(), attach_df[df.columns.to_list()].to_pandas()) is None)
         self.assertIsInstance(attach_df, ak.DataFrame)
 
         # validate error handling for double registration
