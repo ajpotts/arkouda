@@ -652,7 +652,7 @@ class Series:
 
         idx = self.index.to_pandas()
         val = convert_if_categorical(self.values)
-        return pd.Series(val.to_ndarray(), index=idx)
+        return pd.Series(val.to_ndarray(), index=idx, name=self.name)
 
     @typechecked()
     def to_list(self) -> list:

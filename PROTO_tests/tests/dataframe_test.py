@@ -469,15 +469,15 @@ class TestDataFrame:
         gb = df.GroupBy(["userName", "userID"])
         keys, count = gb.count()
         assert len(keys) == 2
-        assert keys[0].to_list() == ["Carol", "Bob", "Alice"]
-        assert keys[1].to_list() == [333, 222, 111]
-        assert count.to_list() == [1, 2, 3]
+        assert keys[0].to_list() == ["Bob", "Alice", "Carol"]
+        assert keys[1].to_list() == [222, 111, 333]
+        assert count.to_list() == [2, 3, 1]
 
         # testing counts with IPv4 column
         s = ak.DataFrame({"a": ak.IPv4(ak.arange(1, 5))}).groupby("a").count(as_series=True)
         pds = pd.Series(
             data=np.ones(4, dtype=np.int64),
-            index=pd.Index(data=np.array(["0.0.0.1", "0.0.0.2", "0.0.0.3", "0.0.0.4"], dtype="<U7")),
+            index=pd.Index(data=np.array(["0.0.0.1", "0.0.0.2", "0.0.0.3", "0.0.0.4"], dtype="<U7"),name="a"),
         )
         assert_series_equal(pds, s.to_pandas())
 
@@ -487,7 +487,7 @@ class TestDataFrame:
             .groupby("a")
             .count(as_series=True)
         )
-        pds = pd.Series(data=np.array([3, 1]), index=pd.Index(data=np.array(["a", "b"], dtype="<U7")))
+        pds = pd.Series(data=np.array([3, 1]), index=pd.Index(data=np.array(["a", "b"], dtype="<U7"), name="a"))
         assert_series_equal(pds, s.to_pandas())
 
     def test_gb_series(self):
@@ -497,8 +497,8 @@ class TestDataFrame:
 
         c = gb.count(as_series=True)
         assert isinstance(c, ak.Series)
-        assert c.index.to_list() == ["Bob", "Alice", "Carol"]
-        assert c.values.to_list() == [2, 3, 1]
+        assert c.index.to_list() == ['Alice', 'Bob', 'Carol']
+        assert c.values.to_list() == [3, 2, 1]
 
     @pytest.mark.parametrize("agg", ["sum", "first"])
     def test_gb_aggregations(self, agg):
@@ -557,12 +557,16 @@ class TestDataFrame:
         assert_frame_equal(
             ak_df.groupby("gb_id").sum().to_pandas(retain_index=True), pd_df.groupby("gb_id").sum()
         )
-        assert set(ak_df.groupby("gb_id").sum().column_names) == set(pd_df.groupby("gb_id").sum().columns.values)
+        assert set(ak_df.groupby("gb_id").sum().column_names) == set(
+            pd_df.groupby("gb_id").sum().columns.values
+        )
 
         assert_frame_equal(
             ak_df.groupby(["gb_id"]).sum().to_pandas(retain_index=True), pd_df.groupby(["gb_id"]).sum()
         )
-        assert set(ak_df.groupby(["gb_id"]).sum().column_names) == set(pd_df.groupby(["gb_id"]).sum().columns.values)
+        assert set(ak_df.groupby(["gb_id"]).sum().column_names) == set(
+            pd_df.groupby(["gb_id"]).sum().columns.values
+        )
 
     def test_gb_count_single(self):
         ak_df = self.build_ak_df_example_numeric_types()
@@ -641,6 +645,7 @@ class TestDataFrame:
         assert_series_equal(
             ak_df.groupby("key1").size(as_series=True).to_pandas(), pd_df.groupby("key1").size()
         )
+
     def test_gb_size_match_pandas(self):
         ak_df = self.build_ak_df_with_nans()
         pd_df = ak_df.to_pandas(retain_index=True)
@@ -662,7 +667,6 @@ class TestDataFrame:
                         assert_frame_equal(ak_result.to_pandas(retain_index=True), pd_result)
                     else:
                         assert_series_equal(ak_result.to_pandas(), pd_result)
-
 
     def test_gb_size_as_index_cases(self):
         ak_df = self.build_ak_df_example2()
@@ -739,20 +743,51 @@ class TestDataFrame:
 
     def test_sort_index(self):
         ak_df = self.build_ak_df_example_numeric_types()
-        ak_df["string"] = ak.array(["f", "g", "h", "i", "j",
-                                    "k", "l", "m", "n", "o",
-                                    "a", "b", "c", "d", "e",
-                                    "p", "q", "r", "s", "t"])
+        ak_df["string"] = ak.array(
+            [
+                "f",
+                "g",
+                "h",
+                "i",
+                "j",
+                "k",
+                "l",
+                "m",
+                "n",
+                "o",
+                "a",
+                "b",
+                "c",
+                "d",
+                "e",
+                "p",
+                "q",
+                "r",
+                "s",
+                "t",
+            ]
+        )
         ak_df["negs"] = -1 * ak_df["int64"]
 
         pd_df = ak_df.to_pandas()
 
-        group_bys = ["gb_id", "float64", "int64", "uint64", "bigint", "negs", "string", ["gb_id", "negs"]]
+        group_bys = [
+            "gb_id",
+            "float64",
+            "int64",
+            "uint64",
+            "bigint",
+            "negs",
+            "string",
+            ["gb_id", "negs"],
+        ]
         for group_by in group_bys:
             ak_result = ak_df.groupby(group_by).size()
             pd_result = ak_result.to_pandas()
             if isinstance(ak_result, ak.dataframe.DataFrame):
-                assert_frame_equal(ak_result.sort_index().to_pandas(retain_index=True), pd_result.sort_index())
+                assert_frame_equal(
+                    ak_result.sort_index().to_pandas(retain_index=True), pd_result.sort_index()
+                )
             else:
                 assert_series_equal(ak_result.sort_index().to_pandas(), pd_result.sort_index())
 
