@@ -569,16 +569,16 @@ class TestDataFrame:
         pd_df = ak_df.to_pandas(retain_index=True)
 
         assert_frame_equal(
-            ak_df.groupby("gb_id").count(as_series=False).to_pandas(retain_index=True),
-            pd_df.groupby("gb_id")
+            ak_df.groupby("gb_id", as_index=False).count().to_pandas(retain_index=True),
+            pd_df.groupby("gb_id", as_index=False)
             .count()
             .drop(["int64", "uint64", "bigint"], axis=1)
             .rename(columns={"float64": "count"}, errors="raise"),
         )
 
         assert_frame_equal(
-            ak_df.groupby(["gb_id"]).count(as_series=False).to_pandas(retain_index=True),
-            pd_df.groupby(["gb_id"])
+            ak_df.groupby(["gb_id"], as_index=False).count().to_pandas(retain_index=True),
+            pd_df.groupby(["gb_id"], as_index=False)
             .count()
             .drop(["int64", "uint64", "bigint"], axis=1)
             .rename(columns={"float64": "count"}, errors="raise"),
@@ -591,7 +591,7 @@ class TestDataFrame:
         pd_result1 = (
             pd_df.groupby(["key1", "key2"], as_index=False).count().drop(["nums", "key3"], axis=1)
         )
-        ak_result1 = ak_df.groupby(["key1", "key2"]).count()
+        ak_result1 = ak_df.groupby(["key1", "key2"]).count(as_series=False)
         assert_frame_equal(pd_result1, ak_result1.to_pandas(retain_index=True))
         assert isinstance(ak_result1, ak.dataframe.DataFrame)
 
@@ -614,7 +614,7 @@ class TestDataFrame:
         pd_df = ak_df.to_pandas(retain_index=True)
 
         pd_result1 = pd_df.groupby(["key1", "key2"], as_index=False).size()
-        ak_result1 = ak_df.groupby(["key1", "key2"]).size()
+        ak_result1 = ak_df.groupby(["key1", "key2"], as_index=False).size()
         assert_frame_equal(pd_result1, ak_result1.to_pandas(retain_index=True))
         assert isinstance(ak_result1, ak.dataframe.DataFrame)
 
@@ -623,9 +623,9 @@ class TestDataFrame:
             pd_df.groupby(["key1", "key2"], as_index=False).size(),
         )
 
-        assert_frame_equal(
-            ak_df.groupby(["key1", "key2"], as_index=True).size().to_pandas(retain_index=True),
-            pd_df.groupby(["key1", "key2"], as_index=False).size(),
+        assert_series_equal(
+            ak_df.groupby(["key1", "key2"], as_index=True).size().to_pandas(),
+            pd_df.groupby(["key1", "key2"], as_index=True).size(),
         )
 
         assert_frame_equal(
@@ -917,7 +917,7 @@ class TestDataFrame:
                     pd_merge = pd.merge(l_pd, r_pd, on=on, how=how)
 
                     sorted_column_names = sorted(ak_merge.column_names)
-                    assert sorted_column_names == sorted(pd_merge.column_names.to_list())
+                    assert sorted_column_names == sorted(pd_merge.columns.to_list())
                     for col in sorted_column_names:
                         from_ak = ak_merge[col].to_ndarray()
                         from_pd = pd_merge[col].to_numpy()
