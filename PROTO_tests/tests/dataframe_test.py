@@ -196,6 +196,7 @@ class TestDataFrame:
             np.random.randint(5, 10, size),
         ]
         pddf = pd.DataFrame(x)
+        pddf.columns = pddf.columns.astype(str)
         akdf = ak.DataFrame([ak.array(val) for val in list(zip(*x))])
         assert isinstance(akdf, ak.DataFrame)
         assert len(akdf) == len(pddf)
@@ -204,7 +205,6 @@ class TestDataFrame:
         # use the column_names from the pandas created for equivalence check
         # these should be equivalent
         ak_to_pd = akdf.to_pandas()
-        #ak_to_pd.columns.values = pddf.columns.values
         assert_frame_equal(pddf, ak_to_pd)
 
     def test_client_type_creation(self):
@@ -557,31 +557,31 @@ class TestDataFrame:
         assert_frame_equal(
             ak_df.groupby("gb_id").sum().to_pandas(retain_index=True), pd_df.groupby("gb_id").sum()
         )
-        assert set(ak_df.groupby("gb_id").sum().column_names) == set(pd_df.groupby("gb_id").sum().column_names)
+        assert set(ak_df.groupby("gb_id").sum().column_names) == set(pd_df.groupby("gb_id").sum().columns.values)
 
         assert_frame_equal(
             ak_df.groupby(["gb_id"]).sum().to_pandas(retain_index=True), pd_df.groupby(["gb_id"]).sum()
         )
-        assert set(ak_df.groupby(["gb_id"]).sum().column_names) == set(pd_df.groupby(["gb_id"]).sum().column_names)
+        assert set(ak_df.groupby(["gb_id"]).sum().column_names) == set(pd_df.groupby(["gb_id"]).sum().columns.values)
 
     def test_gb_count_single(self):
         ak_df = self.build_ak_df_example_numeric_types()
         pd_df = ak_df.to_pandas(retain_index=True)
 
         assert_frame_equal(
-            ak_df.groupby("gb_id").count().to_pandas(retain_index=True),
+            ak_df.groupby("gb_id").count(as_series=False).to_pandas(retain_index=True),
             pd_df.groupby("gb_id")
             .count()
             .drop(["int64", "uint64", "bigint"], axis=1)
-            .rename(column_names={"float64": "count"}, errors="raise"),
+            .rename(columns={"float64": "count"}, errors="raise"),
         )
 
         assert_frame_equal(
-            ak_df.groupby(["gb_id"]).count().to_pandas(retain_index=True),
+            ak_df.groupby(["gb_id"]).count(as_series=False).to_pandas(retain_index=True),
             pd_df.groupby(["gb_id"])
             .count()
             .drop(["int64", "uint64", "bigint"], axis=1)
-            .rename(column_names={"float64": "count"}, errors="raise"),
+            .rename(columns={"float64": "count"}, errors="raise"),
         )
 
     def test_gb_count_multiple(self):
@@ -719,10 +719,10 @@ class TestDataFrame:
 
         df = ak.DataFrame({"userID": userid_ak})
         ord = df.sort_values()
-        assert_frame_equal(pd.DataFrame(data=userid, column_names=["userID"]), ord.to_pandas())
+        assert_frame_equal(pd.DataFrame(data=userid, columns=["userID"]), ord.to_pandas())
         ord = df.sort_values(ascending=False)
         userid.reverse()
-        assert_frame_equal(pd.DataFrame(data=userid, column_names=["userID"]), ord.to_pandas())
+        assert_frame_equal(pd.DataFrame(data=userid, columns=["userID"]), ord.to_pandas())
 
         df = self.build_ak_df()
         ord = df.sort_values(by="userID")
