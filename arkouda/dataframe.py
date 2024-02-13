@@ -729,8 +729,6 @@ class DataFrame(UserDict):
                 self._set_index(index)
             self.update_nrows()
 
-
-
     def __getattr__(self, key):
         if key not in self.column_names:
             raise AttributeError(f"Attribute {key} not found")
@@ -738,7 +736,7 @@ class DataFrame(UserDict):
         return Series(data=self[key], index=self.index.index)
 
     def __dir__(self):
-        return dir(DataFrame) + self.column_names + ['columns','column_names']
+        return dir(DataFrame) + self.column_names + ["columns", "column_names"]
 
     # delete a column
     def __delitem__(self, key):
@@ -1561,6 +1559,7 @@ class DataFrame(UserDict):
         Index(array(['col1', 'col2']), dtype='<U0')
         """
         return Index(self._column_names)
+
     @property
     def column_names(self):
         """
@@ -3695,7 +3694,9 @@ class DataFrame(UserDict):
             res._size = self._nrows
             res._bytes = self._bytes
             res._empty = self._empty
-            res._column_names = self._column_names[:]  # if this is not a slice, droping columns modifies both
+            res._column_names = self._column_names[
+                :
+            ]  # if this is not a slice, droping columns modifies both
 
             for key, val in self.items():
                 res[key] = val[:]
