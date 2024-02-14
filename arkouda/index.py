@@ -16,6 +16,9 @@ from arkouda.pdarraysetops import argsort, in1d
 from arkouda.sorting import coargsort
 from arkouda.util import convert_if_categorical, generic_concat, get_callback
 
+from collections.abc import  Hashable, Sequence
+
+__all__ = ["Index","MultiIndex"]
 
 class Index:
     objType = "Index"
@@ -122,6 +125,8 @@ class Index:
                 idx.append(Categorical.from_return_msg(i_comps[1]))
 
         return cls.factory(idx) if len(idx) > 1 else cls.factory(idx[0])
+
+
 
     def to_pandas(self):
         val = convert_if_categorical(self.values).to_ndarray()
@@ -293,8 +298,12 @@ class Index:
         return data
 
     def _check_types(self, other):
-        if type(self) is not type(other):
-            raise TypeError("Index Types must match")
+        if not isinstance(other, list):
+            other = [other]
+
+        for item in other:
+            if type(self) is not type(item):
+                raise TypeError("Index Types must match")
 
     def _merge(self, other):
         self._check_types(other)
@@ -331,7 +340,10 @@ class Index:
     def concat(self, other):
         self._check_types(other)
 
-        idx = generic_concat([self.values, other.values], ordered=True)
+        if not isinstance(other, list):
+            other = [other]
+
+        idx = generic_concat([self.values] + [item.values for item in other], ordered=True)
         return Index(idx)
 
     def lookup(self, key):
@@ -710,6 +722,74 @@ class Index:
             raise ValueError("Valid file types are HDF5 or Parquet")
 
 
+    def append(self, other ) :
+        """
+        Append a collection of Index options together.
+
+        Parameters
+        ----------
+        other : Index or list/tuple of indices
+
+        Returns
+        -------
+        Index
+
+        Examples
+        --------
+        >>> idx = pd.Index([1, 2, 3])
+        >>> idx.append(pd.Index([4]))
+        Index([1, 2, 3, 4], dtype='int64')
+        """
+        to_concat = [self]
+
+        if isinstance(other, (list, tuple)):
+            to_concat += list(other)
+        else:
+            # error: Argument 1 to "append" of "list" has incompatible type
+            # "Union[Index, Sequence[Index]]"; expected "Index"
+            to_concat.append(other)  # type: ignore[arg-type]
+
+        for obj in to_concat:
+            if not isinstance(obj, Index):
+                raise TypeError("all inputs must be Index")
+
+        names = {obj.name for obj in to_concat}
+        name = None if len(names) > 1 else self.name
+
+        return self._concat(to_concat, name)
+
+    def _concat(self, to_concat, name: Hashable) :
+        """
+        Concatenate multiple Index objects.
+        """
+        to_concat_vals = [x.values for x in to_concat]
+
+        from arkouda import concatenate
+        result = concatenate(to_concat_vals)
+
+        return result
+        #return Index._with_infer(result, name=name)
+
+
+    # @classmethod
+    # def _with_infer(cls, *args, **kwargs):
+    #     """
+    #     Constructor that uses the 1.0.x behavior inferring numeric dtypes
+    #     for ndarray[object] inputs.
+    #     """
+    #     result = cls(*args, **kwargs)
+    #
+    #     import numpy as np
+    #     if result.dtype == np.dtype("object") and not result._is_multi:
+    #         # error: Argument 1 to "maybe_convert_objects" has incompatible type
+    #         # "Union[ExtensionArray, ndarray[Any, Any]]"; expected
+    #         # "ndarray[Any, Any]"
+    #         values = lib.maybe_convert_objects(result._values)  # type: ignore[arg-type]
+    #         if values.dtype.kind in "iufb":
+    #             return Index(values, name=result.name)
+    #
+    #     return result
+
 class MultiIndex(Index):
     objType = "MultiIndex"
 
@@ -1076,3 +1156,5 @@ class MultiIndex(Index):
 
         if repack:
             _repack_hdf(prefix_path)
+
+

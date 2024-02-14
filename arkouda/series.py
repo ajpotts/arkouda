@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, Callable
 
 import numpy as np  # type: ignore
 import pandas as pd  # type: ignore
@@ -154,6 +154,22 @@ class Series:
             raise ValueError("Index size does not match data size")
         self.name = name
         self.size = self.index.size
+        self.ndim = 1
+
+
+    @property
+    def _constructor(self) -> Callable[..., Series]:
+        return Series
+
+    @property
+    def _constructor_expanddim(self) -> Callable[..., arkouda.dataframe.DataFrame]:
+        """
+        Used when a manipulation result has one higher dimension as the
+        original, such as Series.to_frame()
+        """
+        from arkouda.dataframe import DataFrame
+
+        return DataFrame
 
     def __len__(self):
         return self.values.size
@@ -989,7 +1005,7 @@ class Series:
             else:
                 aitor = iter(arrays)
                 idx = next(aitor).index
-                idx = idx._merge_all([i.index for i in aitor])
+                idx = idx.concat([i.index for i in aitor])
 
                 data = idx.to_dict(index_labels)
 
