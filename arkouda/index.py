@@ -93,6 +93,10 @@ class Index:
         return 1
 
     @property
+    def names(self):
+        return [self.name]
+
+    @property
     def is_unique(self):
         """
         Property indicating if all values in the index are unique
@@ -772,27 +776,9 @@ class Index:
         result = concatenate(to_concat_vals)
 
         return result
-        #return Index._with_infer(result, name=name)
 
 
-    # @classmethod
-    # def _with_infer(cls, *args, **kwargs):
-    #     """
-    #     Constructor that uses the 1.0.x behavior inferring numeric dtypes
-    #     for ndarray[object] inputs.
-    #     """
-    #     result = cls(*args, **kwargs)
-    #
-    #     import numpy as np
-    #     if result.dtype == np.dtype("object") and not result._is_multi:
-    #         # error: Argument 1 to "maybe_convert_objects" has incompatible type
-    #         # "Union[ExtensionArray, ndarray[Any, Any]]"; expected
-    #         # "ndarray[Any, Any]"
-    #         values = lib.maybe_convert_objects(result._values)  # type: ignore[arg-type]
-    #         if values.dtype.kind in "iufb":
-    #             return Index(values, name=result.name)
-    #
-    #     return result
+
 
 class MultiIndex(Index):
     objType = "MultiIndex"
@@ -1473,10 +1459,12 @@ def ensure_index(index_like: Union[int, Literal["index", "columns", "rows"]], co
             index_like = index_like.copy()
         return index_like
 
-    if isinstance(index_like, ABCSeries):
+    from arkouda.series import Series
+    if isinstance(index_like, Series):
         name = index_like.name
         return Index(index_like, name=name, copy=copy)
 
+    from pandas.core.dtypes.common import is_iterator
     if is_iterator(index_like):
         index_like = list(index_like)
 
