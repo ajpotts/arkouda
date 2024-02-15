@@ -1493,6 +1493,11 @@ class DataFrame(UserDict):
         """
         return self._empty
 
+
+    @property
+    def ndim(self):
+        return 2
+
     @property
     def shape(self):
         """

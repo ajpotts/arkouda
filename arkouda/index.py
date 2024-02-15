@@ -89,6 +89,10 @@ class Index:
         return (self.size,)
 
     @property
+    def ndim(self):
+        return 1
+
+    @property
     def is_unique(self):
         """
         Property indicating if all values in the index are unique
