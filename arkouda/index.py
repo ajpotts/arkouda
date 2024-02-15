@@ -1,5 +1,5 @@
 import json
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Literal
 
 import pandas as pd  # type: ignore
 from typeguard import typechecked
@@ -15,7 +15,7 @@ from arkouda.pdarraycreation import arange, array, create_pdarray, ones
 from arkouda.pdarraysetops import argsort, in1d
 from arkouda.sorting import coargsort
 from arkouda.util import convert_if_categorical, generic_concat, get_callback
-
+from itertools import zip_longest
 from collections.abc import  Hashable, Sequence
 
 __all__ = ["Index","MultiIndex"]
@@ -1161,7 +1161,7 @@ class MultiIndex(Index):
 def get_objs_combined_axis(
         objs,
         intersect: bool = False,
-        axis: Axis = 0,
+        axis: Union[int, Literal["index", "columns", "rows"]] = 0,
         sort: bool = True,
 ) -> Index:
     """
@@ -1240,42 +1240,9 @@ def _get_combined_index(
         index = ensure_index(index)
 
     if sort:
-        index = safe_sort_index(index)
+        index = index.argsort()
     return index
 
-
-def safe_sort_index(index: Index) -> Index:
-    """
-    Returns the sorted index
-
-    We keep the dtypes and the name attributes.
-
-    Parameters
-    ----------
-    index : an Index
-
-    Returns
-    -------
-    Index
-    """
-    if index.is_monotonic_increasing:
-        return index
-
-    try:
-        array_sorted = safe_sort(index)
-    except TypeError:
-        pass
-    else:
-        if isinstance(array_sorted, Index):
-            return array_sorted
-
-        array_sorted = cast(np.ndarray, array_sorted)
-        if isinstance(index, MultiIndex):
-            index = MultiIndex.from_tuples(array_sorted, names=index.names)
-        else:
-            index = Index(array_sorted, name=index.name, dtype=index.dtype)
-
-    return index
 
 
 def union_indexes(indexes, sort: bool | None = True) -> Index:
@@ -1462,11 +1429,11 @@ def all_indexes_same(indexes) -> bool:
     return all(first.equals(index) for index in itr)
 
 
-def default_index(n: int) -> RangeIndex:
-    rng = range(n)
-    return RangeIndex._simple_new(rng, name=None)
+def default_index(n: int) -> Index:
+    from arkouda import arange
+    return Index(arange(n))
 
-def ensure_index(index_like: Axes, copy: bool = False) -> Index:
+def ensure_index(index_like: Union[int, Literal["index", "columns", "rows"]], copy: bool = False) -> Index:
     """
     Ensure that we have an index from some index-like object.
 
@@ -1523,3 +1490,21 @@ def ensure_index(index_like: Axes, copy: bool = False) -> Index:
             return Index(index_like, copy=copy, tupleize_cols=False)
     else:
         return Index(index_like, copy=copy)
+
+def get_unanimous_names(*indexes: Index) -> tuple[Hashable, ...]:
+    """
+    Return common name if all indices agree, otherwise None (level-by-level).
+
+    Parameters
+    ----------
+    indexes : list of Index objects
+
+    Returns
+    -------
+    list
+        A list representing the unanimous 'names' found.
+    """
+    name_tups = [tuple(i.names) for i in indexes]
+    name_sets = [{*ns} for ns in zip_longest(*name_tups)]
+    names = tuple(ns.pop() if len(ns) == 1 else None for ns in name_sets)
+    return names
