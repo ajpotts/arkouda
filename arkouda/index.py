@@ -460,6 +460,8 @@ class Index:
         -------
         RuntimeError
             Raised if a server-side error is thrown saving the pdarray
+        TypeError
+            Raised if the Index values are a list.
         Notes
         -----
         - The prefix_path must be visible to the arkouda server and the user must
@@ -479,6 +481,9 @@ class Index:
         from arkouda.categorical import Categorical as Categorical_
         from arkouda.client import generic_msg
         from arkouda.io import _file_type_to_int, _mode_str_to_int
+
+        if isinstance(self.values, list):
+            raise TypeError(f"Unable to write Index to hdf when values are a list.")
 
         index_data = [
             self.values.name
@@ -643,6 +648,8 @@ class Index:
         ------
         RuntimeError
             Raised if a server-side error is thrown saving the pdarray
+        TypeError
+            Raised if the Index values are a list.
         Notes
         -----
         - The prefix_path must be visible to the arkouda server and the user must
@@ -657,6 +664,9 @@ class Index:
         - Any file extension can be used.The file I/O does not rely on the extension to
         determine the file format.
         """
+        if isinstance(self.values, list):
+            raise TypeError(f"Unable to write Index to parquet when values are a list.")
+
         return self.values.to_parquet(prefix_path, dataset=dataset, mode=mode, compression=compression)
 
     @typechecked
@@ -693,13 +703,14 @@ class Index:
         ------
         ValueError
             Raised if all datasets are not present in all parquet files or if one or
-            more of the specified files do not exist
+            more of the specified files do not exist.
         RuntimeError
             Raised if one or more of the specified files cannot be opened.
             If `allow_errors` is true this may be raised if no values are returned
             from the server.
         TypeError
-            Raised if we receive an unknown arkouda_type returned from the server
+            Raised if we receive an unknown arkouda_type returned from the server.
+            Raised if the Index values are a list.
 
         Notes
         ------
@@ -708,6 +719,9 @@ class Index:
         - Be sure that column delimiters are not found within your data.
         - All CSV files must delimit rows using newline (`\n`) at this time.
         """
+        if isinstance(self.values, list):
+            raise TypeError(f"Unable to write Index to csv when values are a list.")
+
         return self.values.to_csv(prefix_path, dataset=dataset, col_delim=col_delim, overwrite=overwrite)
 
     def save(
@@ -759,7 +773,8 @@ class Index:
             nor append
         TypeError
             Raised if any one of the prefix_path, dataset, or mode parameters
-            is not a string
+            is not a string.
+            Raised if the Index values are a list.
         See Also
         --------
         save_all, load, read, to_parquet, to_hdf
@@ -784,6 +799,10 @@ class Index:
             "ak.Index.save has been deprecated. Please use ak.Index.to_parquet or ak.Index.to_hdf",
             DeprecationWarning,
         )
+
+        if isinstance(self.values, list):
+            raise TypeError(f"Unable to save Index when values are a list.")
+
         if mode.lower() not in ["append", "truncate"]:
             raise ValueError("Allowed modes are 'truncate' and 'append'")
 
@@ -1021,7 +1040,8 @@ class MultiIndex(Index):
         Raises
         -------
         RuntimeError
-            Raised if a server-side error is thrown saving the pdarray
+            Raised if a server-side error is thrown saving the pdarray.
+
         Notes
         -----
         - The prefix_path must be visible to the arkouda server and the user must
@@ -1105,6 +1125,8 @@ class MultiIndex(Index):
         -------
         RuntimeError
             Raised if a server-side error is thrown saving the index
+        TypeError
+            Raised if the Index values are a list.
 
         Notes
         ------
@@ -1122,6 +1144,9 @@ class MultiIndex(Index):
             _mode_str_to_int,
             _repack_hdf,
         )
+
+        if isinstance(self.values, list):
+            raise TypeError(f"Unable update hdf when Index values are a list.")
 
         # determine the format (single/distribute) that the file was saved in
         file_type = _get_hdf_filetype(prefix_path + "*")
