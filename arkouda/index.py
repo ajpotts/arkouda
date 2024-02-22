@@ -192,7 +192,11 @@ class Index:
         return cls.factory(idx) if len(idx) > 1 else cls.factory(idx[0])
 
     def to_pandas(self):
-        val = convert_if_categorical(self.values).to_ndarray()
+        if isinstance(self.values, list):
+            from numpy import array as ndarray
+            val = ndarray(self.values)
+        else:
+            val = convert_if_categorical(self.values).to_ndarray()
         return pd.Index(data=val, dtype=val.dtype, name=self.name)
 
     def to_ndarray(self):

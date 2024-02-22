@@ -1,3 +1,4 @@
+import pandas as pd
 import pytest
 
 import arkouda as ak
@@ -123,3 +124,16 @@ class TestIndex:
         result = idx.lookup([lk, lk])
 
         assert result.to_list() == [i in truth for i in range(size)]
+
+    def test_to_pandas(self):
+        i = ak.Index([1, 2, 3])
+        assert i.to_pandas().equals(pd.Index([1, 2, 3]))
+
+        i2 = ak.Index([1, 2, 3], allow_list=True)
+        assert i2.to_pandas().equals(pd.Index([1, 2, 3]))
+
+        i3 = ak.Index(["a", "b", "c"], allow_list=True)
+        assert i3.to_pandas().equals(pd.Index(["a", "b", "c"]))
+
+        i4 = ak.Index(ak.array(["a", "b", "c"]))
+        assert i4.to_pandas().equals(pd.Index(["a", "b", "c"]))

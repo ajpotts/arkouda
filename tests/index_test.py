@@ -1,8 +1,8 @@
 import glob
 import os
 import tempfile
-from shutil import rmtree
 
+import pandas as pd
 from base_test import ArkoudaTest
 from context import arkouda as ak
 
@@ -38,7 +38,7 @@ class IndexTest(ArkoudaTest):
         self.assertEqual(i3.dtype, dtype("<U"))
 
         with self.assertRaises(ValueError):
-            i4 = ak.Index([1, 2, 3], allow_list=True, max_list_size=2)
+            ak.Index([1, 2, 3], allow_list=True, max_list_size=2)
 
     def test_multiindex_creation(self):
         # test list generation
@@ -137,3 +137,16 @@ class IndexTest(ArkoudaTest):
             idx = ak.Index(ak.arange(5))
             idx.to_hdf(f"{tmp_dirname}/idx_file.h5")
             self.assertEqual(len(glob.glob(f"{tmp_dirname}/idx_file_*.h5")), locale_count)
+
+    def test_to_pandas(self):
+        i = ak.Index([1, 2, 3])
+        self.assertTrue(i.to_pandas().equals(pd.Index([1, 2, 3])))
+
+        i2 = ak.Index([1, 2, 3], allow_list=True)
+        self.assertTrue(i2.to_pandas().equals(pd.Index([1, 2, 3])))
+
+        i3 = ak.Index(["a", "b", "c"], allow_list=True)
+        self.assertTrue(i3.to_pandas().equals(pd.Index(["a", "b", "c"])))
+
+        i4 = ak.Index(ak.array(["a", "b", "c"]))
+        self.assertTrue(i4.to_pandas().equals(pd.Index(["a", "b", "c"])))
