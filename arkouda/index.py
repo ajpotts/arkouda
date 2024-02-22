@@ -207,7 +207,10 @@ class Index:
             return val.to_ndarray()
 
     def to_list(self):
-        return self.to_ndarray().tolist()
+        if isinstance(self.values,list):
+            return self.values
+        else:
+            return self.to_ndarray().tolist()
 
     def set_dtype(self, dtype):
         """Change the data type of the index

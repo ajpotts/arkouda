@@ -166,3 +166,16 @@ class IndexTest(ArkoudaTest):
 
         i4 = ak.Index(ak.array(["a", "b", "c"]))
         self.assertTrue(array_equal(i4.to_ndarray(), ndarray(["a", "b", "c"])))
+
+    def test_to_list(self):
+        i = ak.Index([1, 2, 3])
+        self.assertListEqual(i.to_list(), [1, 2, 3])
+
+        i2 = ak.Index([1, 2, 3], allow_list=True)
+        self.assertListEqual(i2.to_list(), [1, 2, 3])
+
+        i3 = ak.Index(["a", "b", "c"], allow_list=True)
+        self.assertListEqual(i3.to_list(), ["a", "b", "c"])
+
+        i4 = ak.Index(ak.array(["a", "b", "c"]))
+        self.assertListEqual(i4.to_list(), ["a", "b", "c"])

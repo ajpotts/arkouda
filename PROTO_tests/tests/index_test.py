@@ -153,3 +153,16 @@ class TestIndex:
 
         i4 = ak.Index(ak.array(["a", "b", "c"]))
         assert array_equal(i4.to_ndarray(), ndarray(["a", "b", "c"]))
+
+    def test_to_list(self):
+        i = ak.Index([1, 2, 3])
+        assert i.to_list() == [1, 2, 3]
+
+        i2 = ak.Index([1, 2, 3], allow_list=True)
+        assert i2.to_list() == [1, 2, 3]
+
+        i3 = ak.Index(["a", "b", "c"], allow_list=True)
+        assert i3.to_list() == ["a", "b", "c"]
+
+        i4 = ak.Index(ak.array(["a", "b", "c"]))
+        assert i4.to_list() == ["a", "b", "c"]
