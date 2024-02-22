@@ -51,6 +51,10 @@ def generic_concat(items, ordered=True):
     if len(types) != 1:
         raise TypeError(f"Items must all have same type: {types}")
     t = types.pop()
+
+    if t is list:
+        return [x for lst in items for x in lst]
+
     return (
         t.concat(items, ordered=ordered)
         if hasattr(t, "concat")

@@ -107,11 +107,14 @@ class IndexTest(ArkoudaTest):
 
     def test_concat(self):
         idx_1 = ak.Index.factory(ak.arange(5))
-
         idx_2 = ak.Index(ak.array([2, 4, 1, 3, 0]))
 
         idx_full = idx_1.concat(idx_2)
         self.assertListEqual(idx_full.to_list(), [0, 1, 2, 3, 4, 2, 4, 1, 3, 0])
+
+        i = ak.Index([1, 2, 3], allow_list=True)
+        i2 = ak.Index(["a", "b", "c"], allow_list=True)
+        self.assertListEqual(i.concat(i2).to_list(), ["1", "2", "3", "a", "b", "c"])
 
     def test_lookup(self):
         idx = ak.Index.factory(ak.arange(5))

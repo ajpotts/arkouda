@@ -105,6 +105,10 @@ class TestIndex:
         idx_full = idx_1.concat(idx_2)
         assert idx_full.to_list() == [0, 1, 2, 3, 4, 2, 4, 1, 3, 0]
 
+        i = ak.Index([1, 2, 3], allow_list=True)
+        i2 = ak.Index(["a", "b", "c"], allow_list=True)
+        assert i.concat(i2).to_list() == ["1", "2", "3", "a", "b", "c"]
+
     @pytest.mark.parametrize("size", pytest.prob_size)
     def test_lookup(self, size):
         idx = ak.Index.factory(ak.arange(size))
