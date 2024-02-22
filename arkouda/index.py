@@ -2,6 +2,7 @@ import json
 from typing import List, Optional, Union
 
 import pandas as pd  # type: ignore
+from numpy import array as ndarray
 from typeguard import typechecked
 
 from arkouda import Categorical, Strings
@@ -158,7 +159,7 @@ class Index:
         -------
             bool - True if all values are unique, False otherwise.
         """
-        if isinstance(self.values,list):
+        if isinstance(self.values, list):
             return len(set(self.values)) == self.size
         else:
             g = GroupBy(self.values)
@@ -193,15 +194,17 @@ class Index:
 
     def to_pandas(self):
         if isinstance(self.values, list):
-            from numpy import array as ndarray
             val = ndarray(self.values)
         else:
             val = convert_if_categorical(self.values).to_ndarray()
         return pd.Index(data=val, dtype=val.dtype, name=self.name)
 
     def to_ndarray(self):
-        val = convert_if_categorical(self.values)
-        return val.to_ndarray()
+        if isinstance(self.values, list):
+            return ndarray(self.values)
+        else:
+            val = convert_if_categorical(self.values)
+            return val.to_ndarray()
 
     def to_list(self):
         return self.to_ndarray().tolist()
@@ -850,9 +853,7 @@ class MultiIndex(Index):
         return self
 
     def to_ndarray(self):
-        import numpy as np
-
-        return np.array([convert_if_categorical(val).to_ndarray() for val in self.values])
+        return ndarray([convert_if_categorical(val).to_ndarray() for val in self.values])
 
     def to_list(self):
         return self.to_ndarray().tolist()

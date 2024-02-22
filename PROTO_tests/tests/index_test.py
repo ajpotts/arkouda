@@ -137,3 +137,19 @@ class TestIndex:
 
         i4 = ak.Index(ak.array(["a", "b", "c"]))
         assert i4.to_pandas().equals(pd.Index(["a", "b", "c"]))
+
+    def test_to_ndarray(self):
+        from numpy import array as ndarray
+        from numpy import array_equal
+
+        i = ak.Index([1, 2, 3])
+        assert array_equal(i.to_ndarray(), ndarray([1, 2, 3]))
+
+        i2 = ak.Index([1, 2, 3], allow_list=True)
+        assert array_equal(i2.to_ndarray(), ndarray([1, 2, 3]))
+
+        i3 = ak.Index(["a", "b", "c"], allow_list=True)
+        assert array_equal(i3.to_ndarray(), ndarray(["a", "b", "c"]))
+
+        i4 = ak.Index(ak.array(["a", "b", "c"]))
+        assert array_equal(i4.to_ndarray(), ndarray(["a", "b", "c"]))
