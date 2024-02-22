@@ -1,6 +1,8 @@
 import pytest
 
 import arkouda as ak
+from arkouda.dtypes import dtype
+from arkouda.pdarrayclass import pdarray
 
 
 class TestIndex:
@@ -11,6 +13,21 @@ class TestIndex:
         assert isinstance(idx, ak.Index)
         assert idx.size == size
         assert idx.to_list() == list(range(size))
+
+    def test_index_creation_lists(self):
+        i = ak.Index([1, 2, 3])
+        assert isinstance(i.values, pdarray)
+
+        i2 = ak.Index([1, 2, 3], allow_list=True)
+        assert isinstance(i2.values, list)
+        assert i2.dtype == dtype("int64")
+
+        i3 = ak.Index(["a", "b", "c"], allow_list=True)
+        assert isinstance(i3.values, list)
+        assert i3.dtype == dtype("<U")
+
+        with pytest.raises(ValueError):
+            i4 = ak.Index([1, 2, 3], allow_list=True, max_list_size=2)
 
     @pytest.mark.parametrize("size", pytest.prob_size)
     def test_multiindex_creation(self, size):

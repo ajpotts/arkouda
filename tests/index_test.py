@@ -1,11 +1,14 @@
 import glob
 import os
-from shutil import rmtree
-from arkouda import io_util
 import tempfile
+from shutil import rmtree
 
 from base_test import ArkoudaTest
 from context import arkouda as ak
+
+from arkouda import io_util
+from arkouda.dtypes import dtype
+from arkouda.pdarrayclass import pdarray
 
 
 class IndexTest(ArkoudaTest):
@@ -21,6 +24,21 @@ class IndexTest(ArkoudaTest):
         self.assertIsInstance(idx, ak.Index)
         self.assertEqual(idx.size, 5)
         self.assertListEqual(idx.to_list(), [i for i in range(5)])
+
+    def test_index_creation_lists(self):
+        i = ak.Index([1, 2, 3])
+        self.assertIsInstance(i.values, pdarray)
+
+        i2 = ak.Index([1, 2, 3], allow_list=True)
+        self.assertIsInstance(i2.values, list)
+        self.assertEqual(i2.dtype, dtype("int64"))
+
+        i3 = ak.Index(["a", "b", "c"], allow_list=True)
+        self.assertIsInstance(i3.values, list)
+        self.assertEqual(i3.dtype, dtype("<U"))
+
+        with self.assertRaises(ValueError):
+            i4 = ak.Index([1, 2, 3], allow_list=True, max_list_size=2)
 
     def test_multiindex_creation(self):
         # test list generation

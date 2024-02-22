@@ -19,13 +19,55 @@ from arkouda.util import convert_if_categorical, generic_concat, get_callback
 
 class Index:
     objType = "Index"
+    """
+     Immutable sequence used for indexing and alignment.
+
+    The basic object storing axis labels for all DataFrame objects.
+
+    Parameters
+    ----------
+    values: Union[List, pdarray, Strings, Categorical, pd.Index, "Index"],
+    name : object
+        Name to be stored in the index.
+        
+    name: Optional[str] = None,
+    allow_list = False,
+        If False, values will be converted to pdarray.
+        If True, values will be converted to list, provided the data length is less than max_list_size.
+    max_list_size = 1000,
+        This is the maximum allowed data length for the values to be stored as a list object.
+
+    See Also
+    --------
+    MultiIndex
+
+    Notes
+    -----
+    An Index instance can **only** contain hashable objects.
+    An Index instance *can not* hold numpy float16 dtype.
+
+    Examples
+    --------
+    >>> ak.Index([1, 2, 3])
+    Index([1, 2, 3], dtype='int64')
+
+    >>> ak.Index(list('abc'))
+    Index(['a', 'b', 'c'], dtype='object')
+
+    >>> ak.Index([1, 2, 3], dtype="uint8")
+    Index([1, 2, 3], dtype='uint8')
+
+    """
 
     @typechecked
     def __init__(
         self,
         values: Union[List, pdarray, Strings, Categorical, pd.Index, "Index"],
         name: Optional[str] = None,
+        allow_list=False,
+        max_list_size=1000,
     ):
+        self.max_list_size = max_list_size
         self.registered_name: Optional[str] = None
         if isinstance(values, Index):
             self.values = values.values
@@ -38,10 +80,20 @@ class Index:
             self.dtype = self.values.dtype
             self.name = name if name else values.name
         elif isinstance(values, List):
-            values = array(values)
-            self.values = values
-            self.size = self.values.size
-            self.dtype = self.values.dtype
+            if allow_list:
+                if len(values) <= max_list_size:
+                    self.values = values
+                    self.size = len(values)
+                    self.dtype = self._dtype_of_list_values(values)
+                else:
+                    raise ValueError(
+                        f"Cannot create Index because list size {len(values)} exceeds max_list_size {self.max_list_size}."
+                    )
+            else:
+                values = array(values)
+                self.values = values
+                self.size = self.values.size
+                self.dtype = self.values.dtype
             self.name = name
         elif isinstance(values, (pdarray, Strings, Categorical)):
             self.values = values
@@ -73,6 +125,19 @@ class Index:
         if isinstance(v, Index):
             return self.index == v.index
         return self.index == v
+
+    def _dtype_of_list_values(self, lst):
+        from arkouda.dtypes import dtype
+
+        if isinstance(lst, list):
+            d = dtype(type(lst[0]))
+            for item in lst:
+                assert (
+                    dtype(type(item)) == d
+                ), f"Values of Index must all be same type.  Types {d} and {dtype(type(item))} do not match."
+            return d
+        else:
+            raise TypeError("Index Types must match")
 
     @property
     def index(self):
