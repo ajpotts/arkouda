@@ -66,6 +66,12 @@ class IndexTest(ArkoudaTest):
         i = ak.Index(ak.array([0, 1, 1]))
         self.assertFalse(i.is_unique)
 
+        i = ak.Index([0, 1, 2], allow_list=True)
+        self.assertTrue(i.is_unique)
+
+        i = ak.Index([0, 1, 1], allow_list=True)
+        self.assertFalse(i.is_unique)
+
     def test_factory(self):
         idx = ak.Index.factory(ak.arange(5))
         self.assertIsInstance(idx, ak.Index)

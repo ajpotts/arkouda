@@ -56,6 +56,12 @@ class TestIndex:
         i = ak.Index(ak.array([0, 1, 1]))
         assert not i.is_unique
 
+        i = ak.Index([0, 1, 2], allow_list=True)
+        assert i.is_unique
+
+        i = ak.Index([0, 1, 1], allow_list=True)
+        assert not i.is_unique
+
     @pytest.mark.parametrize("size", pytest.prob_size)
     def test_factory(self, size):
         idx = ak.Index.factory(ak.arange(size))

@@ -158,9 +158,12 @@ class Index:
         -------
             bool - True if all values are unique, False otherwise.
         """
-        g = GroupBy(self.values)
-        key, ct = g.count()
-        return (ct == 1).all()
+        if isinstance(self.values,list):
+            return len(set(self.values)) == self.size
+        else:
+            g = GroupBy(self.values)
+            key, ct = g.count()
+            return (ct == 1).all()
 
     @staticmethod
     def factory(index):
