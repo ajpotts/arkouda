@@ -207,7 +207,7 @@ class Index:
             return val.to_ndarray()
 
     def to_list(self):
-        if isinstance(self.values,list):
+        if isinstance(self.values, list):
             return self.values
         else:
             return self.to_ndarray().tolist()
@@ -255,6 +255,9 @@ class Index:
         Objects registered with the server are immune to deletion until
         they are unregistered.
         """
+        if isinstance(self.values, list):
+            raise TypeError("Index cannot be registered when values are list type.")
+
         from arkouda.client import generic_msg
 
         if self.registered_name is not None and self.is_registered():
@@ -397,6 +400,10 @@ class Index:
         return len(other) == length and (self == other.values).sum() == length
 
     def argsort(self, ascending=True):
+        if isinstance(self.values, list):
+            reverse = not ascending
+            return sorted(range(self.size), key=self.values.__getitem__, reverse=reverse)
+
         if not ascending:
             if isinstance(self.values, pdarray) and self.dtype in (akint64, akfloat64):
                 i = argsort(-self.values)
@@ -941,7 +948,7 @@ class MultiIndex(Index):
             return False
         return is_registered(self.registered_name)
 
-    def to_dict(self, labels):
+    def to_dict(self, labels=None):
         data = {}
         if labels is None:
             labels = [f"idx_{i}" for i in range(len(self.index))]

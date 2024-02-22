@@ -89,6 +89,22 @@ class IndexTest(ArkoudaTest):
         # values should be the indexes in the array of idx
         self.assertListEqual(i.to_list(), [1, 0, 3, 5, 2, 4])
 
+        i = ak.Index([1, 2, 3])
+        self.assertListEqual(i.argsort(ascending=True).to_list(), [0, 1, 2])
+        self.assertListEqual(i.argsort(ascending=False).to_list(), [2, 1, 0])
+
+        i2 = ak.Index([1, 2, 3], allow_list=True)
+        self.assertListEqual(i2.argsort(ascending=True), [0, 1, 2])
+        self.assertListEqual(i2.argsort(ascending=False), [2, 1, 0])
+
+        i3 = ak.Index(["a", "b", "c"], allow_list=True)
+        self.assertListEqual(i3.argsort(ascending=True), [0, 1, 2])
+        self.assertListEqual(i3.argsort(ascending=False), [2, 1, 0])
+
+        i4 = ak.Index(ak.array(["a", "b", "c"]))
+        self.assertListEqual(i4.argsort(ascending=True).to_list(), [0, 1, 2])
+        self.assertListEqual(i4.argsort(ascending=False).to_list(), [2, 1, 0])
+
     def test_concat(self):
         idx_1 = ak.Index.factory(ak.arange(5))
 
@@ -179,3 +195,8 @@ class IndexTest(ArkoudaTest):
 
         i4 = ak.Index(ak.array(["a", "b", "c"]))
         self.assertListEqual(i4.to_list(), ["a", "b", "c"])
+
+    def test_register_list_values(self):
+        i = ak.Index([1, 2, 3], allow_list=True)
+        with self.assertRaises(TypeError):
+            i.register("test")

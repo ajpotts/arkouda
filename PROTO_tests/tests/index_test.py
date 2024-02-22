@@ -81,6 +81,22 @@ class TestIndex:
         # values should be the indexes in the array of idx
         assert i.to_list() == [1, 0, 3, 5, 2, 4]
 
+        i = ak.Index([1, 2, 3])
+        assert i.argsort(ascending=True).to_list() == [0, 1, 2]
+        assert i.argsort(ascending=False).to_list() == [2, 1, 0]
+
+        i2 = ak.Index([1, 2, 3], allow_list=True)
+        assert i2.argsort(ascending=True) == [0, 1, 2]
+        assert i2.argsort(ascending=False) == [2, 1, 0]
+
+        i3 = ak.Index(["a", "b", "c"], allow_list=True)
+        assert i3.argsort(ascending=True) == [0, 1, 2]
+        assert i3.argsort(ascending=False) == [2, 1, 0]
+
+        i4 = ak.Index(ak.array(["a", "b", "c"]))
+        assert i4.argsort(ascending=True).to_list() == [0, 1, 2]
+        assert i4.argsort(ascending=False).to_list() == [2, 1, 0]
+
     def test_concat(self):
         idx_1 = ak.Index.factory(ak.arange(5))
 
@@ -166,3 +182,8 @@ class TestIndex:
 
         i4 = ak.Index(ak.array(["a", "b", "c"]))
         assert i4.to_list() == ["a", "b", "c"]
+
+    def test_register_list_values(self):
+        i = ak.Index([1, 2, 3], allow_list=True)
+        with pytest.raises(TypeError):
+            i.register("test")
