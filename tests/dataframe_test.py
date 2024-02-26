@@ -306,6 +306,7 @@ class DataFrameTest(ArkoudaTest):
         pddf_drop.reset_index(drop=True, inplace=True)
         self.assertTrue(pddf_drop.equals(df_drop.to_pandas()))
 
+
         df_drop = df.drop("userName", axis=1)
         pddf_drop = pd_df.drop(labels=["userName"], axis=1)
         self.assertTrue(pddf_drop.equals(df_drop.to_pandas()))

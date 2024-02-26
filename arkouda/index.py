@@ -21,40 +21,40 @@ from arkouda.util import convert_if_categorical, generic_concat, get_callback
 class Index:
     objType = "Index"
     """
-     Immutable sequence used for indexing and alignment.
+    Sequence used for indexing and alignment.
 
     The basic object storing axis labels for all DataFrame objects.
 
     Parameters
     ----------
-    values: Union[List, pdarray, Strings, Categorical, pd.Index, "Index"],
+    values: List, pdarray, Strings, Categorical, pandas.Index, or Index
     name : str, default=None
         Name to be stored in the index.
-    as_list = False,
-        If False, values will be converted to a pdarray.
-        If True, values will be converted to a list, provided the data length is less than max_list_size.
-    max_list_size = 1000,
+    allow_list = False,
+        If False, list values will be converted to a pdarray.
+        If True, list values will remain as a list, provided the data length is less than max_list_size.
+    max_list_size = 1000
         This is the maximum allowed data length for the values to be stored as a list object.
+
+    Raises
+    ------
+    ValueError
+        Raised if allow_list=True and the size of values is > max_list_size.
 
     See Also
     --------
     MultiIndex
 
-    Notes
-    -----
-    An Index instance can **only** contain hashable objects.
-    An Index instance *can not* hold numpy float16 dtype.
-
     Examples
     --------
     >>> ak.Index([1, 2, 3])
-    Index([1, 2, 3], dtype='int64')
+    Index(array([1 2 3]), dtype='int64')
 
     >>> ak.Index(list('abc'))
-    Index(['a', 'b', 'c'], dtype='object')
+    Index(array(['a', 'b', 'c']), dtype='<U0')
 
-    >>> ak.Index([1, 2, 3], dtype="uint8")
-    Index([1, 2, 3], dtype='uint8')
+    >>> ak.Index([1, 2, 3], allow_list=True)
+    Index([1, 2, 3], dtype='int64')
 
     """
 
@@ -63,7 +63,7 @@ class Index:
         self,
         values: Union[List, pdarray, Strings, Categorical, pd.Index, "Index"],
         name: Optional[str] = None,
-        as_list=False,
+        allow_list=False,
         max_list_size=1000,
     ):
         self.max_list_size = max_list_size
@@ -79,7 +79,7 @@ class Index:
             self.dtype = self.values.dtype
             self.name = name if name else values.name
         elif isinstance(values, List):
-            if as_list:
+            if allow_list is True:
                 if len(values) <= max_list_size:
                     self.values = values
                     self.size = len(values)
