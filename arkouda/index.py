@@ -28,13 +28,11 @@ class Index:
     Parameters
     ----------
     values: Union[List, pdarray, Strings, Categorical, pd.Index, "Index"],
-    name : object
+    name : str, default=None
         Name to be stored in the index.
-        
-    name: Optional[str] = None,
-    allow_list = False,
-        If False, values will be converted to pdarray.
-        If True, values will be converted to list, provided the data length is less than max_list_size.
+    as_list = False,
+        If False, values will be converted to a pdarray.
+        If True, values will be converted to a list, provided the data length is less than max_list_size.
     max_list_size = 1000,
         This is the maximum allowed data length for the values to be stored as a list object.
 
@@ -65,7 +63,7 @@ class Index:
         self,
         values: Union[List, pdarray, Strings, Categorical, pd.Index, "Index"],
         name: Optional[str] = None,
-        allow_list=False,
+        as_list=False,
         max_list_size=1000,
     ):
         self.max_list_size = max_list_size
@@ -81,14 +79,15 @@ class Index:
             self.dtype = self.values.dtype
             self.name = name if name else values.name
         elif isinstance(values, List):
-            if allow_list:
+            if as_list:
                 if len(values) <= max_list_size:
                     self.values = values
                     self.size = len(values)
                     self.dtype = self._dtype_of_list_values(values)
                 else:
                     raise ValueError(
-                        f"Cannot create Index because list size {len(values)} exceeds max_list_size {self.max_list_size}."
+                        f"Cannot create Index because list size {len(values)} "
+                        f"exceeds max_list_size {self.max_list_size}."
                     )
             else:
                 values = array(values)
@@ -133,9 +132,10 @@ class Index:
         if isinstance(lst, list):
             d = dtype(type(lst[0]))
             for item in lst:
-                assert (
-                    dtype(type(item)) == d
-                ), f"Values of Index must all be same type.  Types {d} and {dtype(type(item))} do not match."
+                assert dtype(type(item)) == d, (
+                    f"Values of Index must all be same type.  "
+                    f"Types {d} and {dtype(type(item))} do not match."
+                )
             return d
         else:
             raise TypeError("Index Types must match")
@@ -483,7 +483,7 @@ class Index:
         from arkouda.io import _file_type_to_int, _mode_str_to_int
 
         if isinstance(self.values, list):
-            raise TypeError(f"Unable to write Index to hdf when values are a list.")
+            raise TypeError("Unable to write Index to hdf when values are a list.")
 
         index_data = [
             self.values.name
@@ -665,7 +665,7 @@ class Index:
         determine the file format.
         """
         if isinstance(self.values, list):
-            raise TypeError(f"Unable to write Index to parquet when values are a list.")
+            raise TypeError("Unable to write Index to parquet when values are a list.")
 
         return self.values.to_parquet(prefix_path, dataset=dataset, mode=mode, compression=compression)
 
@@ -720,7 +720,7 @@ class Index:
         - All CSV files must delimit rows using newline (`\n`) at this time.
         """
         if isinstance(self.values, list):
-            raise TypeError(f"Unable to write Index to csv when values are a list.")
+            raise TypeError("Unable to write Index to csv when values are a list.")
 
         return self.values.to_csv(prefix_path, dataset=dataset, col_delim=col_delim, overwrite=overwrite)
 
@@ -801,7 +801,7 @@ class Index:
         )
 
         if isinstance(self.values, list):
-            raise TypeError(f"Unable to save Index when values are a list.")
+            raise TypeError("Unable to save Index when values are a list.")
 
         if mode.lower() not in ["append", "truncate"]:
             raise ValueError("Allowed modes are 'truncate' and 'append'")
@@ -1146,7 +1146,7 @@ class MultiIndex(Index):
         )
 
         if isinstance(self.values, list):
-            raise TypeError(f"Unable update hdf when Index values are a list.")
+            raise TypeError("Unable update hdf when Index values are a list.")
 
         # determine the format (single/distribute) that the file was saved in
         file_type = _get_hdf_filetype(prefix_path + "*")

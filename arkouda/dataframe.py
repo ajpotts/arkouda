@@ -1558,38 +1558,8 @@ class DataFrame(UserDict):
         >>> df.columns
         Index(array(['col1', 'col2']), dtype='<U0')
         """
-        return Index(self._columns)
+        return Index(self._columns, as_list=True)
 
-    @property
-    def column_names(self):
-        """
-        A list of column names of the dataframe.
-
-        Returns
-        -------
-        list of str
-            A list of column names of the dataframe.
-
-        Examples
-        --------
-
-        >>> import arkouda as ak
-        >>> ak.connect()
-        >>> df = ak.DataFrame({'col1': [1, 2], 'col2': [3, 4]})
-        >>> df
-
-        +----+--------+--------+
-        |    |   col1 |   col2 |
-        +====+========+========+
-        |  0 |      1 |      3 |
-        +----+--------+--------+
-        |  1 |      2 |      4 |
-        +----+--------+--------+
-
-        >>> df.columns
-        ['col1', 'col2']
-        """
-        return self._columns
 
     @property
     def index(self):
@@ -3694,9 +3664,7 @@ class DataFrame(UserDict):
             res._size = self._nrows
             res._bytes = self._bytes
             res._empty = self._empty
-            res._columns = self._columns[
-                :
-            ]  # if this is not a slice, droping columns modifies both
+            res._columns = self._columns[:]  # if this is not a slice, droping columns modifies both
 
             for key, val in self.items():
                 res[key] = val[:]
