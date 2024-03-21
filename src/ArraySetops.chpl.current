@@ -387,8 +387,6 @@ module ArraySetops
       const ref b = idx2;
       const ref bVal = val2;
 
-      var release: sync bool; // barrier release
-
       // Allocate arrays representing a table of statistics.
       // Thes statistics represent a value ranges used to chunk up the data in a and b.
       // The maximum table size will be 5 * numLocales.
@@ -505,7 +503,7 @@ module ArraySetops
           const aMax = a[aDom.last];
           const bMax = b[bDom.last];
 
-          forall i in 0..<len{
+          coforall i in 0..<len{
             if(!aComputed[i]){
               const valueToFind: t = values[i];
               if(valueToFind == aMin){
@@ -590,7 +588,7 @@ module ArraySetops
         var sum: int = 0;
         var retLoc: int = 0;
 
-        for i in 0..<len{
+        for i in 0..<(len){
 
           const size : int = aSize[i] + bSize[i];
 
@@ -613,6 +611,7 @@ module ArraySetops
             needsSplit[i] = true;
             // Reset sum to the amount of the chunk that did not fit on this locale.
             sum = size - (segs[retLoc] - sum);
+            //sum += size - segs[Locales[retLoc].id];
             retLoc += 1;
           }else{
             // The data needs to be sent to the next locale.
@@ -673,16 +672,10 @@ module ArraySetops
         return (guessIndex1, guessIndex2, max(val1, val2));
       }
 
-      // Writing to release sync variables allows 
-      begin release.writeEF(true);
-
       //  Determine split points for cases when the segment needs to be divided between locales.
       coforall loc in Locales with (const ref a, const ref b, const ref needsSplit, const ref aSize, const ref bSize, ref len, ref values, ref aComputed, ref aLocId, ref aIndex, ref bComputed, ref bLocId, ref bIndex){
         on loc {
-          // len can be incremented be we only need to loop over the table entries that are already defined.
-          const startingLen: int = len;
-
-          forall i in 0..<startingLen with (ref len){
+          for i in 0..<(len){
             if(needsSplit[i] == true ){
               if (aLocId[i] == here.id && aSize[i] > bSize[i]) {
                 const k : int = returnSize[i];
@@ -694,8 +687,6 @@ module ArraySetops
  
                 const (aSplitIndex,bSplitIndex, splitVal): (int, int, t) = findMinKLocations(k, a, b,  aLow, aHigh, bLow, bHigh);
 
-                release.readFE();
-
                 values[len] = splitVal;
                 aComputed[len] = true;
                 aLocId[len] = here.id;
@@ -705,8 +696,6 @@ module ArraySetops
                 bIndex[len] = bSplitIndex;
 
                 len += 1;
-
-                release.writeEF(true);
 
               }else if(bLocId[i] == here.id && bSize[i] >= aSize[i]) {
                 const k : int = returnSize[i];
@@ -718,8 +707,6 @@ module ArraySetops
 
                 const (bSplitIndex, aSplitIndex, splitVal): (int, int, t) = findMinKLocations(k, b, a,  bLow, bHigh, aLow, aHigh);
 
-                release.readFE();
-
                 values[len] = splitVal;
                 aComputed[len] = true;
                 aLocId[len] = -1;
@@ -729,8 +716,6 @@ module ArraySetops
                 bIndex[len] = bSplitIndex;
 
                 len += 1;
-
-                release.writeEF(true);
               }
             }
           }
@@ -764,7 +749,7 @@ module ArraySetops
 
               //  Only sort if both a and b contribute some values.
               //  Otherwise, no sort is needed b/c the input indices are assumed sorted.
-              if((aSegSize > 0) && (bSegSize > 0)){
+              if(aSegSize > 0 && bSegSize > 0){
                 const tmpSize : int = aSegSize + bSegSize;
                 var tmp: [0..<tmpSize] (t, t2);
 
@@ -776,14 +761,19 @@ module ArraySetops
                 const writeToResultSlice = aSegStarts[i]..#tmpSize;
                 returnIdx[writeToResultSlice] = [(key, val) in tmp] key;
                 returnVals[writeToResultSlice] = [(key, val) in tmp] val;
-              }else if(aSegSize > 0){
-                const writeAToResultSlice = aSegStarts[i]..#aSegSize;
-                returnIdx[writeAToResultSlice] = a[aStartIndex..#aSegSize];
-                returnVals[writeAToResultSlice] = aVal[aStartIndex..#aSegSize];
-              }else if(bSegSize > 0){
-                const writeBToResultSlice = bSegStarts[i]..#bSegSize;
-                returnIdx[writeBToResultSlice] = b[bStartIndex..#bSegSize];
-                returnVals[writeBToResultSlice] = bVal[bStartIndex..#bSegSize];
+              }else{
+                // No need to sort first, just copy in the data.
+                if(aSegSize > 0){
+                  const writeAToResultSlice = aSegStarts[i]..#aSegSize;
+                  returnIdx[writeAToResultSlice] = a[aStartIndex..#aSegSize];
+                  returnVals[writeAToResultSlice] = aVal[aStartIndex..#aSegSize];
+                }
+
+                if(bSegSize > 0){
+                  const writeBToResultSlice = bSegStarts[i]..#bSegSize;
+                  returnIdx[writeBToResultSlice] = a[bStartIndex..#bSegSize];
+                  returnVals[writeBToResultSlice] = aVal[bStartIndex..#bSegSize];
+                }
               }
             }
           }
