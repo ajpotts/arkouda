@@ -51,3 +51,5 @@ from numpy import (  # noqa
     uint32,
     uint64,
 )
+
+from ._numpy import *
