@@ -419,6 +419,46 @@ module ArraySetops
       // There will be at least 4 * numLocales because we include the max and min of each array on each locale.
       var len: int = 4 * numLocales;
 
+      proc writeAll(){
+
+        writeln("values");
+        writeln(values);
+        
+        writeln("aComputed");
+        writeln(aComputed);
+
+        writeln("aLocId");
+        writeln(aLocId);
+        
+        writeln("aIndex");
+        writeln(aIndex);
+
+        writeln("aSize");
+        writeln(aSize);
+
+        writeln("bComputed");
+        writeln(bComputed);
+
+        writeln("bLocId");
+        writeln(bLocId);
+
+        writeln("bIndex");
+        writeln(bIndex);
+
+        writeln("bSize");
+        writeln(bSize);
+        
+        writeln("returnLocId");
+        writeln(returnLocId);
+        
+        writeln("needsSplit");
+        writeln(needsSplit);
+        
+        writeln("returnSize");
+        writeln(returnSize);
+        
+      }
+
       // Permute the array arr by the permutation perm, only permuting the first len elements.
       proc permuteInPlace(arr: [?D] ?t, perm : [?D2] int, len : int) {
         // Only permute the first len values:
@@ -666,80 +706,176 @@ module ArraySetops
           }if(val1 < val2 && val2 <= arry1[guessIndex1+1]){
             return (guessIndex1, guessIndex2, max(val1, val2));
           }else{
+            writeln("update");
+            writeln("guessIndex1");
+            writeln(guessIndex1);
+            writeln("guessIndex2");
+            writeln(guessIndex2);            
             update();
           }
         }
-
-        return (guessIndex1, guessIndex2, max(val1, val2));
+// The problem is that this need to return both values, max and min.
+        return (guessIndex1, guessIndex2, min(val1, val2));
       }
 
       // Writing to release sync variables allows 
       begin release.writeEF(true);
 
       //  Determine split points for cases when the segment needs to be divided between locales.
-      coforall loc in Locales with (const ref a, const ref b, const ref needsSplit, const ref aSize, const ref bSize, ref len, ref values, ref aComputed, ref aLocId, ref aIndex, ref bComputed, ref bLocId, ref bIndex){
+      for loc in Locales {// with (const ref a, const ref b, const ref needsSplit, const ref aSize, const ref bSize, ref len, ref values, ref aComputed, ref aLocId, ref aIndex, ref bComputed, ref bLocId, ref bIndex){
         on loc {
-          // len can be incremented be we only need to loop over the table entries that are already defined.
+          // len can be incremented but we only need to loop over the table entries that are already defined.
           const startingLen: int = len;
 
-          forall i in 0..<startingLen with (ref len){
+          for i in 0..<startingLen{// with (ref len){
             if(needsSplit[i] == true ){
-              if (aLocId[i] == here.id && aSize[i] > bSize[i]) {
-                const k : int = returnSize[i];
-                const aLow : int = aIndex[i];
-                const aHigh : int = min(aLow + aSize[i] - 1, aLow + k);
 
-                const bLow : int = bIndex[i];
-                const bHigh : int = min(bLow + bSize[i] - 1, bLow + k);
- 
-                const (aSplitIndex,bSplitIndex, splitVal): (int, int, t) = findMinKLocations(k, a, b,  aLow, aHigh, bLow, bHigh);
+              const k: int = returnSize[i];
+              const aSz: int = aSize[i];
+              const bSz: int = bSize[i];
+              writeln("\n\n");
+              writeln(here.id);
+              writeln("i");
+              writeln(i);
+              writeln("aSz");
+              writeln(aSz);
+              writeln("bSz");
+              writeln(bSz);
+              writeln("k");
+              writeln(k);
 
-                release.readFE();
+              if (aLocId[i] == here.id){
+                if(bSz == 0){
 
-                values[len] = splitVal;
-                aComputed[len] = true;
-                aLocId[len] = here.id;
-                aIndex[len] = aSplitIndex;
-                bComputed[len] = true;
-                bLocId[len] = -1;
-                bIndex[len] = bSplitIndex;
+                  const aIdx: int = aIndex[i] + k;
 
-                len += 1;
+                  release.readFE();
 
-                release.writeEF(true);
+                  values[len] = a[aIdx];
+                  aComputed[len] = true;
+                  aLocId[len] = here.id;
+                  aIndex[len] = aIdx;
+                  bComputed[len] = true;
+                  bLocId[len] = -1;
+                  bIndex[len] = bIndex[i];
 
-              }else if(bLocId[i] == here.id && bSize[i] >= aSize[i]) {
-                const k : int = returnSize[i];
-                const aLow : int = aIndex[i];
-                const aHigh : int = min(aLow + aSize[i] - 1, aLow + k);
+                  len += 1;
 
-                const bLow : int = bIndex[i];
-                const bHigh : int = min(bLow + bSize[i] - 1, bLow + k);
+                  release.writeEF(true);
+                }else if(aSz > bSz) {
 
-                const (bSplitIndex, aSplitIndex, splitVal): (int, int, t) = findMinKLocations(k, b, a,  bLow, bHigh, aLow, aHigh);
+                  const aLow : int = aIndex[i];
+                  const aHigh : int = min(aLow + aSz - 1, aLow + k, aLow);
 
-                release.readFE();
+                  const bLow : int = bIndex[i];
+                  const bHigh : int = min(bLow + bSz - 1, bLow + k, bLow);
+  
+                  const (aSplitIndex,bSplitIndex, splitVal): (int, int, t) = findMinKLocations(k, a, b,  aLow, aHigh, bLow, bHigh);
 
-                values[len] = splitVal;
-                aComputed[len] = true;
-                aLocId[len] = -1;
-                aIndex[len] = aSplitIndex;
-                bComputed[len] = true;
-                bLocId[len] = here.id;
-                bIndex[len] = bSplitIndex;
+                  writeln("\n case 1: ");
 
-                len += 1;
+                  writeln("aSplitIndex");
+                  writeln(aSplitIndex);
+                  writeln("bSplitIndex");
+                  writeln(bSplitIndex);
+                  writeln("splitVal");
+                  writeln(splitVal);
+                  writeln("aLow");
+                  writeln(aLow);
+                  writeln("bLow");
+                  writeln(bLow);
+                  writeln("aHigh");
+                  writeln(aHigh);
+                  writeln("bHigh");
+                  writeln(bHigh);
 
-                release.writeEF(true);
+                  release.readFE();
+
+                  values[len] = splitVal;
+                  aComputed[len] = true;
+                  aLocId[len] = here.id;
+                  aIndex[len] = aSplitIndex;
+                  bComputed[len] = true;
+                  bLocId[len] = -1;
+                  bIndex[len] = bSplitIndex;
+
+                  len += 1;
+
+                  release.writeEF(true);
+                }
+              }else if(bLocId[i] == here.id){
+                if(aSz == 0){
+                  const bIdx: int = bIndex[i] + k;
+
+                  release.readFE();
+
+                  values[len] = b[bIdx];
+                  aComputed[len] = true;
+                  aLocId[len] = -1;
+                  aIndex[len] = aIndex[i];
+                  bComputed[len] = true;
+                  bLocId[len] = here.id;
+                  bIndex[len] = bIdx;
+
+                  len += 1;
+
+                  release.writeEF(true);
+                }else if( bSz >= aSz) {
+
+                  const aLow : int = aIndex[i];
+                  const aHigh : int = min(aLow + aSz - 1, aLow + k);
+
+                  const bLow : int = bIndex[i];
+                  const bHigh : int = min(bLow + bSz - 1, bLow + k);
+
+                  const (bSplitIndex, aSplitIndex, splitVal): (int, int, t) = findMinKLocations(k, b, a,  bLow, bHigh, aLow, aHigh);
+
+                  writeln("\n case 2: ");
+                  writeln("aSplitIndex");
+                  writeln(aSplitIndex);
+                  writeln("bSplitIndex");
+                  writeln(bSplitIndex);
+                  writeln("splitVal");
+                  writeln(splitVal);
+                  writeln("aLow");
+                  writeln(aLow);
+                  writeln("bLow");
+                  writeln(bLow);
+                  writeln("aHigh");
+                  writeln(aHigh);
+                  writeln("bHigh");
+                  writeln(bHigh);
+
+                  release.readFE();
+
+                  values[len] = splitVal;
+                  aComputed[len] = true;
+                  aLocId[len] = -1;
+                  aIndex[len] = aSplitIndex;
+                  bComputed[len] = true;
+                  bLocId[len] = here.id;
+                  bIndex[len] = bSplitIndex;
+
+                  len += 1;
+
+                  release.writeEF(true);
+                }
               }
             }
           }
         }
       }
 
+      writeln("\n\nWrite 1:");
+      writeAll();
+
       sortAndUpdateStats();
       updateRetLocales();
 
+      writeln("\n\nWrite 2:");
+      writeAll();
+
+      //  Because we send ties to the same locale, segs can be off by a small amount and needs to be recalculated.
       var updatedSegs: [PrivateSpace] int;
       for i in 0..len{
         updatedSegs[returnLocId[i]] += aSize[i] + bSize[i];
@@ -748,13 +884,27 @@ module ArraySetops
       var aSegStarts : [D] int = (+ scan returnSize) - returnSize;
       var bSegStarts : [D] int = aSegStarts + aSize;
 
-      coforall loc in Locales with (const ref a, const ref b, const ref updatedSegs, const ref returnLocId, const ref aIndex, const ref aSize, const ref bIndex, const ref bSize, const ref aSegStarts, const ref bSegStarts, ref returnIdx, ref returnVals) {
+      writeln("\na");
+      writeln(a);
+      writeln("\nb");
+      writeln(b);
+      writeAll();
+      writeln("\naSegStarts");
+      writeln(aSegStarts);
+      writeln("\nbSegStarts");
+      writeln(bSegStarts);
+
+      for loc in Locales{// with (const ref a, const ref b, const ref updatedSegs, const ref returnLocId, const ref aIndex, const ref aSize, const ref bIndex, const ref bSize, const ref aSegStarts, const ref bSegStarts, ref returnIdx, ref returnVals) {
         on loc {
 
           const returnIdxDom = returnIdx.localSubdomain();
 
-          forall i in 0..<len{
+          for i in 0..<len{
             if((returnLocId[i] == here.id)){
+
+              writeln("i");
+              writeln(i);
+
 
               const aStartIndex = aIndex[i];
               const aSegSize = aSize[i];
@@ -762,18 +912,33 @@ module ArraySetops
               const bStartIndex = bIndex[i];
               const bSegSize = bSize[i];
 
+              writeln("aStartIndex");
+              writeln(aStartIndex);
+              writeln("bStartIndex");
+              writeln(bStartIndex);
+
               //  Only sort if both a and b contribute some values.
               //  Otherwise, no sort is needed b/c the input indices are assumed sorted.
               if((aSegSize > 0) && (bSegSize > 0)){
                 const tmpSize : int = aSegSize + bSegSize;
-                var tmp: [0..<tmpSize] (t, t2);
+                var tmp: [0..#tmpSize] (t, t2);
+
+
+
+                writeln("tmpSize:");
+                writeln(tmpSize);
 
                 tmp[0..#aSegSize] = [(key,val) in zip(a[aStartIndex..#aSegSize], aVal[aStartIndex..#aSegSize])] (key,val);
                 tmp[aSegSize..#bSegSize] = [(key,val) in zip(b[bStartIndex..#bSegSize], bVal[bStartIndex..#bSegSize])] (key,val);
+                writeln("tmp");
+                writeln(tmp);
 
                 twoArrayRadixSort(tmp, new KeysRanksComparator());
+                writeln(tmp);
+                writeln("writeToResultSlice");
 
                 const writeToResultSlice = aSegStarts[i]..#tmpSize;
+                writeln(writeToResultSlice);
                 returnIdx[writeToResultSlice] = [(key, val) in tmp] key;
                 returnVals[writeToResultSlice] = [(key, val) in tmp] val;
               }else if(aSegSize > 0){
