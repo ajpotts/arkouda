@@ -882,7 +882,7 @@ module ArraySetops
       }
       segs = updatedSegs;
       sortAndUpdateStats();
-
+      // The other potential problem is that segs is updated and needs to be used to recalcuate returnSize, but in an efficient way that doesn't needlessly sort
       var aSegStarts : [D] int = (+ scan returnSize) - returnSize;
       var bSegStarts : [D] int = aSegStarts + aSize;
 
