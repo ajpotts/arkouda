@@ -676,7 +676,7 @@ module ArraySetops
         var rangeHigh1 : int = high1;
 
         var guessIndex1: int = floor((high1 + low1)/2):int;
-        var guessIndex2: int = low2 + k - (guessIndex1  - low1);
+        var guessIndex2: int = low2 + k - (guessIndex1  - low1) -1;
         var val1: int = arry1[guessIndex1];
         var val2: int = arry2[guessIndex2];
 
@@ -688,7 +688,7 @@ module ArraySetops
           }
 
           guessIndex1 = floor((rangeHigh1 + rangeLow1)/2): int ;
-          guessIndex2 = low2 + k - (guessIndex1  - low1);
+          guessIndex2 = low2 + k - (guessIndex1  - low1) - 1;
 
           val1 = arry1[guessIndex1];
           val2 = arry2[guessIndex2];
@@ -880,6 +880,8 @@ module ArraySetops
       for i in 0..len{
         updatedSegs[returnLocId[i]] += aSize[i] + bSize[i];
       }
+      segs = updatedSegs;
+      sortAndUpdateStats();
 
       var aSegStarts : [D] int = (+ scan returnSize) - returnSize;
       var bSegStarts : [D] int = aSegStarts + aSize;
