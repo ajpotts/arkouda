@@ -722,27 +722,17 @@ module ArraySetops
       begin release.writeEF(true);
 
       //  Determine split points for cases when the segment needs to be divided between locales.
-      for loc in Locales {// with (const ref a, const ref b, const ref needsSplit, const ref aSize, const ref bSize, ref len, ref values, ref aComputed, ref aLocId, ref aIndex, ref bComputed, ref bLocId, ref bIndex){
+      for loc in Locales{//} with (const ref a, const ref b, const ref needsSplit, const ref aSize, const ref bSize, ref len, ref values, ref aComputed, ref aLocId, ref aIndex, ref bComputed, ref bLocId, ref bIndex){
         on loc {
           // len can be incremented but we only need to loop over the table entries that are already defined.
           const startingLen: int = len;
 
-          for i in 0..<startingLen{// with (ref len){
+          for i in 0..<startingLen{//with (ref len){
             if(needsSplit[i] == true ){
 
               const k: int = returnSize[i];
               const aSz: int = aSize[i];
               const bSz: int = bSize[i];
-              writeln("\n\n");
-              writeln(here.id);
-              writeln("i");
-              writeln(i);
-              writeln("aSz");
-              writeln(aSz);
-              writeln("bSz");
-              writeln(bSz);
-              writeln("k");
-              writeln(k);
 
               if (aLocId[i] == here.id){
                 if(bSz == 0){
@@ -771,23 +761,6 @@ module ArraySetops
                   const bHigh : int = min(bLow + bSz - 1, bLow + k, bLow);
   
                   const (aSplitIndex,bSplitIndex, splitVal): (int, int, t) = findMinKLocations(k, a, b,  aLow, aHigh, bLow, bHigh);
-
-                  writeln("\n case 1: ");
-
-                  writeln("aSplitIndex");
-                  writeln(aSplitIndex);
-                  writeln("bSplitIndex");
-                  writeln(bSplitIndex);
-                  writeln("splitVal");
-                  writeln(splitVal);
-                  writeln("aLow");
-                  writeln(aLow);
-                  writeln("bLow");
-                  writeln(bLow);
-                  writeln("aHigh");
-                  writeln(aHigh);
-                  writeln("bHigh");
-                  writeln(bHigh);
 
                   release.readFE();
 
@@ -830,22 +803,6 @@ module ArraySetops
 
                   const (bSplitIndex, aSplitIndex, splitVal): (int, int, t) = findMinKLocations(k, b, a,  bLow, bHigh, aLow, aHigh);
 
-                  writeln("\n case 2: ");
-                  writeln("aSplitIndex");
-                  writeln(aSplitIndex);
-                  writeln("bSplitIndex");
-                  writeln(bSplitIndex);
-                  writeln("splitVal");
-                  writeln(splitVal);
-                  writeln("aLow");
-                  writeln(aLow);
-                  writeln("bLow");
-                  writeln(bLow);
-                  writeln("aHigh");
-                  writeln(aHigh);
-                  writeln("bHigh");
-                  writeln(bHigh);
-
                   release.readFE();
 
                   values[len] = splitVal;
@@ -866,14 +823,7 @@ module ArraySetops
         }
       }
 
-      writeln("\n\nWrite 1:");
-      writeAll();
-
       sortAndUpdateStats();
-      // updateRetLocales();
-
-      // writeln("\n\nWrite 2:");
-      // writeAll();
 
       //  Because we send ties to the same locale, segs can be off by a small amount and needs to be recalculated.
       var updatedSegs: [PrivateSpace] int;
@@ -881,8 +831,9 @@ module ArraySetops
         updatedSegs[returnLocId[i]] += aSize[i] + bSize[i];
       }
       segs = updatedSegs;
-      // sortAndUpdateStats();
+
       updateRetLocales();
+
       // The other potential problem is that segs is updated and needs to be used to recalcuate returnSize, but in an efficient way that doesn't needlessly sort
       var aSegStarts : [D] int = (+ scan returnSize) - returnSize;
       var bSegStarts : [D] int = aSegStarts + aSize;
