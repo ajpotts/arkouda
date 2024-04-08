@@ -387,8 +387,6 @@ module ArraySetops
       const ref b = idx2;
       const ref bVal = val2;
 
-      var release: sync bool; // barrier release
-
       // Allocate arrays representing a table of statistics.
       // Thes statistics represent a value ranges used to chunk up the data in a and b.
       // The maximum table size will be 5 * numLocales.
@@ -714,10 +712,11 @@ module ArraySetops
       }
 
       // Writing to release sync variables allows 
-      begin release.writeEF(true);
+      var release: sync int; // barrier release
+      begin release.writeEF(0);
 
       //  Determine split points for cases when the segment needs to be divided between locales.
-      for loc in Locales{// with (const ref a, const ref b, const ref needsSplit, const ref aSize, const ref bSize, const ref returnSize, ref len, ref values, ref aComputed, ref aLocId, ref aIndex, ref bComputed, ref bLocId, ref bIndex){
+      coforall loc in Locales with (const ref a, const ref b, const ref needsSplit, const ref aSize, const ref bSize, const ref returnSize, ref len, ref values, ref aComputed, ref aLocId, ref aIndex, ref bComputed, ref bLocId, ref bIndex){
         on loc {
           // len can be incremented but we only need to loop over the table entries that are already defined.
           const startingLen: int = len;
@@ -734,7 +733,8 @@ module ArraySetops
 
                   const aIdx: int = aIndex[i] + k;
 
-                  release.readFE();
+                  var int_sync = release.readFE();
+                  writeln("\nwrite case 1: ", int_sync, " on ", here.id);
 
                   values[len] = a[aIdx];
                   aComputed[len] = true;
@@ -746,7 +746,7 @@ module ArraySetops
 
                   len += 1;
 
-                  release.writeEF(true);
+                  release.writeEF(int_sync + 1);
                 }else if(aSz > bSz) {
 
                   const aLow : int = aIndex[i];
@@ -757,7 +757,8 @@ module ArraySetops
   
                   const (aSplitIndex,bSplitIndex, splitVal): (int, int, t) = findMinKLocations(k, a, b,  aLow, aHigh, bLow, bHigh);
 
-                  release.readFE();
+                  var int_sync = release.readFE();
+                  writeln("\nwrite case 2: ", int_sync, " on ", here.id);
 
                   values[len] = splitVal;
                   aComputed[len] = true;
@@ -769,13 +770,14 @@ module ArraySetops
 
                   len += 1;
 
-                  release.writeEF(true);
+                  release.writeEF(int_sync + 1);
                 }
               }else if(bLocId[i] == here.id){
                 if(aSz == 0){
                   const bIdx: int = bIndex[i] + k;
 
-                  release.readFE();
+                  var int_sync = release.readFE();
+                  writeln("\nwrite case 3: ", int_sync, " on ", here.id);
 
                   values[len] = b[bIdx];
                   aComputed[len] = true;
@@ -787,7 +789,7 @@ module ArraySetops
 
                   len += 1;
 
-                  release.writeEF(true);
+                  release.writeEF(int_sync + 1);
                 }else if( bSz >= aSz) {
 
                   const aLow : int = aIndex[i];
@@ -798,7 +800,8 @@ module ArraySetops
 
                   const (bSplitIndex, aSplitIndex, splitVal): (int, int, t) = findMinKLocations(k, b, a,  bLow, bHigh, aLow, aHigh);
 
-                  release.readFE();
+                  var int_sync = release.readFE();
+                  writeln("\nwrite case 4: ", int_sync, " on ", here.id);
 
                   values[len] = splitVal;
                   aComputed[len] = true;
@@ -810,7 +813,7 @@ module ArraySetops
 
                   len += 1;
 
-                  release.writeEF(true);
+                  release.writeEF(int_sync + 1);
                 }
               }
             }
@@ -822,12 +825,9 @@ module ArraySetops
 
       //  Because we send ties to the same locale, segs can be off by a small amount and needs to be recalculated.
       segs = 0;
-      // var updatedSegs: [PrivateSpace] int;
       for i in 0..len{
         segs[returnLocId[i]] += aSize[i] + bSize[i];
-        // updatedSegs[returnLocId[i]] += aSize[i] + bSize[i];
       }
-      // segs = updatedSegs;
 
       updateRetLocales();
 
