@@ -722,12 +722,12 @@ module ArraySetops
       begin release.writeEF(true);
 
       //  Determine split points for cases when the segment needs to be divided between locales.
-      for loc in Locales{//} with (const ref a, const ref b, const ref needsSplit, const ref aSize, const ref bSize, ref len, ref values, ref aComputed, ref aLocId, ref aIndex, ref bComputed, ref bLocId, ref bIndex){
+      for loc in Locales{// with (const ref a, const ref b, const ref needsSplit, const ref aSize, const ref bSize, ref len, ref values, ref aComputed, ref aLocId, ref aIndex, ref bComputed, ref bLocId, ref bIndex, const ref returnSize){
         on loc {
           // len can be incremented but we only need to loop over the table entries that are already defined.
           const startingLen: int = len;
 
-          for i in 0..<startingLen{//with (ref len){
+          forall i in 0..<startingLen with (ref len){
             if(needsSplit[i] == true ){
 
               const k: int = returnSize[i];
