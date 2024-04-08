@@ -705,12 +705,7 @@ module ArraySetops
             return (guessIndex1, guessIndex2, max(val1, val2));
           }if(val1 < val2 && val2 <= arry1[guessIndex1+1]){
             return (guessIndex1, guessIndex2, max(val1, val2));
-          }else{
-            writeln("update");
-            writeln("guessIndex1");
-            writeln(guessIndex1);
-            writeln("guessIndex2");
-            writeln(guessIndex2);            
+          }else{      
             update();
           }
         }
@@ -722,7 +717,7 @@ module ArraySetops
       begin release.writeEF(true);
 
       //  Determine split points for cases when the segment needs to be divided between locales.
-      for loc in Locales{// with (const ref a, const ref b, const ref needsSplit, const ref aSize, const ref bSize, ref len, ref values, ref aComputed, ref aLocId, ref aIndex, ref bComputed, ref bLocId, ref bIndex, const ref returnSize){
+      for loc in Locales{// with (const ref a, const ref b, const ref needsSplit, const ref aSize, const ref bSize, const ref returnSize, ref len, ref values, ref aComputed, ref aLocId, ref aIndex, ref bComputed, ref bLocId, ref bIndex){
         on loc {
           // len can be incremented but we only need to loop over the table entries that are already defined.
           const startingLen: int = len;
@@ -826,11 +821,13 @@ module ArraySetops
       sortAndUpdateStats();
 
       //  Because we send ties to the same locale, segs can be off by a small amount and needs to be recalculated.
-      var updatedSegs: [PrivateSpace] int;
+      segs = 0;
+      // var updatedSegs: [PrivateSpace] int;
       for i in 0..len{
-        updatedSegs[returnLocId[i]] += aSize[i] + bSize[i];
+        segs[returnLocId[i]] += aSize[i] + bSize[i];
+        // updatedSegs[returnLocId[i]] += aSize[i] + bSize[i];
       }
-      segs = updatedSegs;
+      // segs = updatedSegs;
 
       updateRetLocales();
 
@@ -838,7 +835,7 @@ module ArraySetops
       var aSegStarts : [D] int = (+ scan returnSize) - returnSize;
       var bSegStarts : [D] int = aSegStarts + aSize;
 
-      coforall loc in Locales with (const ref a, const ref b, const ref updatedSegs, const ref returnLocId, const ref aIndex, const ref aSize, const ref bIndex, const ref bSize, const ref aSegStarts, const ref bSegStarts, ref returnIdx, ref returnVals) {
+      coforall loc in Locales with (const ref a, const ref b, const ref returnLocId, const ref aIndex, const ref aSize, const ref bIndex, const ref bSize, const ref aSegStarts, const ref bSegStarts, ref returnIdx, ref returnVals) {
         on loc {
 
           const returnIdxDom = returnIdx.localSubdomain();
