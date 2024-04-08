@@ -714,7 +714,7 @@ module ArraySetops
             update();
           }
         }
-// The problem is that this need to return both values, max and min.
+        // The problem is that this need to return both values, max and min.
         return (guessIndex1, guessIndex2, min(val1, val2));
       }
 
@@ -870,10 +870,10 @@ module ArraySetops
       writeAll();
 
       sortAndUpdateStats();
-      updateRetLocales();
+      // updateRetLocales();
 
-      writeln("\n\nWrite 2:");
-      writeAll();
+      // writeln("\n\nWrite 2:");
+      // writeAll();
 
       //  Because we send ties to the same locale, segs can be off by a small amount and needs to be recalculated.
       var updatedSegs: [PrivateSpace] int;
@@ -881,32 +881,19 @@ module ArraySetops
         updatedSegs[returnLocId[i]] += aSize[i] + bSize[i];
       }
       segs = updatedSegs;
-      sortAndUpdateStats();
+      // sortAndUpdateStats();
+      updateRetLocales();
       // The other potential problem is that segs is updated and needs to be used to recalcuate returnSize, but in an efficient way that doesn't needlessly sort
       var aSegStarts : [D] int = (+ scan returnSize) - returnSize;
       var bSegStarts : [D] int = aSegStarts + aSize;
 
-      writeln("\na");
-      writeln(a);
-      writeln("\nb");
-      writeln(b);
-      writeAll();
-      writeln("\naSegStarts");
-      writeln(aSegStarts);
-      writeln("\nbSegStarts");
-      writeln(bSegStarts);
-
-      for loc in Locales{// with (const ref a, const ref b, const ref updatedSegs, const ref returnLocId, const ref aIndex, const ref aSize, const ref bIndex, const ref bSize, const ref aSegStarts, const ref bSegStarts, ref returnIdx, ref returnVals) {
+      coforall loc in Locales with (const ref a, const ref b, const ref updatedSegs, const ref returnLocId, const ref aIndex, const ref aSize, const ref bIndex, const ref bSize, const ref aSegStarts, const ref bSegStarts, ref returnIdx, ref returnVals) {
         on loc {
 
           const returnIdxDom = returnIdx.localSubdomain();
 
-          for i in 0..<len{
+          forall i in 0..<len{
             if((returnLocId[i] == here.id)){
-
-              writeln("i");
-              writeln(i);
-
 
               const aStartIndex = aIndex[i];
               const aSegSize = aSize[i];
@@ -914,33 +901,18 @@ module ArraySetops
               const bStartIndex = bIndex[i];
               const bSegSize = bSize[i];
 
-              writeln("aStartIndex");
-              writeln(aStartIndex);
-              writeln("bStartIndex");
-              writeln(bStartIndex);
-
               //  Only sort if both a and b contribute some values.
               //  Otherwise, no sort is needed b/c the input indices are assumed sorted.
               if((aSegSize > 0) && (bSegSize > 0)){
                 const tmpSize : int = aSegSize + bSegSize;
                 var tmp: [0..#tmpSize] (t, t2);
 
-
-
-                writeln("tmpSize:");
-                writeln(tmpSize);
-
                 tmp[0..#aSegSize] = [(key,val) in zip(a[aStartIndex..#aSegSize], aVal[aStartIndex..#aSegSize])] (key,val);
                 tmp[aSegSize..#bSegSize] = [(key,val) in zip(b[bStartIndex..#bSegSize], bVal[bStartIndex..#bSegSize])] (key,val);
-                writeln("tmp");
-                writeln(tmp);
 
                 twoArrayRadixSort(tmp, new KeysRanksComparator());
-                writeln(tmp);
-                writeln("writeToResultSlice");
 
                 const writeToResultSlice = aSegStarts[i]..#tmpSize;
-                writeln(writeToResultSlice);
                 returnIdx[writeToResultSlice] = [(key, val) in tmp] key;
                 returnVals[writeToResultSlice] = [(key, val) in tmp] val;
               }else if(aSegSize > 0){
