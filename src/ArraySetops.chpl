@@ -374,6 +374,128 @@ module ArraySetops
       return (uIdx, summedVals);
     }
 
+    class partitionHelperTable{
+      param length: int = 0;
+      param maxLength: int = 0;
+      var D = 0..< 0;
+      type t;
+      // The number of values in the statistics table.
+      // There will be at least 4 * numLocales because we include the max and min of each array on each locale.
+      var len: int = 4 * numLocales;
+      var values: [D] t;
+      // Whether the statistics have been computed for this value using a.
+      var aComputed: [D] bool;
+      // Which locale supports the value in array a.
+      var aLocId: [D] int;
+      // Which index locates the value in array a, or the insertion location for the value in a.
+      var aIndex: [D] int;
+      // The number of elements in a that follow in the range of this value and the subsequent value.
+      var aSize: [D] int;
+      // Corresponding statistics for b....
+      var bComputed: [D] bool;
+      var bLocId: [D] int;
+      var bIndex: [D] int;
+      var bSize: [D] int;
+      // For the return arrays, which locale should support the data in this value range.
+      var returnLocId: [D] int;
+      // Whether the chunk of data will need to be split because it crosses two locales.
+      var needsSplit: [D] bool;
+      // The number of elements from this chunk to be written to the return arrays.
+      var returnSize: [D] int;
+
+      proc init(type t) {
+        writeln("\n\n\nInitializing...\n\n\n");
+        this.t = t;
+      }
+
+      proc initialize(){
+        // The number of values in the statistics table.
+        // There will be at least 4 * numLocales because we include the max and min of each array on each locale.
+        this.length = 4 * numLocales;
+
+        // Allocate arrays representing a table of statistics.
+        // Thes statistics represent a value ranges used to chunk up the data in a and b.
+        // The maximum table size will be 5 * numLocales.
+        this.D = 0..< (5 * numLocales);
+        // The index values, representing index ranges to use for chunking up the data.
+        var values: [D] this.t;
+        this.values = values;
+        // Whether the statistics have been computed for this value using a.
+        var aComputed: [D] bool;
+        this.aComputed = aComputed;
+        // Which locale supports the value in array a.
+        var aLocId: [D] int;
+        this.aLocId = aLocId;
+        // Which index locates the value in array a, or the insertion location for the value in a.
+        var aIndex: [D] int;
+        this.aIndex = aIndex;
+        // The number of elements in a that follow in the range of this value and the subsequent value.
+        var aSize: [D] int;
+        this.aSize = aSize;
+        // Corresponding statistics for b....
+        var bComputed: [D] bool;
+        this.bComputed = bComputed;
+        var bLocId: [D] int;
+        this.bLocId = bLocId;
+        var bIndex: [D] int;
+        this.bIndex = bIndex;
+        var bSize: [D] int;
+        this.bSize = bSize;
+        // For the return arrays, which locale should support the data in this value range.
+        var returnLocId: [D] int;
+        this.returnLocId = returnLocId;
+        // Whether the chunk of data will need to be split because it crosses two locales.
+        var needsSplit: [D] bool;
+        this.needsSplit = needsSplit;
+        // The number of elements from this chunk to be written to the return arrays.
+        var returnSize: [D] int;
+        this.returnSize = returnSize;
+
+      }
+
+      proc writeDebugStatements(){
+        writeln("\n\n\nTESTING\n\n\n");
+
+        writeln("values");
+        writeln(this.values);
+        
+        writeln("aComputed");
+        writeln(this.aComputed);
+
+        writeln("aLocId");
+        writeln(this.aLocId);
+        
+        writeln("aIndex");
+        writeln(this.aIndex);
+
+        writeln("aSize");
+        writeln(this.aSize);
+
+        writeln("bComputed");
+        writeln(this.bComputed);
+
+        writeln("bLocId");
+        writeln(this.bLocId);
+
+        writeln("bIndex");
+        writeln(this.bIndex);
+
+        writeln("bSize");
+        writeln(this.bSize);
+        
+        writeln("returnLocId");
+        writeln(this.returnLocId);
+        
+        writeln("needsSplit");
+        writeln(this.needsSplit);
+        
+        writeln("returnSize");
+        writeln(this.returnSize);
+      }
+
+
+    }
+
     proc mergePartitionHelper(const ref idx1: [?D] ?t, const ref idx2: [] t, const ref val1: [] ?t2, const ref val2: [] t2) throws {
       // combine two sorted lists of indices and apply the sort permutation to their associated values
       const allocSize = idx1.size + idx2.size;
@@ -381,11 +503,14 @@ module ArraySetops
       var returnVals = makeDistArray(allocSize, t2);
 
       // create refs to arrays so it's easier to swap them if we come up with a good heuristic
-      //  for which causes fewer data shuffles between locales
+      // for which causes fewer data shuffles between locales
       const ref a = idx1;
       const ref aVal = val1;
       const ref b = idx2;
       const ref bVal = val2;
+
+      var table = new partitionHelperTable(t);
+      table.writeDebugStatements();
 
       // Allocate arrays representing a table of statistics.
       // Thes statistics represent a value ranges used to chunk up the data in a and b.
