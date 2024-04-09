@@ -503,6 +503,7 @@ module ArraySetops
       var returnVals = makeDistArray(allocSize, t2);
 
       // create refs to arrays so it's easier to swap them if we come up with a good heuristic
+
       // for which causes fewer data shuffles between locales
       const ref a = idx1;
       const ref aVal = val1;
