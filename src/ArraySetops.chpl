@@ -380,10 +380,11 @@ module ArraySetops
       // Allocate arrays representing a table of statistics.
       // Thes statistics represent a value ranges used to chunk up the data in a and b.
       // The maximum table size will be 5 * numLocales.
-      var D = 0..< 0;
+
       // The number of values in the statistics table.
       // There will be at least 4 * numLocales because we include the max and min of each array on each locale.
-      var len: int = 4 * numLocales;
+      var len: int;
+      const D = 0..< (5 * numLocales);
       type t;
       var values: [D] t;
       // Whether the statistics have been computed for this value using a.
@@ -411,16 +412,16 @@ module ArraySetops
         this.t = t;
       }
 
-      proc initialize(nLocales: int){
+      proc initialize(){
         // The number of values in the statistics table.
         // There will be at least 4 * numLocales because we include the max and min of each array on each locale.
-        this.length = 4 * nLocales;
+        this.length = 4 * numLocales;
 
-
-        this.D = 0..< (5 * nLocales);
         // The index values, representing index ranges to use for chunking up the data.
         var values: [D] this.t;
         this.values = values;
+        writeln("debugging");
+        writeln(values);
         // Whether the statistics have been computed for this value using a.
         var aComputed: [D] bool;
         this.aComputed = aComputed;
@@ -482,6 +483,149 @@ module ArraySetops
         return perm;
       }
 
+      proc sortAndUpdateStats(){
+        this.sortAllInPlace();
+
+        // Replace any -1 in aLocId and bLocId:
+        // Since the arrays are sorted by value order, and the indices were assumed pre-sorted,
+        // the locales will be in increasing order.  Plus, the locales for the max and min of each locale
+        // are computed.  So, any missing locale values will be fall between computed values, and therefore
+        // can be imputed.
+        this.aLocId = max scan this.aLocId;
+        this.bLocId = max scan this.bLocId;
+
+        // Update sizes for each value range.
+        forall i in 0..<len{
+          if(!aComputed[i]){
+            // If the index was not computed, the value falls between locales in a.
+            // If the index was on a locale it would have been computed by the binary search above.
+            aSize[i] = 0;
+          }else if((i+1 >= len) || !aComputed[i+1]){
+            // If the following value was not computed, it falls between locales. The value is the max of a locale.
+            aSize[i] = 1;
+          }else if(aLocId[i] != aLocId[i+1]){
+            // If the locale is different than the following locale, this is the max of a locale.
+            aSize[i] = 1;
+          }else{
+            aSize[i] = aIndex[i+1] - aIndex[i];
+          }
+
+          if(!bComputed[i]){
+            bSize[i] = 0;
+          }else if((i+1 >= len) || !bComputed[i+1]){
+            bSize[i] = 1;
+          }else if(bLocId[i] != bLocId[i+1]){
+            bSize[i] = 1;
+          }else{
+            bSize[i] = bIndex[i+1] - bIndex[i];
+          }
+        }
+      }
+
+      proc setValue(i: int, val:t){
+        this.value[i] = val;
+      }
+
+      proc getValue(i: int){
+        return this.value[i];
+      }
+
+      proc setAComputed(i: int, val: bool){
+        this.aComputed[i] = val;
+      }
+
+      proc getAComputed(i: int){
+        return this.aComputed[i];
+      }
+
+      proc setALocId(i: int, val: int){
+        this.aLocId[i] = val;
+      }
+
+      proc getALocId(i: int){
+        return this.aLocId[i];
+      }
+
+      proc setAIndex(i: int, val: int){
+        this.aIndex[i] = val;
+      }
+
+      proc getAIndex(i: int){
+        return this.aIndex[i];
+      }
+
+      proc setAIndex(i: int, val: int){
+        this.aIndex[i] = val;
+      }
+
+      proc getAIndex(i: int){
+        return this.aIndex[i];
+      }
+
+      proc setASize(i: int, val: int){
+        this.aSize[i] = val;
+      }
+
+      proc getASize(i: int){
+        return this.aSize[i];
+      }
+
+      proc setBCompute(i: int, val: int){
+        this.bComputed[i] = val;
+      }
+
+      proc getBCompute(i: int){
+        return this.bComputed[i];
+      }
+
+      proc setBLocId(i: int, val: int){
+        this.bLocId[i] = val;
+      }
+
+      proc getBLocId(i: int){
+        return this.bLocId[i];
+      }
+
+      proc setBIndex(i: int, val: int){
+        this.bIndex[i] = val;
+      }
+
+      proc getBIndex(i: int){
+        return this.bIndex[i];
+      }
+
+      proc setBSize(i: int, val: int){
+        this.bSize[i] = val;
+      }
+
+      proc getBSize(i: int){
+        return this.bSize[i];
+      }
+
+      proc setReturnLocId(i: int, val: int){
+        this.returnLocId[i] = val;
+      }
+
+      proc getReturnLocId(i: int){
+        return this.returnLocId[i];
+      }
+
+      proc setNeedsSplit(i: int, val: int){
+        this.needsSplit[i] = val;
+      }
+
+      proc getNeedsSplit(i: int){
+        return this.needsSplit[i];
+      }
+
+      proc setReturnSize(i: int, val: int){
+        this.returnSize[i] = val;
+      }
+
+      proc getReturnSize(i: int){
+        return this.returnSize[i];
+      }
+
       proc writeDebugStatements(){
         writeln("\n\n\nTESTING\n\n\n");
 
@@ -540,7 +684,7 @@ module ArraySetops
       const ref bVal = val2;
 
       var table = new partitionHelperTable(t);
-      table.initialize(numLocales);
+      table.initialize();
       table.writeDebugStatements();
 
       // Allocate arrays representing a table of statistics.
