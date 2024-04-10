@@ -375,13 +375,16 @@ module ArraySetops
     }
 
     class partitionHelperTable{
-      param length: int = 0;
-      param maxLength: int = 0;
+      var length: int;
+      var maxLength: int;
+      // Allocate arrays representing a table of statistics.
+      // Thes statistics represent a value ranges used to chunk up the data in a and b.
+      // The maximum table size will be 5 * numLocales.
       var D = 0..< 0;
-      type t;
       // The number of values in the statistics table.
       // There will be at least 4 * numLocales because we include the max and min of each array on each locale.
       var len: int = 4 * numLocales;
+      type t;
       var values: [D] t;
       // Whether the statistics have been computed for this value using a.
       var aComputed: [D] bool;
@@ -408,15 +411,13 @@ module ArraySetops
         this.t = t;
       }
 
-      proc initialize(){
+      proc initialize(nLocales: int){
         // The number of values in the statistics table.
         // There will be at least 4 * numLocales because we include the max and min of each array on each locale.
-        this.length = 4 * numLocales;
+        this.length = 4 * nLocales;
 
-        // Allocate arrays representing a table of statistics.
-        // Thes statistics represent a value ranges used to chunk up the data in a and b.
-        // The maximum table size will be 5 * numLocales.
-        this.D = 0..< (5 * numLocales);
+
+        this.D = 0..< (5 * nLocales);
         // The index values, representing index ranges to use for chunking up the data.
         var values: [D] this.t;
         this.values = values;
@@ -451,6 +452,34 @@ module ArraySetops
         var returnSize: [D] int;
         this.returnSize = returnSize;
 
+      }
+
+      // Permute the array arr by the permutation perm, only permuting the first len elements.
+      proc permuteInPlace(arr: [?D] ?t, perm : [?D2] int, len : int) {
+        // Only permute the first len values:
+        const tmp: [0..<len] t  = arr[0..<len];
+        arr[0..<len] = tmp[perm];
+      }
+
+      proc sortAllInPlace(){
+        var tmp: [0..<len] (t, int) = [(key,val) in zip(values[0..<len], 0..<len)] (key, val);
+        twoArrayRadixSort(tmp, new KeysRanksComparator());
+        const perm: [0..<len] int = [(v,i) in tmp] i;
+
+        permuteInPlace(values, perm, len);
+        permuteInPlace(aComputed, perm, len);
+        permuteInPlace(aLocId, perm, len);
+        permuteInPlace(aIndex, perm, len);
+        permuteInPlace(aSize, perm, len);
+        permuteInPlace(bComputed, perm, len);
+        permuteInPlace(bLocId, perm, len);
+        permuteInPlace(bIndex, perm, len);
+        permuteInPlace(bSize, perm, len);
+        permuteInPlace(returnLocId, perm, len);
+        permuteInPlace(needsSplit, perm, len);
+        permuteInPlace(returnSize, perm, len);
+
+        return perm;
       }
 
       proc writeDebugStatements(){
@@ -511,6 +540,7 @@ module ArraySetops
       const ref bVal = val2;
 
       var table = new partitionHelperTable(t);
+      table.initialize(numLocales);
       table.writeDebugStatements();
 
       // Allocate arrays representing a table of statistics.
@@ -542,46 +572,6 @@ module ArraySetops
       // The number of values in the statistics table.
       // There will be at least 4 * numLocales because we include the max and min of each array on each locale.
       var len: int = 4 * numLocales;
-
-      proc writeAll(){
-
-        writeln("values");
-        writeln(values);
-        
-        writeln("aComputed");
-        writeln(aComputed);
-
-        writeln("aLocId");
-        writeln(aLocId);
-        
-        writeln("aIndex");
-        writeln(aIndex);
-
-        writeln("aSize");
-        writeln(aSize);
-
-        writeln("bComputed");
-        writeln(bComputed);
-
-        writeln("bLocId");
-        writeln(bLocId);
-
-        writeln("bIndex");
-        writeln(bIndex);
-
-        writeln("bSize");
-        writeln(bSize);
-        
-        writeln("returnLocId");
-        writeln(returnLocId);
-        
-        writeln("needsSplit");
-        writeln(needsSplit);
-        
-        writeln("returnSize");
-        writeln(returnSize);
-        
-      }
 
       // Permute the array arr by the permutation perm, only permuting the first len elements.
       proc permuteInPlace(arr: [?D] ?t, perm : [?D2] int, len : int) {
