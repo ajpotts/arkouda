@@ -523,11 +523,11 @@ module ArraySetops
       }
 
       proc setValue(i: int, val:t){
-        this.value[i] = val;
+        values[i] = val;
       }
 
       proc getValue(i: int){
-        return this.value[i];
+        return this.values[i];
       }
 
       proc setAComputed(i: int, val: bool){
@@ -554,14 +554,6 @@ module ArraySetops
         return this.aIndex[i];
       }
 
-      proc setAIndex(i: int, val: int){
-        this.aIndex[i] = val;
-      }
-
-      proc getAIndex(i: int){
-        return this.aIndex[i];
-      }
-
       proc setASize(i: int, val: int){
         this.aSize[i] = val;
       }
@@ -570,11 +562,11 @@ module ArraySetops
         return this.aSize[i];
       }
 
-      proc setBCompute(i: int, val: int){
+      proc setBComputed(i: int, val: bool){
         this.bComputed[i] = val;
       }
 
-      proc getBCompute(i: int){
+      proc getBComputed(i: int){
         return this.bComputed[i];
       }
 
@@ -768,11 +760,21 @@ module ArraySetops
           aIndex[idx] = aDom.first;
           aComputed[idx] = true;
 
+          table.setValue(idx, aMin);
+          table.setALocId(idx, here.id);
+          table.setAIndex(idx, aDom.first);
+          table.setAComputed(idx, true);
+
           idx += 1;
           values[idx] = bMin;
           bLocId[idx] = here.id;
           bIndex[idx] = bDom.first;
           bComputed[idx] = true;
+
+          table.setValue(idx, bMin);
+          table.setBLocId(idx, here.id);
+          table.setBIndex(idx, bDom.first);
+          table.setBComputed(idx, true);
 
           idx += 1;
           values[idx] = aMax;
@@ -780,11 +782,21 @@ module ArraySetops
           aIndex[idx] = aDom.last;
           aComputed[idx] = true;
 
+          table.setValue(idx, aMax);
+          table.setALocId(idx, here.id);
+          table.setAIndex(idx, aDom.last);
+          table.setAComputed(idx, true);
+
           idx += 1;
           values[idx] = bMax;
           bLocId[idx] = here.id;
           bIndex[idx]= bDom.last;
           bComputed[idx] = true;
+
+          table.setValue(idx, bMax);
+          table.setBLocId(idx, here.id);
+          table.setBIndex(idx, bDom.last);
+          table.setBComputed(idx, true);
 
         }
       }
