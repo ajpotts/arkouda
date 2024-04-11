@@ -375,6 +375,7 @@ module ArraySetops
     }
 
     class partitionHelperTable{
+      const DEBUG: bool = true;
       // Allocate arrays representing a table of statistics.
       // Thes statistics represent a value ranges used to chunk up the data in a and b.
       // The maximum table size will be 5 * numLocales.
@@ -611,44 +612,68 @@ module ArraySetops
         return this.returnSize[i];
       }
 
-      proc writeDebugStatements(){
-        writeln("\n\n\nTESTING\n\n\n");
+      proc writeFormatted(arry:[D]) throws{
+        for i in 0..<this.len{
+          write("|%{#####}".format(arry[i]));
+        }
+        write("\n");
+      }
+
+      proc debugReturnSizes(){
+        for i in 0..#(this.len-1){
+          if(){
+            writeln("WARNING: Return Size does not match at position ",i)
+            writeln("return size: ", this.returnSize[i], " != ", this.aSize[i], " + ", this.bSize);
+          }
+        }
+      }
+
+      proc writeDebugStatements() throws{
+        writeln("\n\n\nDebug\n\n");
+
+        writeln("i:");
+        for i in 1..<this.len{
+          write("|%{#####}".format(i));
+        }
+        write("\n");
 
         writeln("values");
-        writeln(this.values);
+        this.writeFormatted(this.values);
         
         writeln("aComputed");
-        writeln(this.aComputed);
+        this.writeFormatted(this.aComputed);
 
         writeln("aLocId");
-        writeln(this.aLocId);
+        this.writeFormatted(this.aLocId);
         
         writeln("aIndex");
-        writeln(this.aIndex);
+        this.writeFormatted(this.aIndex);
 
         writeln("aSize");
-        writeln(this.aSize);
+        this.writeFormatted(this.aSize);
 
         writeln("bComputed");
-        writeln(this.bComputed);
+        this.writeFormatted(this.bComputed);
 
         writeln("bLocId");
-        writeln(this.bLocId);
+        this.writeFormatted(this.values);
 
         writeln("bIndex");
-        writeln(this.bIndex);
+        this.writeFormatted(this.bIndex);
 
         writeln("bSize");
-        writeln(this.bSize);
+        this.writeFormatted(this.bSize);
         
         writeln("returnLocId");
-        writeln(this.returnLocId);
+        this.writeFormatted(this.returnLocId);
         
         writeln("needsSplit");
-        writeln(this.needsSplit);
+        this.writeFormatted(this.needsSplit);
         
         writeln("returnSize");
-        writeln(this.returnSize);
+        this.writeFormatted(this.returnSize);
+
+        this.debugReturnSizes();
       }
 
 
@@ -716,6 +741,7 @@ module ArraySetops
 
       table.writeDebugStatements();
       table.sortAllInPlace();
+      table.writeDebugStatements();
 
       //  Some indices will need to be computed using a binary search.
       //  Loop over the locales for this.
@@ -937,16 +963,27 @@ module ArraySetops
       table.updateRetLocales(a, b, segs);
       table.writeDebugStatements();
 
+      table.returnSize = table.aSize + table.bSize;
+
+
+
       // The other potential problem is that segs is updated and needs to be used to recalcuate returnSize, but in an efficient way that doesn't needlessly sort
       var aSegStarts : [D] int = (+ scan table.returnSize) - table.returnSize;
       var bSegStarts : [D] int = aSegStarts + table.aSize;
 
-      coforall loc in Locales with (const ref a, const ref b, ref table) {
+      writeln("aSegStarts");
+      writeln(aSegStarts);
+      writeln("bSegStarts");
+      writeln(bSegStarts);
+
+
+
+      for loc in Locales{//} with (const ref a, const ref b, ref table) {
         on loc {
 
           const returnIdxDom = returnIdx.localSubdomain();
 
-          forall i in 0..<table.len{
+          for i in 0..<table.len{
             if((table.getReturnLocId(i) == here.id)){
 
               const aStartIndex = table.getAIndex(i);
@@ -969,14 +1006,32 @@ module ArraySetops
                 const writeToResultSlice = aSegStarts[i]..#tmpSize;
                 returnIdx[writeToResultSlice] = [(key, val) in tmp] key;
                 returnVals[writeToResultSlice] = [(key, val) in tmp] val;
+                writeln("i");
+                writeln(i);
+                writeln("writeToResultSlice");
+                writeln(writeToResultSlice);               
+                writeln("returnIdx[writeToResultSlice]");
+                writeln(returnIdx[writeToResultSlice]);  
               }else if(aSegSize > 0){
                 const writeAToResultSlice = aSegStarts[i]..#aSegSize;
                 returnIdx[writeAToResultSlice] = a[aStartIndex..#aSegSize];
                 returnVals[writeAToResultSlice] = aVal[aStartIndex..#aSegSize];
+                writeln("i");
+                writeln(i);
+                writeln("writeAToResultSlice");
+                writeln(writeAToResultSlice);               
+                writeln("returnIdx[writeAToResultSlice]");
+                writeln(returnIdx[writeAToResultSlice]);  
               }else if(bSegSize > 0){
                 const writeBToResultSlice = bSegStarts[i]..#bSegSize;
                 returnIdx[writeBToResultSlice] = b[bStartIndex..#bSegSize];
                 returnVals[writeBToResultSlice] = bVal[bStartIndex..#bSegSize];
+                writeln("i");
+                writeln(i);
+                writeln("writeBToResultSlice");
+                writeln(writeBToResultSlice);               
+                writeln("returnIdx[writeBToResultSlice]");
+                writeln(returnIdx[writeBToResultSlice]);  
               }
             }
           }
