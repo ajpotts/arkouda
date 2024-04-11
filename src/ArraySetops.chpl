@@ -375,15 +375,13 @@ module ArraySetops
     }
 
     class partitionHelperTable{
-      var length: int;
-      var maxLength: int;
       // Allocate arrays representing a table of statistics.
       // Thes statistics represent a value ranges used to chunk up the data in a and b.
       // The maximum table size will be 5 * numLocales.
 
       // The number of values in the statistics table.
       // There will be at least 4 * numLocales because we include the max and min of each array on each locale.
-      var len: int;
+      var len: int = 4 * numLocales;
       const D = 0..< (5 * numLocales);
       type t;
       var values: [D] t;
@@ -408,58 +406,14 @@ module ArraySetops
       var returnSize: [D] int;
 
       proc init(type t) {
-        writeln("\n\n\nInitializing...\n\n\n");
         this.t = t;
-      }
-
-      proc initialize(){
-        // The number of values in the statistics table.
-        // There will be at least 4 * numLocales because we include the max and min of each array on each locale.
-        this.length = 4 * numLocales;
-
-        // The index values, representing index ranges to use for chunking up the data.
-        var values: [D] this.t;
-        this.values = values;
-        writeln("debugging");
-        writeln(values);
-        // Whether the statistics have been computed for this value using a.
-        var aComputed: [D] bool;
-        this.aComputed = aComputed;
-        // Which locale supports the value in array a.
-        var aLocId: [D] int;
-        this.aLocId = aLocId;
-        // Which index locates the value in array a, or the insertion location for the value in a.
-        var aIndex: [D] int;
-        this.aIndex = aIndex;
-        // The number of elements in a that follow in the range of this value and the subsequent value.
-        var aSize: [D] int;
-        this.aSize = aSize;
-        // Corresponding statistics for b....
-        var bComputed: [D] bool;
-        this.bComputed = bComputed;
-        var bLocId: [D] int;
-        this.bLocId = bLocId;
-        var bIndex: [D] int;
-        this.bIndex = bIndex;
-        var bSize: [D] int;
-        this.bSize = bSize;
-        // For the return arrays, which locale should support the data in this value range.
-        var returnLocId: [D] int;
-        this.returnLocId = returnLocId;
-        // Whether the chunk of data will need to be split because it crosses two locales.
-        var needsSplit: [D] bool;
-        this.needsSplit = needsSplit;
-        // The number of elements from this chunk to be written to the return arrays.
-        var returnSize: [D] int;
-        this.returnSize = returnSize;
-
       }
 
       // Permute the array arr by the permutation perm, only permuting the first len elements.
       proc permuteInPlace(arr: [?D] ?t, perm : [?D2] int, len : int) {
         // Only permute the first len values:
         const tmp: [0..<len] t  = arr[0..<len];
-        arr[0..<len] = tmp[perm];
+        return tmp[perm];
       }
 
       proc sortAllInPlace(){
@@ -467,18 +421,18 @@ module ArraySetops
         twoArrayRadixSort(tmp, new KeysRanksComparator());
         const perm: [0..<len] int = [(v,i) in tmp] i;
 
-        permuteInPlace(values, perm, len);
-        permuteInPlace(aComputed, perm, len);
-        permuteInPlace(aLocId, perm, len);
-        permuteInPlace(aIndex, perm, len);
-        permuteInPlace(aSize, perm, len);
-        permuteInPlace(bComputed, perm, len);
-        permuteInPlace(bLocId, perm, len);
-        permuteInPlace(bIndex, perm, len);
-        permuteInPlace(bSize, perm, len);
-        permuteInPlace(returnLocId, perm, len);
-        permuteInPlace(needsSplit, perm, len);
-        permuteInPlace(returnSize, perm, len);
+        this.values[0..<len] = permuteInPlace(values, perm, len);
+        this.aComputed[0..<len] = permuteInPlace(aComputed, perm, len);
+        this.aLocId[0..<len] = permuteInPlace(aLocId, perm, len);
+        this.aIndex[0..<len] = permuteInPlace(aIndex, perm, len);
+        this.aSize[0..<len] = permuteInPlace(aSize, perm, len);
+        this.bComputed[0..<len] = permuteInPlace(bComputed, perm, len);
+        this.bLocId[0..<len] = permuteInPlace(bLocId, perm, len);
+        this.bIndex[0..<len] = permuteInPlace(bIndex, perm, len);
+        this.bSize[0..<len] = permuteInPlace(bSize, perm, len);
+        this.returnLocId[0..<len] = permuteInPlace(returnLocId, perm, len);
+        this.needsSplit[0..<len] = permuteInPlace(needsSplit, perm, len);
+        this.returnSize[0..<len] = permuteInPlace(returnSize, perm, len);
 
         return perm;
       }
@@ -715,72 +669,12 @@ module ArraySetops
       const ref bVal = val2;
 
       var table = new partitionHelperTable(t);
-      table.initialize();
-      table.writeDebugStatements();
-
-      // Allocate arrays representing a table of statistics.
-      // Thes statistics represent a value ranges used to chunk up the data in a and b.
-      // The maximum table size will be 5 * numLocales.
-      const D = 0..< (5 * numLocales);
-      // The index values, representing index ranges to use for chunking up the data.
-      var values: [D] t;
-      // Whether the statistics have been computed for this value using a.
-      var aComputed: [D] bool;
-      // Which locale supports the value in array a.
-      var aLocId: [D] int;
-      // Which index locates the value in array a, or the insertion location for the value in a.
-      var aIndex: [D] int;
-      // The number of elements in a that follow in the range of this value and the subsequent value.
-      var aSize: [D] int;
-      // Corresponding statistics for b....
-      var bComputed: [D] bool;
-      var bLocId: [D] int;
-      var bIndex: [D] int;
-      var bSize: [D] int;
-      // For the return arrays, which locale should support the data in this value range.
-      var returnLocId: [D] int;
-      // Whether the chunk of data will need to be split because it crosses two locales.
-      var needsSplit: [D] bool;
-      // The number of elements from this chunk to be written to the return arrays.
-      var returnSize: [D] int;
-
-      // The number of values in the statistics table.
-      // There will be at least 4 * numLocales because we include the max and min of each array on each locale.
-      var len: int = 4 * numLocales;
-
-      // Permute the array arr by the permutation perm, only permuting the first len elements.
-      proc permuteInPlace(arr: [?D] ?t, perm : [?D2] int, len : int) {
-        // Only permute the first len values:
-        const tmp: [0..<len] t  = arr[0..<len];
-        arr[0..<len] = tmp[perm];
-      }
-
-      proc sortAllInPlace(){
-        var tmp: [0..<len] (t2, int) = [(key,val) in zip(values[0..<len], 0..<len)] (key, val);
-        twoArrayRadixSort(tmp, new KeysRanksComparator());
-        const perm: [0..<len] int = [(v,i) in tmp] i;
-
-        permuteInPlace(values, perm, len);
-        permuteInPlace(aComputed, perm, len);
-        permuteInPlace(aLocId, perm, len);
-        permuteInPlace(aIndex, perm, len);
-        permuteInPlace(aSize, perm, len);
-        permuteInPlace(bComputed, perm, len);
-        permuteInPlace(bLocId, perm, len);
-        permuteInPlace(bIndex, perm, len);
-        permuteInPlace(bSize, perm, len);
-        permuteInPlace(returnLocId, perm, len);
-        permuteInPlace(needsSplit, perm, len);
-        permuteInPlace(returnSize, perm, len);
-
-        return perm;
-      }
 
       // private space is a distributed domain of size numLocales
       var segs: [PrivateSpace] int;
 
       // Fill the stats table with max and min values from each locale.
-      coforall loc in Locales with (const ref a, const ref b) {
+      coforall loc in Locales with (const ref a, const ref b, ref table) {
         on loc {
           // perform loop body computation on locale #loc
           // domains of a and b that are live on this locale
@@ -794,44 +688,24 @@ module ArraySetops
           const bMax = b[bDom.last];
 
           var idx: int = 4 * here.id;
-          values[idx] = aMin;
-          aLocId[idx] = here.id;
-          aIndex[idx] = aDom.first;
-          aComputed[idx] = true;
-
           table.setValue(idx, aMin);
           table.setALocId(idx, here.id);
           table.setAIndex(idx, aDom.first);
           table.setAComputed(idx, true);
 
           idx += 1;
-          values[idx] = bMin;
-          bLocId[idx] = here.id;
-          bIndex[idx] = bDom.first;
-          bComputed[idx] = true;
-
           table.setValue(idx, bMin);
           table.setBLocId(idx, here.id);
           table.setBIndex(idx, bDom.first);
           table.setBComputed(idx, true);
 
           idx += 1;
-          values[idx] = aMax;
-          aLocId[idx] = here.id;
-          aIndex[idx] = aDom.last;
-          aComputed[idx] = true;
-
           table.setValue(idx, aMax);
           table.setALocId(idx, here.id);
           table.setAIndex(idx, aDom.last);
           table.setAComputed(idx, true);
 
           idx += 1;
-          values[idx] = bMax;
-          bLocId[idx] = here.id;
-          bIndex[idx]= bDom.last;
-          bComputed[idx] = true;
-
           table.setValue(idx, bMax);
           table.setBLocId(idx, here.id);
           table.setBIndex(idx, bDom.last);
@@ -840,12 +714,12 @@ module ArraySetops
         }
       }
 
-      sortAllInPlace();
+      table.writeDebugStatements();
       table.sortAllInPlace();
 
       //  Some indices will need to be computed using a binary search.
       //  Loop over the locales for this.
-      coforall loc in Locales with (const ref a, const ref b, ref aLocId, ref aIndex, ref aComputed, ref bLocId, ref bIndex, ref bComputed){
+      coforall loc in Locales with (const ref a, const ref b, ref table){
         on loc {
           const aDom = a.localSubdomain();
           const bDom = b.localSubdomain();
@@ -855,62 +729,36 @@ module ArraySetops
           const aMax = a[aDom.last];
           const bMax = b[bDom.last];
 
-          forall i in 0..<len{
-            if(!aComputed[i]){
-              const valueToFind: t = values[i];
+          forall i in 0..<table.len{
+            if(!table.getAComputed(i)){
+              const valueToFind: t = table.getValue(i);
               if(valueToFind == aMin){
-                aLocId[i] = here.id;
-                aIndex[i] = aDom.first;
-                aComputed[i] = true;
-
                 table.setALocId(i, here.id);
                 table.setAIndex(i, aDom.first);
                 table.setAComputed(i, true);
               }else if(valueToFind == aMax){
-                aLocId[i] = here.id;
-                aIndex[i] = aDom.last;
-                aComputed[i] = true;
-
                 table.setALocId(i, here.id);
                 table.setAIndex(i, aDom.last);
                 table.setAComputed(i, true);
-
               }else if(valueToFind > aMin && valueToFind < aMax){
-                aLocId[i] = here.id;
                 const (status, binSearchIdx) = search(a.localSlice[aDom], valueToFind, sorted=true);
-                aIndex[i] = binSearchIdx;
-                aComputed[i] = true;
-
                 table.setALocId(i, here.id);
                 table.setAIndex(i, binSearchIdx);
                 table.setAComputed(i, true);
               }
             }
-            if(!bComputed[i]){
-              const valueToFind: t = values[i];
+            if(!table.getBComputed(i)){
+              const valueToFind: t = table.getValue(i);
               if(valueToFind == bMin){
-                bLocId[i] = here.id;
-                bIndex[i] = bDom.first;
-                bComputed[i] = true;
-
                 table.setBLocId(i, here.id);
                 table.setBIndex(i, bDom.first);
                 table.setBComputed(i, true);
-
               }else if(valueToFind == bMax){
-                bLocId[i] = here.id;
-                bIndex[i] = bDom.last;
-                bComputed[i] = true;
-
                 table.setBLocId(i, here.id);
                 table.setBIndex(i, bDom.last);
                 table.setBComputed(i, true);
               }else if(valueToFind > bMin && valueToFind < bMax){
-                bLocId[i] = here.id;
                 const (status, binSearchIdx) = search(b.localSlice[bDom], valueToFind, sorted=true);
-                bIndex[i] = binSearchIdx;
-                bComputed[i] = true;
-
                 table.setBLocId(i, here.id);
                 table.setBIndex(i, binSearchIdx);
                 table.setBComputed(i, true);
@@ -920,89 +768,8 @@ module ArraySetops
         }
       }
 
-      proc sortAndUpdateStats(){
-        sortAllInPlace();
-
-        // Replace any -1 in aLocId and bLocId:
-        // Since the arrays are sorted by value order, and the indices were assumed pre-sorted,
-        // the locales will be in increasing order.  Plus, the locales for the max and min of each locale
-        // are computed.  So, any missing locale values will be fall between computed values, and therefore
-        // can be imputed.
-        aLocId = max scan aLocId;
-        bLocId = max scan bLocId;
-
-        // Update sizes for each value range.
-        forall i in 0..<len{
-          if(!aComputed[i]){
-            // If the index was not computed, the value falls between locales in a.
-            // If the index was on a locale it would have been computed by the binary search above.
-            aSize[i] = 0;
-          }else if((i+1 >= len) || !aComputed[i+1]){
-            // If the following value was not computed, it falls between locales. The value is the max of a locale.
-            aSize[i] = 1;
-          }else if(aLocId[i] != aLocId[i+1]){
-            // If the locale is different than the following locale, this is the max of a locale.
-            aSize[i] = 1;
-          }else{
-            aSize[i] = aIndex[i+1] - aIndex[i];
-          }
-
-          if(!bComputed[i]){
-            bSize[i] = 0;
-          }else if((i+1 >= len) || !bComputed[i+1]){
-            bSize[i] = 1;
-          }else if(bLocId[i] != bLocId[i+1]){
-            bSize[i] = 1;
-          }else{
-            bSize[i] = bIndex[i+1] - bIndex[i];
-          }
-        }
-      }
-
-      sortAndUpdateStats();
       table.sortAndUpdateStats();
       table.writeDebugStatements();
-
-      // Compute the locale for the chunk in the return arrays
-      proc updateRetLocales(){
-        var sum: int = 0;
-        var retLoc: int = 0;
-
-        for i in 0..<len{
-
-          const size : int = aSize[i] + bSize[i];
-
-          if((sum + size) <= segs[retLoc]){ // Data fits on current retLoc
-            returnLocId[i] = retLoc;
-            returnSize[i] = size;
-            sum += size;
-          }else if (( (sum + size) == segs[retLoc] + 1) && (a[aIndex[i]] == b[bIndex[i]])){
-            // Data is only one too big for current retLoc.
-            // Send to current locale, and allow the size to be one greater than expected.
-            returnLocId[i] = retLoc;
-            returnSize[i] = size;
-            sum += size;
-          }else if(sum < segs[retLoc]){
-            //  The data is to big for current locale, and needs to be split.
-            // Record the local as the current locale, since some of the data will fit here.
-            returnLocId[i] = retLoc;
-            // Record the size as the amount of the array that fits on the current locale.
-            returnSize[i] = segs[retLoc] - sum;
-            needsSplit[i] = true;
-            // Reset sum to the amount of the chunk that did not fit on this locale.
-            sum = size - (segs[retLoc] - sum);
-            retLoc += 1;
-          }else{
-            // The data needs to be sent to the next locale.
-            retLoc += 1;
-            returnLocId[i] = retLoc;
-            returnSize[i] = size;
-            sum = size;
-          }
-        }
-      }
-
-      updateRetLocales();
       table.updateRetLocales(a, b, segs);
 
       //  Find the location to split off the min K of the two arrays.
@@ -1057,52 +824,42 @@ module ArraySetops
       begin release.writeEF(0);
 
       //  Determine split points for cases when the segment needs to be divided between locales.
-      coforall loc in Locales with (const ref a, const ref b, const ref needsSplit, const ref aSize, const ref bSize, const ref returnSize, ref len, ref values, ref aComputed, ref aLocId, ref aIndex, ref bComputed, ref bLocId, ref bIndex){
+      coforall loc in Locales with (const ref a, const ref b, ref table){
         on loc {
           // len can be incremented but we only need to loop over the table entries that are already defined.
-          const startingLen: int = len;
+          const startingLen: int = table.len;
 
-          forall i in 0..<startingLen with (ref len){
-            if(needsSplit[i] == true ){
+          forall i in 0..<startingLen with (ref table){
+            if(table.getNeedsSplit(i) == true ){
 
-              const k: int = returnSize[i];
-              const aSz: int = aSize[i];
-              const bSz: int = bSize[i];
+              const k: int = table.getReturnSize(i);
+              const aSz: int = table.getASize(i);
+              const bSz: int = table.getBSize(i);
 
-              if (aLocId[i] == here.id){
+              if (table.getALocId(i) == here.id){
                 if(bSz == 0){
 
-                  const aIdx: int = aIndex[i] + k;
+                  const aIdx: int = table.getAIndex(i) + k;
 
                   var int_sync = release.readFE();
                   writeln("\nwrite case 1: ", int_sync, " on ", here.id);
 
-                  values[len] = a[aIdx];
-                  aComputed[len] = true;
-                  aLocId[len] = here.id;
-                  aIndex[len] = aIdx;
-                  bComputed[len] = true;
-                  bLocId[len] = -1;
-                  bIndex[len] = bIndex[i];
-
-                  table.setValue(len, a[aIdx]);
-                  table.setAComputed(len, true);
-                  table.setALocId(len, here.id);
-                  table.setAIndex(len, aIdx);
-                  table.setBComputed(len, true);
-                  table.setBLocId(len, -1);
-                  table.setBIndex(len, bIndex[i]);
+                  table.setValue(table.len, a[aIdx]);
+                  table.setAComputed(table.len, true);
+                  table.setALocId(table.len, here.id);
+                  table.setAIndex(table.len, aIdx);
+                  table.setBComputed(table.len, true);
+                  table.setBLocId(table.len, -1);
+                  table.setBIndex(table.len, table.getBIndex(i));
                   table.len += 1;
-
-                  len += 1;
 
                   release.writeEF(int_sync + 1);
                 }else if(aSz > bSz) {
 
-                  const aLow : int = aIndex[i];
+                  const aLow : int = table.getAIndex(i);
                   const aHigh : int = min(aLow + aSz - 1, aLow + k, aLow);
 
-                  const bLow : int = bIndex[i];
+                  const bLow : int = table.getBIndex(i);
                   const bHigh : int = min(bLow + bSz - 1, bLow + k, bLow);
   
                   const (aSplitIndex,bSplitIndex, splitVal): (int, int, t) = findMinKLocations(k, a, b,  aLow, aHigh, bLow, bHigh);
@@ -1110,59 +867,41 @@ module ArraySetops
                   var int_sync = release.readFE();
                   writeln("\nwrite case 2: ", int_sync, " on ", here.id);
 
-                  values[len] = splitVal;
-                  aComputed[len] = true;
-                  aLocId[len] = here.id;
-                  aIndex[len] = aSplitIndex;
-                  bComputed[len] = true;
-                  bLocId[len] = -1;
-                  bIndex[len] = bSplitIndex;
+                  table.setValue(table.len, splitVal);
+                  table.setAComputed(table.len, true);
+                  table.setALocId(table.len, here.id);
+                  table.setAIndex(table.len, aSplitIndex);
+                  table.setBComputed(table.len, true);
+                  table.setBLocId(table.len, -1);
+                  table.setBIndex(table.len, bSplitIndex);
 
-                  table.setValue(len, splitVal);
-                  table.setAComputed(len, true);
-                  table.setALocId(len, here.id);
-                  table.setAIndex(len, aSplitIndex);
-                  table.setBComputed(len, true);
-                  table.setBLocId(len, -1);
-                  table.setBIndex(len, bSplitIndex);
-
-                  len += 1;
+                  table.len += 1;
 
                   release.writeEF(int_sync + 1);
                 }
-              }else if(bLocId[i] == here.id){
+              }else if(table.getBLocId(i) == here.id){
                 if(aSz == 0){
-                  const bIdx: int = bIndex[i] + k;
+                  const bIdx: int = table.getBIndex(i) + k;
 
                   var int_sync = release.readFE();
                   writeln("\nwrite case 3: ", int_sync, " on ", here.id);
 
-                  values[len] = b[bIdx];
-                  aComputed[len] = true;
-                  aLocId[len] = -1;
-                  aIndex[len] = aIndex[i];
-                  bComputed[len] = true;
-                  bLocId[len] = here.id;
-                  bIndex[len] = bIdx;
-
-                  len += 1;
-
-                  table.setValue(len, b[bIdx]);
-                  table.setAComputed(len, true);
-                  table.setALocId(len, -1);
-                  table.setAIndex(len, aIndex[i]);
-                  table.setBComputed(len, true);
-                  table.setBLocId(len, here.id);
-                  table.setBIndex(len, bIdx);
-                  table.length += 1;
+                  table.setValue(table.len, b[bIdx]);
+                  table.setAComputed(table.len, true);
+                  table.setALocId(table.len, -1);
+                  table.setAIndex(table.len, table.getAIndex(i));
+                  table.setBComputed(table.len, true);
+                  table.setBLocId(table.len, here.id);
+                  table.setBIndex(table.len, bIdx);
+                  table.len += 1;
 
                   release.writeEF(int_sync + 1);
                 }else if( bSz >= aSz) {
 
-                  const aLow : int = aIndex[i];
+                  const aLow : int = table.getAIndex(i);
                   const aHigh : int = min(aLow + aSz - 1, aLow + k);
 
-                  const bLow : int = bIndex[i];
+                  const bLow : int = table.getBIndex(i);
                   const bHigh : int = min(bLow + bSz - 1, bLow + k);
 
                   const (bSplitIndex, aSplitIndex, splitVal): (int, int, t) = findMinKLocations(k, b, a,  bLow, bHigh, aLow, aHigh);
@@ -1170,24 +909,14 @@ module ArraySetops
                   var int_sync = release.readFE();
                   writeln("\nwrite case 4: ", int_sync, " on ", here.id);
 
-                  values[len] = splitVal;
-                  aComputed[len] = true;
-                  aLocId[len] = -1;
-                  aIndex[len] = aSplitIndex;
-                  bComputed[len] = true;
-                  bLocId[len] = here.id;
-                  bIndex[len] = bSplitIndex;
-
-                  len += 1;
-
-                  table.setValue(len, splitVal);
-                  table.setAComputed(len, true);
-                  table.setALocId(len, -1);
-                  table.setAIndex(len, aSplitIndex);
-                  table.setBComputed(len, true);
-                  table.setBLocId(len, here.id);
-                  table.setBIndex(len, bSplitIndex);
-                  table.length += 1;
+                  table.setValue(table.len, splitVal);
+                  table.setAComputed(table.len, true);
+                  table.setALocId(table.len, -1);
+                  table.setAIndex(table.len, aSplitIndex);
+                  table.setBComputed(table.len, true);
+                  table.setBLocId(table.len, here.id);
+                  table.setBIndex(table.len, bSplitIndex);
+                  table.len += 1;
 
                   release.writeEF(int_sync + 1);
                 }
@@ -1197,36 +926,34 @@ module ArraySetops
         }
       }
 
-      sortAndUpdateStats();
       table.sortAndUpdateStats();
 
       //  Because we send ties to the same locale, segs can be off by a small amount and needs to be recalculated.
       segs = 0;
-      for i in 0..len{
-        segs[returnLocId[i]] += aSize[i] + bSize[i];
+      for i in 0..table.len{
+        segs[table.getReturnLocId(i)] += table.getASize(i) + table.getBSize(i);
       }
 
-      updateRetLocales();
       table.updateRetLocales(a, b, segs);
       table.writeDebugStatements();
 
       // The other potential problem is that segs is updated and needs to be used to recalcuate returnSize, but in an efficient way that doesn't needlessly sort
-      var aSegStarts : [D] int = (+ scan returnSize) - returnSize;
-      var bSegStarts : [D] int = aSegStarts + aSize;
+      var aSegStarts : [D] int = (+ scan table.returnSize) - table.returnSize;
+      var bSegStarts : [D] int = aSegStarts + table.aSize;
 
-      coforall loc in Locales with (const ref a, const ref b, const ref returnLocId, const ref aIndex, const ref aSize, const ref bIndex, const ref bSize, const ref aSegStarts, const ref bSegStarts, ref returnIdx, ref returnVals) {
+      coforall loc in Locales with (const ref a, const ref b, ref table) {
         on loc {
 
           const returnIdxDom = returnIdx.localSubdomain();
 
-          forall i in 0..<len{
-            if((returnLocId[i] == here.id)){
+          forall i in 0..<table.len{
+            if((table.getReturnLocId(i) == here.id)){
 
-              const aStartIndex = aIndex[i];
-              const aSegSize = aSize[i];
+              const aStartIndex = table.getAIndex(i);
+              const aSegSize = table.getASize(i);
 
-              const bStartIndex = bIndex[i];
-              const bSegSize = bSize[i];
+              const bStartIndex = table.getBIndex(i);
+              const bSegSize = table.getBSize(i);
 
               //  Only sort if both a and b contribute some values.
               //  Otherwise, no sort is needed b/c the input indices are assumed sorted.
