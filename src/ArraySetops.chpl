@@ -612,27 +612,31 @@ module ArraySetops
         return this.returnSize[i];
       }
 
-      proc writeFormatted(arry:[D]) throws{
+      proc debugReturnSizes(){
+        if(this.DEBUG){
+          for i in 0..#(this.len-1){
+            if(this.returnSize[i] != this.aSize[i] + this.bSize[i]){
+              writeln("WARNING: Return Size does not match at position ", i);
+              writeln("return size: ", this.returnSize[i], " != ", this.aSize[i], " + ", this.bSize[i]);
+            }
+          }
+        }
+      }
+
+      proc writeFormatted(arry:[D] ?t2) throws{
         for i in 0..<this.len{
           write("|%{#####}".format(arry[i]));
         }
         write("\n");
       }
 
-      proc debugReturnSizes(){
-        for i in 0..#(this.len-1){
-          if(){
-            writeln("WARNING: Return Size does not match at position ",i)
-            writeln("return size: ", this.returnSize[i], " != ", this.aSize[i], " + ", this.bSize);
-          }
-        }
-      }
-
       proc writeDebugStatements() throws{
         writeln("\n\n\nDebug\n\n");
 
+        writeln("len: ", this.len);
+
         writeln("i:");
-        for i in 1..<this.len{
+        for i in 0..<this.len{
           write("|%{#####}".format(i));
         }
         write("\n");
@@ -656,7 +660,7 @@ module ArraySetops
         this.writeFormatted(this.bComputed);
 
         writeln("bLocId");
-        this.writeFormatted(this.values);
+        this.writeFormatted(this.bLocId);
 
         writeln("bIndex");
         this.writeFormatted(this.bIndex);
@@ -831,18 +835,21 @@ module ArraySetops
           //  or arry1[i] = val1 > val2 >= arry1[i-1]
           //  or arry1[i] = val1 < val2 <= arry1[i+1]
           if(val1 == val2){
+            writeln("case1: ", guessIndex1, " ", guessIndex2, " ", max(val1, val2));
             return (guessIndex1, guessIndex2, max(val1, val2));
           }if(val1 > val2 && val2 >= arry1[guessIndex1-1]){
-
+            writeln("case2: ", guessIndex1, " ", guessIndex2, " ", max(val1, val2));
             return (guessIndex1, guessIndex2, max(val1, val2));
           }if(val1 < val2 && val2 <= arry1[guessIndex1+1]){
+            writeln("case3: ", guessIndex1, " ", guessIndex2, " ", max(val1, val2));
             return (guessIndex1, guessIndex2, max(val1, val2));
           }else{      
             update();
           }
         }
+        writeln("case4: ", guessIndex1, " ", guessIndex2, " ", max(val1, val2));
         // The problem is that this need to return both values, max and min.
-        return (guessIndex1, guessIndex2, min(val1, val2));
+        return (guessIndex1, guessIndex2, max(val1, val2));
       }
 
       // Writing to release sync variables allows 
@@ -965,17 +972,18 @@ module ArraySetops
 
       table.returnSize = table.aSize + table.bSize;
 
-
-
       // The other potential problem is that segs is updated and needs to be used to recalcuate returnSize, but in an efficient way that doesn't needlessly sort
-      var aSegStarts : [D] int = (+ scan table.returnSize) - table.returnSize;
-      var bSegStarts : [D] int = aSegStarts + table.aSize;
+      var aSegStarts : [table.D] int = (+ scan table.returnSize) - table.returnSize;
+      var bSegStarts : [table.D] int = aSegStarts + table.aSize;
 
       writeln("aSegStarts");
       writeln(aSegStarts);
       writeln("bSegStarts");
       writeln(bSegStarts);
-
+      writeln("a");
+      writeln(a);
+      writeln("b");
+      writeln(b);
 
 
       for loc in Locales{//} with (const ref a, const ref b, ref table) {
@@ -1006,18 +1014,23 @@ module ArraySetops
                 const writeToResultSlice = aSegStarts[i]..#tmpSize;
                 returnIdx[writeToResultSlice] = [(key, val) in tmp] key;
                 returnVals[writeToResultSlice] = [(key, val) in tmp] val;
-                writeln("i");
+                writeln("\ni");
                 writeln(i);
+                writeln("target range: ",table.getValue[i]," .. ", table.getValue[i+1]);
                 writeln("writeToResultSlice");
                 writeln(writeToResultSlice);               
                 writeln("returnIdx[writeToResultSlice]");
                 writeln(returnIdx[writeToResultSlice]);  
+                writeln("tmp");
+                writeln(a[aStartIndex..#aSegSize]);
+                writeln(b[bStartIndex..#bSegSize]);
               }else if(aSegSize > 0){
                 const writeAToResultSlice = aSegStarts[i]..#aSegSize;
                 returnIdx[writeAToResultSlice] = a[aStartIndex..#aSegSize];
                 returnVals[writeAToResultSlice] = aVal[aStartIndex..#aSegSize];
-                writeln("i");
+                writeln("\ni");
                 writeln(i);
+                writeln("target range: ",table.getValue[i]," .. ", table.getValue[i+1]);
                 writeln("writeAToResultSlice");
                 writeln(writeAToResultSlice);               
                 writeln("returnIdx[writeAToResultSlice]");
@@ -1026,8 +1039,9 @@ module ArraySetops
                 const writeBToResultSlice = bSegStarts[i]..#bSegSize;
                 returnIdx[writeBToResultSlice] = b[bStartIndex..#bSegSize];
                 returnVals[writeBToResultSlice] = bVal[bStartIndex..#bSegSize];
-                writeln("i");
+                writeln("\ni");
                 writeln(i);
+                writeln("target range: ",table.getValue[i]," .. ", table.getValue[i+1]);
                 writeln("writeBToResultSlice");
                 writeln(writeBToResultSlice);               
                 writeln("returnIdx[writeBToResultSlice]");
@@ -1037,6 +1051,8 @@ module ArraySetops
           }
         }
       }
+      writeln("returnIdx");
+      writeln(returnIdx);
       return (returnIdx, returnVals);
     }
 }
