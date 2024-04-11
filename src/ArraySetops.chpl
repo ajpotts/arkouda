@@ -522,6 +522,45 @@ module ArraySetops
         }
       }
 
+      // Compute the locale for the chunk in the return arrays
+      proc updateRetLocales(const ref a: [?D] ?t, const ref b: [] t, segs:[PrivateSpace] int){
+        var sum: int = 0;
+        var retLoc: int = 0;
+
+        for i in 0..<len{
+
+          const size : int = aSize[i] + bSize[i];
+
+          if((sum + size) <= segs[retLoc]){ // Data fits on current retLoc
+            returnLocId[i] = retLoc;
+            returnSize[i] = size;
+            sum += size;
+          }else if (( (sum + size) == segs[retLoc] + 1) && (a[aIndex[i]] == b[bIndex[i]])){
+            // Data is only one too big for current retLoc.
+            // Send to current locale, and allow the size to be one greater than expected.
+            returnLocId[i] = retLoc;
+            returnSize[i] = size;
+            sum += size;
+          }else if(sum < segs[retLoc]){
+            //  The data is to big for current locale, and needs to be split.
+            // Record the local as the current locale, since some of the data will fit here.
+            returnLocId[i] = retLoc;
+            // Record the size as the amount of the array that fits on the current locale.
+            returnSize[i] = segs[retLoc] - sum;
+            needsSplit[i] = true;
+            // Reset sum to the amount of the chunk that did not fit on this locale.
+            sum = size - (segs[retLoc] - sum);
+            retLoc += 1;
+          }else{
+            // The data needs to be sent to the next locale.
+            retLoc += 1;
+            returnLocId[i] = retLoc;
+            returnSize[i] = size;
+            sum = size;
+          }
+        }
+      }
+
       proc setValue(i: int, val:t){
         values[i] = val;
       }
@@ -802,6 +841,7 @@ module ArraySetops
       }
 
       sortAllInPlace();
+      table.sortAllInPlace();
 
       //  Some indices will need to be computed using a binary search.
       //  Loop over the locales for this.
@@ -822,15 +862,28 @@ module ArraySetops
                 aLocId[i] = here.id;
                 aIndex[i] = aDom.first;
                 aComputed[i] = true;
+
+                table.setALocId(i, here.id);
+                table.setAIndex(i, aDom.first);
+                table.setAComputed(i, true);
               }else if(valueToFind == aMax){
                 aLocId[i] = here.id;
                 aIndex[i] = aDom.last;
                 aComputed[i] = true;
+
+                table.setALocId(i, here.id);
+                table.setAIndex(i, aDom.last);
+                table.setAComputed(i, true);
+
               }else if(valueToFind > aMin && valueToFind < aMax){
                 aLocId[i] = here.id;
                 const (status, binSearchIdx) = search(a.localSlice[aDom], valueToFind, sorted=true);
                 aIndex[i] = binSearchIdx;
                 aComputed[i] = true;
+
+                table.setALocId(i, here.id);
+                table.setAIndex(i, binSearchIdx);
+                table.setAComputed(i, true);
               }
             }
             if(!bComputed[i]){
@@ -839,15 +892,28 @@ module ArraySetops
                 bLocId[i] = here.id;
                 bIndex[i] = bDom.first;
                 bComputed[i] = true;
+
+                table.setBLocId(i, here.id);
+                table.setBIndex(i, bDom.first);
+                table.setBComputed(i, true);
+
               }else if(valueToFind == bMax){
                 bLocId[i] = here.id;
                 bIndex[i] = bDom.last;
                 bComputed[i] = true;
+
+                table.setBLocId(i, here.id);
+                table.setBIndex(i, bDom.last);
+                table.setBComputed(i, true);
               }else if(valueToFind > bMin && valueToFind < bMax){
                 bLocId[i] = here.id;
                 const (status, binSearchIdx) = search(b.localSlice[bDom], valueToFind, sorted=true);
                 bIndex[i] = binSearchIdx;
                 bComputed[i] = true;
+
+                table.setBLocId(i, here.id);
+                table.setBIndex(i, binSearchIdx);
+                table.setBComputed(i, true);
               }
             }
           }
@@ -894,6 +960,8 @@ module ArraySetops
       }
 
       sortAndUpdateStats();
+      table.sortAndUpdateStats();
+      table.writeDebugStatements();
 
       // Compute the locale for the chunk in the return arrays
       proc updateRetLocales(){
@@ -935,6 +1003,7 @@ module ArraySetops
       }
 
       updateRetLocales();
+      table.updateRetLocales(a, b, segs);
 
       //  Find the location to split off the min K of the two arrays.
       //  Array 2 will have fewer lookups.
@@ -1016,6 +1085,15 @@ module ArraySetops
                   bLocId[len] = -1;
                   bIndex[len] = bIndex[i];
 
+                  table.setValue(len, a[aIdx]);
+                  table.setAComputed(len, true);
+                  table.setALocId(len, here.id);
+                  table.setAIndex(len, aIdx);
+                  table.setBComputed(len, true);
+                  table.setBLocId(len, -1);
+                  table.setBIndex(len, bIndex[i]);
+                  table.len += 1;
+
                   len += 1;
 
                   release.writeEF(int_sync + 1);
@@ -1040,6 +1118,14 @@ module ArraySetops
                   bLocId[len] = -1;
                   bIndex[len] = bSplitIndex;
 
+                  table.setValue(len, splitVal);
+                  table.setAComputed(len, true);
+                  table.setALocId(len, here.id);
+                  table.setAIndex(len, aSplitIndex);
+                  table.setBComputed(len, true);
+                  table.setBLocId(len, -1);
+                  table.setBIndex(len, bSplitIndex);
+
                   len += 1;
 
                   release.writeEF(int_sync + 1);
@@ -1060,6 +1146,15 @@ module ArraySetops
                   bIndex[len] = bIdx;
 
                   len += 1;
+
+                  table.setValue(len, b[bIdx]);
+                  table.setAComputed(len, true);
+                  table.setALocId(len, -1);
+                  table.setAIndex(len, aIndex[i]);
+                  table.setBComputed(len, true);
+                  table.setBLocId(len, here.id);
+                  table.setBIndex(len, bIdx);
+                  table.length += 1;
 
                   release.writeEF(int_sync + 1);
                 }else if( bSz >= aSz) {
@@ -1085,6 +1180,15 @@ module ArraySetops
 
                   len += 1;
 
+                  table.setValue(len, splitVal);
+                  table.setAComputed(len, true);
+                  table.setALocId(len, -1);
+                  table.setAIndex(len, aSplitIndex);
+                  table.setBComputed(len, true);
+                  table.setBLocId(len, here.id);
+                  table.setBIndex(len, bSplitIndex);
+                  table.length += 1;
+
                   release.writeEF(int_sync + 1);
                 }
               }
@@ -1094,6 +1198,7 @@ module ArraySetops
       }
 
       sortAndUpdateStats();
+      table.sortAndUpdateStats();
 
       //  Because we send ties to the same locale, segs can be off by a small amount and needs to be recalculated.
       segs = 0;
@@ -1102,6 +1207,8 @@ module ArraySetops
       }
 
       updateRetLocales();
+      table.updateRetLocales(a, b, segs);
+      table.writeDebugStatements();
 
       // The other potential problem is that segs is updated and needs to be used to recalcuate returnSize, but in an efficient way that doesn't needlessly sort
       var aSegStarts : [D] int = (+ scan returnSize) - returnSize;
