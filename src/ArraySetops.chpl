@@ -449,6 +449,10 @@ module ArraySetops
         this.aLocId = max scan this.aLocId;
         this.bLocId = max scan this.bLocId;
 
+        // For missing indices, estimate the insertion index:
+        this.aIndex = max scan this.aIndex;
+        this.bIndex = max scan this.bIndex;
+
         // Update sizes for each value range.
         forall i in 0..<len{
           if(!aComputed[i]){
@@ -934,6 +938,9 @@ module ArraySetops
       //  Determine split points for cases when the segment needs to be divided between locales.
       for loc in Locales{// with (const ref a, const ref b, ref table){
         on loc {
+          const aDom = a.localSubdomain();
+          const bDom = b.localSubdomain();
+
           // len can be incremented but we only need to loop over the table entries that are already defined.
           const startingLen: int = table.len;
 
@@ -953,19 +960,30 @@ module ArraySetops
 
               if (table.getALocId(i) == here.id){
                 if(bSz == 0){
-
+                  writeln("table.getAIndex(i)=",table.getAIndex(i));
                   const aIdx: int = table.getAIndex(i) + k;
 
                   var int_sync = release.readFE();
                   writeln("\nwrite case 1: ", int_sync, " on ", here.id);
 
                   table.setValue(table.len, a[aIdx]);
+                  writeln("setting value to ", a[aIdx]);
                   table.setAComputed(table.len, true);
+                  writeln("setting a computed to: ", true);
                   table.setALocId(table.len, here.id);
+                  writeln("setting a loc id to: ", here.id);
                   table.setAIndex(table.len, aIdx);
+                  writeln("setting a index to ", aIdx);
                   table.setBComputed(table.len, true);
+                  writeln("setting b computed to ", true);
                   table.setBLocId(table.len, -1);
+                  writeln("setting b loc id to ", -1);
+                  // if(table.getBComputed(i)){
                   table.setBIndex(table.len, table.getBIndex(i));
+                  // }else{
+                  //   table.setBIndex(table.len, bDom.last);
+                  // }
+                  writeln("setting b index to : ", table.getBIndex(i));
                   table.len += 1;
 
                   release.writeEF(int_sync + 1);
@@ -1001,6 +1019,7 @@ module ArraySetops
                 }
               }else if(table.getBLocId(i) == here.id){
                 if(aSz == 0){
+                  writeln("table.getBIndex(i)=",table.getBIndex(i));
                   const bIdx: int = table.getBIndex(i) + k;
 
                   var int_sync = release.readFE();
@@ -1009,11 +1028,23 @@ module ArraySetops
                   table.setValue(table.len, b[bIdx]);
                   table.setAComputed(table.len, true);
                   table.setALocId(table.len, -1);
+                  // if(table.getAComputed(i)){
                   table.setAIndex(table.len, table.getAIndex(i));
+                  // }else{
+                  //   table.setAIndex(table.len, aDom.last);
+                  // }
                   table.setBComputed(table.len, true);
                   table.setBLocId(table.len, here.id);
                   table.setBIndex(table.len, bIdx);
                   table.len += 1;
+
+                  writeln("setting value to ", b[bIdx]);
+                  writeln("setting a computed to: ", true);
+                  writeln("setting a loc id to: ", -1);
+                  writeln("setting a index to ", table.getAIndex(i));
+                  writeln("setting b computed to ", true);
+                  writeln("setting b loc id to ", here.id);
+                  writeln("setting b index to : ",bIdx);
 
                   release.writeEF(int_sync + 1);
                 }else if( bSz >= aSz) {
