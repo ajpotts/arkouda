@@ -477,6 +477,46 @@ module ArraySetops
         }
       }
 
+      proc shiftAll(j:int){
+        for i in j..<(this.len-1){
+          this.values[i] = this.values[i+1];
+          this.aComputed[i] = this.aComputed[i+1];
+          this.aLocId[i] = this.aLocId[i+1];
+          this.aIndex[i] = this.aIndex[i+1];
+          this.aSize[i] = this.aSize[i+1];
+          this.bComputed[i] = this.bComputed[i+1];
+          this.bLocId[i] = this.bLocId[i+1];
+          this.bIndex[i] = this.bIndex[i+1];
+          this.bSize[i] = this.bSize[i+1];
+          this.returnLocId[i] = this.returnLocId[i+1];
+          this.needsSplit[i] = this.needsSplit[i+1];
+          this.returnSize[i] = this.returnSize[i+1];
+        }
+        this.len -= 1;
+      }
+
+      proc dedupe(){
+        for i in 0..<(this.len - 1){
+          if(values[i] == values[i+1]){
+            if(aComputed[i]){
+              writeln("Deduping: ", i);
+              bComputed[i] = bComputed[i+1];
+              bLocId[i] = bLocId[i+1];
+              bIndex[i] = bIndex[i+1];
+              bSize[i] = bSize[i+1];
+              shiftAll(i+1);
+            }else if(bComputed[i]){
+              writeln("Deduping: ", i);
+              aComputed[i] = aComputed[i+1];
+              aLocId[i] = aLocId[i+1];
+              aIndex[i] = aIndex[i+1];
+              aSize[i] = aSize[i+1];
+              shiftAll(i+1);
+            }
+          }
+        }
+      }
+
       // Compute the locale for the chunk in the return arrays
       proc updateRetLocales(const ref a: [?D] ?t, const ref b: [] t, segs:[PrivateSpace] int){
         var sum: int = 0;
@@ -745,6 +785,7 @@ module ArraySetops
 
       table.writeDebugStatements();
       table.sortAllInPlace();
+      table.dedupe();
       table.writeDebugStatements();
 
       //  Some indices will need to be computed using a binary search.
@@ -835,19 +876,19 @@ module ArraySetops
           //  or arry1[i] = val1 > val2 >= arry1[i-1]
           //  or arry1[i] = val1 < val2 <= arry1[i+1]
           if(val1 == val2){
-            writeln("case1: ", guessIndex1, " ", guessIndex2, " ", max(val1, val2));
+            writeln("case1: ", guessIndex1, " ", guessIndex2, " ", max(val1, val2), " ", k);
             return (guessIndex1, guessIndex2, max(val1, val2));
           }if(val1 > val2 && val2 >= arry1[guessIndex1-1]){
-            writeln("case2: ", guessIndex1, " ", guessIndex2, " ", max(val1, val2));
+            writeln("case2: ", guessIndex1, " ", guessIndex2, " ", max(val1, val2), " ", k);
             return (guessIndex1, guessIndex2, max(val1, val2));
           }if(val1 < val2 && val2 <= arry1[guessIndex1+1]){
-            writeln("case3: ", guessIndex1, " ", guessIndex2, " ", max(val1, val2));
+            writeln("case3: ", guessIndex1, " ", guessIndex2, " ", max(val1, val2), " ", k);
             return (guessIndex1, guessIndex2, max(val1, val2));
           }else{      
             update();
           }
         }
-        writeln("case4: ", guessIndex1, " ", guessIndex2, " ", max(val1, val2));
+        writeln("case4: ", guessIndex1, " ", guessIndex2, " ", max(val1, val2), " ", k);
         // The problem is that this need to return both values, max and min.
         return (guessIndex1, guessIndex2, max(val1, val2));
       }
@@ -857,17 +898,24 @@ module ArraySetops
       begin release.writeEF(0);
 
       //  Determine split points for cases when the segment needs to be divided between locales.
-      coforall loc in Locales with (const ref a, const ref b, ref table){
+      for loc in Locales{// with (const ref a, const ref b, ref table){
         on loc {
           // len can be incremented but we only need to loop over the table entries that are already defined.
           const startingLen: int = table.len;
 
-          forall i in 0..<startingLen with (ref table){
+          for i in 0..<startingLen{// with (ref table){
             if(table.getNeedsSplit(i) == true ){
 
               const k: int = table.getReturnSize(i);
               const aSz: int = table.getASize(i);
               const bSz: int = table.getBSize(i);
+              writeln("k");
+              writeln(k);
+              writeln("aSz");
+              writeln(aSz);
+              writeln("bSz");
+              writeln(bSz);
+
 
               if (table.getALocId(i) == here.id){
                 if(bSz == 0){
@@ -899,16 +947,21 @@ module ArraySetops
 
                   var int_sync = release.readFE();
                   writeln("\nwrite case 2: ", int_sync, " on ", here.id);
+                  writeln("table.getValue(i)");
+                  writeln(table.getValue(i));
 
-                  table.setValue(table.len, splitVal);
-                  table.setAComputed(table.len, true);
-                  table.setALocId(table.len, here.id);
-                  table.setAIndex(table.len, aSplitIndex);
-                  table.setBComputed(table.len, true);
-                  table.setBLocId(table.len, -1);
-                  table.setBIndex(table.len, bSplitIndex);
+                  if((splitVal != table.getValue(i)) && ((i>table.len-2)||(splitVal != table.getValue(i+1))) ){
 
-                  table.len += 1;
+                    table.setValue(table.len, splitVal);
+                    table.setAComputed(table.len, true);
+                    table.setALocId(table.len, here.id);
+                    table.setAIndex(table.len, aSplitIndex);
+                    table.setBComputed(table.len, true);
+                    table.setBLocId(table.len, -1);
+                    table.setBIndex(table.len, bSplitIndex);
+
+                    table.len += 1;
+                  }
 
                   release.writeEF(int_sync + 1);
                 }
@@ -941,15 +994,20 @@ module ArraySetops
 
                   var int_sync = release.readFE();
                   writeln("\nwrite case 4: ", int_sync, " on ", here.id);
+                  writeln("table.getValue(i)");
+                  writeln(table.getValue(i));
 
-                  table.setValue(table.len, splitVal);
-                  table.setAComputed(table.len, true);
-                  table.setALocId(table.len, -1);
-                  table.setAIndex(table.len, aSplitIndex);
-                  table.setBComputed(table.len, true);
-                  table.setBLocId(table.len, here.id);
-                  table.setBIndex(table.len, bSplitIndex);
-                  table.len += 1;
+
+                  if((splitVal != table.getValue(i)) && ((i>table.len-2)||(splitVal != table.getValue(i+1))) ){
+                    table.setValue(table.len, splitVal);
+                    table.setAComputed(table.len, true);
+                    table.setALocId(table.len, -1);
+                    table.setAIndex(table.len, aSplitIndex);
+                    table.setBComputed(table.len, true);
+                    table.setBLocId(table.len, here.id);
+                    table.setBIndex(table.len, bSplitIndex);
+                    table.len += 1;
+                  }
 
                   release.writeEF(int_sync + 1);
                 }
@@ -960,6 +1018,7 @@ module ArraySetops
       }
 
       table.sortAndUpdateStats();
+      table.dedupe();
 
       //  Because we send ties to the same locale, segs can be off by a small amount and needs to be recalculated.
       segs = 0;
