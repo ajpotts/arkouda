@@ -446,8 +446,8 @@ module ArraySetops
         // the locales will be in increasing order.  Plus, the locales for the max and min of each locale
         // are computed.  So, any missing locale values will be fall between computed values, and therefore
         // can be imputed.
-        this.aLocId = max scan this.aLocId;
-        this.bLocId = max scan this.bLocId;
+        this.aLocId = (max scan this.aLocId) * this.aComputed;
+        this.bLocId = (max scan this.bLocId) * this.bComputed;
 
         // For missing indices, estimate the insertion index:
         this.aIndex = max scan this.aIndex;
@@ -974,7 +974,7 @@ module ArraySetops
                   writeln("setting a loc id to: ", here.id);
                   table.setAIndex(table.len, aIdx);
                   writeln("setting a index to ", aIdx);
-                  table.setBComputed(table.len, true);
+                  table.setBComputed(table.len, false);
                   writeln("setting b computed to ", true);
                   table.setBLocId(table.len, -1);
                   writeln("setting b loc id to ", -1);
@@ -1026,7 +1026,7 @@ module ArraySetops
                   writeln("\nwrite case 3: ", int_sync, " on ", here.id);
 
                   table.setValue(table.len, b[bIdx]);
-                  table.setAComputed(table.len, true);
+                  table.setAComputed(table.len, false);
                   table.setALocId(table.len, -1);
                   // if(table.getAComputed(i)){
                   table.setAIndex(table.len, table.getAIndex(i));
