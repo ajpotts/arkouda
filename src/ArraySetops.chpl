@@ -497,16 +497,18 @@ module ArraySetops
 
       proc dedupe(){
         for i in 0..<(this.len - 1){
-          if(values[i] == values[i+1]){
+          writeln("i: ",i);
+
+          if((i < this.len -1) && (values[i] == values[i+1])){
             if(aComputed[i]){
-              writeln("Deduping: ", i);
+              writeln("Deduping: ", values[i]);
               bComputed[i] = bComputed[i+1];
               bLocId[i] = bLocId[i+1];
               bIndex[i] = bIndex[i+1];
               bSize[i] = bSize[i+1];
               shiftAll(i+1);
             }else if(bComputed[i]){
-              writeln("Deduping: ", i);
+              writeln("Deduping: ", values[i]);
               aComputed[i] = aComputed[i+1];
               aLocId[i] = aLocId[i+1];
               aIndex[i] = aIndex[i+1];
@@ -785,6 +787,7 @@ module ArraySetops
 
       table.writeDebugStatements();
       table.sortAllInPlace();
+      table.writeDebugStatements();
       table.dedupe();
       table.writeDebugStatements();
 
@@ -839,6 +842,8 @@ module ArraySetops
         }
       }
 
+      table.sortAndUpdateStats();
+      table.dedupe();
       table.sortAndUpdateStats();
       table.writeDebugStatements();
       table.updateRetLocales(a, b, segs);
@@ -1017,8 +1022,9 @@ module ArraySetops
         }
       }
 
-      table.sortAndUpdateStats();
+      table.sortAllInPlace();
       table.dedupe();
+      table.sortAndUpdateStats();
 
       //  Because we send ties to the same locale, segs can be off by a small amount and needs to be recalculated.
       segs = 0;
