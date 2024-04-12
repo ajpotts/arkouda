@@ -857,10 +857,37 @@ module ArraySetops
         var rangeLow1: int = low1;
         var rangeHigh1 : int = high1;
 
-        var guessIndex1: int = floor((high1 + low1)/2):int;
-        var guessIndex2: int = low2 + k - (guessIndex1  - low1) -1;
+        var guessIndex1: int = ceil((high1:real + low1:real)/2):int;
+        var guessIndex2: int = max(low2 + k - (guessIndex1  - low1) -1, high2);
         var val1: int = arry1[guessIndex1];
         var val2: int = arry2[guessIndex2];
+        
+        writeln("high1");
+        writeln(high1);
+
+        writeln("low1");
+        writeln(low1);
+
+        writeln("(high1:real + low1:real)/2");
+        writeln((high1:real + low1:real)/2);
+
+        writeln("ceil((high1:real+ low1:real)/2)");
+        writeln(ceil((high1:real + low1:real)/2));        
+
+        writeln("ceil((high1:real + low1:real)/2):int");
+        writeln(ceil((high1:real + low1:real)/2):int);
+
+        writeln("(guessIndex1  - low1)");
+        writeln((guessIndex1  - low1));
+
+        writeln(" low2 + k ");
+        writeln( low2 + k );
+
+        writeln("low2 + k - (guessIndex1  - low1) -1");
+        writeln(low2 + k - (guessIndex1  - low1) -1);
+
+        writeln("Range0: ",low1, " ", high1, " ", low2, " ", high2);
+        writeln("guesses0: ", guessIndex1, " ", guessIndex2, " ",  val1, " ",  val2);
 
         proc update(){ // TODO Should range be over value2
           if( val1 > val2){
@@ -869,11 +896,13 @@ module ArraySetops
             rangeLow1 = guessIndex1;
           }
 
-          guessIndex1 = floor((rangeHigh1 + rangeLow1)/2): int ;
-          guessIndex2 = low2 + k - (guessIndex1  - low1) - 1;
+          guessIndex1 = ceil((rangeHigh1:real + rangeLow1:real)/2): int ;
+          guessIndex2 = max(low2 + k - (guessIndex1  - low1) - 1, high2);
 
           val1 = arry1[guessIndex1];
           val2 = arry2[guessIndex2];
+          writeln("Range: ",rangeLow1, " ", rangeHigh1, " ", low2, " ", high2);
+          writeln("guesses: ", guessIndex1, " ", guessIndex2, " ",  val1, " ",  val2);
         }
 
         for i in 0..maxIterations{
@@ -943,10 +972,10 @@ module ArraySetops
                 }else if(aSz > bSz) {
 
                   const aLow : int = table.getAIndex(i);
-                  const aHigh : int = min(aLow + aSz - 1, aLow + k, aLow);
+                  const aHigh : int = max(min(aLow + aSz - 1, aLow + k), aLow);
 
                   const bLow : int = table.getBIndex(i);
-                  const bHigh : int = min(bLow + bSz - 1, bLow + k, bLow);
+                  const bHigh : int = max(min(bLow + bSz - 1, bLow + k), bLow);
   
                   const (aSplitIndex,bSplitIndex, splitVal): (int, int, t) = findMinKLocations(k, a, b,  aLow, aHigh, bLow, bHigh);
 
