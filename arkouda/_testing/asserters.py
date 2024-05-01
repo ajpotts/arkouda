@@ -11,6 +11,7 @@ from typing import (
 import numpy as np
 
 from arkouda import Index, Series, DataFrame, MultiIndex, Categorical
+from arkouda.util import is_numeric_dtype, is_float_dtype, is_integer_dtype
 
 from pandas.api.types import is_number, is_bool
 
@@ -33,8 +34,7 @@ import pandas as pd
 #     ExtensionDtype,
 #     NumpyEADtype,
 # )
-# from pandas.core.dtypes.missing import array_equivalent
-#
+
 # import pandas as pd
 # from pandas import (
 #     Categorical,
@@ -69,7 +69,6 @@ import pandas as pd
 def assert_almost_equal(
     left,
     right,
-    check_dtype: bool | Literal["equiv"] = "equiv",
     rtol: float = 1.0e-5,
     atol: float = 1.0e-8,
     **kwargs,
@@ -84,10 +83,6 @@ def assert_almost_equal(
     ----------
     left : object
     right : object
-    check_dtype : bool or {'equiv'}, default 'equiv'
-        Check dtype if both a and b are the same type. If 'equiv' is passed in,
-        then `RangeIndex` and `Index` with int64 dtype are also considered
-        equivalent when doing type checking.
     rtol : float, default 1e-5
         Relative tolerance.
     atol : float, default 1e-8
@@ -98,7 +93,6 @@ def assert_almost_equal(
             left,
             right,
             check_exact=False,
-            exact=check_dtype,
             rtol=rtol,
             atol=atol,
             **kwargs,
@@ -109,7 +103,6 @@ def assert_almost_equal(
             left,
             right,
             check_exact=False,
-            check_dtype=check_dtype,
             rtol=rtol,
             atol=atol,
             **kwargs,
@@ -120,7 +113,6 @@ def assert_almost_equal(
             left,
             right,
             check_exact=False,
-            check_dtype=check_dtype,
             rtol=rtol,
             atol=atol,
             **kwargs,
@@ -128,24 +120,22 @@ def assert_almost_equal(
 
     else:
         # Other sequences.
-        if check_dtype:
-            if is_number(left) and is_number(right):
-                # Do not compare numeric classes, like np.float64 and float.
-                pass
-            elif is_bool(left) and is_bool(right):
-                # Do not compare bool classes, like np.bool_ and bool.
-                pass
+
+        if is_number(left) and is_number(right):
+            # Do not compare numeric classes, like np.float64 and float.
+            pass
+        elif is_bool(left) and is_bool(right):
+            # Do not compare bool classes, like np.bool_ and bool.
+            pass
+        else:
+            if isinstance(left, np.ndarray) or isinstance(right, np.ndarray):
+                obj = "numpy array"
             else:
-                if isinstance(left, np.ndarray) or isinstance(right, np.ndarray):
-                    obj = "numpy array"
-                else:
-                    obj = "Input"
-                assert_class_equal(left, right, obj=obj)
+                obj = "Input"
+            assert_class_equal(left, right, obj=obj)
 
         # if we have "equiv", this becomes True
-        _testing.assert_almost_equal(
-            left, right, check_dtype=bool(check_dtype), rtol=rtol, atol=atol, **kwargs
-        )
+        np.allclose(left, right, rtol=rtol, atol=atol, equal_nan=True)
 
 
 def _check_isinstance(left, right, cls) -> None:
@@ -174,7 +164,17 @@ def _check_isinstance(left, right, cls) -> None:
 
 def assert_dict_equal(left, right, compare_keys: bool = True) -> None:
     _check_isinstance(left, right, dict)
-    _testing.assert_dict_equal(left, right, compare_keys=compare_keys)
+
+    left_keys = frozenset(left.keys())
+    right_keys = frozenset(right.keys())
+
+    if compare_keys:
+        assert left_keys == right_keys
+
+    for k in left_keys:
+        assert_almost_equal(right[k], right[k])
+
+    return True
 
 
 def assert_index_equal(
@@ -235,7 +235,7 @@ def assert_index_equal(
         assert_attr_equal("inferred_type", left, right, obj=obj)
 
         # Skip exact dtype checking when `check_categorical` is False
-        if isinstance(left.dtype, CategoricalDtype) and isinstance(right.dtype, CategoricalDtype):
+        if isinstance(left.dtype, Categorical) and isinstance(right.dtype, Categorical):
             if check_categorical:
                 assert_attr_equal("dtype", left, right, obj=obj)
                 assert_index_equal(left.categories, right.categories, exact=exact)
@@ -320,15 +320,12 @@ def assert_index_equal(
     else:
         # if we have "equiv", this becomes True
         exact_bool = bool(exact)
-        _testing.assert_almost_equal(
+        np.allclose(
             left.values,
             right.values,
             rtol=rtol,
             atol=atol,
-            check_dtype=exact_bool,
-            obj=obj,
-            lobj=left,
-            robj=right,
+            equal_nan=True
         )
 
     # metadata comparison
@@ -336,7 +333,7 @@ def assert_index_equal(
         assert_attr_equal("names", left, right, obj=obj)
 
     if check_categorical:
-        if isinstance(left.dtype, CategoricalDtype) or isinstance(right.dtype, CategoricalDtype):
+        if isinstance(left.dtype, Categorical) or isinstance(right.dtype, Categorical):
             assert_categorical_equal(left._values, right._values, obj=f"{obj} category")
 
 
@@ -438,10 +435,7 @@ def assert_is_sorted(seq) -> None:
     if isinstance(seq, (Index, Series)):
         seq = seq.values
     # sorting does not change precisions
-    if isinstance(seq, np.ndarray):
-        assert_numpy_array_equal(seq, np.sort(np.array(seq)))
-    else:
-        assert_extension_array_equal(seq, seq[seq.argsort()])
+    assert_numpy_array_equal(seq, np.sort(np.array(seq)))
 
 
 def assert_categorical_equal(
@@ -513,12 +507,12 @@ def raise_assert_detail(
 
     if isinstance(left, np.ndarray):
         left = pprint_thing(left)
-    elif isinstance(left, (CategoricalDtype, NumpyEADtype, StringDtype)):
+    elif isinstance(left, (Categorical, NumpyEADtype, Strings)):
         left = repr(left)
 
     if isinstance(right, np.ndarray):
         right = pprint_thing(right)
-    elif isinstance(right, (CategoricalDtype, NumpyEADtype, StringDtype)):
+    elif isinstance(right, (Categorical, NumpyEADtype, Strings)):
         right = repr(right)
 
     msg += f"""
@@ -594,7 +588,7 @@ def assert_numpy_array_equal(
             diff = 0
             for left_arr, right_arr in zip(left, right):
                 # count up differences
-                if not array_equivalent(left_arr, right_arr, strict_nan=strict_nan):
+                if not np.allclose(left_arr, right_arr, atol=0, equal_nan=True):
                     diff += 1
 
             diff = diff * 100.0 / left.size
@@ -604,7 +598,7 @@ def assert_numpy_array_equal(
         raise AssertionError(err_msg)
 
     # compare shape and values
-    if not array_equivalent(left, right, strict_nan=strict_nan):
+    if not np.allclose(left, right, atol=0, equal_nan=True):
         _raise(left, right, err_msg)
 
     if check_dtype:
@@ -746,8 +740,8 @@ def assert_series_equal(
         # is False. We'll still raise if only one is a `Categorical`,
         # regardless of `check_categorical`
         if (
-            isinstance(left.dtype, CategoricalDtype)
-            and isinstance(right.dtype, CategoricalDtype)
+            isinstance(left.dtype, Categorical)
+            and isinstance(right.dtype, Categorical)
             and not check_categorical
         ):
             pass
@@ -767,8 +761,8 @@ def assert_series_equal(
             obj=str(obj),
             index_values=left.index,
         )
-    elif isinstance(left.dtype, CategoricalDtype) or isinstance(right.dtype, CategoricalDtype):
-        _testing.assert_almost_equal(
+    elif isinstance(left.dtype, Categorical) or isinstance(right.dtype, Categorical):
+        assert_almost_equal(
             left._values,
             right._values,
             rtol=rtol,
@@ -778,7 +772,7 @@ def assert_series_equal(
             index_values=left.index,
         )
     else:
-        _testing.assert_almost_equal(
+        assert_almost_equal(
             left._values,
             right._values,
             rtol=rtol,
@@ -793,7 +787,7 @@ def assert_series_equal(
         assert_attr_equal("name", left, right, obj=obj)
 
     if check_categorical:
-        if isinstance(left.dtype, CategoricalDtype) or isinstance(right.dtype, CategoricalDtype):
+        if isinstance(left.dtype, Categorical) or isinstance(right.dtype, Categorical):
             assert_categorical_equal(
                 left._values,
                 right._values,
