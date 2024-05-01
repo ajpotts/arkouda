@@ -10,11 +10,12 @@ from typing import (
 
 import numpy as np
 
-from arkouda import Index, Series, DataFrame,MultiIndex
+from arkouda import Index, Series, DataFrame, MultiIndex, Categorical
 
 from pandas.api.types import is_number, is_bool
 
 from pandas._libs.missing import is_matching_na
+from pandas.io.formats.printing import pprint_thing
 
 import pandas as pd
 
@@ -63,9 +64,6 @@ import pandas as pd
 #
 # if TYPE_CHECKING:
 #     from pandas._typing import DtypeObj
-
-
-
 
 
 def assert_almost_equal(
@@ -169,13 +167,9 @@ def _check_isinstance(left, right, cls) -> None:
     cls_name = cls.__name__
 
     if not isinstance(left, cls):
-        raise AssertionError(
-            f"{cls_name} Expected type {cls}, found {type(left)} instead"
-        )
+        raise AssertionError(f"{cls_name} Expected type {cls}, found {type(left)} instead")
     if not isinstance(right, cls):
-        raise AssertionError(
-            f"{cls_name} Expected type {cls}, found {type(right)} instead"
-        )
+        raise AssertionError(f"{cls_name} Expected type {cls}, found {type(right)} instead")
 
 
 def assert_dict_equal(left, right, compare_keys: bool = True) -> None:
@@ -241,9 +235,7 @@ def assert_index_equal(
         assert_attr_equal("inferred_type", left, right, obj=obj)
 
         # Skip exact dtype checking when `check_categorical` is False
-        if isinstance(left.dtype, CategoricalDtype) and isinstance(
-            right.dtype, CategoricalDtype
-        ):
+        if isinstance(left.dtype, CategoricalDtype) and isinstance(right.dtype, CategoricalDtype):
             if check_categorical:
                 assert_attr_equal("dtype", left, right, obj=obj)
                 assert_index_equal(left.categories, right.categories, exact=exact)
@@ -344,15 +336,11 @@ def assert_index_equal(
         assert_attr_equal("names", left, right, obj=obj)
 
     if check_categorical:
-        if isinstance(left.dtype, CategoricalDtype) or isinstance(
-            right.dtype, CategoricalDtype
-        ):
+        if isinstance(left.dtype, CategoricalDtype) or isinstance(right.dtype, CategoricalDtype):
             assert_categorical_equal(left._values, right._values, obj=f"{obj} category")
 
 
-def assert_class_equal(
-    left, right, exact: bool | str = True, obj: str = "Input"
-) -> None:
+def assert_class_equal(left, right, exact: bool | str = True, obj: str = "Input") -> None:
     """
     Checks classes are equal.
     """
@@ -484,21 +472,12 @@ def assert_categorical_equal(
     _check_isinstance(left, right, Categorical)
 
     exact: bool | str
-    if isinstance(left.categories, RangeIndex) or isinstance(
-        right.categories, RangeIndex
-    ):
-        exact = "equiv"
-    else:
-        # We still want to require exact matches for Index
-        exact = True
+
+    exact = True
 
     if check_category_order:
-        assert_index_equal(
-            left.categories, right.categories, obj=f"{obj}.categories", exact=exact
-        )
-        assert_numpy_array_equal(
-            left.codes, right.codes, check_dtype=check_dtype, obj=f"{obj}.codes"
-        )
+        assert_index_equal(left.categories, right.categories, obj=f"{obj}.categories", exact=exact)
+        assert_numpy_array_equal(left.codes, right.codes, check_dtype=check_dtype, obj=f"{obj}.codes")
     else:
         try:
             lc = left.categories.sort_values()
@@ -515,66 +494,6 @@ def assert_categorical_equal(
         )
 
     assert_attr_equal("ordered", left, right, obj=obj)
-
-
-def assert_interval_array_equal(
-    left, right, exact: bool | Literal["equiv"] = "equiv", obj: str = "IntervalArray"
-) -> None:
-    """
-    Test that two IntervalArrays are equivalent.
-
-    Parameters
-    ----------
-    left, right : IntervalArray
-        The IntervalArrays to compare.
-    exact : bool or {'equiv'}, default 'equiv'
-        Whether to check the Index class, dtype and inferred_type
-        are identical. If 'equiv', then RangeIndex can be substituted for
-        Index with an int64 dtype as well.
-    obj : str, default 'IntervalArray'
-        Specify object name being compared, internally used to show appropriate
-        assertion message
-    """
-    _check_isinstance(left, right, IntervalArray)
-
-    kwargs = {}
-    if left._left.dtype.kind in "mM":
-        # We have a DatetimeArray or TimedeltaArray
-        kwargs["check_freq"] = False
-
-    assert_equal(left._left, right._left, obj=f"{obj}.left", **kwargs)
-    assert_equal(left._right, right._right, obj=f"{obj}.left", **kwargs)
-
-    assert_attr_equal("closed", left, right, obj=obj)
-
-
-def assert_period_array_equal(left, right, obj: str = "PeriodArray") -> None:
-    _check_isinstance(left, right, PeriodArray)
-
-    assert_numpy_array_equal(left._ndarray, right._ndarray, obj=f"{obj}._ndarray")
-    assert_attr_equal("dtype", left, right, obj=obj)
-
-
-def assert_datetime_array_equal(
-    left, right, obj: str = "DatetimeArray", check_freq: bool = True
-) -> None:
-    __tracebackhide__ = True
-    _check_isinstance(left, right, DatetimeArray)
-
-    assert_numpy_array_equal(left._ndarray, right._ndarray, obj=f"{obj}._ndarray")
-    if check_freq:
-        assert_attr_equal("freq", left, right, obj=obj)
-    assert_attr_equal("tz", left, right, obj=obj)
-
-
-def assert_timedelta_array_equal(
-    left, right, obj: str = "TimedeltaArray", check_freq: bool = True
-) -> None:
-    __tracebackhide__ = True
-    _check_isinstance(left, right, TimedeltaArray)
-    assert_numpy_array_equal(left._ndarray, right._ndarray, obj=f"{obj}._ndarray")
-    if check_freq:
-        assert_attr_equal("freq", left, right, obj=obj)
 
 
 def raise_assert_detail(
@@ -670,9 +589,7 @@ def assert_numpy_array_equal(
     def _raise(left, right, err_msg) -> NoReturn:
         if err_msg is None:
             if left.shape != right.shape:
-                raise_assert_detail(
-                    obj, f"{obj} shapes are different", left.shape, right.shape
-                )
+                raise_assert_detail(obj, f"{obj} shapes are different", left.shape, right.shape)
 
             diff = 0
             for left_arr, right_arr in zip(left, right):
@@ -693,135 +610,6 @@ def assert_numpy_array_equal(
     if check_dtype:
         if isinstance(left, np.ndarray) and isinstance(right, np.ndarray):
             assert_attr_equal("dtype", left, right, obj=obj)
-
-
-def assert_extension_array_equal(
-    left,
-    right,
-    check_dtype: bool | Literal["equiv"] = True,
-    index_values=None,
-    check_exact: bool | lib.NoDefault = lib.no_default,
-    rtol: float | lib.NoDefault = lib.no_default,
-    atol: float | lib.NoDefault = lib.no_default,
-    obj: str = "ExtensionArray",
-) -> None:
-    """
-    Check that left and right ExtensionArrays are equal.
-
-    Parameters
-    ----------
-    left, right : ExtensionArray
-        The two arrays to compare.
-    check_dtype : bool, default True
-        Whether to check if the ExtensionArray dtypes are identical.
-    index_values : Index | numpy.ndarray, default None
-        Optional index (shared by both left and right), used in output.
-    check_exact : bool, default False
-        Whether to compare number exactly.
-
-        .. versionchanged:: 2.2.0
-
-            Defaults to True for integer dtypes if none of
-            ``check_exact``, ``rtol`` and ``atol`` are specified.
-    rtol : float, default 1e-5
-        Relative tolerance. Only used when check_exact is False.
-    atol : float, default 1e-8
-        Absolute tolerance. Only used when check_exact is False.
-    obj : str, default 'ExtensionArray'
-        Specify object name being compared, internally used to show appropriate
-        assertion message.
-
-        .. versionadded:: 2.0.0
-
-    Notes
-    -----
-    Missing values are checked separately from valid values.
-    A mask of missing values is computed for each and checked to match.
-    The remaining all-valid values are cast to object dtype and checked.
-
-    Examples
-    --------
-    >>> from pandas import testing as tm
-    >>> a = pd.Series([1, 2, 3, 4])
-    >>> b, c = a.array, a.array
-    >>> tm.assert_extension_array_equal(b, c)
-    """
-    if (
-        check_exact is lib.no_default
-        and rtol is lib.no_default
-        and atol is lib.no_default
-    ):
-        check_exact = (
-            is_numeric_dtype(left.dtype)
-            and not is_float_dtype(left.dtype)
-            or is_numeric_dtype(right.dtype)
-            and not is_float_dtype(right.dtype)
-        )
-    elif check_exact is lib.no_default:
-        check_exact = False
-
-    rtol = rtol if rtol is not lib.no_default else 1.0e-5
-    atol = atol if atol is not lib.no_default else 1.0e-8
-
-    assert isinstance(left, ExtensionArray), "left is not an ExtensionArray"
-    assert isinstance(right, ExtensionArray), "right is not an ExtensionArray"
-    if check_dtype:
-        assert_attr_equal("dtype", left, right, obj=f"Attributes of {obj}")
-
-    if (
-        isinstance(left, DatetimeLikeArrayMixin)
-        and isinstance(right, DatetimeLikeArrayMixin)
-        and type(right) == type(left)
-    ):
-        # GH 52449
-        if not check_dtype and left.dtype.kind in "mM":
-            if not isinstance(left.dtype, np.dtype):
-                l_unit = cast(DatetimeTZDtype, left.dtype).unit
-            else:
-                l_unit = np.datetime_data(left.dtype)[0]
-            if not isinstance(right.dtype, np.dtype):
-                r_unit = cast(DatetimeTZDtype, right.dtype).unit
-            else:
-                r_unit = np.datetime_data(right.dtype)[0]
-            if (
-                l_unit != r_unit
-                and compare_mismatched_resolutions(
-                    left._ndarray, right._ndarray, operator.eq
-                ).all()
-            ):
-                return
-        # Avoid slow object-dtype comparisons
-        # np.asarray for case where we have a np.MaskedArray
-        assert_numpy_array_equal(
-            np.asarray(left.asi8),
-            np.asarray(right.asi8),
-            index_values=index_values,
-            obj=obj,
-        )
-        return
-
-    left_na = np.asarray(left.isna())
-    right_na = np.asarray(right.isna())
-    assert_numpy_array_equal(
-        left_na, right_na, obj=f"{obj} NA mask", index_values=index_values
-    )
-
-    left_valid = left[~left_na].to_numpy(dtype=object)
-    right_valid = right[~right_na].to_numpy(dtype=object)
-    if check_exact:
-        assert_numpy_array_equal(
-            left_valid, right_valid, obj=obj, index_values=index_values
-        )
-    else:
-        _testing.assert_almost_equal(
-            left_valid,
-            right_valid,
-            check_dtype=bool(check_dtype),
-            rtol=rtol,
-            atol=atol,
-            obj=obj,
-            index_values=index_values,
-        )
 
 
 # This could be refactored to use the NDFrame.equals method
@@ -904,11 +692,7 @@ def assert_series_equal(
     """
     __tracebackhide__ = True
     check_exact_index = False if check_exact is lib.no_default else check_exact
-    if (
-        check_exact is lib.no_default
-        and rtol is lib.no_default
-        and atol is lib.no_default
-    ):
+    if check_exact is lib.no_default and rtol is lib.no_default and atol is lib.no_default:
         check_exact = (
             is_numeric_dtype(left.dtype)
             and not is_float_dtype(left.dtype)
@@ -957,11 +741,6 @@ def assert_series_equal(
     if check_like:
         left = left.reindex_like(right)
 
-    if check_freq and isinstance(left.index, (DatetimeIndex, TimedeltaIndex)):
-        lidx = left.index
-        ridx = right.index
-        assert lidx.freq == ridx.freq, (lidx.freq, ridx.freq)
-
     if check_dtype:
         # We want to skip exact dtype checking when `check_categorical`
         # is False. We'll still raise if only one is a `Categorical`,
@@ -978,52 +757,17 @@ def assert_series_equal(
         left_values = left._values
         right_values = right._values
         # Only check exact if dtype is numeric
-        if isinstance(left_values, ExtensionArray) and isinstance(
-            right_values, ExtensionArray
-        ):
-            assert_extension_array_equal(
-                left_values,
-                right_values,
-                check_dtype=check_dtype,
-                index_values=left.index,
-                obj=str(obj),
-            )
-        else:
-            # convert both to NumPy if not, check_dtype would raise earlier
-            lv, rv = left_values, right_values
-            if isinstance(left_values, ExtensionArray):
-                lv = left_values.to_numpy()
-            if isinstance(right_values, ExtensionArray):
-                rv = right_values.to_numpy()
-            assert_numpy_array_equal(
-                lv,
-                rv,
-                check_dtype=check_dtype,
-                obj=str(obj),
-                index_values=left.index,
-            )
-    elif check_datetimelike_compat and (
-        needs_i8_conversion(left.dtype) or needs_i8_conversion(right.dtype)
-    ):
-        # we want to check only if we have compat dtypes
-        # e.g. integer and M|m are NOT compat, but we can simply check
-        # the values in that case
 
-        # datetimelike may have different objects (e.g. datetime.datetime
-        # vs Timestamp) but will compare equal
-        if not Index(left._values).equals(Index(right._values)):
-            msg = (
-                f"[datetimelike_compat=True] {left._values} "
-                f"is not equal to {right._values}."
-            )
-            raise AssertionError(msg)
-    elif isinstance(left.dtype, IntervalDtype) and isinstance(
-        right.dtype, IntervalDtype
-    ):
-        assert_interval_array_equal(left.array, right.array)
-    elif isinstance(left.dtype, CategoricalDtype) or isinstance(
-        right.dtype, CategoricalDtype
-    ):
+        # convert both to NumPy if not, check_dtype would raise earlier
+        lv, rv = left_values, right_values
+        assert_numpy_array_equal(
+            lv,
+            rv,
+            check_dtype=check_dtype,
+            obj=str(obj),
+            index_values=left.index,
+        )
+    elif isinstance(left.dtype, CategoricalDtype) or isinstance(right.dtype, CategoricalDtype):
         _testing.assert_almost_equal(
             left._values,
             right._values,
@@ -1032,37 +776,6 @@ def assert_series_equal(
             check_dtype=bool(check_dtype),
             obj=str(obj),
             index_values=left.index,
-        )
-    elif isinstance(left.dtype, ExtensionDtype) and isinstance(
-        right.dtype, ExtensionDtype
-    ):
-        assert_extension_array_equal(
-            left._values,
-            right._values,
-            rtol=rtol,
-            atol=atol,
-            check_dtype=check_dtype,
-            index_values=left.index,
-            obj=str(obj),
-        )
-    elif is_extension_array_dtype_and_needs_i8_conversion(
-        left.dtype, right.dtype
-    ) or is_extension_array_dtype_and_needs_i8_conversion(right.dtype, left.dtype):
-        assert_extension_array_equal(
-            left._values,
-            right._values,
-            check_dtype=check_dtype,
-            index_values=left.index,
-            obj=str(obj),
-        )
-    elif needs_i8_conversion(left.dtype) and needs_i8_conversion(right.dtype):
-        # DatetimeArray or TimedeltaArray
-        assert_extension_array_equal(
-            left._values,
-            right._values,
-            check_dtype=check_dtype,
-            index_values=left.index,
-            obj=str(obj),
         )
     else:
         _testing.assert_almost_equal(
@@ -1080,9 +793,7 @@ def assert_series_equal(
         assert_attr_equal("name", left, right, obj=obj)
 
     if check_categorical:
-        if isinstance(left.dtype, CategoricalDtype) or isinstance(
-            right.dtype, CategoricalDtype
-        ):
+        if isinstance(left.dtype, CategoricalDtype) or isinstance(right.dtype, CategoricalDtype):
             assert_categorical_equal(
                 left._values,
                 right._values,
@@ -1216,9 +927,7 @@ def assert_frame_equal(
 
     # shape comparison
     if left.shape != right.shape:
-        raise_assert_detail(
-            obj, f"{obj} shape mismatch", f"{repr(left.shape)}", f"{repr(right.shape)}"
-        )
+        raise_assert_detail(obj, f"{obj} shape mismatch", f"{repr(left.shape)}", f"{repr(right.shape)}")
 
     if check_flags:
         assert left.flags == right.flags, f"{repr(left.flags)} != {repr(right.flags)}"
@@ -1261,9 +970,7 @@ def assert_frame_equal(
         for dtype in list(set(list(lblocks.keys()) + list(rblocks.keys()))):
             assert dtype in lblocks
             assert dtype in rblocks
-            assert_frame_equal(
-                lblocks[dtype], rblocks[dtype], check_dtype=check_dtype, obj=obj
-            )
+            assert_frame_equal(lblocks[dtype], rblocks[dtype], check_dtype=check_dtype, obj=obj)
 
     # compare by columns
     else:
@@ -1310,22 +1017,10 @@ def assert_equal(left, right, **kwargs) -> None:
 
     if isinstance(left, Index):
         assert_index_equal(left, right, **kwargs)
-        if isinstance(left, (DatetimeIndex, TimedeltaIndex)):
-            assert left.freq == right.freq, (left.freq, right.freq)
     elif isinstance(left, Series):
         assert_series_equal(left, right, **kwargs)
     elif isinstance(left, DataFrame):
         assert_frame_equal(left, right, **kwargs)
-    elif isinstance(left, IntervalArray):
-        assert_interval_array_equal(left, right, **kwargs)
-    elif isinstance(left, PeriodArray):
-        assert_period_array_equal(left, right, **kwargs)
-    elif isinstance(left, DatetimeArray):
-        assert_datetime_array_equal(left, right, **kwargs)
-    elif isinstance(left, TimedeltaArray):
-        assert_timedelta_array_equal(left, right, **kwargs)
-    elif isinstance(left, ExtensionArray):
-        assert_extension_array_equal(left, right, **kwargs)
     elif isinstance(left, np.ndarray):
         assert_numpy_array_equal(left, right, **kwargs)
     elif isinstance(left, str):
@@ -1334,39 +1029,6 @@ def assert_equal(left, right, **kwargs) -> None:
     else:
         assert kwargs == {}
         assert_almost_equal(left, right)
-
-
-def assert_sp_array_equal(left, right) -> None:
-    """
-    Check that the left and right SparseArray are equal.
-
-    Parameters
-    ----------
-    left : SparseArray
-    right : SparseArray
-    """
-    _check_isinstance(left, right, pd.arrays.SparseArray)
-
-    assert_numpy_array_equal(left.sp_values, right.sp_values)
-
-    # SparseIndex comparison
-    assert isinstance(left.sp_index, SparseIndex)
-    assert isinstance(right.sp_index, SparseIndex)
-
-    left_index = left.sp_index
-    right_index = right.sp_index
-
-    if not left_index.equals(right_index):
-        raise_assert_detail(
-            "SparseArray.index", "index are not equal", left_index, right_index
-        )
-    else:
-        # Just ensure a
-        pass
-
-    assert_attr_equal("fill_value", left, right)
-    assert_attr_equal("dtype", left, right)
-    assert_numpy_array_equal(left.to_dense(), right.to_dense())
 
 
 def assert_contains_all(iterable, dic) -> None:
@@ -1390,22 +1052,6 @@ def assert_copy(iter1, iter2, **eql_kwargs) -> None:
             "different objects, but they were the same object."
         )
         assert elem1 is not elem2, msg
-
-
-def is_extension_array_dtype_and_needs_i8_conversion(
-    left_dtype: DtypeObj, right_dtype: DtypeObj
-) -> bool:
-    """
-    Checks that we have the combination of an ExtensionArraydtype and
-    a dtype that should be converted to int64
-
-    Returns
-    -------
-    bool
-
-    Related to issue #37609
-    """
-    return isinstance(left_dtype, ExtensionDtype) and needs_i8_conversion(right_dtype)
 
 
 def assert_indexing_slices_equivalent(ser: Series, l_slc: slice, i_slc: slice) -> None:
