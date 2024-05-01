@@ -1,24 +1,16 @@
 from __future__ import annotations
 
 import operator
-from typing import (
-    TYPE_CHECKING,
-    Literal,
-    NoReturn,
-    cast,
-)
+from typing import TYPE_CHECKING, Literal, NoReturn, cast
 
 import numpy as np
-
-from arkouda import Index, Series, DataFrame, MultiIndex, Categorical
-from arkouda.util import is_numeric_dtype, is_float_dtype, is_integer_dtype
-
-from pandas.api.types import is_number, is_bool
-
+import pandas as pd
 from pandas._libs.missing import is_matching_na
+from pandas.api.types import is_bool, is_number
 from pandas.io.formats.printing import pprint_thing
 
-import pandas as pd
+from arkouda import Categorical, DataFrame, Index, MultiIndex, Series, Strings, pdarray
+from arkouda.util import is_float_dtype, is_integer_dtype, is_numeric_dtype
 
 # from pandas.core.dtypes.common import (
 #     is_bool,
@@ -265,8 +257,8 @@ def assert_index_equal(
 
     # If order doesn't matter then sort the index entries
     if not check_order:
-        left = safe_sort_index(left)
-        right = safe_sort_index(right)
+        left = left.argsort()  # safe_sort_index(left)
+        right = right.argsort()  # safe_sort_index(right)
 
     # MultiIndex special comparison for little-friendly error messages
     if isinstance(left, MultiIndex):
@@ -320,13 +312,7 @@ def assert_index_equal(
     else:
         # if we have "equiv", this becomes True
         exact_bool = bool(exact)
-        np.allclose(
-            left.values,
-            right.values,
-            rtol=rtol,
-            atol=atol,
-            equal_nan=True
-        )
+        np.allclose(left.values, right.values, rtol=rtol, atol=atol, equal_nan=True)
 
     # metadata comparison
     if check_names:
@@ -507,12 +493,12 @@ def raise_assert_detail(
 
     if isinstance(left, np.ndarray):
         left = pprint_thing(left)
-    elif isinstance(left, (Categorical, NumpyEADtype, Strings)):
+    elif isinstance(left, (Categorical, Strings)):
         left = repr(left)
 
     if isinstance(right, np.ndarray):
         right = pprint_thing(right)
-    elif isinstance(right, (Categorical, NumpyEADtype, Strings)):
+    elif isinstance(right, (Categorical, Strings)):
         right = repr(right)
 
     msg += f"""
@@ -614,14 +600,12 @@ def assert_series_equal(
     check_index_type: bool | Literal["equiv"] = "equiv",
     check_series_type: bool = True,
     check_names: bool = True,
-    check_exact: bool | lib.NoDefault = lib.no_default,
-    check_datetimelike_compat: bool = False,
+    check_exact: bool = True,
     check_categorical: bool = True,
     check_category_order: bool = True,
-    check_freq: bool = True,
     check_flags: bool = True,
-    rtol: float | lib.NoDefault = lib.no_default,
-    atol: float | lib.NoDefault = lib.no_default,
+    rtol: float = 1.0e-5,
+    atol: float = 1.0e-8,
     obj: str = "Series",
     *,
     check_index: bool = True,
@@ -685,19 +669,7 @@ def assert_series_equal(
     >>> tm.assert_series_equal(a, b)
     """
     __tracebackhide__ = True
-    check_exact_index = False if check_exact is lib.no_default else check_exact
-    if check_exact is lib.no_default and rtol is lib.no_default and atol is lib.no_default:
-        check_exact = (
-            is_numeric_dtype(left.dtype)
-            and not is_float_dtype(left.dtype)
-            or is_numeric_dtype(right.dtype)
-            and not is_float_dtype(right.dtype)
-        )
-    elif check_exact is lib.no_default:
-        check_exact = False
-
-    rtol = rtol if rtol is not lib.no_default else 1.0e-5
-    atol = atol if atol is not lib.no_default else 1.0e-8
+    check_exact_index = check_exact  ## TODO Remove
 
     if not check_index and check_like:
         raise ValueError("check_like must be False if check_index is False")
@@ -806,14 +778,14 @@ def assert_frame_equal(
     check_frame_type: bool = True,
     check_names: bool = True,
     by_blocks: bool = False,
-    check_exact: bool | lib.NoDefault = lib.no_default,
+    check_exact: bool = True,
     check_datetimelike_compat: bool = False,
     check_categorical: bool = True,
     check_like: bool = False,
     check_freq: bool = True,
     check_flags: bool = True,
-    rtol: float | lib.NoDefault = lib.no_default,
-    atol: float | lib.NoDefault = lib.no_default,
+    rtol: float = 1.0e-5,
+    atol: float = 1.0e-8,
     obj: str = "DataFrame",
 ) -> None:
     """
@@ -908,9 +880,9 @@ def assert_frame_equal(
     >>> assert_frame_equal(df1, df2, check_dtype=False)
     """
     __tracebackhide__ = True
-    _rtol = rtol if rtol is not lib.no_default else 1.0e-5
-    _atol = atol if atol is not lib.no_default else 1.0e-8
-    _check_exact = check_exact if check_exact is not lib.no_default else False
+    _rtol = rtol  # TODO remove
+    _atol = atol  # TODO remove
+    _check_exact = check_exact  # TODO remove
 
     # instance validation
     _check_isinstance(left, right, DataFrame)
