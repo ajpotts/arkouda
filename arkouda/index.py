@@ -111,6 +111,8 @@ class Index:
         else:
             raise TypeError(f"Unable to create Index from type {type(values)}")
 
+        self.names = [self.name]
+
     def __getitem__(self, key):
         from arkouda.series import Series
 
@@ -147,6 +149,26 @@ class Index:
             return d
         else:
             raise TypeError("Index Types must match")
+
+    @property
+    def inferred_type(self):
+        from arkouda.dtypes import float_scalars, int_scalars
+        from arkouda.util import _is_dtype_in_union
+
+        if _is_dtype_in_union(self.dtype, int_scalars):
+            return "integer"
+        elif _is_dtype_in_union(self.dtype, float_scalars):
+            return "floating"
+        elif self.dtype == "<U":
+            return "string"
+        elif isinstance(self.values, Strings):
+            return "string"
+        elif isinstance(self.values, Categorical):
+            return "categorical"
+
+    @property
+    def nlevels(self):
+        return 1
 
     @property
     def index(self):
@@ -919,7 +941,6 @@ class MultiIndex(Index):
             else:
                 if col_size != self.size:
                     raise ValueError("All columns in MultiIndex must have same length")
-        self.levels = len(self.values)
 
     def __getitem__(self, key):
         from arkouda.series import Series
@@ -948,6 +969,10 @@ class MultiIndex(Index):
     @property
     def index(self):
         return self.values
+
+    @property
+    def nlevels(self):
+        return len(self.values)
 
     def memory_usage(self, unit="B"):
         """
