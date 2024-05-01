@@ -127,7 +127,7 @@ def assert_almost_equal(
             assert_class_equal(left, right, obj=obj)
 
         # if we have "equiv", this becomes True
-        np.allclose(left, right, rtol=rtol, atol=atol, equal_nan=True)
+        assert np.allclose(left, right, rtol=rtol, atol=atol, equal_nan=True)
 
 
 def _check_isinstance(left, right, cls) -> None:
@@ -312,7 +312,8 @@ def assert_index_equal(
     else:
         # if we have "equiv", this becomes True
         exact_bool = bool(exact)
-        np.allclose(left.values, right.values, rtol=rtol, atol=atol, equal_nan=True)
+        # @TODO Use new ak.allclose function
+        np.allclose(left.values.to_ndarray(), right.values.to_ndarray(), rtol=rtol, atol=atol, equal_nan=True)
 
     # metadata comparison
     if check_names:

@@ -44,13 +44,13 @@ class IndexTest(ArkoudaTest):
         # test list generation
         idx = ak.MultiIndex([ak.arange(5), ak.arange(5)])
         self.assertIsInstance(idx, ak.MultiIndex)
-        self.assertEqual(idx.levels, 2)
+        self.assertEqual(idx.nlevels, 2)
         self.assertEqual(idx.size, 5)
 
         # test tuple generation
         idx = ak.MultiIndex((ak.arange(5), ak.arange(5)))
         self.assertIsInstance(idx, ak.MultiIndex)
-        self.assertEqual(idx.levels, 2)
+        self.assertEqual(idx.nlevels, 2)
         self.assertEqual(idx.size, 5)
 
         with self.assertRaises(TypeError):

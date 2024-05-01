@@ -451,6 +451,14 @@ def is_numeric(arry: Union[pdarray, Strings, Categorical]) -> builtins.bool:
     else:
         return False
 
+def is_numeric_dtype(item):
+    if isinstance(item, pdarray):
+        return _is_dtype_in_union(dtype(item.dtype), numeric_scalars)
+    elif _is_dtype_in_union(dtype(item), numeric_scalars):
+        return True
+    else:
+        return False
+
 
 def is_float(arry: Union[pdarray, Strings, Categorical]):
     """
@@ -482,6 +490,13 @@ def is_float(arry: Union[pdarray, Strings, Categorical]):
     else:
         return False
 
+def is_float_dtype(item):
+    if isinstance(item, pdarray):
+        return _is_dtype_in_union(dtype(item.dtype), float_scalars)
+    elif _is_dtype_in_union(dtype(item), float_scalars):
+        return True
+    else:
+        return False
 
 def is_int(arry: Union[pdarray, Strings, Categorical]):
     """
@@ -514,6 +529,13 @@ def is_int(arry: Union[pdarray, Strings, Categorical]):
     else:
         return False
 
+def is_integer_dtype(item):
+    if isinstance(item, pdarray):
+        return _is_dtype_in_union(dtype(item.dtype), int_scalars)
+    elif _is_dtype_in_union(dtype(item), int_scalars):
+        return True
+    else:
+        return False
 
 def map(
     values: Union[pdarray, Strings, Categorical], mapping: Union[dict, "Series"]
