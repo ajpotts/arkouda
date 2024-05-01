@@ -33,3 +33,12 @@ class AssertersTest(ArkoudaTest):
         idx = ak.Index(ak.arange(5))
 
         assert_attr_equal("name", idx, idx, obj="Index")
+
+    def test_assert_class_equal(self):
+        pass
+
+    def test_check_isinstance(self):
+        pass
+
+    def test_check_types(self):
+        pass
