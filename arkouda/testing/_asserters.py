@@ -9,7 +9,19 @@ from pandas._libs.missing import is_matching_na
 from pandas.api.types import is_bool, is_number
 from pandas.io.formats.printing import pprint_thing
 
-from arkouda import Categorical, DataFrame, Index, MultiIndex, Series, Strings, pdarray
+from arkouda import (
+    Categorical,
+    DataFrame,
+    Index,
+    MultiIndex,
+    Series,
+    Strings,
+    all,
+    array,
+    pdarray,
+    sort,
+    sum,
+)
 from arkouda.util import is_float_dtype, is_integer_dtype, is_numeric_dtype
 
 # from pandas.core.dtypes.common import (
@@ -57,7 +69,6 @@ from arkouda.util import is_float_dtype, is_integer_dtype, is_numeric_dtype
 # if TYPE_CHECKING:
 #     from pandas._typing import DtypeObj
 
-from arkouda import sum, all
 
 def assert_almost_equal(
     left,
@@ -301,7 +312,7 @@ def assert_index_equal(
 
     # skip exact index checking when `check_categorical` is False
     elif check_exact and check_categorical:
-        if not all(left.values==right.values):#left.equals(right):
+        if not all(left.values == right.values):  # left.equals(right):
             mismatch = left._values != right._values
 
             if not isinstance(mismatch, np.ndarray):
@@ -314,7 +325,9 @@ def assert_index_equal(
         # if we have "equiv", this becomes True
         exact_bool = bool(exact)
         # @TODO Use new ak.allclose function
-        np.allclose(left.values.to_ndarray(), right.values.to_ndarray(), rtol=rtol, atol=atol, equal_nan=True)
+        np.allclose(
+            left.values.to_ndarray(), right.values.to_ndarray(), rtol=rtol, atol=atol, equal_nan=True
+        )
 
     # metadata comparison
     if check_names:
@@ -423,7 +436,7 @@ def assert_is_sorted(seq) -> None:
     if isinstance(seq, (Index, Series)):
         seq = seq.values
     # sorting does not change precisions
-    assert_arkouda_array_equal(seq, np.sort(np.array(seq)))
+    assert_arkouda_array_equal(seq, sort(array(seq)))
 
 
 def assert_categorical_equal(
@@ -519,11 +532,10 @@ def raise_assert_detail(
 def assert_arkouda_array_equal(
     left,
     right,
-    strict_nan: bool = False,
-    check_dtype: bool | Literal["equiv"] = True,
+    check_dtype: bool = True,
     err_msg=None,
     check_same=None,
-    obj: str = "numpy array",
+    obj: str = "pdarray",
     index_values=None,
 ) -> None:
     """
@@ -531,10 +543,8 @@ def assert_arkouda_array_equal(
 
     Parameters
     ----------
-    left, right : arkouda.pdarray or iterable
+    left, right : arkouda.pdarray
         The two arrays to be compared.
-    strict_nan : bool, default False
-        If True, consider NaN and None to be different.
     check_dtype : bool, default True
         Check dtype if both a and b are ak.pdarray.
     err_msg : str, default None
@@ -573,7 +583,7 @@ def assert_arkouda_array_equal(
             if left.shape != right.shape:
                 raise_assert_detail(obj, f"{obj} shapes are different", left.shape, right.shape)
 
-            diff = sum(left!=right)
+            diff = sum(left != right)
 
             diff = diff * 100.0 / left.size
             msg = f"{obj} values are different ({np.round(diff, 5)} %)"

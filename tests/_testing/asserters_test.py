@@ -2,11 +2,14 @@ import pandas as pd
 from base_test import ArkoudaTest
 from context import arkouda as ak
 
+from arkouda import cast
+from arkouda import float64 as akfloat64
+from arkouda.numpy import nan
 from arkouda.testing import (
-    assert_index_equal,
+    assert_arkouda_array_equal,
     assert_attr_equal,
     assert_class_equal,
-    assert_arkouda_array_equal,
+    assert_index_equal,
 )
 
 
@@ -45,7 +48,7 @@ class AssertersTest(ArkoudaTest):
             }
         )
 
-    #@ TODO Complete
+    # @ TODO Complete
     def test_assert_almost_equal(self):
         idx = ak.Index(ak.arange(5))
 
@@ -57,7 +60,7 @@ class AssertersTest(ArkoudaTest):
         # assert_index_equal(a, a)
         assert_index_equal(idx, idx)
 
-    #@ TODO Complete
+    # @ TODO Complete
     def test_assert_attr_equal_index(self):
         idx = self.build_index()
         idx2 = self.build_index()
@@ -72,7 +75,7 @@ class AssertersTest(ArkoudaTest):
         with self.assertRaises(AssertionError):
             assert_attr_equal("names", idx, idx2, obj="Index")
 
-    #@ TODO Complete
+    # @ TODO Complete
     def test_assert_attr_equal_multiindex(self):
         idx = self.build_index()
         midx = self.build_multi_index()
@@ -88,7 +91,7 @@ class AssertersTest(ArkoudaTest):
 
         assert_attr_equal("nlevels", midx, midx2, obj="MultiIndex")
 
-    #@ TODO Complete
+    # @ TODO Complete
     def test_assert_class_equal(self):
         idx = self.build_index()
         midx = self.build_multi_index()
@@ -107,58 +110,116 @@ class AssertersTest(ArkoudaTest):
         with self.assertRaises(AssertionError):
             assert_class_equal(df, s)
 
-    #@ TODO Complete
+    # @ TODO Complete
     def test_assert_arkouda_array_equal(self):
-        a = ak.arange(5)
-        a1 = -1 * ak.arange(5)
+        size = 5
+        a = ak.arange(size)
+        a1 = -1 * ak.arange(size)
+        b = ak.array([1, 2, nan, 3, 4, nan])
+        a_float = cast(a, dt=akfloat64)
 
         assert_arkouda_array_equal(a, a)
+        assert_arkouda_array_equal(b, b)
         with self.assertRaises(AssertionError):
             assert_arkouda_array_equal(a, a1)
 
-    #@ TODO Complete
+        #   check_dtype
+        assert_arkouda_array_equal(a, a_float, check_dtype=False)
+        with self.assertRaises(AssertionError):
+            assert_arkouda_array_equal(a, a_float, check_dtype=True)
+
+        #   check_same
+        a_copy = a[:]
+        assert_arkouda_array_equal(a, a_copy)
+        assert_arkouda_array_equal(a, a, check_same="same")
+        with self.assertRaises(AssertionError):
+            assert_arkouda_array_equal(a, a, check_same="copy")
+        assert_arkouda_array_equal(a, a_copy, check_same="copy")
+        with self.assertRaises(AssertionError):
+            assert_arkouda_array_equal(a, a_copy, check_same="same")
+
+
+        #         obj: str = "pdarray",
+        # obj: str, default 'numpy array'
+        # Specify object name being compared, internally used to show appropriate assertion message.
+
+        #         index_values=None,
+        # index_values : Index | numpy.ndarray, default None
+        #     optional index (shared by both left and right), used in output.
+
+    # def assert_arkouda_array_equal(
+
+    #     if check_same == "same":
+    #         if left_base is not right_base:
+    #             raise AssertionError(f"{repr(left_base)} is not {repr(right_base)}")
+    #     elif check_same == "copy":
+    #         if left_base is right_base:
+    #             raise AssertionError(f"{repr(left_base)} is {repr(right_base)}")
+    #
+    #     def _raise(left: pdarray, right: pdarray, err_msg) -> NoReturn:
+    #         if err_msg is None:
+    #             if left.shape != right.shape:
+    #                 raise_assert_detail(obj, f"{obj} shapes are different", left.shape, right.shape)
+    #
+    #             diff = sum(left != right)
+    #
+    #             diff = diff * 100.0 / left.size
+    #             msg = f"{obj} values are different ({np.round(diff, 5)} %)"
+    #             raise_assert_detail(obj, msg, left, right, index_values=index_values)
+    #
+    #         raise AssertionError(err_msg)
+    #
+    #     # compare shape and values
+    #     # @TODO use ak.allclose
+    #     if not np.allclose(left.to_ndarray(), right.to_ndarray(), atol=0, equal_nan=True):
+    #         _raise(left, right, err_msg)
+    #
+    #     if check_dtype:
+    #         if isinstance(left, pdarray) and isinstance(right, pdarray):
+    #             assert_attr_equal("dtype", left, right, obj=obj)
+
+    # @ TODO Complete
     def test_assert_dict_equal(self):
         pass
 
-
     ###################################
 
-    #@ TODO Complete
+    # @ TODO Complete
     def test_assert_is_valid_plot_return_object(self):
         pass
 
-    #@ TODO Complete
+    # @ TODO Complete
     def test_assert_is_sorted(self):
         pass
 
-    #@ TODO Complete
+    # @ TODO Complete
     def test_assert_categorical_equal(self):
         pass
 
-    #@ TODO Complete
+    # @ TODO Complete
     def test_assert_series_equal(self):
         pass
 
-    #@ TODO Complete
+    # @ TODO Complete
     def test_assert_frame_equal(self):
         pass
 
-    #@ TODO Complete
+    # @ TODO Complete
     def test_assert_equal(self):
         pass
 
-    #@ TODO Complete
+    # @ TODO Complete
     def test_assert_contains_all(self):
         pass
 
-    #@ TODO Complete
+    # @ TODO Complete
     def test_assert_copy(self):
         pass
 
-    #@ TODO Complete
+    # @ TODO Complete
     def test_assert_indexing_slices_equivalent(self):
         pass
 
-    #@ TODO Complete
+    # @ TODO Complete
     def test_assert_metadata_equivalent(self):
         pass
