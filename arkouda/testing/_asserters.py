@@ -22,6 +22,7 @@ from arkouda import (
     sort,
     sum,
 )
+from arkouda.numpy import nan
 from arkouda.util import is_float_dtype, is_integer_dtype, is_numeric_dtype
 
 # from pandas.core.dtypes.common import (
@@ -338,7 +339,7 @@ def assert_index_equal(
             assert_categorical_equal(left._values, right._values, obj=f"{obj} category")
 
 
-def assert_class_equal(left, right, exact: bool | str = True, obj: str = "Input") -> None:
+def assert_class_equal(left, right, exact: bool = True, obj: str = "Input") -> None:
     """
     Checks classes are equal.
     """
@@ -351,20 +352,8 @@ def assert_class_equal(left, right, exact: bool | str = True, obj: str = "Input"
 
         return type(x).__name__
 
-    def is_class_equiv(idx: Index) -> bool:
-        """Classes that are an `Index` .
-
-        This only checks class equivalence. There is a separate check that the
-        dtype is int64.
-        """
-        return type(idx) is Index
-
     if type(left) == type(right):
         return
-
-    if exact == "equiv":
-        if is_class_equiv(left) and is_class_equiv(right):
-            return
 
     msg = f"{obj} classes are different"
     raise_assert_detail(obj, msg, repr_class(left), repr_class(right))
@@ -396,9 +385,8 @@ def assert_attr_equal(attr: str, left, right, obj: str = "Attributes") -> None:
     try:
         result = left_attr == right_attr
     except TypeError:
-        # datetimetz on rhs may raise TypeError
         result = False
-    if (left_attr is pd.NA) ^ (right_attr is pd.NA):
+    if (left_attr is nan) ^ (right_attr is nan):
         result = False
     elif not isinstance(result, bool):
         result = result.all()
@@ -501,16 +489,23 @@ def raise_assert_detail(
 {message}"""
 
     if isinstance(index_values, Index):
-        index_values = np.asarray(index_values)
+        index_values = index_values.values.to_ndarray()
+
+    if isinstance(index_values, pdarray):
+        index_values = index_values.to_ndarray()
 
     if isinstance(index_values, np.ndarray):
         msg += f"\n[index]: {pprint_thing(index_values)}"
 
+    if isinstance(left, pdarray):
+        left = left.to_ndarray()
     if isinstance(left, np.ndarray):
         left = pprint_thing(left)
     elif isinstance(left, (Categorical, Strings)):
         left = repr(left)
 
+    if isinstance(right, pdarray):
+        right = right.to_ndarray()
     if isinstance(right, np.ndarray):
         right = pprint_thing(right)
     elif isinstance(right, (Categorical, Strings)):
@@ -554,7 +549,7 @@ def assert_arkouda_array_equal(
     obj : str, default 'numpy array'
         Specify object name being compared, internally used to show appropriate
         assertion message.
-    index_values : Index | numpy.ndarray, default None
+    index_values : Index | arkouda.pdarray, default None
         optional index (shared by both left and right), used in output.
     """
     __tracebackhide__ = True
