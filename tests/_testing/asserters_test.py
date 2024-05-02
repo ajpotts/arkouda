@@ -45,6 +45,7 @@ class AssertersTest(ArkoudaTest):
             }
         )
 
+    #@ TODO Complete
     def test_assert_almost_equal(self):
         idx = ak.Index(ak.arange(5))
 
@@ -56,6 +57,7 @@ class AssertersTest(ArkoudaTest):
         # assert_index_equal(a, a)
         assert_index_equal(idx, idx)
 
+    #@ TODO Complete
     def test_assert_attr_equal_index(self):
         idx = self.build_index()
         idx2 = self.build_index()
@@ -70,6 +72,7 @@ class AssertersTest(ArkoudaTest):
         with self.assertRaises(AssertionError):
             assert_attr_equal("names", idx, idx2, obj="Index")
 
+    #@ TODO Complete
     def test_assert_attr_equal_multiindex(self):
         idx = self.build_index()
         midx = self.build_multi_index()
@@ -85,6 +88,7 @@ class AssertersTest(ArkoudaTest):
 
         assert_attr_equal("nlevels", midx, midx2, obj="MultiIndex")
 
+    #@ TODO Complete
     def test_assert_class_equal(self):
         idx = self.build_index()
         midx = self.build_multi_index()
@@ -103,6 +107,7 @@ class AssertersTest(ArkoudaTest):
         with self.assertRaises(AssertionError):
             assert_class_equal(df, s)
 
+    #@ TODO Complete
     def test_assert_arkouda_array_equal(self):
         a = ak.arange(5)
         a1 = -1 * ak.arange(5)
@@ -111,39 +116,49 @@ class AssertersTest(ArkoudaTest):
         with self.assertRaises(AssertionError):
             assert_arkouda_array_equal(a, a1)
 
+    #@ TODO Complete
     def test_assert_dict_equal(self):
         pass
 
 
     ###################################
 
-
+    #@ TODO Complete
     def test_assert_is_valid_plot_return_object(self):
         pass
 
+    #@ TODO Complete
     def test_assert_is_sorted(self):
         pass
 
+    #@ TODO Complete
     def test_assert_categorical_equal(self):
         pass
 
+    #@ TODO Complete
     def test_assert_series_equal(self):
         pass
 
+    #@ TODO Complete
     def test_assert_frame_equal(self):
         pass
 
+    #@ TODO Complete
     def test_assert_equal(self):
         pass
 
+    #@ TODO Complete
     def test_assert_contains_all(self):
         pass
 
+    #@ TODO Complete
     def test_assert_copy(self):
         pass
 
+    #@ TODO Complete
     def test_assert_indexing_slices_equivalent(self):
         pass
 
+    #@ TODO Complete
     def test_assert_metadata_equivalent(self):
         pass
