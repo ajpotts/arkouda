@@ -301,7 +301,7 @@ def assert_index_equal(
 
     # skip exact index checking when `check_categorical` is False
     elif check_exact and check_categorical:
-        if not all(left==right):#left.equals(right):
+        if not all(left.values==right.values):#left.equals(right):
             mismatch = left._values != right._values
 
             if not isinstance(mismatch, np.ndarray):
@@ -459,7 +459,7 @@ def assert_categorical_equal(
 
     if check_category_order:
         assert_index_equal(left.categories, right.categories, obj=f"{obj}.categories", exact=exact)
-        assert_numpy_array_equal(left.codes, right.codes, check_dtype=check_dtype, obj=f"{obj}.codes")
+        assert_arkouda_array_equal(left.codes, right.codes, check_dtype=check_dtype, obj=f"{obj}.codes")
     else:
         try:
             lc = left.categories.sort_values()
@@ -725,7 +725,7 @@ def assert_series_equal(
 
         # convert both to NumPy if not, check_dtype would raise earlier
         lv, rv = left_values, right_values
-        assert_numpy_array_equal(
+        assert_arkouda_array_equal(
             lv,
             rv,
             check_dtype=check_dtype,
@@ -987,7 +987,7 @@ def assert_equal(left, right, **kwargs) -> None:
     elif isinstance(left, DataFrame):
         assert_frame_equal(left, right, **kwargs)
     elif isinstance(left, np.ndarray):
-        assert_numpy_array_equal(left, right, **kwargs)
+        assert_arkouda_array_equal(left, right, **kwargs)
     elif isinstance(left, str):
         assert kwargs == {}
         assert left == right
