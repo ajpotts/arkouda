@@ -111,8 +111,6 @@ class Index:
         else:
             raise TypeError(f"Unable to create Index from type {type(values)}")
 
-        self.names = [self.name]
-
     def __getitem__(self, key):
         from arkouda.series import Series
 
@@ -165,6 +163,10 @@ class Index:
             return "string"
         elif isinstance(self.values, Categorical):
             return "categorical"
+
+    @property
+    def names(self):
+        return [self.name]
 
     @property
     def nlevels(self):
@@ -927,7 +929,7 @@ class MultiIndex(Index):
             raise TypeError("MultiIndex should be an iterable")
         self.levels = levels
         first = True
-        self.names = names
+        self._names = names
         self.name = name
         for col in self.levels:
             # col can be a python int which doesn't have a size attribute
@@ -969,6 +971,10 @@ class MultiIndex(Index):
     @property
     def index(self):
         return self.levels
+
+    @property
+    def names(self):
+        return self._names
 
     @property
     def nlevels(self):
