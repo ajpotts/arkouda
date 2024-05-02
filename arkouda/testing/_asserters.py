@@ -57,7 +57,7 @@ from arkouda.util import is_float_dtype, is_integer_dtype, is_numeric_dtype
 # if TYPE_CHECKING:
 #     from pandas._typing import DtypeObj
 
-from arkouda import sum
+from arkouda import sum, all
 
 def assert_almost_equal(
     left,
@@ -280,7 +280,7 @@ def assert_index_equal(
                     atol=atol,
                     obj=lobj,
                 )
-                assert_numpy_array_equal(left.codes[level], right.codes[level])
+                assert_arkouda_array_equal(left.codes[level], right.codes[level])
             except AssertionError:
                 llevel = left.get_level_values(level)
                 rlevel = right.get_level_values(level)
@@ -301,7 +301,7 @@ def assert_index_equal(
 
     # skip exact index checking when `check_categorical` is False
     elif check_exact and check_categorical:
-        if not left.equals(right):
+        if not all(left==right):#left.equals(right):
             mismatch = left._values != right._values
 
             if not isinstance(mismatch, np.ndarray):
