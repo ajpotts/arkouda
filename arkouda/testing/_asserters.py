@@ -57,6 +57,7 @@ from arkouda.util import is_float_dtype, is_integer_dtype, is_numeric_dtype
 # if TYPE_CHECKING:
 #     from pandas._typing import DtypeObj
 
+from arkouda import sum
 
 def assert_almost_equal(
     left,
@@ -422,7 +423,7 @@ def assert_is_sorted(seq) -> None:
     if isinstance(seq, (Index, Series)):
         seq = seq.values
     # sorting does not change precisions
-    assert_numpy_array_equal(seq, np.sort(np.array(seq)))
+    assert_arkouda_array_equal(seq, np.sort(np.array(seq)))
 
 
 def assert_categorical_equal(
@@ -515,7 +516,7 @@ def raise_assert_detail(
     raise AssertionError(msg)
 
 
-def assert_numpy_array_equal(
+def assert_arkouda_array_equal(
     left,
     right,
     strict_nan: bool = False,
@@ -526,16 +527,16 @@ def assert_numpy_array_equal(
     index_values=None,
 ) -> None:
     """
-    Check that 'np.ndarray' is equivalent.
+    Check that 'ak.pdarray' is equivalent.
 
     Parameters
     ----------
-    left, right : numpy.ndarray or iterable
+    left, right : arkouda.pdarray or iterable
         The two arrays to be compared.
     strict_nan : bool, default False
         If True, consider NaN and None to be different.
     check_dtype : bool, default True
-        Check dtype if both a and b are np.ndarray.
+        Check dtype if both a and b are ak.pdarray.
     err_msg : str, default None
         If provided, used as assertion message.
     check_same : None|'copy'|'same', default None
@@ -551,8 +552,8 @@ def assert_numpy_array_equal(
     # instance validation
     # Show a detailed error message when classes are different
     assert_class_equal(left, right, obj=obj)
-    # both classes must be an np.ndarray
-    _check_isinstance(left, right, np.ndarray)
+    # both classes must be an ak.pdarray
+    _check_isinstance(left, right, pdarray)
 
     def _get_base(obj):
         return obj.base if getattr(obj, "base", None) is not None else obj
@@ -567,16 +568,12 @@ def assert_numpy_array_equal(
         if left_base is right_base:
             raise AssertionError(f"{repr(left_base)} is {repr(right_base)}")
 
-    def _raise(left, right, err_msg) -> NoReturn:
+    def _raise(left: pdarray, right: pdarray, err_msg) -> NoReturn:
         if err_msg is None:
             if left.shape != right.shape:
                 raise_assert_detail(obj, f"{obj} shapes are different", left.shape, right.shape)
 
-            diff = 0
-            for left_arr, right_arr in zip(left, right):
-                # count up differences
-                if not np.allclose(left_arr, right_arr, atol=0, equal_nan=True):
-                    diff += 1
+            diff = sum(left!=right)
 
             diff = diff * 100.0 / left.size
             msg = f"{obj} values are different ({np.round(diff, 5)} %)"
@@ -585,11 +582,12 @@ def assert_numpy_array_equal(
         raise AssertionError(err_msg)
 
     # compare shape and values
-    if not np.allclose(left, right, atol=0, equal_nan=True):
+    # @TODO use ak.allclose
+    if not np.allclose(left.to_ndarray(), right.to_ndarray(), atol=0, equal_nan=True):
         _raise(left, right, err_msg)
 
     if check_dtype:
-        if isinstance(left, np.ndarray) and isinstance(right, np.ndarray):
+        if isinstance(left, pdarray) and isinstance(right, pdarray):
             assert_attr_equal("dtype", left, right, obj=obj)
 
 
