@@ -177,7 +177,7 @@ def assert_dict_equal(left, right, compare_keys: bool = True) -> None:
         assert left_keys == right_keys
 
     for k in left_keys:
-        assert_almost_equal(right[k], right[k])
+        assert_almost_equal(left[k], right[k])
 
     return True
 
@@ -397,28 +397,6 @@ def assert_attr_equal(attr: str, left, right, obj: str = "Attributes") -> None:
     return None
 
 
-def assert_is_valid_plot_return_object(objs) -> None:
-    from matplotlib.artist import Artist
-    from matplotlib.axes import Axes
-
-    if isinstance(objs, (Series, np.ndarray)):
-        if isinstance(objs, Series):
-            objs = objs._values
-        for el in objs.ravel():
-            msg = (
-                "one of 'objs' is not a matplotlib Axes instance, "
-                f"type encountered {repr(type(el).__name__)}"
-            )
-            assert isinstance(el, (Axes, dict)), msg
-    else:
-        msg = (
-            "objs is neither an ndarray of Artist instances nor a single "
-            "ArtistArtist instance, tuple, or dict, 'objs' is a "
-            f"{repr(type(objs).__name__)}"
-        )
-        assert isinstance(objs, (Artist, tuple, dict)), msg
-
-
 def assert_is_sorted(seq) -> None:
     """Assert that the sequence is sorted."""
     if isinstance(seq, (Index, Series)):
@@ -459,7 +437,14 @@ def assert_categorical_equal(
     exact = True
 
     if check_category_order:
-        assert_index_equal(left.categories, right.categories, obj=f"{obj}.categories", exact=exact)
+        if isinstance(left.categories, Strings):
+            assert_arkouda_strings_equal(
+                left.categories, right.categories, obj=f"{obj}.categories"
+            )
+        else:
+            assert_arkouda_array_equal(
+                left.categories, right.categories, check_dtype=check_dtype, obj=f"{obj}.categories"
+            )
         assert_arkouda_array_equal(left.codes, right.codes, check_dtype=check_dtype, obj=f"{obj}.codes")
     else:
         try:
@@ -524,6 +509,68 @@ def raise_assert_detail(
     raise AssertionError(msg)
 
 
+def assert_arkouda_strings_equal(
+    left,
+    right,
+    err_msg=None,
+    check_same=None,
+    obj: str = "Strings",
+    index_values=None,
+) -> None:
+    """
+    Check that 'ak.pdarray' is equivalent.
+
+    Parameters
+    ----------
+    left, right : arkouda.Strings
+        The two Strings to be compared.
+    err_msg : str, default None
+        If provided, used as assertion message.
+    check_same : None|'copy'|'same', default None
+        Ensure left and right refer/do not refer to the same memory area.
+    obj : str, default 'numpy array'
+        Specify object name being compared, internally used to show appropriate
+        assertion message.
+    index_values : Index | arkouda.pdarray, default None
+        optional index (shared by both left and right), used in output.
+    """
+    __tracebackhide__ = True
+
+    # instance validation
+    # Show a detailed error message when classes are different
+    assert_class_equal(left, right, obj=obj)
+    # both classes must be an ak.pdarray
+    _check_isinstance(left, right, Strings)
+
+    def _get_base(obj):
+        return obj.base if getattr(obj, "base", None) is not None else obj
+
+    left_base = _get_base(left)
+    right_base = _get_base(right)
+
+    if check_same == "same":
+        if left_base is not right_base:
+            raise AssertionError(f"{repr(left_base)} is not {repr(right_base)}")
+    elif check_same == "copy":
+        if left_base is right_base:
+            raise AssertionError(f"{repr(left_base)} is {repr(right_base)}")
+
+    def _raise(left: Strings, right: Strings, err_msg):
+        if err_msg is None:
+            diff = sum(left != right)
+            diff = diff * 100.0 / left.size
+            msg = f"{obj} values are different ({np.round(diff, 5)} %)"
+            raise_assert_detail(obj, msg, left, right, index_values=index_values)
+
+        raise AssertionError(err_msg)
+
+    if left.shape != right.shape:
+        raise_assert_detail(obj, f"{obj} shapes are different", left.shape, right.shape)
+
+    if not sum(left != right) == 0:
+        _raise(left, right, err_msg)
+
+
 def assert_arkouda_array_equal(
     left,
     right,
@@ -573,7 +620,7 @@ def assert_arkouda_array_equal(
         if left_base is right_base:
             raise AssertionError(f"{repr(left_base)} is {repr(right_base)}")
 
-    def _raise(left: pdarray, right: pdarray, err_msg) -> NoReturn:
+    def _raise(left: pdarray, right: pdarray, err_msg):
         if err_msg is None:
             if left.shape != right.shape:
                 raise_assert_detail(obj, f"{obj} shapes are different", left.shape, right.shape)
@@ -1036,17 +1083,3 @@ def assert_indexing_slices_equivalent(ser: Series, l_slc: slice, i_slc: slice) -
     if not is_integer_dtype(ser.index):
         # For integer indices, .loc and plain getitem are position-based.
         assert_series_equal(ser[l_slc], expected)
-
-
-def assert_metadata_equivalent(
-    left: DataFrame | Series, right: DataFrame | Series | None = None
-) -> None:
-    """
-    Check that ._metadata attributes are equivalent.
-    """
-    for attr in left._metadata:
-        val = getattr(left, attr, None)
-        if right is None:
-            assert val is None
-        else:
-            assert val == getattr(right, attr, None)

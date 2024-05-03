@@ -2,7 +2,7 @@ import pandas as pd
 from base_test import ArkoudaTest
 from context import arkouda as ak
 
-from arkouda import DataFrame, Index, MultiIndex, Series, cast
+from arkouda import Categorical, DataFrame, Index, MultiIndex, Series, Strings, cast
 from arkouda import float64 as akfloat64
 from arkouda.numpy import nan
 from arkouda.testing import (
@@ -19,8 +19,6 @@ from arkouda.testing import (
     assert_index_equal,
     assert_indexing_slices_equivalent,
     assert_is_sorted,
-    assert_is_valid_plot_return_object,
-    assert_metadata_equivalent,
     assert_series_equal,
 )
 
@@ -115,33 +113,31 @@ class AssertersTest(ArkoudaTest):
         with self.assertRaises(AssertionError):
             assert_class_equal(df, s)
 
-    def test_assert_arkouda_array_equal(self):
-        size = 5
-        a = ak.arange(size)
-        a1 = -1 * ak.arange(size)
-        b = ak.array([1, 2, nan, 3, 4, nan])
-        a_float = cast(a, dt=akfloat64)
+    def test_assert_arkouda_strings_equal(self):
+        a = ak.array(["a", "a", "b", "c"])
+        a2 = ak.array(["a", "d", "b", "c"])
+        a3 = ak.array(["a", "a", "b", "c", "d"])
 
-        assert_arkouda_array_equal(a, a)
-        assert_arkouda_array_equal(a, a, index_values=a)
-        assert_arkouda_array_equal(b, b)
-        with self.assertRaises(AssertionError):
-            assert_arkouda_array_equal(a, a1)
+        from arkouda.testing import _check_isinstance, assert_arkouda_strings_equal
 
-        #   check_dtype
-        assert_arkouda_array_equal(a, a_float, check_dtype=False)
+        _check_isinstance(a, a, Strings)
+
+        assert_arkouda_strings_equal(a, a)
+        assert_arkouda_strings_equal(a, a, index_values=ak.arange(4))
         with self.assertRaises(AssertionError):
-            assert_arkouda_array_equal(a, a_float, check_dtype=True)
+            assert_arkouda_strings_equal(a, a2)
+        with self.assertRaises(AssertionError):
+            assert_arkouda_strings_equal(a, a3)
 
         #   check_same
         a_copy = a[:]
-        assert_arkouda_array_equal(a, a_copy)
-        assert_arkouda_array_equal(a, a, check_same="same")
+        assert_arkouda_strings_equal(a, a_copy)
+        assert_arkouda_strings_equal(a, a, check_same="same")
         with self.assertRaises(AssertionError):
-            assert_arkouda_array_equal(a, a, check_same="copy")
-        assert_arkouda_array_equal(a, a_copy, check_same="copy")
+            assert_arkouda_strings_equal(a, a, check_same="copy")
+        assert_arkouda_strings_equal(a, a_copy, check_same="copy")
         with self.assertRaises(AssertionError):
-            assert_arkouda_array_equal(a, a_copy, check_same="same")
+            assert_arkouda_strings_equal(a, a_copy, check_same="same")
 
     def test_assert_dict_equal(self):
         size = 5
@@ -153,14 +149,9 @@ class AssertersTest(ArkoudaTest):
 
         assert_dict_equal(dict1, dict2)
 
-        pass
-
-    ###################################
-
-    # @ TODO Complete
-    def test_assert_is_valid_plot_return_object(self):
-        pass
-
+        for d in [dict3, dict4, dict5]:
+            with self.assertRaises(AssertionError):
+                assert_dict_equal(dict1, d)
 
     def test_assert_is_sorted(self):
         size = 5
@@ -196,7 +187,9 @@ class AssertersTest(ArkoudaTest):
 
     # @ TODO Complete
     def test_assert_categorical_equal(self):
-        pass
+        c1 = Categorical(ak.array(["a", "a", "b"]))
+
+        assert_categorical_equal(c1, c1)
 
     # @ TODO Complete
     def test_assert_series_equal(self):
@@ -212,19 +205,27 @@ class AssertersTest(ArkoudaTest):
 
     # @ TODO Complete
     def test_assert_contains_all(self):
-        d = {"a":1,"b":2,"c":3}
-        assert_contains_all([],d)
+        d = {"a": 1, "b": 2, "c": 3}
 
-        pass
+        assert_contains_all([], d)
+        assert_contains_all(["a", "b"], d)
+        with self.assertRaises(AssertionError):
+            assert_contains_all(["a", "d"], d)
 
-    # @ TODO Complete
     def test_assert_copy(self):
-        pass
+        size = 10
+        df = DataFrame({"a": ak.arange(size), "b": -1 * ak.arange(size)})
+        df_deep = df.copy(deep=True)
+        df_shallow = df.copy(deep=False)
+
+        cols = [df[col] for col in df.columns.values]
+        cols_deep = [df_deep[col] for col in df_deep.columns.values]
+        with self.assertRaises(AssertionError):
+            cols_shallow = [df_shallow[col] for col in df_shallow.columns.values]
+
+        assert_copy(cols, cols_deep)
+        assert_copy(cols, cols_shallow)
 
     # @ TODO Complete
     def test_assert_indexing_slices_equivalent(self):
-        pass
-
-    # @ TODO Complete
-    def test_assert_metadata_equivalent(self):
         pass
