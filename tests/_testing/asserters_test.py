@@ -8,6 +8,7 @@ from arkouda.numpy import nan
 from arkouda.testing import (
     assert_almost_equal,
     assert_arkouda_array_equal,
+    assert_arkouda_strings_equal,
     assert_attr_equal,
     assert_categorical_equal,
     assert_class_equal,
@@ -188,8 +189,12 @@ class AssertersTest(ArkoudaTest):
     # @ TODO Complete
     def test_assert_categorical_equal(self):
         c1 = Categorical(ak.array(["a", "a", "b"]))
+        c2 = Categorical(ak.array(["a", "b", "a"]))
 
         assert_categorical_equal(c1, c1)
+        assert_categorical_equal(c1, c2, check_category_order=False)
+        with self.assertRaises(AssertionError):
+            assert_categorical_equal(c1, c2, check_category_order=True)
 
     # @ TODO Complete
     def test_assert_series_equal(self):
@@ -220,11 +225,12 @@ class AssertersTest(ArkoudaTest):
 
         cols = [df[col] for col in df.columns.values]
         cols_deep = [df_deep[col] for col in df_deep.columns.values]
-        with self.assertRaises(AssertionError):
-            cols_shallow = [df_shallow[col] for col in df_shallow.columns.values]
+        cols_shallow = [df_shallow[col] for col in df_shallow.columns.values]
 
         assert_copy(cols, cols_deep)
-        assert_copy(cols, cols_shallow)
+
+        with self.assertRaises(AssertionError):
+            assert_copy(cols, cols_shallow)
 
     # @ TODO Complete
     def test_assert_indexing_slices_equivalent(self):

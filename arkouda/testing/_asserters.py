@@ -17,6 +17,7 @@ from arkouda import (
     Series,
     Strings,
     all,
+    argsort,
     array,
     pdarray,
     sort,
@@ -437,31 +438,25 @@ def assert_categorical_equal(
     exact = True
 
     if check_category_order:
-        if isinstance(left.categories, Strings):
-            assert_arkouda_strings_equal(
-                left.categories, right.categories, obj=f"{obj}.categories"
-            )
-        else:
-            assert_arkouda_array_equal(
-                left.categories, right.categories, check_dtype=check_dtype, obj=f"{obj}.categories"
-            )
+        assert_arkouda_array_equal(
+            left.categories, right.categories, check_dtype=check_dtype, obj=f"{obj}.categories"
+        )
         assert_arkouda_array_equal(left.codes, right.codes, check_dtype=check_dtype, obj=f"{obj}.codes")
     else:
         try:
-            lc = left.categories.sort_values()
-            rc = right.categories.sort_values()
+            lc = left.sort().categories
+            rc = right.sort().categories
         except TypeError:
             # e.g. '<' not supported between instances of 'int' and 'str'
             lc, rc = left.categories, right.categories
-        assert_index_equal(lc, rc, obj=f"{obj}.categories", exact=exact)
-        assert_index_equal(
-            left.categories.take(left.codes),
-            right.categories.take(right.codes),
+        assert_arkouda_array_equal(lc, rc, obj=f"{obj}.categories")
+        left_sorted = left[argsort(left)]
+        right_sorted = right[argsort(right)]
+        assert_arkouda_array_equal(
+            left_sorted.categories[left_sorted.codes],
+            right_sorted.categories[right_sorted.codes],
             obj=f"{obj}.values",
-            exact=exact,
         )
-
-    assert_attr_equal("ordered", left, right, obj=obj)
 
 
 def raise_assert_detail(
@@ -509,69 +504,7 @@ def raise_assert_detail(
     raise AssertionError(msg)
 
 
-def assert_arkouda_strings_equal(
-    left,
-    right,
-    err_msg=None,
-    check_same=None,
-    obj: str = "Strings",
-    index_values=None,
-) -> None:
-    """
-    Check that 'ak.pdarray' is equivalent.
-
-    Parameters
-    ----------
-    left, right : arkouda.Strings
-        The two Strings to be compared.
-    err_msg : str, default None
-        If provided, used as assertion message.
-    check_same : None|'copy'|'same', default None
-        Ensure left and right refer/do not refer to the same memory area.
-    obj : str, default 'numpy array'
-        Specify object name being compared, internally used to show appropriate
-        assertion message.
-    index_values : Index | arkouda.pdarray, default None
-        optional index (shared by both left and right), used in output.
-    """
-    __tracebackhide__ = True
-
-    # instance validation
-    # Show a detailed error message when classes are different
-    assert_class_equal(left, right, obj=obj)
-    # both classes must be an ak.pdarray
-    _check_isinstance(left, right, Strings)
-
-    def _get_base(obj):
-        return obj.base if getattr(obj, "base", None) is not None else obj
-
-    left_base = _get_base(left)
-    right_base = _get_base(right)
-
-    if check_same == "same":
-        if left_base is not right_base:
-            raise AssertionError(f"{repr(left_base)} is not {repr(right_base)}")
-    elif check_same == "copy":
-        if left_base is right_base:
-            raise AssertionError(f"{repr(left_base)} is {repr(right_base)}")
-
-    def _raise(left: Strings, right: Strings, err_msg):
-        if err_msg is None:
-            diff = sum(left != right)
-            diff = diff * 100.0 / left.size
-            msg = f"{obj} values are different ({np.round(diff, 5)} %)"
-            raise_assert_detail(obj, msg, left, right, index_values=index_values)
-
-        raise AssertionError(err_msg)
-
-    if left.shape != right.shape:
-        raise_assert_detail(obj, f"{obj} shapes are different", left.shape, right.shape)
-
-    if not sum(left != right) == 0:
-        _raise(left, right, err_msg)
-
-
-def assert_arkouda_array_equal(
+def assert_arkouda_pdarray_equal(
     left,
     right,
     check_dtype: bool = True,
@@ -641,6 +574,112 @@ def assert_arkouda_array_equal(
     if check_dtype:
         if isinstance(left, pdarray) and isinstance(right, pdarray):
             assert_attr_equal("dtype", left, right, obj=obj)
+
+
+def assert_arkouda_strings_equal(
+    left,
+    right,
+    err_msg=None,
+    check_same=None,
+    obj: str = "Strings",
+    index_values=None,
+) -> None:
+    """
+    Check that 'ak.pdarray' is equivalent.
+
+    Parameters
+    ----------
+    left, right : arkouda.Strings
+        The two Strings to be compared.
+    err_msg : str, default None
+        If provided, used as assertion message.
+    check_same : None|'copy'|'same', default None
+        Ensure left and right refer/do not refer to the same memory area.
+    obj : str, default 'numpy array'
+        Specify object name being compared, internally used to show appropriate
+        assertion message.
+    index_values : Index | arkouda.pdarray, default None
+        optional index (shared by both left and right), used in output.
+    """
+    __tracebackhide__ = True
+
+    # instance validation
+    # Show a detailed error message when classes are different
+    assert_class_equal(left, right, obj=obj)
+    # both classes must be an ak.pdarray
+    _check_isinstance(left, right, Strings)
+
+    def _get_base(obj):
+        return obj.base if getattr(obj, "base", None) is not None else obj
+
+    left_base = _get_base(left)
+    right_base = _get_base(right)
+
+    if check_same == "same":
+        if left_base is not right_base:
+            raise AssertionError(f"{repr(left_base)} is not {repr(right_base)}")
+    elif check_same == "copy":
+        if left_base is right_base:
+            raise AssertionError(f"{repr(left_base)} is {repr(right_base)}")
+
+    def _raise(left: Strings, right: Strings, err_msg):
+        if err_msg is None:
+            diff = sum(left != right)
+            diff = diff * 100.0 / left.size
+            msg = f"{obj} values are different ({np.round(diff, 5)} %)"
+            raise_assert_detail(obj, msg, left, right, index_values=index_values)
+
+        raise AssertionError(err_msg)
+
+    if left.shape != right.shape:
+        raise_assert_detail(obj, f"{obj} shapes are different", left.shape, right.shape)
+
+    if not sum(left != right) == 0:
+        _raise(left, right, err_msg)
+
+
+def assert_arkouda_array_equal(
+    left: pdarray | Strings,
+    right: pdarray | Strings,
+    check_dtype: bool = True,
+    err_msg=None,
+    check_same=None,
+    obj: str = "pdarray",
+    index_values=None,
+) -> None:
+    """
+    Check that 'ak.pdarray' is equivalent.
+
+    Parameters
+    ----------
+    left, right : arkouda.pdarray or arkouda.Strings
+        The two arrays to be compared.
+    check_dtype : bool, default True
+        Check dtype if both a and b are ak.pdarray.
+    err_msg : str, default None
+        If provided, used as assertion message.
+    check_same : None|'copy'|'same', default None
+        Ensure left and right refer/do not refer to the same memory area.
+    obj : str, default 'numpy array'
+        Specify object name being compared, internally used to show appropriate
+        assertion message.
+    index_values : Index | arkouda.pdarray, default None
+        optional index (shared by both left and right), used in output.
+    """
+    if isinstance(left, Strings):
+        assert_arkouda_strings_equal(
+            left, right, err_msg=err_msg, check_same=check_same, obj=obj, index_values=index_values
+        )
+    else:
+        assert_arkouda_pdarray_equal(
+            left,
+            right,
+            check_dtype=check_dtype,
+            err_msg=err_msg,
+            check_same=check_same,
+            obj=obj,
+            index_values=index_values,
+        )
 
 
 # This could be refactored to use the NDFrame.equals method
