@@ -315,7 +315,7 @@ def assert_index_equal(
     # skip exact index checking when `check_categorical` is False
     elif check_exact and check_categorical:
         if not all(left.values == right.values):  # left.equals(right):
-            mismatch = left._values != right._values
+            mismatch = left.values != right.values
 
             if not isinstance(mismatch, np.ndarray):
                 mismatch = cast("ExtensionArray", mismatch).fillna(True)
@@ -337,7 +337,7 @@ def assert_index_equal(
 
     if check_categorical:
         if isinstance(left.dtype, Categorical) or isinstance(right.dtype, Categorical):
-            assert_categorical_equal(left._values, right._values, obj=f"{obj} category")
+            assert_categorical_equal(left.values, right.values, obj=f"{obj} category")
 
 
 def assert_class_equal(left, right, exact: bool = True, obj: str = "Input") -> None:
@@ -693,7 +693,6 @@ def assert_series_equal(
     check_exact: bool = True,
     check_categorical: bool = True,
     check_category_order: bool = True,
-    check_flags: bool = True,
     rtol: float = 1.0e-5,
     atol: float = 1.0e-8,
     obj: str = "Series",
@@ -732,8 +731,6 @@ def assert_series_equal(
         Whether to compare category order of internal Categoricals.
     check_freq : bool, default True
         Whether to check the `freq` attribute on a DatetimeIndex or TimedeltaIndex.
-    check_flags : bool, default True
-        Whether to check the `flags` attribute.
     rtol : float, default 1e-5
         Relative tolerance. Only used when check_exact is False.
     atol : float, default 1e-8
@@ -776,11 +773,7 @@ def assert_series_equal(
         msg2 = f"{len(right)}, {right.index}"
         raise_assert_detail(obj, "Series length are different", msg1, msg2)
 
-    if check_flags:
-        assert left.flags == right.flags, f"{repr(left.flags)} != {repr(right.flags)}"
-
     if check_index:
-        # GH #38183
         assert_index_equal(
             left.index,
             right.index,
@@ -810,8 +803,8 @@ def assert_series_equal(
         else:
             assert_attr_equal("dtype", left, right, obj=f"Attributes of {obj}")
     if check_exact:
-        left_values = left._values
-        right_values = right._values
+        left_values = left.values
+        right_values = right.values
         # Only check exact if dtype is numeric
 
         # convert both to NumPy if not, check_dtype would raise earlier
@@ -825,8 +818,8 @@ def assert_series_equal(
         )
     elif isinstance(left.dtype, Categorical) or isinstance(right.dtype, Categorical):
         assert_almost_equal(
-            left._values,
-            right._values,
+            left.values,
+            right.values,
             rtol=rtol,
             atol=atol,
             check_dtype=bool(check_dtype),
@@ -835,8 +828,8 @@ def assert_series_equal(
         )
     else:
         assert_almost_equal(
-            left._values,
-            right._values,
+            left.values,
+            right.values,
             rtol=rtol,
             atol=atol,
             check_dtype=bool(check_dtype),
@@ -851,8 +844,8 @@ def assert_series_equal(
     if check_categorical:
         if isinstance(left.dtype, Categorical) or isinstance(right.dtype, Categorical):
             assert_categorical_equal(
-                left._values,
-                right._values,
+                left.values,
+                right.values,
                 obj=f"{obj} category",
                 check_category_order=check_category_order,
             )

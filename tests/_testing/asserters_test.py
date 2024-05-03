@@ -198,7 +198,36 @@ class AssertersTest(ArkoudaTest):
 
     # @ TODO Complete
     def test_assert_series_equal(self):
-        pass
+        s = Series(ak.array(["a", "b", "c"]), index=Index(ak.arange(3)))
+        s2 = Series(ak.array([1, 0, 2]), index=Index(ak.arange(3)))
+        s2_float = Series(ak.array([1.0, 0.0, 2.0]), index=Index(ak.arange(3)))
+
+        assert_series_equal(s, s)
+        assert_series_equal(s2, s2)
+        assert_series_equal(s2_float, s2_float)
+
+        #   check_dtype
+        assert_series_equal(s2, s2_float, check_dtype=False)
+        with self.assertRaises(AssertionError):
+            assert_series_equal(s2, s2_float, check_dtype=True)
+
+        # check_index_type
+        s_float_index = Series(ak.array(["a", "b", "c"]), index=Index(1.0 * ak.arange(3)))
+        with self.assertRaises(AssertionError):
+            assert_series_equal(s, s_float_index, check_index_type=True)
+        assert_series_equal(s, s_float_index, check_index_type=False)
+        with self.assertRaises(AssertionError):
+            assert_series_equal(s, s_float_index, check_index_type="equiv")
+
+        # check_series_type: bool = True,
+        # check_names: bool = True,
+        # check_exact: bool = True,
+        # check_categorical: bool = True,
+        # check_category_order: bool = True,
+        # rtol: float = 1.0e-5,
+        # atol: float = 1.0e-8,
+        # check_index: bool = True,
+        # check_like: bool = False,
 
     # @ TODO Complete
     def test_assert_frame_equal(self):

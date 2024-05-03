@@ -505,6 +505,10 @@ class Series:
         # mimic the pandas return of series shape property
         return (self.values.size,)
 
+    @property
+    def dtype(self):
+        return self.values.dtype
+
     @typechecked
     def isin(self, lst: Union[pdarray, Strings, List]) -> Series:
         """Find series elements whose values are in the specified list
