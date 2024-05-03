@@ -16,5 +16,6 @@ from ._asserters import (
     raise_assert_detail,
     _check_isinstance,
     assert_arkouda_strings_equal,
+    assert_arkouda_pdarray_equal,
 )
 
