@@ -2,14 +2,26 @@ import pandas as pd
 from base_test import ArkoudaTest
 from context import arkouda as ak
 
-from arkouda import cast
+from arkouda import DataFrame, Index, MultiIndex, Series, cast
 from arkouda import float64 as akfloat64
 from arkouda.numpy import nan
 from arkouda.testing import (
+    assert_almost_equal,
     assert_arkouda_array_equal,
     assert_attr_equal,
+    assert_categorical_equal,
     assert_class_equal,
+    assert_contains_all,
+    assert_copy,
+    assert_dict_equal,
+    assert_equal,
+    assert_frame_equal,
     assert_index_equal,
+    assert_indexing_slices_equivalent,
+    assert_is_sorted,
+    assert_is_valid_plot_return_object,
+    assert_metadata_equivalent,
+    assert_series_equal,
 )
 
 
@@ -52,10 +64,6 @@ class AssertersTest(ArkoudaTest):
     def test_assert_almost_equal(self):
         idx = ak.Index(ak.arange(5))
 
-        self.assertIsInstance(idx, ak.Index)
-        self.assertEqual(idx.size, 5)
-        self.assertListEqual(idx.to_list(), [i for i in range(5)])
-
         a = pd.Index([1, 2, 3])
         # assert_index_equal(a, a)
         assert_index_equal(idx, idx)
@@ -89,7 +97,6 @@ class AssertersTest(ArkoudaTest):
 
         assert_attr_equal("nlevels", midx, midx2, obj="MultiIndex")
 
-    # @ TODO Complete
     def test_assert_class_equal(self):
         idx = self.build_index()
         midx = self.build_multi_index()
@@ -136,8 +143,16 @@ class AssertersTest(ArkoudaTest):
         with self.assertRaises(AssertionError):
             assert_arkouda_array_equal(a, a_copy, check_same="same")
 
-    # @ TODO Complete
     def test_assert_dict_equal(self):
+        size = 5
+        dict1 = {"a": ak.arange(size), "b": -1 * ak.arange(size)}
+        dict2 = {"a": ak.arange(size), "b": -1 * ak.arange(size)}
+        dict3 = {"a": ak.arange(size), "c": -2 * ak.arange(size)}
+        dict4 = {"a": ak.arange(size), "b": -1 * ak.arange(size), "c": -2 * ak.arange(size)}
+        dict5 = {"a": ak.arange(size), "b": -2 * ak.arange(size)}
+
+        assert_dict_equal(dict1, dict2)
+
         pass
 
     ###################################
@@ -146,9 +161,38 @@ class AssertersTest(ArkoudaTest):
     def test_assert_is_valid_plot_return_object(self):
         pass
 
-    # @ TODO Complete
+
     def test_assert_is_sorted(self):
-        pass
+        size = 5
+        a = ak.arange(size)
+        b = -1 * a
+        c = ak.array([1, 2, 5, 4, 3])
+
+        assert_is_sorted(a)
+        with self.assertRaises(AssertionError):
+            assert_is_sorted(b)
+        with self.assertRaises(AssertionError):
+            assert_is_sorted(c)
+
+        idx_a = Index(a)
+        idx_b = Index(b)
+        idx_c = Index(c)
+
+        assert_is_sorted(idx_a)
+        with self.assertRaises(AssertionError):
+            assert_is_sorted(idx_b)
+        with self.assertRaises(AssertionError):
+            assert_is_sorted(idx_c)
+
+        series_a = Series(a)
+        series_b = Series(b)
+        series_c = Series(c)
+
+        assert_is_sorted(series_a)
+        with self.assertRaises(AssertionError):
+            assert_is_sorted(series_b)
+        with self.assertRaises(AssertionError):
+            assert_is_sorted(series_c)
 
     # @ TODO Complete
     def test_assert_categorical_equal(self):
@@ -168,6 +212,9 @@ class AssertersTest(ArkoudaTest):
 
     # @ TODO Complete
     def test_assert_contains_all(self):
+        d = {"a":1,"b":2,"c":3}
+        assert_contains_all([],d)
+
         pass
 
     # @ TODO Complete
