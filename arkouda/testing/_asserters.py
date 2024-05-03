@@ -133,14 +133,14 @@ def assert_almost_equal(
             # Do not compare bool classes, like np.bool_ and bool.
             pass
         else:
-            if isinstance(left, np.ndarray) or isinstance(right, np.ndarray):
-                obj = "numpy array"
+            if isinstance(left, pdarray) or isinstance(right, pdarray):
+                obj = "pdarray"
             else:
                 obj = "Input"
             assert_class_equal(left, right, obj=obj)
 
         # if we have "equiv", this becomes True
-        assert np.allclose(left, right, rtol=rtol, atol=atol, equal_nan=True)
+        assert np.allclose(left.to_ndarray(), right.to_ndarray(), rtol=rtol, atol=atol, equal_nan=True)
 
 
 def _check_isinstance(left, right, cls) -> None:
