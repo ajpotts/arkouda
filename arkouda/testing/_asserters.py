@@ -317,10 +317,7 @@ def assert_index_equal(
         if not all(left.values == right.values):  # left.equals(right):
             mismatch = left.values != right.values
 
-            if not isinstance(mismatch, np.ndarray):
-                mismatch = cast("ExtensionArray", mismatch).fillna(True)
-
-            diff = np.sum(mismatch.astype(int)) * 100.0 / len(left)
+            diff = sum(mismatch.astype(int)) * 100.0 / len(left)
             msg = f"{obj} values are different ({np.round(diff, 5)} %)"
             raise_assert_detail(obj, msg, left, right)
     else:
@@ -963,9 +960,9 @@ def assert_frame_equal(
     >>> assert_frame_equal(df1, df2, check_dtype=False)
     """
     __tracebackhide__ = True
-    _rtol = rtol  # TODO remove
-    _atol = atol  # TODO remove
-    _check_exact = check_exact  # TODO remove
+    _rtol = rtol
+    _atol = atol
+    _check_exact = check_exact
 
     # instance validation
     _check_isinstance(left, right, DataFrame)

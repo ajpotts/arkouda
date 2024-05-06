@@ -67,6 +67,13 @@ class AssertersTest(ArkoudaTest):
         # assert_index_equal(a, a)
         assert_index_equal(idx, idx)
 
+    def test_assert_index_equal(self):
+        i1 = Index(Categorical(ak.array(["a", "a", "b"])))
+        i2 =Index(Categorical(ak.array(["a", "b", "a"])))
+
+        assert_index_equal(i1, i1)
+        assert_index_equal(i1, i2, check_categorical=False)
+
     def test_assert_attr_equal_index(self):
         idx = self.build_index()
         idx2 = self.build_index()
@@ -198,36 +205,82 @@ class AssertersTest(ArkoudaTest):
 
     # @ TODO Complete
     def test_assert_series_equal(self):
-        s = Series(ak.array(["a", "b", "c"]), index=Index(ak.arange(3)))
+        s = Series(ak.array(["a", "b", "c"]), index=Index(ak.arange(3)), name="test")
         s2 = Series(ak.array([1, 0, 2]), index=Index(ak.arange(3)))
-        s2_float = Series(ak.array([1.0, 0.0, 2.0]), index=Index(ak.arange(3)))
+        s2_float = Series(ak.array([1.0, 0.0, 2.0]), index=Index(ak.arange(3) * 1.0))
+        s_diff_name = Series(ak.array(["a", "b", "c"]), index=Index(ak.arange(3)), name="different_name")
 
         assert_series_equal(s, s)
         assert_series_equal(s2, s2)
         assert_series_equal(s2_float, s2_float)
 
         #   check_dtype
-        assert_series_equal(s2, s2_float, check_dtype=False)
+        assert_series_equal(s2, s2_float, check_dtype=False, check_index_type=False)
+        with self.assertRaises(AssertionError):
+            assert_series_equal(s2, s2_float, check_dtype=False, check_index_type=True)
         with self.assertRaises(AssertionError):
             assert_series_equal(s2, s2_float, check_dtype=True)
 
-        # check_index_type
-        s_float_index = Series(ak.array(["a", "b", "c"]), index=Index(1.0 * ak.arange(3)))
+        # check_names
+        assert_series_equal(s, s_diff_name, check_names=False)
         with self.assertRaises(AssertionError):
-            assert_series_equal(s, s_float_index, check_index_type=True)
-        assert_series_equal(s, s_float_index, check_index_type=False)
-        with self.assertRaises(AssertionError):
-            assert_series_equal(s, s_float_index, check_index_type="equiv")
+            assert_series_equal(s, s_diff_name, check_names=True)
 
-        # check_series_type: bool = True,
-        # check_names: bool = True,
-        # check_exact: bool = True,
+
+
+        rng = ak.random.default_rng()
+        atol = 0.001
+        rtol = 0.001
+        s2_random = Series(
+            ak.array([1, 0, 2]) + rng.random() * atol, index=Index(ak.arange(3) + rng.random() * atol)
+        )
+
+        d1 = rtol * ak.array([1, 0, 2]) + rng.random() * atol
+        d2 = rtol * ak.arange(3) + rng.random() * atol
+
+        s2_random2 = Series(
+            ak.array([1, 0, 2]) + d1,
+            index=Index(ak.arange(3) + d2),
+        )
+
+        s2_random3 = Series(
+            ak.array([1, 0, 2]) + ak.array([1, 0, 2]) * 2 * rtol,
+            index=Index(ak.arange(3) + ak.array([1, 0, 2]) * 2 * rtol),
+        )
+
+        s2_random4 = Series(
+            ak.array([1, 0, 2]) + 2 * atol,
+            index=Index(ak.arange(3) + 2 * atol),
+        )
+
+        assert_series_equal(s2_float, s2_random, check_exact=False, atol=atol)
+        assert_series_equal(s2_float, s2_random2, check_exact=False, atol=atol, rtol=rtol)
+        with self.assertRaises(AssertionError):
+            assert_series_equal(s2_float, s2_random3, check_exact=False, rtol=rtol)
+        with self.assertRaises(AssertionError):
+            assert_series_equal(s2_float, s2_random4, check_exact=False, atol=atol)
+
         # check_categorical: bool = True,
         # check_category_order: bool = True,
-        # rtol: float = 1.0e-5,
-        # atol: float = 1.0e-8,
-        # check_index: bool = True,
-        # check_like: bool = False,
+
+        s3a = Series(ak.array(["a", "b", "c"]), index=Index(Categorical(ak.array(["a", "a", "b"]))), name="test")
+        s3b = Series(ak.array(["a", "b", "c"]), index=Index(Categorical(ak.array(["a", "b", "a"]))), name="test")
+        assert_series_equal(s3a, s3a)
+        with self.assertRaises(AssertionError):
+            assert_series_equal(s3a, s3b)
+        assert_series_equal(s3a, s3b, check_categorical=True, check_category_order=False)
+
+        # check_index
+        s2_diff_index = Series(ak.array([1, 0, 2]), index=Index(ak.arange(3) * 2.0))
+        assert_series_equal(s2, s2_diff_index, check_index=False)
+        with self.assertRaises(AssertionError):
+            assert_series_equal(s2, s2_diff_index, check_index=True)
+
+        # check_like
+        s2_unordered_index = Series(ak.array([1, 0, 2]), index=Index(ak.array([0, 2, 1])))
+        # assert_series_equal(s2, s2_unordered_index, check_like=True)
+        with self.assertRaises(AssertionError):
+            assert_series_equal(s2, s2_unordered_index, check_like=False)
 
     # @ TODO Complete
     def test_assert_frame_equal(self):
