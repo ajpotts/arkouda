@@ -399,6 +399,12 @@ class pdarray:
             generic_msg(cmd="set_max_bits", args={"array": self, "max_bits": max_bits})
             self._max_bits = max_bits
 
+    def equals(self, other):
+        if isinstance(other, pdarray):
+            return all(self == other)
+        else:
+            return False
+
     def format_other(self, other) -> str:
         """
         Attempt to cast scalar other to the element dtype of this pdarray,
