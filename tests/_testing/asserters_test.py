@@ -68,11 +68,15 @@ class AssertersTest(ArkoudaTest):
         assert_index_equal(idx, idx)
 
     def test_assert_index_equal(self):
+        from arkouda import argsort
+
         i1 = Index(Categorical(ak.array(["a", "a", "b"])))
-        i2 =Index(Categorical(ak.array(["a", "b", "a"])))
+        c = Categorical(ak.array(["a", "b", "a"]))
+        c = c[argsort(c)]
+        i2 = Index(c)
 
         assert_index_equal(i1, i1)
-        assert_index_equal(i1, i2, check_categorical=False)
+        assert_index_equal(i1, i2, check_order=False)
 
     def test_assert_attr_equal_index(self):
         idx = self.build_index()
@@ -226,8 +230,6 @@ class AssertersTest(ArkoudaTest):
         with self.assertRaises(AssertionError):
             assert_series_equal(s, s_diff_name, check_names=True)
 
-
-
         rng = ak.random.default_rng()
         atol = 0.001
         rtol = 0.001
@@ -263,8 +265,12 @@ class AssertersTest(ArkoudaTest):
         # check_categorical: bool = True,
         # check_category_order: bool = True,
 
-        s3a = Series(ak.array(["a", "b", "c"]), index=Index(Categorical(ak.array(["a", "a", "b"]))), name="test")
-        s3b = Series(ak.array(["a", "b", "c"]), index=Index(Categorical(ak.array(["a", "b", "a"]))), name="test")
+        s3a = Series(
+            ak.array(["a", "b", "c"]), index=Index(Categorical(ak.array(["a", "a", "b"]))), name="test"
+        )
+        s3b = Series(
+            ak.array(["a", "b", "c"]), index=Index(Categorical(ak.array(["a", "b", "a"]))), name="test"
+        )
         assert_series_equal(s3a, s3a)
         with self.assertRaises(AssertionError):
             assert_series_equal(s3a, s3b)

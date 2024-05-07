@@ -134,6 +134,11 @@ class Index:
             return self.index == v.index
         return self.index == v
 
+    def __ne__(self, v):
+        if isinstance(v, Index):
+            return self.index != v.index
+        return self.index != v
+
     def _dtype_of_list_values(self, lst):
         from arkouda.dtypes import dtype
 
@@ -223,6 +228,14 @@ class Index:
                 idx.append(Categorical.from_return_msg(i_comps[1]))
 
         return cls.factory(idx) if len(idx) > 1 else cls.factory(idx[0])
+
+    def equals(self, other):
+        from arkouda.pdarrayclass import all as akall
+
+        if isinstance(other, Index):
+            return akall(self.values == other.values)
+        else:
+            return False
 
     def memory_usage(self, unit="B"):
         """
@@ -918,6 +931,14 @@ class Index:
             return self.to_parquet(prefix_path, dataset=dataset, mode=mode, compression=compression)
         else:
             raise ValueError("Valid file types are HDF5 or Parquet")
+
+    def _r_binop(self, other: pdarray, op: str):
+        if (
+            isinstance(other, Index)
+            and isinstance(self.values, pdarray)
+            and isinstance(other.values, pdarray)
+        ):
+            self.values._r_binop(other.values, op)
 
 
 class MultiIndex(Index):

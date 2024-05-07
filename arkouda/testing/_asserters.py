@@ -24,7 +24,7 @@ from arkouda import (
     sum,
 )
 from arkouda.numpy import nan
-from arkouda.util import is_float_dtype, is_integer_dtype, is_numeric_dtype
+from arkouda.util import is_float_dtype, is_integer_dtype, is_numeric, is_numeric_dtype
 
 # from pandas.core.dtypes.common import (
 #     is_bool,
@@ -231,7 +231,12 @@ def assert_index_equal(
     >>> b = pd.Index([1, 2, 3])
     >>> tm.assert_index_equal(a, b)
     """
-    __tracebackhide__ = True
+    # __tracebackhide__ = True
+
+    print("test1")
+    print("left")
+    print(type(left))
+    print(left)
 
     def _check_types(left, right, obj: str = "Index") -> None:
         if not exact:
@@ -255,6 +260,11 @@ def assert_index_equal(
     # class / dtype comparison
     _check_types(left, right, obj=obj)
 
+    print("test2")
+    print("left")
+    print(type(left))
+    print(left)
+
     # level comparison
     if left.nlevels != right.nlevels:
         msg1 = f"{obj} levels are different"
@@ -271,8 +281,13 @@ def assert_index_equal(
 
     # If order doesn't matter then sort the index entries
     if not check_order:
-        left = left.argsort()  # safe_sort_index(left)
-        right = right.argsort()  # safe_sort_index(right)
+        left = left[left.argsort()]  # safe_sort_index(left)
+        right = right[right.argsort()]  # safe_sort_index(right)
+
+    print("test3")
+    print("left")
+    print(type(left))
+    print(left)
 
     # MultiIndex special comparison for little-friendly error messages
     if isinstance(left, MultiIndex):
@@ -314,13 +329,16 @@ def assert_index_equal(
 
     # skip exact index checking when `check_categorical` is False
     elif check_exact and check_categorical:
-        if not all(left.values == right.values):  # left.equals(right):
-            mismatch = left.values != right.values
+        print("left")
+        print(type(left))
+        print(left)
+        if not left.equals(right):  # all(left.values == right.values):
+            mismatch = left != right
 
             diff = sum(mismatch.astype(int)) * 100.0 / len(left)
             msg = f"{obj} values are different ({np.round(diff, 5)} %)"
             raise_assert_detail(obj, msg, left, right)
-    else:
+    elif is_numeric(left.values) and is_numeric(right.values):
         # if we have "equiv", this becomes True
         exact_bool = bool(exact)
         # @TODO Use new ak.allclose function
@@ -341,7 +359,7 @@ def assert_class_equal(left, right, exact: bool = True, obj: str = "Input") -> N
     """
     Checks classes are equal.
     """
-    __tracebackhide__ = True
+    # __tracebackhide__ = True
 
     def repr_class(x):
         if isinstance(x, Index):
@@ -371,7 +389,7 @@ def assert_attr_equal(attr: str, left, right, obj: str = "Attributes") -> None:
         Specify object name being compared, internally used to show appropriate
         assertion message
     """
-    __tracebackhide__ = True
+    # __tracebackhide__ = True
 
     left_attr = getattr(left, attr)
     right_attr = getattr(right, attr)
@@ -459,7 +477,7 @@ def assert_categorical_equal(
 def raise_assert_detail(
     obj, message, left, right, diff=None, first_diff=None, index_values=None
 ) -> NoReturn:
-    __tracebackhide__ = True
+    # __tracebackhide__ = True
 
     msg = f"""{obj} are different
 
@@ -529,7 +547,7 @@ def assert_arkouda_pdarray_equal(
     index_values : Index | arkouda.pdarray, default None
         optional index (shared by both left and right), used in output.
     """
-    __tracebackhide__ = True
+    # __tracebackhide__ = True
 
     # instance validation
     # Show a detailed error message when classes are different
@@ -598,7 +616,7 @@ def assert_arkouda_strings_equal(
     index_values : Index | arkouda.pdarray, default None
         optional index (shared by both left and right), used in output.
     """
-    __tracebackhide__ = True
+    # __tracebackhide__ = True
 
     # instance validation
     # Show a detailed error message when classes are different
@@ -752,7 +770,7 @@ def assert_series_equal(
     >>> b = pd.Series([1, 2, 3, 4])
     >>> tm.assert_series_equal(a, b)
     """
-    __tracebackhide__ = True
+    # __tracebackhide__ = True
     check_exact_index = check_exact  ## TODO Remove
 
     if not check_index and check_like:
@@ -959,7 +977,7 @@ def assert_frame_equal(
 
     >>> assert_frame_equal(df1, df2, check_dtype=False)
     """
-    __tracebackhide__ = True
+    # __tracebackhide__ = True
     _rtol = rtol
     _atol = atol
     _check_exact = check_exact
@@ -1059,7 +1077,7 @@ def assert_equal(left, right, **kwargs) -> None:
     **kwargs
         All keyword arguments are passed through to the underlying assert method.
     """
-    __tracebackhide__ = True
+    # __tracebackhide__ = True
 
     if isinstance(left, Index):
         assert_index_equal(left, right, **kwargs)
