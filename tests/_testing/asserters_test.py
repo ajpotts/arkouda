@@ -68,15 +68,66 @@ class AssertersTest(ArkoudaTest):
         assert_index_equal(idx, idx)
 
     def test_assert_index_equal(self):
-        from arkouda import argsort
+        size = 10
+        # exact
+        i4 = Index(ak.arange(size, dtype="float64"))
+        i5 = Index(ak.arange(size, dtype="int64"))
+        assert_index_equal(i4, i5, exact=False)
+        with self.assertRaises(AssertionError):
+            assert_index_equal(i4, i5, exact=True)
 
+        # check_names
+        i6 = Index(ak.arange(size), name="name1")
+        i7 = Index(ak.arange(size), name="name1")
+        i8 = Index(ak.arange(size), name="name2")
+
+        assert_index_equal(i6, i7, check_names=True)
+        assert_index_equal(i6, i8, check_names=False)
+        with self.assertRaises(AssertionError):
+            assert_index_equal(i6, i8, check_names=True)
+
+        # check_exact
+        i4 = Index(ak.arange(size, dtype="float64"))
+        i5 = Index(ak.arange(size) + 1e-9)
+        assert_index_equal(i4, i5, check_exact=False)
+        with self.assertRaises(AssertionError):
+            assert_index_equal(i4, i5, check_exact=True)
+
+        # check_categorical
+        # check_order
         i1 = Index(Categorical(ak.array(["a", "a", "b"])))
-        c = Categorical(ak.array(["a", "b", "a"]))
-        c = c[argsort(c)]
-        i2 = Index(c)
+        # c = Categorical(ak.array(["a", "b", "a"]))
+        # c = c[argsort(c)]
+        # i2 = Index(c)
+        i3 = Index(Categorical(ak.array(["a", "b", "a"])))
 
         assert_index_equal(i1, i1)
-        assert_index_equal(i1, i2, check_order=False)
+        assert_index_equal(i1, i3, check_order=False)
+        assert_index_equal(i1, i3, check_categorical=False)
+        with self.assertRaises(AssertionError):
+            assert_index_equal(i1, i3, check_order=True, check_categorical=True)
+
+        # rtol : float, default 1e-5
+        # atol : float, default 1e-8
+        i2_float = Index(ak.arange(3, dtype="float64"))
+
+        rng = ak.random.default_rng()
+        atol = 0.001
+        rtol = 0.001
+        i2_random = Index(ak.arange(3) + rng.random() * atol)
+
+        d = rtol * ak.arange(3) + rng.random() * atol
+
+        i2_random2 = Index(ak.arange(3) + d)
+        i2_random3 = Index(ak.arange(3) + ak.array([1, 0, 2]) * 2 * rtol)
+        i2_random4 = Index(ak.arange(3) + 2 * atol)
+
+        assert_index_equal(i2_float, i2_random, check_exact=False, atol=atol)
+        assert_index_equal(i2_float, i2_random2, check_exact=False, atol=atol, rtol=rtol)
+        with self.assertRaises(AssertionError):
+            assert_index_equal(i2_float, i2_random3, check_exact=False, rtol=rtol)
+        with self.assertRaises(AssertionError):
+            assert_index_equal(i2_float, i2_random4, check_exact=False, atol=atol)
 
     def test_assert_attr_equal_index(self):
         idx = self.build_index()
