@@ -374,13 +374,8 @@ class AssertersTest(ArkoudaTest):
         with self.assertRaises(AssertionError):
             assert_frame_equal(d5, d6, check_names=True)
 
-        # check_like : bool, default False
-        #     If True, ignore the order of index & columns.
-        #     Note: index labels must match their respective rows
-        #     (same as in columns) - same labels must be with the same data.
-
+        # check_like
         d7 = d1.sort_values("amount")
-
         assert_frame_equal(d1, d7, check_like=True)
         with self.assertRaises(AssertionError):
             assert_frame_equal(d1, d7, check_like=False)
@@ -388,10 +383,23 @@ class AssertersTest(ArkoudaTest):
         d8 = d1[["bi", "userID", "day", "item", "amount", "userName"]]
         assert_frame_equal(d1, d8, check_like=True)
         with self.assertRaises(AssertionError):
-            assert_frame_equal(d1, d8, check_like=False)
+            assert_frame_equal(d1, d8, check_column_type=True)
 
         #         check_categorical : bool, default True
         #     Whether to compare internal Categorical exactly.
+
+        # i1 = Index(Categorical(ak.array(["a", "a", "b"])))
+        # i3 = Index(Categorical(ak.array(["a", "b", "a"])))
+
+        d9 = self.build_ak_df()
+        d9["userName"] = Categorical(d9["userName"])
+        d10 = self.build_ak_df()
+        d10["userName"] = Categorical(d10["userName"]).argsort()
+        # assert_index_equal(i1, i1)
+        # assert_index_equal(i1, i3, check_order=False)
+        assert_frame_equal(d9, d10, check_categorical=False)
+        with self.assertRaises(AssertionError):
+            assert_frame_equal(d9, d10, check_order=True, check_categorical=True)
 
         # check_exact : bool, default False
         #     Whether to compare number exactly.

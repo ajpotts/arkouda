@@ -135,12 +135,18 @@ class Index:
 
     def __eq__(self, v):
         if isinstance(v, Index):
-            return self.index == v.index
-        return self.index == v
+            if isinstance(self.values, list):
+                return array(self.values) == array(v.values)
+            else:
+                return self.values == v.values
+        return self.values == v
 
     def __ne__(self, v):
         if isinstance(v, Index):
-            return self.index != v.index
+            if isinstance(self.values, list):
+                return array(self.values) != array(v.values)
+            else:
+                return self.values != v.values
         return self.index != v
 
     def _dtype_of_list_values(self, lst):

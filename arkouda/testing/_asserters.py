@@ -325,7 +325,17 @@ def assert_index_equal(
         or not isinstance(right.values, Categorical)
     ):
         if not left.equals(right):
-            mismatch = left != right
+
+            if isinstance(left, list) and isinstance(right, list):
+                mismatch = np.array(left) != np.array(right)
+            else:
+                print("type:")
+                print(type(left))
+                print(type(right))
+                mismatch = left != right
+                print("mismatch")
+                print(mismatch)
+
 
             diff = sum(mismatch.astype(int)) * 100.0 / len(left)
             msg = f"{obj} values are different ({np.round(diff, 5)} %)"
@@ -864,7 +874,7 @@ def assert_frame_equal(
     right,
     check_dtype: bool = True,
     check_index_type: bool = True,
-    check_column_type: bool  = True,
+    check_column_type: bool = True,
     check_frame_type: bool = True,
     check_names: bool = True,
     check_exact: bool = True,
@@ -998,7 +1008,6 @@ def assert_frame_equal(
     if check_like:
         # left = left.reindex_like(right)
         left = left[right.index.values]
-
 
     for col in left.columns.values:
         # We have already checked that columns match, so we can do
