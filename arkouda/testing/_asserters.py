@@ -186,7 +186,7 @@ def assert_dict_equal(left, right, compare_keys: bool = True) -> None:
 def assert_index_equal(
     left: Index,
     right: Index,
-    exact: bool | str = "equiv",
+    exact: bool = True,
     check_names: bool = True,
     check_exact: bool = True,
     check_categorical: bool = True,
@@ -202,10 +202,9 @@ def assert_index_equal(
     ----------
     left : Index
     right : Index
-    exact : bool or {'equiv'}, default 'equiv'
+    exact : True
         Whether to check the Index class, dtype and inferred_type
-        are identical. If 'equiv', then RangeIndex can be substituted for
-        Index with an int64 dtype as well.
+        are identical.
     check_names : bool, default True
         Whether to check the names attribute.
     check_exact : bool, default True
@@ -233,11 +232,6 @@ def assert_index_equal(
     """
     # __tracebackhide__ = True
 
-    print("test1")
-    print("left")
-    print(type(left))
-    print(left)
-
     def _check_types(left, right, obj: str = "Index") -> None:
         if not exact:
             return
@@ -260,11 +254,6 @@ def assert_index_equal(
     # class / dtype comparison
     _check_types(left, right, obj=obj)
 
-    print("test2")
-    print("left")
-    print(type(left))
-    print(left)
-
     # level comparison
     if left.nlevels != right.nlevels:
         msg1 = f"{obj} levels are different"
@@ -283,11 +272,6 @@ def assert_index_equal(
     if not check_order:
         left = left[left.argsort()]  # safe_sort_index(left)
         right = right[right.argsort()]  # safe_sort_index(right)
-
-    print("test3")
-    print("left")
-    print(type(left))
-    print(left)
 
     # MultiIndex special comparison for little-friendly error messages
     if isinstance(left, MultiIndex):
@@ -328,23 +312,22 @@ def assert_index_equal(
             _check_types(left.levels[level], right.levels[level], obj=obj)
 
     # skip exact index checking when `check_categorical` is False
-    elif check_exact and check_categorical:
-        print("left")
-        print(type(left))
-        print(left)
-        if not left.equals(right):  # all(left.values == right.values):
+    # differed from pandas due to unintuitive pandas behavior.
+    elif check_exact is False and is_numeric(left.values) and is_numeric(right.values):
+        # @TODO Use new ak.allclose function
+        assert_almost_equal(left.values, right.values, rtol=rtol, atol=atol, equal_nan=True)
+
+    elif check_exact is True and (
+        check_categorical is True
+        or not isinstance(left.values, Categorical)
+        or not isinstance(right.values, Categorical)
+    ):
+        if not left.equals(right):
             mismatch = left != right
 
             diff = sum(mismatch.astype(int)) * 100.0 / len(left)
             msg = f"{obj} values are different ({np.round(diff, 5)} %)"
             raise_assert_detail(obj, msg, left, right)
-    elif is_numeric(left.values) and is_numeric(right.values):
-        # if we have "equiv", this becomes True
-        exact_bool = bool(exact)
-        # @TODO Use new ak.allclose function
-        np.allclose(
-            left.values.to_ndarray(), right.values.to_ndarray(), rtol=rtol, atol=atol, equal_nan=True
-        )
 
     # metadata comparison
     if check_names:
