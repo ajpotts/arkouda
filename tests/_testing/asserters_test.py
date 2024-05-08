@@ -41,7 +41,7 @@ class AssertersTest(ArkoudaTest):
         s = ak.Series(-1 * ak.arange(5), index=ak.arange(5))
         return s
 
-    def build_ak_df(self):
+    def build_ak_df(self, index_dtype="int64", index_name=None):
         username = ak.array(["Alice", "Bob", "Alice", "Carol", "Bob", "Alice"])
         userid = ak.array([111, 222, 111, 333, 222, 111])
         item = ak.array([0, 0, 1, 1, 2, 0])
@@ -56,7 +56,8 @@ class AssertersTest(ArkoudaTest):
                 "day": day,
                 "amount": amount,
                 "bi": bi,
-            }
+            },
+            index=Index(ak.arange(6, dtype=index_dtype), name=index_name),
         )
 
     # @ TODO Complete
@@ -96,9 +97,6 @@ class AssertersTest(ArkoudaTest):
         # check_categorical
         # check_order
         i1 = Index(Categorical(ak.array(["a", "a", "b"])))
-        # c = Categorical(ak.array(["a", "b", "a"]))
-        # c = c[argsort(c)]
-        # i2 = Index(c)
         i3 = Index(Categorical(ak.array(["a", "b", "a"])))
 
         assert_index_equal(i1, i1)
@@ -107,8 +105,8 @@ class AssertersTest(ArkoudaTest):
         with self.assertRaises(AssertionError):
             assert_index_equal(i1, i3, check_order=True, check_categorical=True)
 
-        # rtol : float, default 1e-5
-        # atol : float, default 1e-8
+        # rtol
+        # atol
         i2_float = Index(ak.arange(3, dtype="float64"))
 
         rng = ak.random.default_rng()
@@ -128,6 +126,13 @@ class AssertersTest(ArkoudaTest):
             assert_index_equal(i2_float, i2_random3, check_exact=False, rtol=rtol)
         with self.assertRaises(AssertionError):
             assert_index_equal(i2_float, i2_random4, check_exact=False, atol=atol)
+
+    # @TODO
+    def test_assert_index_equal_multiindex(self):
+        m1 = self.build_multi_index()
+        m2 = self.build_multi_index()
+
+        assert_index_equal(m1, m2)
 
     def test_assert_attr_equal_index(self):
         idx = self.build_index()
@@ -341,7 +346,60 @@ class AssertersTest(ArkoudaTest):
 
     # @ TODO Complete
     def test_assert_frame_equal(self):
-        pass
+        size = 10
+        d1 = self.build_ak_df()
+        d2 = self.build_ak_df()
+        assert_frame_equal(d1, d2)
+
+        #         check_dtype : bool, default True
+        #     Whether to check the DataFrame dtype is identical.
+        d3 = d1.copy(deep=True)
+        assert_frame_equal(d1, d3, check_dtype=True)
+        d3["day"] = cast(d3["day"], dt="float64")
+        assert_frame_equal(d3, d3, check_dtype=True)
+        assert_frame_equal(d1, d3, check_dtype=False)
+        with self.assertRaises(AssertionError):
+            assert_frame_equal(d1, d3, check_dtype=True)
+
+        # check_index_type : bool, default = True
+        d3 = self.build_ak_df(index_dtype="float64")
+        assert_frame_equal(d1, d3, check_index_type=False)
+        with self.assertRaises(AssertionError):
+            assert_frame_equal(d1, d3, check_index_type=True)
+
+        # check_names
+        d5 = self.build_ak_df(index_name="name1")
+        d6 = self.build_ak_df(index_name="name2")
+        assert_frame_equal(d5, d6, check_names=False)
+        with self.assertRaises(AssertionError):
+            assert_frame_equal(d5, d6, check_names=True)
+
+        # check_like : bool, default False
+        #     If True, ignore the order of index & columns.
+        #     Note: index labels must match their respective rows
+        #     (same as in columns) - same labels must be with the same data.
+
+        d7 = d1.sort_values("amount")
+
+        assert_frame_equal(d1, d7, check_like=True)
+        with self.assertRaises(AssertionError):
+            assert_frame_equal(d1, d7, check_like=False)
+
+        d8 = d1[["bi", "userID", "day", "item", "amount", "userName"]]
+        assert_frame_equal(d1, d8, check_like=True)
+        with self.assertRaises(AssertionError):
+            assert_frame_equal(d1, d8, check_like=False)
+
+        #         check_categorical : bool, default True
+        #     Whether to compare internal Categorical exactly.
+
+        # check_exact : bool, default False
+        #     Whether to compare number exactly.
+        # rtol : float, default 1e-5
+        #     Relative tolerance. Only used when check_exact is False.
+
+        # atol : float, default 1e-8
+        #     Absolute tolerance. Only used when check_exact is False.
 
     # @ TODO Complete
     def test_assert_equal(self):
