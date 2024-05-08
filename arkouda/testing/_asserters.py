@@ -71,6 +71,8 @@ from arkouda.util import is_float_dtype, is_integer_dtype, is_numeric, is_numeri
 # if TYPE_CHECKING:
 #     from pandas._typing import DtypeObj
 
+DEBUG = True
+
 
 def assert_almost_equal(
     left,
@@ -230,7 +232,7 @@ def assert_index_equal(
     >>> b = pd.Index([1, 2, 3])
     >>> tm.assert_index_equal(a, b)
     """
-    # __tracebackhide__ = True
+    __tracebackhide__ = not DEBUG
 
     def _check_types(left, right, obj: str = "Index") -> None:
         if not exact:
@@ -566,7 +568,14 @@ def assert_arkouda_pdarray_equal(
 
     # compare shape and values
     # @TODO use ak.allclose
-    if not np.allclose(left.to_ndarray(), right.to_ndarray(), atol=0, equal_nan=True):
+
+    from arkouda.dtypes import dtype, bigint
+    from arkouda import all as akall
+
+    if isinstance(left, pdarray) and isinstance(right, pdarray) and left.dtype == dtype(bigint):
+        if not akall(left == right):
+            _raise(left, right, err_msg)
+    elif not np.allclose(left.to_ndarray(), right.to_ndarray(), atol=0, equal_nan=True):
         _raise(left, right, err_msg)
 
     if check_dtype:
@@ -800,7 +809,7 @@ def assert_series_equal(
             pass
         else:
             assert_attr_equal("dtype", left, right, obj=f"Attributes of {obj}")
-    if check_exact:
+    if check_exact or isinstance(left.values, Strings):
         left_values = left.values
         right_values = right.values
         # Only check exact if dtype is numeric
@@ -853,18 +862,14 @@ def assert_series_equal(
 def assert_frame_equal(
     left,
     right,
-    check_dtype: bool | Literal["equiv"] = True,
-    check_index_type: bool | Literal["equiv"] = "equiv",
-    check_column_type: bool | Literal["equiv"] = "equiv",
+    check_dtype: bool = True,
+    check_index_type: bool = True,
+    check_column_type: bool  = True,
     check_frame_type: bool = True,
     check_names: bool = True,
-    by_blocks: bool = False,
     check_exact: bool = True,
-    check_datetimelike_compat: bool = False,
     check_categorical: bool = True,
     check_like: bool = False,
-    check_freq: bool = True,
-    check_flags: bool = True,
     rtol: float = 1.0e-5,
     atol: float = 1.0e-8,
     obj: str = "DataFrame",
@@ -885,7 +890,7 @@ def assert_frame_equal(
         Second DataFrame to compare.
     check_dtype : bool, default True
         Whether to check the DataFrame dtype is identical.
-    check_index_type : bool or {'equiv'}, default 'equiv'
+    check_index_type : bool, default = True
         Whether to check the Index class, dtype and inferred_type
         are identical.
     check_column_type : bool or {'equiv'}, default 'equiv'
@@ -897,28 +902,14 @@ def assert_frame_equal(
     check_names : bool, default True
         Whether to check that the `names` attribute for both the `index`
         and `column` attributes of the DataFrame is identical.
-    by_blocks : bool, default False
-        Specify how to compare internal data. If False, compare by columns.
-        If True, compare by blocks.
     check_exact : bool, default False
         Whether to compare number exactly.
-
-        .. versionchanged:: 2.2.0
-
-            Defaults to True for integer dtypes if none of
-            ``check_exact``, ``rtol`` and ``atol`` are specified.
-    check_datetimelike_compat : bool, default False
-        Compare datetime-like which is comparable ignoring dtype.
     check_categorical : bool, default True
         Whether to compare internal Categorical exactly.
     check_like : bool, default False
         If True, ignore the order of index & columns.
         Note: index labels must match their respective rows
         (same as in columns) - same labels must be with the same data.
-    check_freq : bool, default True
-        Whether to check the `freq` attribute on a DatetimeIndex or TimedeltaIndex.
-    check_flags : bool, default True
-        Whether to check the `flags` attribute.
     rtol : float, default 1e-5
         Relative tolerance. Only used when check_exact is False.
     atol : float, default 1e-8
@@ -970,14 +961,11 @@ def assert_frame_equal(
 
     if check_frame_type:
         assert isinstance(left, type(right))
-        # assert_class_equal(left, right, obj=obj)
+        assert_class_equal(left, right, obj=obj)
 
     # shape comparison
     if left.shape != right.shape:
         raise_assert_detail(obj, f"{obj} shape mismatch", f"{repr(left.shape)}", f"{repr(right.shape)}")
-
-    if check_flags:
-        assert left.flags == right.flags, f"{repr(left.flags)} != {repr(right.flags)}"
 
     # index comparison
     assert_index_equal(
@@ -1008,45 +996,36 @@ def assert_frame_equal(
     )
 
     if check_like:
-        left = left.reindex_like(right)
+        # left = left.reindex_like(right)
+        left = left[right.index.values]
 
-    # compare by blocks
-    if by_blocks:
-        rblocks = right._to_dict_of_blocks()
-        lblocks = left._to_dict_of_blocks()
-        for dtype in list(set(list(lblocks.keys()) + list(rblocks.keys()))):
-            assert dtype in lblocks
-            assert dtype in rblocks
-            assert_frame_equal(lblocks[dtype], rblocks[dtype], check_dtype=check_dtype, obj=obj)
 
-    # compare by columns
-    else:
-        for i, col in enumerate(left.columns):
-            # We have already checked that columns match, so we can do
-            #  fast location-based lookups
-            lcol = left._ixs(i, axis=1)
-            rcol = right._ixs(i, axis=1)
+    for col in left.columns.values:
+        # We have already checked that columns match, so we can do
+        #  fast location-based lookups
+        lcol = left[col]
+        rcol = right[col]
+        if not isinstance(lcol, Series):
+            lcol = Series(lcol)
+        if not isinstance(rcol, Series):
+            rcol = Series(rcol)
 
-            # GH #38183
-            # use check_index=False, because we do not want to run
-            # assert_index_equal for each column,
-            # as we already checked it for the whole dataframe before.
-            assert_series_equal(
-                lcol,
-                rcol,
-                check_dtype=check_dtype,
-                check_index_type=check_index_type,
-                check_exact=check_exact,
-                check_names=check_names,
-                check_datetimelike_compat=check_datetimelike_compat,
-                check_categorical=check_categorical,
-                check_freq=check_freq,
-                obj=f'{obj}.iloc[:, {i}] (column name="{col}")',
-                rtol=rtol,
-                atol=atol,
-                check_index=False,
-                check_flags=False,
-            )
+        # use check_index=False, because we do not want to run
+        # assert_index_equal for each column,
+        # as we already checked it for the whole dataframe before.
+        assert_series_equal(
+            lcol,
+            rcol,
+            check_dtype=check_dtype,
+            check_index_type=check_index_type,
+            check_exact=check_exact,
+            check_names=check_names,
+            check_categorical=check_categorical,
+            obj=f'{obj}.(column name="{col}")',
+            rtol=rtol,
+            atol=atol,
+            check_index=False,
+        )
 
 
 def assert_equal(left, right, **kwargs) -> None:

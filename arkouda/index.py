@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, List, Optional, Union
 
 import pandas as pd  # type: ignore
 from numpy import array as ndarray
+from numpy import dtype as npdtype
 from typeguard import typechecked
 
 from arkouda import Categorical, Strings
@@ -120,6 +121,9 @@ class Index:
         if isinstance(key, int):
             return self.values[key]
 
+        if isinstance(key, list):
+            return Index([self.values[k] for k in key])
+
         return Index(self.values[key])
 
     def __repr__(self):
@@ -229,13 +233,18 @@ class Index:
 
         return cls.factory(idx) if len(idx) > 1 else cls.factory(idx[0])
 
-    def equals(self, other):
+    def equals(self, other) -> bool:
         from arkouda.pdarrayclass import all as akall
 
         if isinstance(other, Index):
-            return akall(self.values == other.values)
-        else:
-            return False
+            if isinstance(self.values, (pdarray, Strings, Categorical)) and isinstance(
+                other.values, (pdarray, Strings, Categorical)
+            ):
+                return akall(self.values == other.values)
+            elif isinstance(self.values, list) and isinstance(other.values, list):
+                return self.values == other.values
+
+        return False
 
     def memory_usage(self, unit="B"):
         """
@@ -1000,6 +1009,14 @@ class MultiIndex(Index):
     @property
     def nlevels(self):
         return len(self.levels)
+
+    @property
+    def dtype(self) -> npdtype:
+        return npdtype("O")
+
+    @property
+    def inferred_type(self) -> str:
+        return "mixed"
 
     def memory_usage(self, unit="B"):
         """
