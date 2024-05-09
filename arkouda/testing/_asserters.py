@@ -325,7 +325,6 @@ def assert_index_equal(
         or not isinstance(right.values, Categorical)
     ):
         if not left.equals(right):
-
             if isinstance(left, list) and isinstance(right, list):
                 mismatch = np.array(left) != np.array(right)
             else:
@@ -335,7 +334,6 @@ def assert_index_equal(
                 mismatch = left != right
                 print("mismatch")
                 print(mismatch)
-
 
             diff = sum(mismatch.astype(int)) * 100.0 / len(left)
             msg = f"{obj} values are different ({np.round(diff, 5)} %)"
@@ -447,7 +445,7 @@ def assert_categorical_equal(
 
     exact = True
 
-    if check_category_order:
+    if check_category_order is True:
         assert_arkouda_array_equal(
             left.categories, right.categories, check_dtype=check_dtype, obj=f"{obj}.categories"
         )
@@ -463,8 +461,8 @@ def assert_categorical_equal(
         left_sorted = left[argsort(left)]
         right_sorted = right[argsort(right)]
         assert_arkouda_array_equal(
-            left_sorted.categories[left_sorted.codes],
-            right_sorted.categories[right_sorted.codes],
+            left.categories[left.codes],
+            right.categories[right.codes],
             obj=f"{obj}.values",
         )
 
@@ -579,8 +577,8 @@ def assert_arkouda_pdarray_equal(
     # compare shape and values
     # @TODO use ak.allclose
 
-    from arkouda.dtypes import dtype, bigint
     from arkouda import all as akall
+    from arkouda.dtypes import bigint, dtype
 
     if isinstance(left, pdarray) and isinstance(right, pdarray) and left.dtype == dtype(bigint):
         if not akall(left == right):
@@ -684,8 +682,14 @@ def assert_arkouda_array_equal(
         optional index (shared by both left and right), used in output.
     """
     if isinstance(left, Strings):
+        print("case1")
+        print(left)
         assert_arkouda_strings_equal(
             left, right, err_msg=err_msg, check_same=check_same, obj=obj, index_values=index_values
+        )
+    elif isinstance(left, Categorical):
+        assert_categorical_equal(
+            left, right,  obj=obj,
         )
     else:
         assert_arkouda_pdarray_equal(
@@ -819,27 +823,21 @@ def assert_series_equal(
             pass
         else:
             assert_attr_equal("dtype", left, right, obj=f"Attributes of {obj}")
-    if check_exact or isinstance(left.values, Strings):
-        left_values = left.values
-        right_values = right.values
-        # Only check exact if dtype is numeric
 
-        # convert both to NumPy if not, check_dtype would raise earlier
-        lv, rv = left_values, right_values
+    if isinstance(left.values, Categorical) or isinstance(right.values, Categorical):
+        assert_categorical_equal(
+            left.values,
+            right.values,
+            check_dtype=check_dtype,
+            check_category_order=check_category_order,
+            obj="Categorical",
+        )
+    elif check_exact or isinstance(left.values, Strings):
+        lv, rv = left.values, right.values
         assert_arkouda_array_equal(
             lv,
             rv,
             check_dtype=check_dtype,
-            obj=str(obj),
-            index_values=left.index,
-        )
-    elif isinstance(left.dtype, Categorical) or isinstance(right.dtype, Categorical):
-        assert_almost_equal(
-            left.values,
-            right.values,
-            rtol=rtol,
-            atol=atol,
-            check_dtype=bool(check_dtype),
             obj=str(obj),
             index_values=left.index,
         )
