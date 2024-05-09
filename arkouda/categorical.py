@@ -170,6 +170,10 @@ class Categorical:
 
         return nbytes
 
+    @property
+    def inferred_type(self):
+        return "categorical"
+
     @classmethod
     @typechecked
     def from_codes(

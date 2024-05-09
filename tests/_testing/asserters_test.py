@@ -255,13 +255,12 @@ class AssertersTest(ArkoudaTest):
 
     # @ TODO Complete
     def test_assert_categorical_equal(self):
-        c1 = Categorical(ak.array(["a", "a", "b"]))
-        c2 = Categorical(ak.array(["a", "b", "a"]))
 
-        assert_categorical_equal(c1, c1)
-        assert_categorical_equal(c1, c2, check_category_order=False)
+        c3 = Categorical(ak.array(["Alice", "Bob", "Alice", "Carol", "Bob", "Alice"]))
+        c4 = Categorical(ak.array(["Alice", "Bob", "Alice", "Carol", "Bob", "Alice"])).sort()
+        assert_categorical_equal(c3, c4, check_category_order=False)
         with self.assertRaises(AssertionError):
-            assert_categorical_equal(c1, c2, check_category_order=True)
+            assert_categorical_equal(c3, c4, check_category_order=True)
 
     # @ TODO Complete
     def test_assert_series_equal(self):
@@ -322,14 +321,14 @@ class AssertersTest(ArkoudaTest):
         # check_category_order: bool = True,
 
         s3a = Series(
-            ak.array(["a", "b", "c"]), index=Index(Categorical(ak.array(["a", "a", "b"]))), name="test"
+            Categorical(ak.array(["a", "b", "c"])), index=Index(Categorical(ak.array(["a", "a", "b"]))), name="test"
         )
         s3b = Series(
-            ak.array(["a", "b", "c"]), index=Index(Categorical(ak.array(["a", "b", "a"]))), name="test"
+            Categorical(ak.array(["a", "b", "c"])).sort(), index=Index(Categorical(ak.array(["a", "a", "b"]))), name="test"
         )
         assert_series_equal(s3a, s3a)
         with self.assertRaises(AssertionError):
-            assert_series_equal(s3a, s3b)
+            assert_series_equal(s3a, s3b, check_categorical=True, check_category_order=True)
         assert_series_equal(s3a, s3b, check_categorical=True, check_category_order=False)
 
         # check_index
@@ -394,12 +393,12 @@ class AssertersTest(ArkoudaTest):
         d9 = self.build_ak_df()
         d9["userName"] = Categorical(d9["userName"])
         d10 = self.build_ak_df()
-        d10["userName"] = Categorical(d10["userName"]).argsort()
+        d10["userName"] = Categorical(d10["userName"]).sort()
         # assert_index_equal(i1, i1)
         # assert_index_equal(i1, i3, check_order=False)
         assert_frame_equal(d9, d10, check_categorical=False)
         with self.assertRaises(AssertionError):
-            assert_frame_equal(d9, d10, check_order=True, check_categorical=True)
+            assert_frame_equal(d9, d10, check_categorical=True)
 
         # check_exact : bool, default False
         #     Whether to compare number exactly.

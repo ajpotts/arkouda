@@ -165,19 +165,7 @@ class Index:
 
     @property
     def inferred_type(self):
-        from arkouda.dtypes import float_scalars, int_scalars
-        from arkouda.util import _is_dtype_in_union
-
-        if _is_dtype_in_union(self.dtype, int_scalars):
-            return "integer"
-        elif _is_dtype_in_union(self.dtype, float_scalars):
-            return "floating"
-        elif self.dtype == "<U":
-            return "string"
-        elif isinstance(self.values, Strings):
-            return "string"
-        elif isinstance(self.values, Categorical):
-            return "categorical"
+        return self.values.inferred_type
 
     @property
     def names(self):
@@ -1023,6 +1011,17 @@ class MultiIndex(Index):
     @property
     def inferred_type(self) -> str:
         return "mixed"
+
+    def get_level_values(self, level: str or int):
+        if isinstance(level, str) and level in self.names:
+            level = self.names.index(level)
+        if isinstance(level, int) and abs(level) <= self.nlevels:
+            return Index(self.levels[level], name=self.names[level])
+        else:
+            raise ValueError(
+                "Cannot get level values because level must be a string in names or "
+                "an integer with absolute value leq than the number of levels."
+            )
 
     def memory_usage(self, unit="B"):
         """
