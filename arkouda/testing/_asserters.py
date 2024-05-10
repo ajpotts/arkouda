@@ -315,29 +315,21 @@ def assert_index_equal(
 
     # skip exact index checking when `check_categorical` is False
     # differed from pandas due to unintuitive pandas behavior.
-    elif check_exact is False and is_numeric(left.values) and is_numeric(right.values):
-        # @TODO Use new ak.allclose function
-        assert_almost_equal(left.values, right.values, rtol=rtol, atol=atol, equal_nan=True)
-
-    elif check_exact is True and (
-        check_categorical is True
-        or not isinstance(left.values, Categorical)
-        or not isinstance(right.values, Categorical)
-    ):
+    elif check_exact is True or not is_numeric(left) or not is_numeric(right):
         if not left.equals(right):
             if isinstance(left, list) and isinstance(right, list):
                 mismatch = np.array(left) != np.array(right)
             else:
-                print("type:")
-                print(type(left))
-                print(type(right))
                 mismatch = left != right
-                print("mismatch")
-                print(mismatch)
 
             diff = sum(mismatch.astype(int)) * 100.0 / len(left)
             msg = f"{obj} values are different ({np.round(diff, 5)} %)"
             raise_assert_detail(obj, msg, left, right)
+    else:
+        # @TODO Use new ak.allclose function
+        assert_almost_equal(left.values, right.values, rtol=rtol, atol=atol, equal_nan=True)
+
+
 
     # metadata comparison
     if check_names:
@@ -689,7 +681,9 @@ def assert_arkouda_array_equal(
         )
     elif isinstance(left, Categorical):
         assert_categorical_equal(
-            left, right,  obj=obj,
+            left,
+            right,
+            obj=obj,
         )
     else:
         assert_arkouda_pdarray_equal(
@@ -824,15 +818,15 @@ def assert_series_equal(
         else:
             assert_attr_equal("dtype", left, right, obj=f"Attributes of {obj}")
 
-    if isinstance(left.values, Categorical) or isinstance(right.values, Categorical):
-        assert_categorical_equal(
-            left.values,
-            right.values,
-            check_dtype=check_dtype,
-            check_category_order=check_category_order,
-            obj="Categorical",
-        )
-    elif check_exact or isinstance(left.values, Strings):
+    # if isinstance(left.values, Categorical) or isinstance(right.values, Categorical):
+    #     assert_categorical_equal(
+    #         left.values,
+    #         right.values,
+    #         check_dtype=check_dtype,
+    #         check_category_order=check_category_order,
+    #         obj="Categorical",
+    #     )
+    if check_exact or not is_numeric(left.values) or not is_numeric(right.values):
         lv, rv = left.values, right.values
         assert_arkouda_array_equal(
             lv,
