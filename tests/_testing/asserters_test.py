@@ -18,7 +18,6 @@ from arkouda.testing import (
     assert_equal,
     assert_frame_equal,
     assert_index_equal,
-    assert_indexing_slices_equivalent,
     assert_is_sorted,
     assert_series_equal,
 )
@@ -522,10 +521,6 @@ class AssertersTest(ArkoudaTest):
 
         with self.assertRaises(AssertionError):
             assert_copy(cols, cols_shallow)
-
-    # @ TODO Complete
-    def test_assert_indexing_slices_equivalent(self):
-        pass
 
     def test_assert_arkouda_array_equal(self):
         size = 10
