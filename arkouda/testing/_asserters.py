@@ -857,19 +857,19 @@ def assert_series_equal(
 
 # This could be refactored to use the NDFrame.equals method
 def assert_frame_equal(
-    left,
-    right,
-    check_dtype: bool = True,
-    check_index_type: bool = True,
-    check_column_type: bool = True,
-    check_frame_type: bool = True,
-    check_names: bool = True,
-    check_exact: bool = True,
-    check_categorical: bool = True,
-    check_like: bool = False,
-    rtol: float = 1.0e-5,
-    atol: float = 1.0e-8,
-    obj: str = "DataFrame",
+        left: object,
+        right: object,
+        check_dtype: bool = True,
+        check_index_type: bool = True,
+        check_column_type: bool = True,
+        check_frame_type: bool = True,
+        check_names: bool = True,
+        check_exact: bool = True,
+        check_categorical: bool = True,
+        check_like: bool = False,
+        rtol: float = 1.0e-5,
+        atol: float = 1.0e-8,
+        obj: str = "DataFrame",
 ) -> None:
     """
     Check that left and right DataFrame are equal.
