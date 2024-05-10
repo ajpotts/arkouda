@@ -488,3 +488,29 @@ class AssertersTest(ArkoudaTest):
     # @ TODO Complete
     def test_assert_indexing_slices_equivalent(self):
         pass
+
+    def test_assert_arkouda_array_equal(self):
+        size = 10
+        a = ak.arange(size)
+        a2 = a + 1
+        assert_arkouda_array_equal(a, a)
+        with self.assertRaises(AssertionError):
+            assert_arkouda_array_equal(a, a2)
+
+        s = ak.array(["a", "b", "b"])
+        s2 = ak.array(["a", "b", "c"])
+        assert_arkouda_array_equal(s, s)
+        with self.assertRaises(AssertionError):
+            assert_arkouda_array_equal(s, s2)
+
+        c = Categorical(s)
+        c2 = Categorical(s2)
+        assert_arkouda_array_equal(c, c)
+        with self.assertRaises(AssertionError):
+            assert_arkouda_array_equal(c, c2)
+
+        with self.assertRaises(AssertionError):
+            assert_arkouda_array_equal(a, s)
+
+        with self.assertRaises(AssertionError):
+            assert_arkouda_array_equal(s, c)
