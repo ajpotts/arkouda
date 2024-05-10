@@ -143,7 +143,12 @@ def assert_almost_equal(
             assert_class_equal(left, right, obj=obj)
 
         # if we have "equiv", this becomes True
-        assert np.allclose(left.to_ndarray(), right.to_ndarray(), rtol=rtol, atol=atol, equal_nan=True)
+        if isinstance(left, pdarray) and isinstance(right, pdarray):
+            assert np.allclose(
+                left.to_ndarray(), right.to_ndarray(), rtol=rtol, atol=atol, equal_nan=True
+            )
+        else:
+            assert np.allclose(left, right, rtol=rtol, atol=atol, equal_nan=True)
 
 
 def _check_isinstance(left, right, cls) -> None:
@@ -858,19 +863,19 @@ def assert_series_equal(
 
 # This could be refactored to use the NDFrame.equals method
 def assert_frame_equal(
-        left: object,
-        right: object,
-        check_dtype: bool = True,
-        check_index_type: bool = True,
-        check_column_type: bool = True,
-        check_frame_type: bool = True,
-        check_names: bool = True,
-        check_exact: bool = True,
-        check_categorical: bool = True,
-        check_like: bool = False,
-        rtol: float = 1.0e-5,
-        atol: float = 1.0e-8,
-        obj: str = "DataFrame",
+    left: object,
+    right: object,
+    check_dtype: bool = True,
+    check_index_type: bool = True,
+    check_column_type: bool = True,
+    check_frame_type: bool = True,
+    check_names: bool = True,
+    check_exact: bool = True,
+    check_categorical: bool = True,
+    check_like: bool = False,
+    rtol: float = 1.0e-5,
+    atol: float = 1.0e-8,
+    obj: str = "DataFrame",
 ) -> None:
     """
     Check that left and right DataFrame are equal.
@@ -1044,7 +1049,7 @@ def assert_equal(left, right, **kwargs) -> None:
         assert_series_equal(left, right, **kwargs)
     elif isinstance(left, DataFrame):
         assert_frame_equal(left, right, **kwargs)
-    elif isinstance(left, np.ndarray):
+    elif isinstance(left, pdarray):
         assert_arkouda_array_equal(left, right, **kwargs)
     elif isinstance(left, str):
         assert kwargs == {}

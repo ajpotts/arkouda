@@ -397,8 +397,7 @@ class AssertersTest(ArkoudaTest):
         d9["userName"] = Categorical(d9["userName"])
         d10 = self.build_ak_df()
         d10["userName"] = Categorical(d10["userName"]).sort()
-        # assert_index_equal(i1, i1)
-        # assert_index_equal(i1, i3, check_order=False)
+
         assert_frame_equal(d9, d10, check_categorical=False)
         with self.assertRaises(AssertionError):
             assert_frame_equal(d9, d10, check_categorical=True)
@@ -423,9 +422,44 @@ class AssertersTest(ArkoudaTest):
         with self.assertRaises(AssertionError):
             assert_frame_equal(d11, d12, check_exact=False, atol=atol)
 
-    # @ TODO Complete
     def test_assert_equal(self):
-        pass
+        size = 10
+        a = ak.arange(size)
+        a2 = a + 1
+        idx = Index(a)
+        idx2 = Index(a2)
+        s = Series(a)
+        s2 = Series(a2)
+        df = DataFrame({"col": a}, index=idx)
+        df2 = DataFrame({"col": a2}, index=idx2)
+
+        assert_equal(a, a)
+        with self.assertRaises(AssertionError):
+            assert_equal(a, a2)
+
+        assert_equal(idx, idx)
+        with self.assertRaises(AssertionError):
+            assert_equal(idx, idx2)
+
+        assert_equal(s, s)
+        with self.assertRaises(AssertionError):
+            assert_equal(s, s2)
+
+        assert_equal(df, df)
+        with self.assertRaises(AssertionError):
+            assert_equal(df, df2)
+
+        st = "string1"
+        st2 = "string2"
+        assert_equal(st, st)
+        with self.assertRaises(AssertionError):
+            assert_equal(st, st2)
+
+        n = 1.0
+        n2 = 1.5
+        assert_equal(n, n)
+        with self.assertRaises(AssertionError):
+            assert_equal(n, n2)
 
     # @ TODO Complete
     def test_assert_contains_all(self):
