@@ -677,8 +677,6 @@ def assert_arkouda_array_equal(
         optional index (shared by both left and right), used in output.
     """
     if isinstance(left, Strings):
-        print("case1")
-        print(left)
         assert_arkouda_strings_equal(
             left, right, err_msg=err_msg, check_same=check_same, obj=obj, index_values=index_values
         )
