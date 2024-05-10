@@ -322,8 +322,8 @@ class AssertersTest(ArkoudaTest):
         with self.assertRaises(AssertionError):
             assert_series_equal(s2_float, s2_random4, check_exact=False, atol=atol)
 
-        # check_categorical: bool = True,
-        # check_category_order: bool = True,
+        # check_categorical
+        # check_category_order
 
         s3a = Series(
             Categorical(ak.array(["a", "b", "c"])),
@@ -347,20 +347,19 @@ class AssertersTest(ArkoudaTest):
             assert_series_equal(s2, s2_diff_index, check_index=True)
 
         # check_like
-        s2_unordered_index = Series(ak.array([1, 0, 2]), index=Index(ak.array([0, 2, 1])))
-        # assert_series_equal(s2, s2_unordered_index, check_like=True)
+        s4_unordered_index = Series(ak.array([1, 0, 2]), index=Index(ak.array([0, 2, 1])))
+        s4 = s4_unordered_index.sort_index()
+        assert_series_equal(s4, s4_unordered_index, check_like=True)
         with self.assertRaises(AssertionError):
-            assert_series_equal(s2, s2_unordered_index, check_like=False)
+            assert_series_equal(s4, s4_unordered_index, check_like=False)
 
-    # @ TODO Complete
     def test_assert_frame_equal(self):
         size = 10
         d1 = self.build_ak_df()
         d2 = self.build_ak_df()
         assert_frame_equal(d1, d2)
 
-        #         check_dtype : bool, default True
-        #     Whether to check the DataFrame dtype is identical.
+        # check_dtype
         d3 = d1.copy(deep=True)
         assert_frame_equal(d1, d3, check_dtype=True)
         d3["day"] = cast(d3["day"], dt="float64")
@@ -369,7 +368,7 @@ class AssertersTest(ArkoudaTest):
         with self.assertRaises(AssertionError):
             assert_frame_equal(d1, d3, check_dtype=True)
 
-        # check_index_type : bool, default = True
+        # check_index_type
         d3 = self.build_ak_df(index_dtype="float64")
         assert_frame_equal(d1, d3, check_index_type=False)
         with self.assertRaises(AssertionError):
@@ -393,12 +392,7 @@ class AssertersTest(ArkoudaTest):
         with self.assertRaises(AssertionError):
             assert_frame_equal(d1, d8, check_column_type=True)
 
-        #         check_categorical : bool, default True
-        #     Whether to compare internal Categorical exactly.
-
-        # i1 = Index(Categorical(ak.array(["a", "a", "b"])))
-        # i3 = Index(Categorical(ak.array(["a", "b", "a"])))
-
+        # check_categorical
         d9 = self.build_ak_df()
         d9["userName"] = Categorical(d9["userName"])
         d10 = self.build_ak_df()
@@ -409,13 +403,9 @@ class AssertersTest(ArkoudaTest):
         with self.assertRaises(AssertionError):
             assert_frame_equal(d9, d10, check_categorical=True)
 
-        # check_exact : bool, default False
-        #     Whether to compare number exactly.
-        # rtol : float, default 1e-5
-        #     Relative tolerance. Only used when check_exact is False.
-
-        # atol : float, default 1e-8
-        #     Absolute tolerance. Only used when check_exact is False.
+        # check_exact
+        # rtol
+        # atol
         rng = ak.random.default_rng()
         atol = 0.001
         rtol = 0.001

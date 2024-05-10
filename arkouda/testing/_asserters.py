@@ -805,7 +805,8 @@ def assert_series_equal(
         )
 
     if check_like:
-        left = left.reindex_like(right)
+        # left = left.reindex_like(right)
+        left = left[right.index.values]
 
     if check_dtype:
         # We want to skip exact dtype checking when `check_categorical`
