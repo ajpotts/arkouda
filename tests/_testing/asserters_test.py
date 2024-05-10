@@ -60,13 +60,51 @@ class AssertersTest(ArkoudaTest):
             index=Index(ak.arange(6, dtype=index_dtype), name=index_name),
         )
 
-    # @ TODO Complete
     def test_assert_almost_equal(self):
-        idx = ak.Index(ak.arange(5))
+        size = 10
 
-        a = pd.Index([1, 2, 3])
-        # assert_index_equal(a, a)
-        assert_index_equal(idx, idx)
+        rng = ak.random.default_rng()
+        atol = 0.001
+        rtol = 0.001
+        a = ak.arange(10, dtype="float64")
+        a2 = a + rtol * a + atol * rng.random()
+        a3 = a + rtol + atol
+
+        assert_almost_equal(a, a2, atol=atol, rtol=rtol)
+        with self.assertRaises(AssertionError):
+            assert_almost_equal(a, a3, atol=atol, rtol=rtol)
+
+        idx = Index(a)
+        idx2 = Index(a2)
+        idx3 = Index(a3)
+
+        assert_almost_equal(idx, idx2, atol=atol, rtol=rtol)
+        with self.assertRaises(AssertionError):
+            assert_almost_equal(idx, idx3, atol=atol, rtol=rtol)
+
+        s = Series(a)
+        s2 = Series(a2)
+        s3 = Series(a3)
+
+        assert_almost_equal(s, s2, atol=atol, rtol=rtol)
+        with self.assertRaises(AssertionError):
+            assert_almost_equal(s, s3, atol=atol, rtol=rtol)
+
+        df = DataFrame({"col1": a}, index=idx)
+        df2 = DataFrame({"col1": a2}, index=idx2)
+        df3 = DataFrame({"col1": a3}, index=idx3)
+
+        assert_almost_equal(df, df2, atol=atol, rtol=rtol)
+        with self.assertRaises(AssertionError):
+            assert_almost_equal(df, df3, atol=atol, rtol=rtol)
+
+        assert_almost_equal(True, True, atol=atol, rtol=rtol)
+        with self.assertRaises(AssertionError):
+            assert_almost_equal(True, False, atol=atol, rtol=rtol)
+
+        assert_almost_equal(1.0, 1.0, atol=atol, rtol=rtol)
+        with self.assertRaises(AssertionError):
+            assert_almost_equal(1.0, 1.5, atol=atol, rtol=rtol)
 
     def test_assert_index_equal(self):
         size = 10
@@ -514,3 +552,16 @@ class AssertersTest(ArkoudaTest):
 
         with self.assertRaises(AssertionError):
             assert_arkouda_array_equal(s, c)
+
+    def test_assert_arkouda_strings_equal(self):
+        s = ak.array(["a", "b", "c"])
+        s_copy = ak.array(["a", "b", "c"])
+
+        # check_same
+        assert_arkouda_strings_equal(s, s, check_same="same")
+        with self.assertRaises(AssertionError):
+            assert_arkouda_strings_equal(s, s, check_same="copy")
+
+        assert_arkouda_strings_equal(s, s_copy, check_same="copy")
+        with self.assertRaises(AssertionError):
+            assert_arkouda_strings_equal(s, s_copy, check_same="same")
