@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import builtins
 import json
 from typing import TYPE_CHECKING, Sequence, Tuple, Union, cast
@@ -421,7 +423,9 @@ def convert_bytes(nbytes, unit="B"):
         return nbytes / gb
 
 
-def is_numeric(arry: Union[pdarray, Strings, Categorical]) -> builtins.bool:
+def is_numeric(
+    arry: Union[pdarray, Strings, Categorical, "Series", "Index"]  # noqa: F821
+) -> builtins.bool:
     """
     Check if the dtype of the given array is numeric.
 
@@ -446,8 +450,10 @@ def is_numeric(arry: Union[pdarray, Strings, Categorical]) -> builtins.bool:
         False
 
     """
+    from arkouda.index import Index
+    from arkouda.series import Series
 
-    if isinstance(arry, (pdarray)):
+    if isinstance(arry, (pdarray, Series, Index)):
         return _is_dtype_in_union(dtype(arry.dtype), numeric_scalars)
     else:
         return False
@@ -462,7 +468,7 @@ def is_numeric_dtype(item):
         return False
 
 
-def is_float(arry: Union[pdarray, Strings, Categorical]):
+def is_float(arry: Union[pdarray, Strings, Categorical, "Series", "Index"]):  # noqa: F821
     """
     Check if the dtype of the given array is float.
 
@@ -487,7 +493,10 @@ def is_float(arry: Union[pdarray, Strings, Categorical]):
         False
 
     """
-    if isinstance(arry, (pdarray)):
+    from arkouda.index import Index
+    from arkouda.series import Series
+
+    if isinstance(arry, (pdarray, Series, Index)):
         return _is_dtype_in_union(dtype(arry.dtype), float_scalars)
     else:
         return False
@@ -502,7 +511,7 @@ def is_float_dtype(item):
         return False
 
 
-def is_int(arry: Union[pdarray, Strings, Categorical]):
+def is_int(arry: Union[pdarray, Strings, Categorical, "Series", "Index"]):  # noqa: F821
     """
     Check if the dtype of the given array is int.
 
@@ -528,7 +537,10 @@ def is_int(arry: Union[pdarray, Strings, Categorical]):
     True
 
     """
-    if isinstance(arry, (pdarray)):
+    from arkouda.index import Index
+    from arkouda.series import Series
+
+    if isinstance(arry, (pdarray, Series, Index)):
         return _is_dtype_in_union(dtype(arry.dtype), int_scalars)
     else:
         return False

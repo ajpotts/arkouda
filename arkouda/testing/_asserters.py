@@ -329,8 +329,6 @@ def assert_index_equal(
         # @TODO Use new ak.allclose function
         assert_almost_equal(left.values, right.values, rtol=rtol, atol=atol, equal_nan=True)
 
-
-
     # metadata comparison
     if check_names:
         assert_attr_equal("names", left, right, obj=obj)
@@ -680,10 +678,14 @@ def assert_arkouda_array_equal(
             left, right, err_msg=err_msg, check_same=check_same, obj=obj, index_values=index_values
         )
     elif isinstance(left, Categorical):
-        assert_categorical_equal(
-            left,
-            right,
+        assert_arkouda_array_equal(
+            left.categories[left.codes],
+            right.categories[right.codes],
+            check_dtype=check_dtype,
+            err_msg=err_msg,
+            check_same=check_same,
             obj=obj,
+            index_values=index_values,
         )
     else:
         assert_arkouda_pdarray_equal(
@@ -701,8 +703,8 @@ def assert_arkouda_array_equal(
 def assert_series_equal(
     left,
     right,
-    check_dtype: bool | Literal["equiv"] = True,
-    check_index_type: bool | Literal["equiv"] = "equiv",
+    check_dtype: bool = True,
+    check_index_type: bool = True,
     check_series_type: bool = True,
     check_names: bool = True,
     check_exact: bool = True,
@@ -724,7 +726,7 @@ def assert_series_equal(
     right : Series
     check_dtype : bool, default True
         Whether to check the Series dtype is identical.
-    check_index_type : bool or {'equiv'}, default 'equiv'
+    check_index_type : bool, default True
         Whether to check the Index class, dtype and inferred_type
         are identical.
     check_series_type : bool, default True
@@ -818,14 +820,6 @@ def assert_series_equal(
         else:
             assert_attr_equal("dtype", left, right, obj=f"Attributes of {obj}")
 
-    # if isinstance(left.values, Categorical) or isinstance(right.values, Categorical):
-    #     assert_categorical_equal(
-    #         left.values,
-    #         right.values,
-    #         check_dtype=check_dtype,
-    #         check_category_order=check_category_order,
-    #         obj="Categorical",
-    #     )
     if check_exact or not is_numeric(left.values) or not is_numeric(right.values):
         lv, rv = left.values, right.values
         assert_arkouda_array_equal(
@@ -850,13 +844,14 @@ def assert_series_equal(
     if check_names:
         assert_attr_equal("name", left, right, obj=obj)
 
-    if check_categorical:
-        if isinstance(left.dtype, Categorical) or isinstance(right.dtype, Categorical):
+    if check_categorical is True:
+        if isinstance(left.values, Categorical) or isinstance(right.values, Categorical):
             assert_categorical_equal(
                 left.values,
                 right.values,
                 obj=f"{obj} category",
                 check_category_order=check_category_order,
+                check_dtype=check_dtype,
             )
 
 
