@@ -416,6 +416,22 @@ class AssertersTest(ArkoudaTest):
 
         # atol : float, default 1e-8
         #     Absolute tolerance. Only used when check_exact is False.
+        rng = ak.random.default_rng()
+        atol = 0.001
+        rtol = 0.001
+
+        d11 = self.build_ak_df()
+        d12 = self.build_ak_df()
+        d12["amount"] = d12["amount"] + rtol * d12["amount"] + rng.random() * atol
+
+        assert_frame_equal(d11, d12, check_exact=False, atol=atol, rtol=rtol)
+
+        with self.assertRaises(AssertionError):
+            assert_frame_equal(d11, d12, check_exact=True)
+        with self.assertRaises(AssertionError):
+            assert_frame_equal(d11, d12, check_exact=False, rtol=rtol)
+        with self.assertRaises(AssertionError):
+            assert_frame_equal(d11, d12, check_exact=False, atol=atol)
 
     # @ TODO Complete
     def test_assert_equal(self):
