@@ -98,12 +98,18 @@ class AssertersTest(ArkoudaTest):
         # check_order
         i1 = Index(Categorical(ak.array(["a", "a", "b"])))
         i3 = Index(Categorical(ak.array(["a", "b", "a"])))
+        i4 = Index(Categorical(ak.array(["a", "b", "c"])))
+        i5 = Index(Categorical(ak.array(["a", "a", "b"])).sort())
 
         assert_index_equal(i1, i1)
         assert_index_equal(i1, i3, check_order=False)
-        assert_index_equal(i1, i3, check_categorical=False)
         with self.assertRaises(AssertionError):
-            assert_index_equal(i1, i3, check_order=True, check_categorical=True)
+            assert_index_equal(i1, i3, check_order=True)
+        with self.assertRaises(AssertionError):
+            assert_index_equal(i1, i3, check_categorical=False)
+        with self.assertRaises(AssertionError):
+            assert_index_equal(i1, i4, check_categorical=False)
+        assert_index_equal(i1, i5, check_order=True, check_categorical=True)
 
         # rtol
         # atol
@@ -255,7 +261,6 @@ class AssertersTest(ArkoudaTest):
 
     # @ TODO Complete
     def test_assert_categorical_equal(self):
-
         c3 = Categorical(ak.array(["Alice", "Bob", "Alice", "Carol", "Bob", "Alice"]))
         c4 = Categorical(ak.array(["Alice", "Bob", "Alice", "Carol", "Bob", "Alice"])).sort()
         assert_categorical_equal(c3, c4, check_category_order=False)
@@ -321,10 +326,14 @@ class AssertersTest(ArkoudaTest):
         # check_category_order: bool = True,
 
         s3a = Series(
-            Categorical(ak.array(["a", "b", "c"])), index=Index(Categorical(ak.array(["a", "a", "b"]))), name="test"
+            Categorical(ak.array(["a", "b", "c"])),
+            index=Index(Categorical(ak.array(["a", "a", "b"]))),
+            name="test",
         )
         s3b = Series(
-            Categorical(ak.array(["a", "b", "c"])).sort(), index=Index(Categorical(ak.array(["a", "a", "b"]))), name="test"
+            Categorical(ak.array(["a", "b", "c"])).sort(),
+            index=Index(Categorical(ak.array(["a", "a", "b"]))),
+            name="test",
         )
         assert_series_equal(s3a, s3a)
         with self.assertRaises(AssertionError):
