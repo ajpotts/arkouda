@@ -1,10 +1,7 @@
-import pandas as pd
 from base_test import ArkoudaTest
 from context import arkouda as ak
 
 from arkouda import Categorical, DataFrame, Index, MultiIndex, Series, Strings, cast
-from arkouda import float64 as akfloat64
-from arkouda.numpy import nan
 from arkouda.testing import (
     assert_almost_equal,
     assert_arkouda_array_equal,
@@ -28,19 +25,15 @@ class AssertersTest(ArkoudaTest):
     def setUpClass(cls):
         super(AssertersTest, cls).setUpClass()
 
-    def build_index(self):
+    def build_index(self) -> Index:
         idx = ak.Index(ak.arange(5), name="test1")
         return idx
 
-    def build_multi_index(self):
+    def build_multi_index(self) -> MultiIndex:
         midx = ak.MultiIndex([ak.arange(5), -1 * ak.arange(5)], names=["test1", "test2"])
         return midx
 
-    def build_series(self):
-        s = ak.Series(-1 * ak.arange(5), index=ak.arange(5))
-        return s
-
-    def build_ak_df(self, index_dtype="int64", index_name=None):
+    def build_ak_df(self, index_dtype="int64", index_name=None) -> DataFrame:
         username = ak.array(["Alice", "Bob", "Alice", "Carol", "Bob", "Alice"])
         userid = ak.array([111, 222, 111, 333, 222, 111])
         item = ak.array([0, 0, 1, 1, 2, 0])
@@ -107,29 +100,26 @@ class AssertersTest(ArkoudaTest):
 
     def test_assert_index_equal(self):
         size = 10
+
         # exact
-        i4 = Index(ak.arange(size, dtype="float64"))
-        i5 = Index(ak.arange(size, dtype="int64"))
-        assert_index_equal(i4, i5, exact=False)
+        i1 = Index(ak.arange(size, dtype="float64"))
+        i2 = Index(ak.arange(size, dtype="int64"))
+        assert_index_equal(i1, i2, exact=False)
         with self.assertRaises(AssertionError):
-            assert_index_equal(i4, i5, exact=True)
+            assert_index_equal(i1, i2, exact=True)
 
         # check_names
-        i6 = Index(ak.arange(size), name="name1")
-        i7 = Index(ak.arange(size), name="name1")
-        i8 = Index(ak.arange(size), name="name2")
+        i3 = Index(ak.arange(size), name="name1")
+        i4 = Index(ak.arange(size), name="name1")
+        i5 = Index(ak.arange(size), name="name2")
 
-        assert_index_equal(i6, i7, check_names=True)
-        assert_index_equal(i6, i8, check_names=False)
+        assert_index_equal(i3, i4, check_names=True)
+        assert_index_equal(i3, i5, check_names=False)
         with self.assertRaises(AssertionError):
-            assert_index_equal(i6, i8, check_names=True)
+            assert_index_equal(i3, i5, check_names=True)
 
-        # check_exact
-        i4 = Index(ak.arange(size, dtype="float64"))
-        i5 = Index(ak.arange(size) + 1e-9)
-        assert_index_equal(i4, i5, check_exact=False)
-        with self.assertRaises(AssertionError):
-            assert_index_equal(i4, i5, check_exact=True)
+    def test_assert_index_equal_categorical(self):
+        size = 10
 
         # check_categorical
         # check_order
@@ -148,29 +138,38 @@ class AssertersTest(ArkoudaTest):
             assert_index_equal(i1, i4, check_categorical=False)
         assert_index_equal(i1, i5, check_order=True, check_categorical=True)
 
+    def test_assert_index_equal_check_exact(self):
+        size = 10
+
+        # check_exact
+        i1 = Index(ak.arange(size, dtype="float64"))
+        i2 = Index(ak.arange(size) + 1e-9)
+        assert_index_equal(i1, i2, check_exact=False)
+        with self.assertRaises(AssertionError):
+            assert_index_equal(i1, i2, check_exact=True)
+
         # rtol
         # atol
-        i2_float = Index(ak.arange(3, dtype="float64"))
+        i3_float = Index(ak.arange(size, dtype="float64"))
 
         rng = ak.random.default_rng()
         atol = 0.001
         rtol = 0.001
-        i2_random = Index(ak.arange(3) + rng.random() * atol)
 
-        d = rtol * ak.arange(3) + rng.random() * atol
+        i3_atol = Index(ak.arange(size) + atol * rng.random())
+        assert_index_equal(i3_float, i3_atol, check_exact=False, atol=atol)
 
-        i2_random2 = Index(ak.arange(3) + d)
-        i2_random3 = Index(ak.arange(3) + ak.array([1, 0, 2]) * 2 * rtol)
-        i2_random4 = Index(ak.arange(3) + 2 * atol)
+        i3_atol_rtol = Index(ak.arange(size) + rtol * ak.arange(size) + atol * rng.random())
+        assert_index_equal(i3_float, i3_atol_rtol, check_exact=False, atol=atol, rtol=rtol)
 
-        assert_index_equal(i2_float, i2_random, check_exact=False, atol=atol)
-        assert_index_equal(i2_float, i2_random2, check_exact=False, atol=atol, rtol=rtol)
+        i3_2rtol = Index(ak.arange(size) + ak.arange(size) * 2 * rtol)
         with self.assertRaises(AssertionError):
-            assert_index_equal(i2_float, i2_random3, check_exact=False, rtol=rtol)
-        with self.assertRaises(AssertionError):
-            assert_index_equal(i2_float, i2_random4, check_exact=False, atol=atol)
+            assert_index_equal(i3_float, i3_2rtol, check_exact=False, rtol=rtol)
 
-    # @TODO
+        i3_2atol = Index(ak.arange(size) + 2 * atol)
+        with self.assertRaises(AssertionError):
+            assert_index_equal(i3_float, i3_2atol, check_exact=False, atol=atol)
+
     def test_assert_index_equal_multiindex(self):
         m1 = self.build_multi_index()
         m2 = self.build_multi_index()
@@ -211,7 +210,7 @@ class AssertersTest(ArkoudaTest):
         midx = self.build_multi_index()
         midx2 = self.build_multi_index()
         df = self.build_ak_df()
-        s = self.build_series()
+        s = ak.Series(-1 * ak.arange(5), index=ak.arange(5))
 
         assert_class_equal(idx, idx)
         assert_class_equal(midx, midx2)
@@ -229,7 +228,7 @@ class AssertersTest(ArkoudaTest):
         a2 = ak.array(["a", "d", "b", "c"])
         a3 = ak.array(["a", "a", "b", "c", "d"])
 
-        from arkouda.testing import _check_isinstance, assert_arkouda_strings_equal
+        from arkouda.testing import _check_isinstance
 
         _check_isinstance(a, a, Strings)
 
@@ -243,15 +242,17 @@ class AssertersTest(ArkoudaTest):
         #   check_same
         a_copy = a[:]
         assert_arkouda_strings_equal(a, a_copy)
+
         assert_arkouda_strings_equal(a, a, check_same="same")
         with self.assertRaises(AssertionError):
             assert_arkouda_strings_equal(a, a, check_same="copy")
+
         assert_arkouda_strings_equal(a, a_copy, check_same="copy")
         with self.assertRaises(AssertionError):
             assert_arkouda_strings_equal(a, a_copy, check_same="same")
 
     def test_assert_dict_equal(self):
-        size = 5
+        size = 10
         dict1 = {"a": ak.arange(size), "b": -1 * ak.arange(size)}
         dict2 = {"a": ak.arange(size), "b": -1 * ak.arange(size)}
         dict3 = {"a": ak.arange(size), "c": -2 * ak.arange(size)}
@@ -265,7 +266,7 @@ class AssertersTest(ArkoudaTest):
                 assert_dict_equal(dict1, d)
 
     def test_assert_is_sorted(self):
-        size = 5
+        size = 10
         a = ak.arange(size)
         b = -1 * a
         c = ak.array([1, 2, 5, 4, 3])
@@ -296,7 +297,6 @@ class AssertersTest(ArkoudaTest):
         with self.assertRaises(AssertionError):
             assert_is_sorted(series_c)
 
-    # @ TODO Complete
     def test_assert_categorical_equal(self):
         c3 = Categorical(ak.array(["Alice", "Bob", "Alice", "Carol", "Bob", "Alice"]))
         c4 = Categorical(ak.array(["Alice", "Bob", "Alice", "Carol", "Bob", "Alice"])).sort()
@@ -304,7 +304,7 @@ class AssertersTest(ArkoudaTest):
         with self.assertRaises(AssertionError):
             assert_categorical_equal(c3, c4, check_category_order=True)
 
-    # @ TODO Complete
+    #@TODO Clean up below this point
     def test_assert_series_equal(self):
         s = Series(ak.array(["a", "b", "c"]), index=Index(ak.arange(3)), name="test")
         s2 = Series(ak.array([1, 0, 2]), index=Index(ak.arange(3)))
@@ -547,16 +547,3 @@ class AssertersTest(ArkoudaTest):
 
         with self.assertRaises(AssertionError):
             assert_arkouda_array_equal(s, c)
-
-    def test_assert_arkouda_strings_equal(self):
-        s = ak.array(["a", "b", "c"])
-        s_copy = ak.array(["a", "b", "c"])
-
-        # check_same
-        assert_arkouda_strings_equal(s, s, check_same="same")
-        with self.assertRaises(AssertionError):
-            assert_arkouda_strings_equal(s, s, check_same="copy")
-
-        assert_arkouda_strings_equal(s, s_copy, check_same="copy")
-        with self.assertRaises(AssertionError):
-            assert_arkouda_strings_equal(s, s_copy, check_same="same")
