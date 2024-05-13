@@ -681,7 +681,7 @@ def assert_series_equal(
     check_index_type: bool = True,
     check_series_type: bool = True,
     check_names: bool = True,
-    check_exact: bool = True,
+    check_exact: bool = False,
     check_categorical: bool = True,
     check_category_order: bool = True,
     rtol: float = 1.0e-5,
@@ -765,7 +765,7 @@ def assert_series_equal(
         )
 
     if check_like:
-        # left = left.reindex_like(right)
+        # @TODO use Series.reindex_like
         left = left[right.index.values]
 
     if check_dtype:
@@ -773,8 +773,8 @@ def assert_series_equal(
         # is False. We'll still raise if only one is a `Categorical`,
         # regardless of `check_categorical`
         if (
-            isinstance(left.dtype, Categorical)
-            and isinstance(right.dtype, Categorical)
+            isinstance(left, Categorical)
+            and isinstance(right, Categorical)
             and not check_categorical
         ):
             pass
@@ -782,13 +782,12 @@ def assert_series_equal(
             assert_attr_equal("dtype", left, right, obj=f"Attributes of {obj}")
 
     if check_exact or not is_numeric(left.values) or not is_numeric(right.values):
-        lv, rv = left.values, right.values
         assert_arkouda_array_equal(
-            lv,
-            rv,
+            left.values,
+            right.values,
             check_dtype=check_dtype,
-            obj=str(obj),
             index_values=left.index,
+            obj=str(obj),
         )
     else:
         assert_almost_equal(
@@ -879,16 +878,15 @@ def assert_frame_equal(
     See Also
     --------
     assert_series_equal : Equivalent method for asserting Series equality.
-    DataFrame.equals : Check DataFrame equality.
 
     Examples
     --------
     This example shows comparing two DataFrames that are equal
     but with columns of differing dtypes.
 
-    >>> from pandas.testing import assert_frame_equal
-    >>> df1 = pd.DataFrame({'a': [1, 2], 'b': [3, 4]})
-    >>> df2 = pd.DataFrame({'a': [1, 2], 'b': [3.0, 4.0]})
+    >>> from arkouda.testing import assert_frame_equal
+    >>> df1 = ak.DataFrame({'a': [1, 2], 'b': [3, 4]})
+    >>> df2 = ak.DataFrame({'a': [1, 2], 'b': [3.0, 4.0]})
 
     df1 equals itself.
 
@@ -910,9 +908,6 @@ def assert_frame_equal(
     >>> assert_frame_equal(df1, df2, check_dtype=False)
     """
     __tracebackhide__ = not DEBUG
-    _rtol = rtol
-    _atol = atol
-    _check_exact = check_exact
 
     # instance validation
     _check_isinstance(left, right, DataFrame)
@@ -931,11 +926,11 @@ def assert_frame_equal(
         right.index,
         exact=check_index_type,
         check_names=check_names,
-        check_exact=_check_exact,
+        check_exact=check_exact,
         check_categorical=check_categorical,
         check_order=not check_like,
-        rtol=_rtol,
-        atol=_atol,
+        rtol=rtol,
+        atol=atol,
         obj=f"{obj}.index",
     )
 
@@ -945,16 +940,16 @@ def assert_frame_equal(
         right.columns,
         exact=check_column_type,
         check_names=check_names,
-        check_exact=_check_exact,
+        check_exact=check_exact,
         check_categorical=check_categorical,
         check_order=not check_like,
-        rtol=_rtol,
-        atol=_atol,
+        rtol=rtol,
+        atol=atol,
         obj=f"{obj}.columns",
     )
 
     if check_like:
-        # left = left.reindex_like(right)
+        # @TODO use left.reindex_like(right)
         left = left[right.index.values]
 
     for col in left.columns.values:
@@ -991,7 +986,7 @@ def assert_equal(left, right, **kwargs) -> None:
 
     Parameters
     ----------
-    left, right : Index, Series, DataFrame, ExtensionArray, or np.ndarray
+    left, right : Index, Series, DataFrame, or np.pdarray
         The two items to be compared.
     **kwargs
         All keyword arguments are passed through to the underlying assert method.
