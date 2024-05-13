@@ -285,15 +285,16 @@ def assert_index_equal(
             raise_assert_detail(obj, msg, left, right)
     else:
         # @TODO Use new ak.allclose function
-        assert_almost_equal(left.values,
-                            right.values,
-                            rtol=rtol,
-                            atol=atol,
-                            check_dtype=exact,
-                            obj=obj,
-                            lobj=left,
-                            robj=right,
-                            )
+        assert_almost_equal(
+            left.values,
+            right.values,
+            rtol=rtol,
+            atol=atol,
+            check_dtype=exact,
+            obj=obj,
+            lobj=left,
+            robj=right,
+        )
 
     # metadata comparison
     if check_names:
@@ -397,30 +398,36 @@ def assert_categorical_equal(
     """
     _check_isinstance(left, right, Categorical)
 
-    exact: bool | str
-
     exact = True
 
-    if check_category_order is True:
-        assert_arkouda_array_equal(
-            left.categories, right.categories, check_dtype=check_dtype, obj=f"{obj}.categories"
+    if check_category_order:
+        assert_index_equal(
+            Index(left.categories), Index(right.categories), obj=f"{obj}.categories", exact=exact
         )
         assert_arkouda_array_equal(left.codes, right.codes, check_dtype=check_dtype, obj=f"{obj}.codes")
     else:
         try:
-            lc = left.sort().categories
-            rc = right.sort().categories
+            # @TODO replace with Index.sort_values
+            lc = Index(
+                left.categories[argsort(left.categories)]
+            )  # .sort_values()  # left.sort().categories
+            rc = Index(
+                right.categories[argsort(right.categories)]
+            )  # .sort_values()  # right.sort().categories
         except TypeError:
             # e.g. '<' not supported between instances of 'int' and 'str'
-            lc, rc = left.categories, right.categories
-        assert_arkouda_array_equal(lc, rc, obj=f"{obj}.categories")
-        left_sorted = left[argsort(left)]
-        right_sorted = right[argsort(right)]
-        assert_arkouda_array_equal(
-            left.categories[left.codes],
-            right.categories[right.codes],
+            lc, rc = Index(left.categories), Index(right.categories)
+        assert_index_equal(lc, rc, obj=f"{obj}.categories", exact=exact)
+        # @TODO Replace with Index.take
+        assert_index_equal(
+            Index(left.categories[left.codes]),
+            Index(right.categories[right.codes]),
             obj=f"{obj}.values",
+            exact=exact,
         )
+
+    # @TODO uncomment when Categorical.ordered is added
+    # assert_attr_equal("ordered", left, right, obj=obj)
 
 
 def raise_assert_detail(
@@ -490,7 +497,7 @@ def assert_arkouda_pdarray_equal(
         If provided, used as assertion message.
     check_same : None|'copy'|'same', default None
         Ensure left and right refer/do not refer to the same memory area.
-    obj : str, default 'numpy array'
+    obj : str, default 'pdarray'
         Specify object name being compared, internally used to show appropriate
         assertion message.
     index_values : Index | arkouda.pdarray, default None
@@ -530,16 +537,15 @@ def assert_arkouda_pdarray_equal(
 
         raise AssertionError(err_msg)
 
-    # compare shape and values
-    # @TODO use ak.allclose
-
     from arkouda import all as akall
     from arkouda.dtypes import bigint, dtype
 
+    # compare shape and values
+    # @TODO use ak.allclose
     if isinstance(left, pdarray) and isinstance(right, pdarray) and left.dtype == dtype(bigint):
         if not akall(left == right):
             _raise(left, right, err_msg)
-    elif not np.allclose(left.to_ndarray(), right.to_ndarray(), atol=0, equal_nan=True):
+    elif not np.allclose(left.to_ndarray(), right.to_ndarray(), atol=0, rtol=0, equal_nan=True):
         _raise(left, right, err_msg)
 
     if check_dtype:
@@ -556,7 +562,7 @@ def assert_arkouda_strings_equal(
     index_values=None,
 ) -> None:
     """
-    Check that 'ak.pdarray' is equivalent.
+    Check that 'ak.Strings' is equivalent.
 
     Parameters
     ----------
@@ -566,7 +572,7 @@ def assert_arkouda_strings_equal(
         If provided, used as assertion message.
     check_same : None|'copy'|'same', default None
         Ensure left and right refer/do not refer to the same memory area.
-    obj : str, default 'numpy array'
+    obj : str, default 'Strings'
         Specify object name being compared, internally used to show appropriate
         assertion message.
     index_values : Index | arkouda.pdarray, default None
@@ -610,8 +616,8 @@ def assert_arkouda_strings_equal(
 
 
 def assert_arkouda_array_equal(
-    left: pdarray | Strings,
-    right: pdarray | Strings,
+    left: pdarray | Strings | Categorical,
+    right: pdarray | Strings | Categorical,
     check_dtype: bool = True,
     err_msg=None,
     check_same=None,
@@ -619,11 +625,11 @@ def assert_arkouda_array_equal(
     index_values=None,
 ) -> None:
     """
-    Check that 'ak.pdarray' is equivalent.
+    Check that 'ak.pdarray' or 'ak.Strings' or 'ak.Categorical' is equivalent.
 
     Parameters
     ----------
-    left, right : arkouda.pdarray or arkouda.Strings
+    left, right : arkouda.pdarray or arkouda.Strings or arkouda.Categorical
         The two arrays to be compared.
     check_dtype : bool, default True
         Check dtype if both a and b are ak.pdarray.
@@ -639,7 +645,11 @@ def assert_arkouda_array_equal(
     """
     if isinstance(left, Strings):
         assert_arkouda_strings_equal(
-            left, right, err_msg=err_msg, check_same=check_same, obj=obj, index_values=index_values
+            left, right,
+            err_msg=err_msg,
+            check_same=check_same,
+            obj=obj,
+            index_values=index_values
         )
     elif isinstance(left, Categorical):
         assert_arkouda_array_equal(
@@ -699,19 +709,10 @@ def assert_series_equal(
         Whether to check the Series and Index names attribute.
     check_exact : bool, default False
         Whether to compare number exactly.
-
-        .. versionchanged:: 2.2.0
-
-            Defaults to True for integer dtypes if none of
-            ``check_exact``, ``rtol`` and ``atol`` are specified.
-    check_datetimelike_compat : bool, default False
-        Compare datetime-like which is comparable ignoring dtype.
     check_categorical : bool, default True
         Whether to compare internal Categorical exactly.
     check_category_order : bool, default True
         Whether to compare category order of internal Categoricals.
-    check_freq : bool, default True
-        Whether to check the `freq` attribute on a DatetimeIndex or TimedeltaIndex.
     rtol : float, default 1e-5
         Relative tolerance. Only used when check_exact is False.
     atol : float, default 1e-8
@@ -721,23 +722,18 @@ def assert_series_equal(
         assertion message.
     check_index : bool, default True
         Whether to check index equivalence. If False, then compare only values.
-
-        .. versionadded:: 1.3.0
     check_like : bool, default False
         If True, ignore the order of the index. Must be False if check_index is False.
         Note: same labels must be with the same data.
 
-        .. versionadded:: 1.5.0
-
     Examples
     --------
-    >>> from pandas import testing as tm
-    >>> a = pd.Series([1, 2, 3, 4])
-    >>> b = pd.Series([1, 2, 3, 4])
+    >>> from arkouda import testing as tm
+    >>> a = ak.Series([1, 2, 3, 4])
+    >>> b = ak.Series([1, 2, 3, 4])
     >>> tm.assert_series_equal(a, b)
     """
     __tracebackhide__ = not DEBUG
-    check_exact_index = check_exact  ## TODO Remove
 
     if not check_index and check_like:
         raise ValueError("check_like must be False if check_index is False")
@@ -760,7 +756,7 @@ def assert_series_equal(
             right.index,
             exact=check_index_type,
             check_names=check_names,
-            check_exact=check_exact_index,
+            check_exact=check_exact,
             check_categorical=check_categorical,
             check_order=not check_like,
             rtol=rtol,
