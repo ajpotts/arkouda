@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import operator
-from typing import TYPE_CHECKING, Literal, NoReturn, cast
+
+from typing import NoReturn, cast
 
 import numpy as np
 import pandas as pd
@@ -16,7 +16,6 @@ from arkouda import (
     MultiIndex,
     Series,
     Strings,
-    all,
     argsort,
     array,
     pdarray,
@@ -24,52 +23,8 @@ from arkouda import (
     sum,
 )
 from arkouda.numpy import nan
-from arkouda.util import is_float_dtype, is_integer_dtype, is_numeric, is_numeric_dtype
+from arkouda.util import is_numeric
 
-# from pandas.core.dtypes.common import (
-#     is_bool,
-#     is_float_dtype,
-#     is_integer_dtype,
-#     is_number,
-#     is_numeric_dtype,
-#     needs_i8_conversion,
-# )
-# from pandas.core.dtypes.dtypes import (
-#     CategoricalDtype,
-#     DatetimeTZDtype,
-#     ExtensionDtype,
-#     NumpyEADtype,
-# )
-
-# import pandas as pd
-# from pandas import (
-#     Categorical,
-#     DataFrame,
-#     DatetimeIndex,
-#     Index,
-#     IntervalDtype,
-#     IntervalIndex,
-#     MultiIndex,
-#     PeriodIndex,
-#     RangeIndex,
-#     Series,
-#     TimedeltaIndex,
-# )
-# from pandas.core.arrays import (
-#     DatetimeArray,
-#     ExtensionArray,
-#     IntervalArray,
-#     PeriodArray,
-#     TimedeltaArray,
-# )
-#
-# from pandas.core.arrays.string_ import StringDtype
-# from pandas.core.indexes.api import safe_sort_index
-#
-# from pandas.io.formats.printing import pprint_thing
-#
-# if TYPE_CHECKING:
-#     from pandas._typing import DtypeObj
 
 DEBUG = True
 
@@ -128,7 +83,6 @@ def assert_almost_equal(
 
     else:
         # Other sequences.
-
         if is_number(left) and is_number(right):
             # Do not compare numeric classes, like np.float64 and float.
             pass
@@ -142,7 +96,6 @@ def assert_almost_equal(
                 obj = "Input"
             assert_class_equal(left, right, obj=obj)
 
-        # if we have "equiv", this becomes True
         if isinstance(left, pdarray) and isinstance(right, pdarray):
             assert np.allclose(
                 left.to_ndarray(), right.to_ndarray(), rtol=rtol, atol=atol, equal_nan=True
@@ -232,9 +185,9 @@ def assert_index_equal(
 
     Examples
     --------
-    >>> from pandas import testing as tm
-    >>> a = pd.Index([1, 2, 3])
-    >>> b = pd.Index([1, 2, 3])
+    >>> from arkouda import testing as tm
+    >>> a = ak.Index([1, 2, 3])
+    >>> b = ak.Index([1, 2, 3])
     >>> tm.assert_index_equal(a, b)
     """
     __tracebackhide__ = not DEBUG
@@ -277,8 +230,8 @@ def assert_index_equal(
 
     # If order doesn't matter then sort the index entries
     if not check_order:
-        left = left[left.argsort()]  # safe_sort_index(left)
-        right = right[right.argsort()]  # safe_sort_index(right)
+        left = left[left.argsort()]
+        right = right[right.argsort()]
 
     # MultiIndex special comparison for little-friendly error messages
     if isinstance(left, MultiIndex):
@@ -332,14 +285,22 @@ def assert_index_equal(
             raise_assert_detail(obj, msg, left, right)
     else:
         # @TODO Use new ak.allclose function
-        assert_almost_equal(left.values, right.values, rtol=rtol, atol=atol, equal_nan=True)
+        assert_almost_equal(left.values,
+                            right.values,
+                            rtol=rtol,
+                            atol=atol,
+                            check_dtype=exact,
+                            obj=obj,
+                            lobj=left,
+                            robj=right,
+                            )
 
     # metadata comparison
     if check_names:
         assert_attr_equal("names", left, right, obj=obj)
 
     if check_categorical:
-        if isinstance(left.dtype, Categorical) or isinstance(right.dtype, Categorical):
+        if isinstance(left, Categorical) or isinstance(right, Categorical):
             assert_categorical_equal(left.values, right.values, obj=f"{obj} category")
 
 
@@ -347,7 +308,7 @@ def assert_class_equal(left, right, exact: bool = True, obj: str = "Input") -> N
     """
     Checks classes are equal.
     """
-    # __tracebackhide__ = True
+    __tracebackhide__ = not DEBUG
 
     def repr_class(x):
         if isinstance(x, Index):
@@ -377,7 +338,7 @@ def assert_attr_equal(attr: str, left, right, obj: str = "Attributes") -> None:
         Specify object name being compared, internally used to show appropriate
         assertion message
     """
-    # __tracebackhide__ = True
+    __tracebackhide__ = not DEBUG
 
     left_attr = getattr(left, attr)
     right_attr = getattr(right, attr)
@@ -465,7 +426,7 @@ def assert_categorical_equal(
 def raise_assert_detail(
     obj, message, left, right, diff=None, first_diff=None, index_values=None
 ) -> NoReturn:
-    # __tracebackhide__ = True
+    __tracebackhide__ = not DEBUG
 
     msg = f"""{obj} are different
 
@@ -535,7 +496,7 @@ def assert_arkouda_pdarray_equal(
     index_values : Index | arkouda.pdarray, default None
         optional index (shared by both left and right), used in output.
     """
-    # __tracebackhide__ = True
+    __tracebackhide__ = not DEBUG
 
     # instance validation
     # Show a detailed error message when classes are different
@@ -611,7 +572,7 @@ def assert_arkouda_strings_equal(
     index_values : Index | arkouda.pdarray, default None
         optional index (shared by both left and right), used in output.
     """
-    # __tracebackhide__ = True
+    __tracebackhide__ = not DEBUG
 
     # instance validation
     # Show a detailed error message when classes are different
@@ -775,7 +736,7 @@ def assert_series_equal(
     >>> b = pd.Series([1, 2, 3, 4])
     >>> tm.assert_series_equal(a, b)
     """
-    # __tracebackhide__ = True
+    __tracebackhide__ = not DEBUG
     check_exact_index = check_exact  ## TODO Remove
 
     if not check_index and check_like:
@@ -952,7 +913,7 @@ def assert_frame_equal(
 
     >>> assert_frame_equal(df1, df2, check_dtype=False)
     """
-    # __tracebackhide__ = True
+    __tracebackhide__ = not DEBUG
     _rtol = rtol
     _atol = atol
     _check_exact = check_exact
@@ -1039,7 +1000,7 @@ def assert_equal(left, right, **kwargs) -> None:
     **kwargs
         All keyword arguments are passed through to the underlying assert method.
     """
-    # __tracebackhide__ = True
+    __tracebackhide__ = not DEBUG
 
     if isinstance(left, Index):
         assert_index_equal(left, right, **kwargs)
