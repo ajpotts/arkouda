@@ -560,3 +560,11 @@ class AssertersTest(ArkoudaTest):
 
         with self.assertRaises(AssertionError):
             assert_arkouda_array_equal(s, c)
+
+    def test_assert_arkouda_array_equal_bigint(self):
+        size = 10
+        a = ak.arange(size, dtype=ak.bigint) + (2**64 - size - 1)
+        a2 = a + 1
+        assert_arkouda_array_equal(a, a)
+        with self.assertRaises(AssertionError):
+            assert_arkouda_array_equal(a, a2)
