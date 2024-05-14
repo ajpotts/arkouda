@@ -399,6 +399,12 @@ class pdarray:
             generic_msg(cmd="set_max_bits", args={"array": self, "max_bits": max_bits})
             self._max_bits = max_bits
 
+    def equals(self, other):
+        if isinstance(other, pdarray):
+            return all(self == other)
+        else:
+            return False
+
     def format_other(self, other) -> str:
         """
         Attempt to cast scalar other to the element dtype of this pdarray,
@@ -700,6 +706,19 @@ class pdarray:
         if self.dtype == bool:
             return self._binop(True, "^")
         raise TypeError(f"Unhandled dtype: {self} ({self.dtype})")
+
+    @property
+    def inferred_type(self):
+        from arkouda.dtypes import float_scalars, int_scalars
+        from arkouda.util import _is_dtype_in_union
+
+        if _is_dtype_in_union(self.dtype, int_scalars):
+            return "integer"
+        elif _is_dtype_in_union(self.dtype, float_scalars):
+            return "floating"
+        elif self.dtype == "<U":
+            return "string"
+        return None
 
     # op= operators
     def opeq(self, other, op):

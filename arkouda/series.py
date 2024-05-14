@@ -505,6 +505,10 @@ class Series:
         # mimic the pandas return of series shape property
         return (self.values.size,)
 
+    @property
+    def dtype(self):
+        return self.values.dtype
+
     @typechecked
     def isin(self, lst: Union[pdarray, Strings, List]) -> Series:
         """Find series elements whose values are in the specified list
@@ -631,7 +635,7 @@ class Series:
 
     def _reindex(self, idx):
         if isinstance(self.index, MultiIndex):
-            new_index = MultiIndex(self.index[idx].values, name=self.index.name, names=self.index.names)
+            new_index = MultiIndex(self.index[idx].levels, name=self.index.name, names=self.index.names)
         elif isinstance(self.index, Index):
             new_index = Index(self.index[idx], name=self.index.name)
         else:
@@ -1209,7 +1213,7 @@ class Series:
         from arkouda import Series
         from arkouda.util import map
 
-        return Series(map(self.values, arg), index=self.index)
+        return Series(map(self.values, arg), index=self.index)  # type: ignore [call-overload]
 
     def isna(self) -> Series:
         """
@@ -1552,7 +1556,7 @@ class Series:
                 cols.append(pd.Series(data=col.values.to_ndarray(), index=idx))
             retval = pd.concat(cols, axis=1)
             if labels is not None:
-                retval.columns = labels
+                retval.columns = pd.Index(labels)
         else:
             retval = pd.concat([s.to_pandas() for s in arrays])
 

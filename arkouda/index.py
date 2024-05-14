@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, List, Optional, Union
 
 import pandas as pd  # type: ignore
 from numpy import array as ndarray
+from numpy import dtype as npdtype
 from typeguard import typechecked
 
 from arkouda import Categorical, Strings
@@ -120,6 +121,9 @@ class Index:
         if isinstance(key, int):
             return self.values[key]
 
+        if isinstance(key, list):
+            return Index([self.values[k] for k in key])
+
         return Index(self.values[key])
 
     def __repr__(self):
@@ -131,8 +135,19 @@ class Index:
 
     def __eq__(self, v):
         if isinstance(v, Index):
-            return self.index == v.index
-        return self.index == v
+            if isinstance(self.values, list):
+                return array(self.values) == array(v.values)
+            else:
+                return self.values == v.values
+        return self.values == v
+
+    def __ne__(self, v):
+        if isinstance(v, Index):
+            if isinstance(self.values, list):
+                return array(self.values) != array(v.values)
+            else:
+                return self.values != v.values
+        return self.index != v
 
     def _dtype_of_list_values(self, lst):
         from arkouda.dtypes import dtype
@@ -147,6 +162,28 @@ class Index:
             return d
         else:
             raise TypeError("Index Types must match")
+
+    @property
+    def inferred_type(self):
+        if isinstance(self.values, list):
+            from arkouda.dtypes import float_scalars, int_scalars
+            from arkouda.util import _is_dtype_in_union
+
+            if _is_dtype_in_union(self.dtype, int_scalars):
+                return "integer"
+            elif _is_dtype_in_union(self.dtype, float_scalars):
+                return "floating"
+            elif self.dtype == "<U":
+                return "string"
+        return self.values.inferred_type
+
+    @property
+    def names(self):
+        return [self.name]
+
+    @property
+    def nlevels(self):
+        return 1
 
     @property
     def index(self):
@@ -199,6 +236,19 @@ class Index:
                 idx.append(Categorical.from_return_msg(i_comps[1]))
 
         return cls.factory(idx) if len(idx) > 1 else cls.factory(idx[0])
+
+    def equals(self, other) -> bool:
+        from arkouda.pdarrayclass import all as akall
+
+        if isinstance(other, Index):
+            if isinstance(self.values, (pdarray, Strings, Categorical)) and isinstance(
+                other.values, (pdarray, Strings, Categorical)
+            ):
+                return akall(self.values == other.values)
+            elif isinstance(self.values, list) and isinstance(other.values, list):
+                return self.values == other.values
+
+        return False
 
     def memory_usage(self, unit="B"):
         """
@@ -895,23 +945,36 @@ class Index:
         else:
             raise ValueError("Valid file types are HDF5 or Parquet")
 
+    def _r_binop(self, other: pdarray, op: str):
+        if (
+            isinstance(other, Index)
+            and isinstance(self.values, pdarray)
+            and isinstance(other.values, pdarray)
+        ):
+            self.values._r_binop(other.values, op)
+
 
 class MultiIndex(Index):
     objType = "MultiIndex"
 
-    def __init__(self, values, name=None, names=None):
+    def __init__(
+        self,
+        levels: Union[list, pdarray, Strings, Categorical],
+        name: Optional[str] = None,
+        names: Optional[list[str]] = None,
+    ):
         self.registered_name: Optional[str] = None
-        if not (isinstance(values, list) or isinstance(values, tuple)):
+        if not (isinstance(levels, list) or isinstance(levels, tuple)):
             raise TypeError("MultiIndex should be an iterable")
-        self.values = values
+        self.levels = levels
         first = True
-        self.names = names
+        self._names = names
         self.name = name
-        for col in self.values:
+        for col in self.levels:
             # col can be a python int which doesn't have a size attribute
             col_size = col.size if not isinstance(col, int) else 0
             if first:
-                # we are implicitly assuming values contains arkouda types and not python lists
+                # we are implicitly assuming levels contains arkouda types and not python lists
                 # because we are using obj.size/obj.dtype instead of len(obj)/type(obj)
                 # this should be made explict using typechecking
                 self.size = col_size
@@ -919,7 +982,6 @@ class MultiIndex(Index):
             else:
                 if col_size != self.size:
                     raise ValueError("All columns in MultiIndex must have same length")
-        self.levels = len(self.values)
 
     def __getitem__(self, key):
         from arkouda.series import Series
@@ -947,11 +1009,38 @@ class MultiIndex(Index):
 
     @property
     def index(self):
-        return self.values
+        return self.levels
+
+    @property
+    def names(self):
+        return self._names
+
+    @property
+    def nlevels(self):
+        return len(self.levels)
+
+    @property
+    def dtype(self) -> npdtype:
+        return npdtype("O")
+
+    @property
+    def inferred_type(self) -> str:
+        return "mixed"
+
+    def get_level_values(self, level: Union[str, int]):
+        if isinstance(level, str) and level in self.names:
+            level = self.names.index(level)
+        if isinstance(level, int) and abs(level) <= self.nlevels:
+            return Index(self.levels[level], name=self.names[level])
+        else:
+            raise ValueError(
+                "Cannot get level values because level must be a string in names or "
+                "an integer with absolute value leq than the number of levels."
+            )
 
     def memory_usage(self, unit="B"):
         """
-        Return the memory usage of the MultiIndex values.
+        Return the memory usage of the MultiIndex levels.
 
         Parameters
         ----------
@@ -983,7 +1072,7 @@ class MultiIndex(Index):
         from arkouda.util import convert_bytes
 
         nbytes = 0
-        for item in self.values:
+        for item in self.levels:
             nbytes += item.nbytes
 
         return convert_bytes(nbytes, unit=unit)
@@ -1003,7 +1092,7 @@ class MultiIndex(Index):
         return self
 
     def to_ndarray(self):
-        return ndarray([convert_if_categorical(val).to_ndarray() for val in self.values])
+        return ndarray([convert_if_categorical(val).to_ndarray() for val in self.levels])
 
     def to_list(self):
         return self.to_ndarray().tolist()
@@ -1052,7 +1141,7 @@ class MultiIndex(Index):
             args={
                 "name": user_defined_name,
                 "objType": self.objType,
-                "num_idxs": len(self.values),
+                "num_idxs": len(self.levels),
                 "idx_names": [
                     json.dumps(
                         {
@@ -1065,9 +1154,9 @@ class MultiIndex(Index):
                     )
                     if isinstance(v, Categorical)
                     else v.name
-                    for v in self.values
+                    for v in self.levels
                 ],
-                "idx_types": [v.objType for v in self.values],
+                "idx_types": [v.objType for v in self.levels],
             },
         )
         self.registered_name = user_defined_name
@@ -1126,7 +1215,7 @@ class MultiIndex(Index):
             raise TypeError("MultiIndex lookup failure")
         # if individual vals convert to pdarrays
         if not isinstance(key[0], pdarray):
-            dt = self.values[0].dtype if isinstance(self.values[0], pdarray) else akint64
+            dt = self.levels[0].dtype if isinstance(self.levels[0], pdarray) else akint64
             key = [akcast(array([x]), dt) for x in key]
 
         return in1d(self.index, key)
@@ -1195,7 +1284,7 @@ class MultiIndex(Index):
                     **({"segments": obj.segments.name} if obj.segments is not None else {}),
                 }
             )
-            for obj in self.values
+            for obj in self.levels
         ]
         return typecast(
             str,
@@ -1207,10 +1296,10 @@ class MultiIndex(Index):
                     "file_format": _file_type_to_int(file_type),
                     "write_mode": _mode_str_to_int(mode),
                     "objType": self.objType,
-                    "num_idx": len(self.values),
+                    "num_idx": len(self.levels),
                     "idx": index_data,
-                    "idx_objTypes": [obj.objType for obj in self.values],
-                    "idx_dtypes": [str(obj.dtype) for obj in self.values],
+                    "idx_objTypes": [obj.objType for obj in self.levels],
+                    "idx_dtypes": [str(obj.dtype) for obj in self.levels],
                 },
             ),
         )
@@ -1247,7 +1336,7 @@ class MultiIndex(Index):
         RuntimeError
             Raised if a server-side error is thrown saving the index
         TypeError
-            Raised if the Index values are a list.
+            Raised if the Index levels are a list.
 
         Notes
         ------
@@ -1266,8 +1355,8 @@ class MultiIndex(Index):
             _repack_hdf,
         )
 
-        if isinstance(self.values, list):
-            raise TypeError("Unable update hdf when Index values are a list.")
+        if isinstance(self.levels, list):
+            raise TypeError("Unable update hdf when Index levels are a list.")
 
         # determine the format (single/distribute) that the file was saved in
         file_type = _get_hdf_filetype(prefix_path + "*")
@@ -1284,7 +1373,7 @@ class MultiIndex(Index):
                     **({"segments": obj.segments.name} if obj.segments is not None else {}),
                 }
             )
-            for obj in self.values
+            for obj in self.levels
         ]
 
         generic_msg(
@@ -1295,10 +1384,10 @@ class MultiIndex(Index):
                 "file_format": _file_type_to_int(file_type),
                 "write_mode": _mode_str_to_int("append"),
                 "objType": self.objType,
-                "num_idx": len(self.values),
+                "num_idx": len(self.levels),
                 "idx": index_data,
-                "idx_objTypes": [obj.objType for obj in self.values],
-                "idx_dtypes": [str(obj.dtype) for obj in self.values],
+                "idx_objTypes": [obj.objType for obj in self.levels],
+                "idx_dtypes": [str(obj.dtype) for obj in self.levels],
                 "overwrite": True,
             },
         ),
