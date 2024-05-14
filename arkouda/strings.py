@@ -341,6 +341,11 @@ class Strings:
         else:
             raise TypeError(f"unsupported pdarray index type {key.__class__.__name__}")
 
+    @property
+    def inferred_type(self):
+        return "string"
+
+
     def get_lengths(self) -> pdarray:
         """
         Return the length of each string in the array.
