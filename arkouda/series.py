@@ -1213,7 +1213,7 @@ class Series:
         from arkouda import Series
         from arkouda.util import map
 
-        return Series(map(self.values, arg), index=self.index)
+        return Series(map(self.values, arg), index=self.index)  # type: ignore [call-overload]
 
     def isna(self) -> Series:
         """
@@ -1556,7 +1556,7 @@ class Series:
                 cols.append(pd.Series(data=col.values.to_ndarray(), index=idx))
             retval = pd.concat(cols, axis=1)
             if labels is not None:
-                retval.columns = labels
+                retval.columns = pd.Index(labels)
         else:
             retval = pd.concat([s.to_pandas() for s in arrays])
 

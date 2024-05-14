@@ -28,6 +28,7 @@ from arkouda.strings import Strings
 from arkouda.timeclass import Datetime, Timedelta
 
 if TYPE_CHECKING:
+    from arkouda.index import Index
     from arkouda.series import Series
 
 
@@ -565,7 +566,7 @@ def map(
     ----------
     values :  pdarray, Strings, or Categorical
         The values to be mapped.
-    mapping : dict or Series
+    mapping : dict or arkouda.Series
         The mapping correspondence.
 
     Returns
@@ -606,7 +607,8 @@ def map(
     gb_keys = gb.unique_keys
 
     if isinstance(mapping, dict):
-        mapping = Series([array(list(mapping.keys())), array(list(mapping.values()))])
+        mapping = Series([array(list(mapping.keys())),
+                          array(list(mapping.values()))])  # type: ignore [assignment]
 
     if isinstance(mapping, Series):
         xtra_keys = gb_keys[in1d(gb_keys, mapping.index.values, invert=True)]

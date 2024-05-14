@@ -345,7 +345,6 @@ class Strings:
     def inferred_type(self):
         return "string"
 
-
     def get_lengths(self) -> pdarray:
         """
         Return the length of each string in the array.

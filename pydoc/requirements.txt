@@ -36,3 +36,4 @@ mathjax
 sphinx-autopackagesummary
 sphinx-design
 sphinx-autodoc-typehints
+pandas-stubs

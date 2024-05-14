@@ -157,7 +157,9 @@ setup(
             "linkify-it-py",
             "mathjax",
             "sphinx-autopackagesummary",
-            "sphinx-design", "sphinx-autodoc-typehints",
+            "sphinx-design", 
+            "sphinx-autodoc-typehints",
+            "pandas-stubs",
         ],
     },
     # replace original install command with version that also builds

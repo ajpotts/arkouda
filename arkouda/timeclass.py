@@ -109,7 +109,7 @@ class _AbstractBaseTime(pdarray):
             if isinstance(pda, Series):
                 # Pandas Datetime and Timedelta
                 # Get units of underlying numpy datetime64 array
-                self.unit = np.datetime_data(pda.values.dtype)[0]
+                self.unit = np.datetime_data(pda.values.dtype)[0]  # type: ignore [arg-type]
                 self._factor = _get_factor(self.unit)
                 # Create pdarray
                 self.values = from_series(pda)

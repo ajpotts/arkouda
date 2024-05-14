@@ -168,6 +168,7 @@ class Index:
         if isinstance(self.values, list):
             from arkouda.dtypes import float_scalars, int_scalars
             from arkouda.util import _is_dtype_in_union
+
             if _is_dtype_in_union(self.dtype, int_scalars):
                 return "integer"
             elif _is_dtype_in_union(self.dtype, float_scalars):
@@ -956,7 +957,12 @@ class Index:
 class MultiIndex(Index):
     objType = "MultiIndex"
 
-    def __init__(self, levels, name=None, names=None):
+    def __init__(
+        self,
+        levels: Union[list, pdarray, Strings, Categorical],
+        name: Optional[str] = None,
+        names: Optional[list[str]] = None,
+    ):
         self.registered_name: Optional[str] = None
         if not (isinstance(levels, list) or isinstance(levels, tuple)):
             raise TypeError("MultiIndex should be an iterable")
@@ -1021,7 +1027,7 @@ class MultiIndex(Index):
     def inferred_type(self) -> str:
         return "mixed"
 
-    def get_level_values(self, level: str or int):
+    def get_level_values(self, level: Union[str, int]):
         if isinstance(level, str) and level in self.names:
             level = self.names.index(level)
         if isinstance(level, int) and abs(level) <= self.nlevels:

@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-
 from typing import NoReturn, cast
 
 import numpy as np
-import pandas as pd
-from pandas._libs.missing import is_matching_na
 from pandas.api.types import is_bool, is_number
-from pandas.io.formats.printing import pprint_thing
+from pandas.io.formats.printing import pprint_thing  # type: ignore [import-untyped]
 
 from arkouda import (
     Categorical,
@@ -25,8 +22,26 @@ from arkouda import (
 from arkouda.numpy import nan
 from arkouda.util import is_numeric
 
-
 DEBUG = True
+
+__all__ = [
+    "_check_isinstance",
+    "assert_almost_equal",
+    "assert_arkouda_array_equal",
+    "assert_arkouda_pdarray_equal",
+    "assert_arkouda_strings_equal",
+    "assert_attr_equal",
+    "assert_categorical_equal",
+    "assert_class_equal",
+    "assert_contains_all",
+    "assert_copy",
+    "assert_dict_equal",
+    "assert_equal",
+    "assert_frame_equal",
+    "assert_index_equal",
+    "assert_is_sorted",
+    "assert_series_equal",
+]
 
 
 def assert_almost_equal(
@@ -140,7 +155,7 @@ def assert_dict_equal(left, right, compare_keys: bool = True) -> None:
     for k in left_keys:
         assert_almost_equal(left[k], right[k])
 
-    return True
+    return None
 
 
 def assert_index_equal(
@@ -252,7 +267,6 @@ def assert_index_equal(
                     atol=atol,
                     obj=lobj,
                 )
-                assert_arkouda_array_equal(left.codes[level], right.codes[level])
             except AssertionError:
                 llevel = left.get_level_values(level)
                 rlevel = right.get_level_values(level)
@@ -318,7 +332,7 @@ def assert_class_equal(left, right, exact: bool = True, obj: str = "Input") -> N
 
         return type(x).__name__
 
-    if type(left) == type(right):
+    if type(left) is type(right):
         return
 
     msg = f"{obj} classes are different"
@@ -344,8 +358,7 @@ def assert_attr_equal(attr: str, left, right, obj: str = "Attributes") -> None:
     left_attr = getattr(left, attr)
     right_attr = getattr(right, attr)
 
-    if left_attr is right_attr or is_matching_na(left_attr, right_attr):
-        # e.g. both np.nan, both NaT, both pd.NA, ...
+    if left_attr is right_attr:
         return None
 
     try:
@@ -643,15 +656,13 @@ def assert_arkouda_array_equal(
     index_values : Index | arkouda.pdarray, default None
         optional index (shared by both left and right), used in output.
     """
-    if isinstance(left, Strings):
+    assert_class_equal(left, right)
+
+    if isinstance(left, Strings) and isinstance(right, Strings):
         assert_arkouda_strings_equal(
-            left, right,
-            err_msg=err_msg,
-            check_same=check_same,
-            obj=obj,
-            index_values=index_values
+            left, right, err_msg=err_msg, check_same=check_same, obj=obj, index_values=index_values
         )
-    elif isinstance(left, Categorical):
+    elif isinstance(left, Categorical) and isinstance(right, Categorical):
         assert_arkouda_array_equal(
             left.categories[left.codes],
             right.categories[right.codes],
@@ -772,11 +783,7 @@ def assert_series_equal(
         # We want to skip exact dtype checking when `check_categorical`
         # is False. We'll still raise if only one is a `Categorical`,
         # regardless of `check_categorical`
-        if (
-            isinstance(left, Categorical)
-            and isinstance(right, Categorical)
-            and not check_categorical
-        ):
+        if isinstance(left, Categorical) and isinstance(right, Categorical) and not check_categorical:
             pass
         else:
             assert_attr_equal("dtype", left, right, obj=f"Attributes of {obj}")
@@ -817,8 +824,8 @@ def assert_series_equal(
 
 # This could be refactored to use the NDFrame.equals method
 def assert_frame_equal(
-    left: object,
-    right: object,
+    left: DataFrame,
+    right: DataFrame,
     check_dtype: bool = True,
     check_index_type: bool = True,
     check_column_type: bool = True,
