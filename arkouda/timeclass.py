@@ -3,7 +3,7 @@ import json
 from warnings import warn
 
 import numpy as np  # type: ignore
-from pandas import Series as pdSeries # type: ignore
+from pandas import Series as pdSeries  # type: ignore
 from pandas import Timestamp as pdTimestamp  # type: ignore
 from pandas import Timedelta as pdTimedelta  # type: ignore
 from pandas import date_range as pd_date_range  # type: ignore
