@@ -24,8 +24,8 @@ from arkouda.infoclass import *
 from arkouda.segarray import *
 from arkouda.dataframe import *
 from arkouda.row import *
-from arkouda.index import *  # type: ignore [assignment]
-from arkouda.series import *  # type: ignore [assignment]
+from arkouda.index import *
+from arkouda.series import *
 from arkouda.alignment import *
 from arkouda.plotting import *
 from arkouda.accessor import *
