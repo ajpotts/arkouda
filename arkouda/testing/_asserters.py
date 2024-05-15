@@ -4,7 +4,7 @@ from typing import NoReturn, cast
 
 import numpy as np
 from pandas.api.types import is_bool, is_number
-from pandas.io.formats.printing import pprint_thing  # type: ignore [import-untyped]
+from pandas.io.formats.printing import pprint_thing
 
 from arkouda import (
     Categorical,
