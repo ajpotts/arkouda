@@ -226,10 +226,6 @@ class AssertersTest(ArkoudaTest):
         a2 = ak.array(["a", "d", "b", "c"])
         a3 = ak.array(["a", "a", "b", "c", "d"])
 
-        from arkouda.testing import _check_isinstance
-
-        _check_isinstance(a, a, Strings)
-
         assert_arkouda_strings_equal(a, a)
         assert_arkouda_strings_equal(a, a, index_values=ak.arange(4))
         with self.assertRaises(AssertionError):
