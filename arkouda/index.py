@@ -272,7 +272,7 @@ class Index:
 
         if isinstance(other, list) and self.size != len(other):
             return False
-        elif hasattr(other, "size") and self.size != other.size:
+        elif not isinstance(other, list) and self.size != other.size:
             return False
 
         from arkouda.pdarrayclass import all as akall
