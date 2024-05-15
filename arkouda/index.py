@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Union, Tuple
 
 import pandas as pd  # type: ignore
 from numpy import array as ndarray
@@ -115,6 +115,10 @@ class Index:
     def __getitem__(self, key):
         from arkouda.series import Series
 
+        allow_list = False
+        if isinstance(self.values, list):
+            allow_list = True
+
         if isinstance(key, Series):
             key = key.values
 
@@ -122,9 +126,9 @@ class Index:
             return self.values[key]
 
         if isinstance(key, list):
-            return Index([self.values[k] for k in key])
+            return Index([self.values[k] for k in key], allow_list=allow_list)
 
-        return Index(self.values[key])
+        return Index(self.values[key], allow_list=allow_list)
 
     def __repr__(self):
         # Configured to match pandas
@@ -133,21 +137,32 @@ class Index:
     def __len__(self):
         return len(self.index)
 
-    def __eq__(self, v):
-        if isinstance(v, Index):
-            if isinstance(self.values, list):
-                return array(self.values) == array(v.values)
-            else:
-                return self.values == v.values
-        return self.values == v
+    def _get_arrays_for_comparison(
+        self, other
+    ) -> Tuple[Union[pdarray, Strings, Categorical], Union[pdarray, Strings, Categorical]]:
+        if isinstance(self.values, list):
+            values = array(self.values)
+        else:
+            values = self.values
 
-    def __ne__(self, v):
-        if isinstance(v, Index):
-            if isinstance(self.values, list):
-                return array(self.values) != array(v.values)
-            else:
-                return self.values != v.values
-        return self.index != v
+        if isinstance(other, Index):
+            other_values = other.values
+        else:
+            other_values = other
+
+        if isinstance(other_values, list):
+            other_values = array(other_values)
+        return values, other_values
+
+    def __eq__(self, other):
+        values, other_values = self._get_arrays_for_comparison(other)
+
+        return values == other_values
+
+    def __ne__(self, other):
+        values, other_values = self._get_arrays_for_comparison(other)
+
+        return values != other_values
 
     def _dtype_of_list_values(self, lst):
         from arkouda.dtypes import dtype
@@ -164,7 +179,11 @@ class Index:
             raise TypeError("Index Types must match")
 
     @property
-    def inferred_type(self):
+    def inferred_type(self) -> str:
+        """
+        Return a string of the type inferred from the values.
+        """
+
         if isinstance(self.values, list):
             from arkouda.dtypes import float_scalars, int_scalars
             from arkouda.util import _is_dtype_in_union
@@ -179,10 +198,23 @@ class Index:
 
     @property
     def names(self):
+        """
+        Return Index or MultiIndex names.
+        """
+
         return [self.name]
 
     @property
     def nlevels(self):
+        """
+        Integer number of levels in this Index.
+        An Index will always have 1 level.
+
+        See Also
+        --------
+        MultiIndex.nlevels
+        """
+
         return 1
 
     @property
@@ -237,18 +269,18 @@ class Index:
 
         return cls.factory(idx) if len(idx) > 1 else cls.factory(idx[0])
 
-    def equals(self, other) -> bool:
+    def equals(self, other: Union[Index, pdarray, Strings, Categorical, list]) -> bool:
+        if not isinstance(other, (Index, pdarray, Strings, Categorical, list)):
+            raise TypeError("other must be of type Index, pdarray, Strings, Categorical, list")
+
+        if isinstance(other, list) and self.size != len(other):
+            return False
+        elif not isinstance(other, list) and self.size != other.size:
+            return False
+
         from arkouda.pdarrayclass import all as akall
 
-        if isinstance(other, Index):
-            if isinstance(self.values, (pdarray, Strings, Categorical)) and isinstance(
-                other.values, (pdarray, Strings, Categorical)
-            ):
-                return akall(self.values == other.values)
-            elif isinstance(self.values, list) and isinstance(other.values, list):
-                return self.values == other.values
-
-        return False
+        return akall(self == other)
 
     def memory_usage(self, unit="B"):
         """
@@ -1013,14 +1045,27 @@ class MultiIndex(Index):
 
     @property
     def names(self):
+        """
+        Return Index or MultiIndex names.
+        """
         return self._names
 
     @property
-    def nlevels(self):
+    def nlevels(self) -> int:
+        """
+        Integer number of levels in this MultiIndex.
+
+        See Also
+        --------
+        Index.nlevels
+        """
         return len(self.levels)
 
     @property
     def dtype(self) -> npdtype:
+        """
+        Return the dtype object of the underlying data.
+        """
         return npdtype("O")
 
     @property
