@@ -25,7 +25,6 @@ from arkouda.util import is_numeric
 DEBUG = True
 
 __all__ = [
-    "_check_isinstance",
     "assert_almost_equal",
     "assert_arkouda_array_equal",
     "assert_arkouda_pdarray_equal",
@@ -144,6 +143,17 @@ def _check_isinstance(left, right, cls) -> None:
 
 
 def assert_dict_equal(left, right, compare_keys: bool = True) -> None:
+    """
+    Asset that two dictionaries are equal.
+    Values must be arkouda objects.
+    Parameters
+    ----------
+    left, right: dict
+        The dictionaries to be compared.
+    compare_keys: bool, default = True
+        Whether to compare the keys.
+        If False, only the values are compared.
+    """
     _check_isinstance(left, right, dict)
 
     left_keys = frozenset(left.keys())
@@ -1017,18 +1027,26 @@ def assert_equal(left, right, **kwargs) -> None:
 
 
 def assert_contains_all(iterable, dic) -> None:
+    """
+    Assert that a dictionary contains all the elements of an iterable.
+    Parameters
+    ----------
+    iterable: iterable
+    dic: dict
+    """
     for k in iterable:
         assert k in dic, f"Did not contain item: {repr(k)}"
 
 
 def assert_copy(iter1, iter2, **eql_kwargs) -> None:
     """
-    iter1, iter2: iterables that produce elements
-    comparable with assert_almost_equal
+    Checks that the elements are equal, but not the same object.
+    (Does not check that items in sequences are also not the same object.)
 
-    Checks that the elements are equal, but not
-    the same object. (Does not check that items
-    in sequences are also not the same object)
+    Parameters
+    ----------
+    iter1, iter2: iterable
+        Iterables that produce elements comparable with assert_almost_equal.
     """
     for elem1, elem2 in zip(iter1, iter2):
         assert_almost_equal(elem1, elem2, **eql_kwargs)

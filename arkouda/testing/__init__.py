@@ -18,7 +18,6 @@ from ._asserters import (
 )
 
 __all__ = [
-    "_check_isinstance",
     "assert_almost_equal",
     "assert_arkouda_array_equal",
     "assert_arkouda_pdarray_equal",
