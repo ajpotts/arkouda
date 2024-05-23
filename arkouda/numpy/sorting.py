@@ -111,18 +111,11 @@ def argsort(
                 "algoName": algorithm.name,
             },
         )
+        return create_pdarray(cast(str, repMsg))
     else:
-        repMsg = generic_msg(
-            cmd=f"argsort<{pda.dtype.name},{pda.ndim}>",
-            args={
-                "name": pda.name,
-                "algoName": algorithm.name,
-                "objType": pda.objType,
-                "axis": axis,
-            },
-        )
+        return pda.argsort(algorithm=algorithm, axis=axis)
 
-    return create_pdarray(cast(str, repMsg))
+
 
 
 def coargsort(
