@@ -8,7 +8,7 @@ from typeguard import typechecked
 from arkouda.client import generic_msg
 from arkouda.client_dtypes import BitVector
 from arkouda.dtypes import bigint
-from arkouda.dtypes import bool as akbool
+from arkouda.dtypes import bool_ as akbool
 from arkouda.dtypes import int64 as akint64
 from arkouda.dtypes import uint64 as akuint64
 from arkouda.groupbyclass import GroupBy, groupable, groupable_element_type, unique
@@ -84,7 +84,7 @@ def _in1d_single(
     array([False, True])
     """
     from arkouda.categorical import Categorical as Categorical_
-    from arkouda.dtypes import bool as ak_bool
+    from arkouda.dtypes import bool_ as ak_bool
 
     if isinstance(pda1, pdarray) or isinstance(pda1, Strings) or isinstance(pda1, Categorical_):
         # While isinstance(thing, type) can be called on a tuple of types,
