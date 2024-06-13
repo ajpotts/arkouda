@@ -157,6 +157,20 @@ class DataFrameGroupBy:
 
         return aggop
 
+    def aggregate(self, func=None):
+        """ """
+        if isinstance(func, dict):
+            ret_dict = func
+        elif isinstance(func, str):
+            columns = self.df.columns.values
+            if isinstance(columns, (pdarray, Strings)):
+                columns = columns.to_list()
+            ret_dict = dict.fromkeys(columns, func)
+        else:
+            raise TypeError("Must provide mapping argument of type str or dict.")
+
+        return_columns = MultiIndex([array(list(ret_dict.keys())), array(list(ret_dict.values()))])
+
     def size(self, as_series=None, sort_index=True):
         """
         Compute the size of each value as the total number of rows, including NaN values.
@@ -3225,19 +3239,27 @@ class DataFrame(UserDict):
         from arkouda.io import _file_type_to_int, _mode_str_to_int
 
         column_data = [
-            obj.name
-            if not isinstance(obj, (Categorical_, SegArray))
-            else json.dumps(
-                {
-                    "codes": obj.codes.name,
-                    "categories": obj.categories.name,
-                    "NA_codes": obj._akNAcode.name,
-                    **({"permutation": obj.permutation.name} if obj.permutation is not None else {}),
-                    **({"segments": obj.segments.name} if obj.segments is not None else {}),
-                }
+            (
+                obj.name
+                if not isinstance(obj, (Categorical_, SegArray))
+                else (
+                    json.dumps(
+                        {
+                            "codes": obj.codes.name,
+                            "categories": obj.categories.name,
+                            "NA_codes": obj._akNAcode.name,
+                            **(
+                                {"permutation": obj.permutation.name}
+                                if obj.permutation is not None
+                                else {}
+                            ),
+                            **({"segments": obj.segments.name} if obj.segments is not None else {}),
+                        }
+                    )
+                    if isinstance(obj, Categorical_)
+                    else json.dumps({"segments": obj.segments.name, "values": obj.values.name})
+                )
             )
-            if isinstance(obj, Categorical_)
-            else json.dumps({"segments": obj.segments.name, "values": obj.values.name})
             for k, obj in self.items()
         ]
         dtypes = [
@@ -5314,26 +5336,36 @@ class DataFrame(UserDict):
         if self.registered_name is not None and self.is_registered():
             raise RegistrationError(f"This object is already registered as {self.registered_name}")
         column_data = [
-            obj.name
-            if not isinstance(obj, (Categorical_, SegArray, BitVector))
-            else json.dumps(
-                {
-                    "codes": obj.codes.name,
-                    "categories": obj.categories.name,
-                    "NA_codes": obj._akNAcode.name,
-                    **({"permutation": obj.permutation.name} if obj.permutation is not None else {}),
-                    **({"segments": obj.segments.name} if obj.segments is not None else {}),
-                }
-            )
-            if isinstance(obj, Categorical_)
-            else json.dumps({"segments": obj.segments.name, "values": obj.values.name})
-            if isinstance(obj, SegArray)
-            else json.dumps(
-                {
-                    "name": obj.name,
-                    "width": obj.width,
-                    "reverse": obj.reverse,
-                }  # BitVector Case
+            (
+                obj.name
+                if not isinstance(obj, (Categorical_, SegArray, BitVector))
+                else (
+                    json.dumps(
+                        {
+                            "codes": obj.codes.name,
+                            "categories": obj.categories.name,
+                            "NA_codes": obj._akNAcode.name,
+                            **(
+                                {"permutation": obj.permutation.name}
+                                if obj.permutation is not None
+                                else {}
+                            ),
+                            **({"segments": obj.segments.name} if obj.segments is not None else {}),
+                        }
+                    )
+                    if isinstance(obj, Categorical_)
+                    else (
+                        json.dumps({"segments": obj.segments.name, "values": obj.values.name})
+                        if isinstance(obj, SegArray)
+                        else json.dumps(
+                            {
+                                "name": obj.name,
+                                "width": obj.width,
+                                "reverse": obj.reverse,
+                            }  # BitVector Case
+                        )
+                    )
+                )
             )
             for obj in self.values()
         ]
