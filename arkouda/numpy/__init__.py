@@ -26,7 +26,6 @@ from numpy import (  # noqa
     clongfloat,
     compat,
     csingle,
-    cumproduct,
     deprecate,
     deprecate_with_doc,
     disp,
