@@ -1,3 +1,25 @@
+
+
+# import random
+# import typing
+
+#import _builtins
+# import _mat
+# import _typing
+# import char
+# import ctypeslib
+# import dtypes
+# import emath
+# import exceptions
+# import fft
+# import lib
+# import linalg
+# import ma
+# import polynomial
+# import rec
+
+from arkouda.numpy.char import *
+
 from numpy import (  # noqa
     NAN,
     NINF,
@@ -16,11 +38,9 @@ from numpy import (  # noqa
     add_newdoc_ufunc,
     base_repr,
     binary_repr,
-    bool_,
     byte,
     cdouble,
     cfloat,
-    character,
     clongdouble,
     clongfloat,
     compat,
@@ -49,9 +69,7 @@ from numpy import (  # noqa
     int16,
     int32,
     int64,
-    int_,
     intc,
-    integer,
     intp,
     isscalar,
     issctype,
@@ -64,7 +82,6 @@ from numpy import (  # noqa
     maximum_sctype,
     nan,
     number,
-    object_,
     pi,
     promote_types,
     sctypeDict,
@@ -72,7 +89,6 @@ from numpy import (  # noqa
     short,
     signedinteger,
     single,
-    str_,
     typename,
     ubyte,
     uint,
@@ -90,6 +106,7 @@ from numpy import (  # noqa
 from ._numeric import floor
 
 __all__ = [
+    "char"
     "NAN",
     "NINF",
     "NZERO",
@@ -130,7 +147,6 @@ __all__ = [
     "longdouble",
     "longlong",
     "nan",
-    "newaxis",
     "pi",
     "short",
     "signedinteger",
