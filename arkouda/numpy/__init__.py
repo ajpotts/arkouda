@@ -14,9 +14,6 @@ from numpy import (  # noqa
     NaN,
     ScalarType,
     True_,
-    add_docstring,
-    add_newdoc,
-    add_newdoc_ufunc,
     base_repr,
     binary_repr,
     byte,
@@ -26,9 +23,6 @@ from numpy import (  # noqa
     clongfloat,
     compat,
     csingle,
-    deprecate,
-    deprecate_with_doc,
-    disp,
     double,
     e,
     euler_gamma,
@@ -40,7 +34,7 @@ from numpy import (  # noqa
     floating,
     format_float_positional,
     format_float_scientific,
-    format_parser,
+
     half,
     iinfo,
     inexact,
@@ -54,12 +48,10 @@ from numpy import (  # noqa
     intp,
     isscalar,
     issctype,
-    issubclass_,
     issubdtype,
     longdouble,
     longfloat,
     longlong,
-    lookfor,
     maximum_sctype,
     nan,
     number,
@@ -70,7 +62,6 @@ from numpy import (  # noqa
     short,
     signedinteger,
     single,
-    typename,
     ubyte,
     uint,
     uint8,
@@ -91,13 +82,11 @@ from arkouda.numpy import (
     char,
     ctypeslib,
     dtypes,
-    emath,
     exceptions,
     fft,
     lib,
     linalg,
     ma,
-    polynomial,
     rec,
 )
 from arkouda.numpy._builtins import *
@@ -106,10 +95,10 @@ from arkouda.numpy._typing import *
 from arkouda.numpy.char import *
 from arkouda.numpy.ctypeslib import *
 from arkouda.numpy.dtypes import *
-from arkouda.numpy.emath import *
 from arkouda.numpy.exceptions import *
 from arkouda.numpy.fft import *
 from arkouda.numpy.lib import *
+from arkouda.numpy.lib.emath import *
 from arkouda.numpy.linalg import *
 from arkouda.numpy.ma import *
 from arkouda.numpy.polynomial import *
@@ -150,7 +139,6 @@ __all__ = [
     "int64",
     "int_",
     "intc",
-    "integer",
     "intp",
     "isscalar",
     "issubdtype",
