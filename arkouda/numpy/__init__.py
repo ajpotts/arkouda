@@ -1,24 +1,5 @@
-
-
 # import random
 # import typing
-
-#import _builtins
-# import _mat
-# import _typing
-# import char
-# import ctypeslib
-# import dtypes
-# import emath
-# import exceptions
-# import fft
-# import lib
-# import linalg
-# import ma
-# import polynomial
-# import rec
-
-from arkouda.numpy.char import *
 
 from numpy import (  # noqa
     NAN,
@@ -103,10 +84,40 @@ from numpy import (  # noqa
     ushort,
 )
 
+from arkouda.numpy import (
+    _builtins,
+    _mat,
+    _typing,
+    char,
+    ctypeslib,
+    dtypes,
+    emath,
+    exceptions,
+    fft,
+    lib,
+    linalg,
+    ma,
+    polynomial,
+    rec,
+)
+from arkouda.numpy._builtins import *
+from arkouda.numpy._mat import *
+from arkouda.numpy._typing import *
+from arkouda.numpy.char import *
+from arkouda.numpy.ctypeslib import *
+from arkouda.numpy.dtypes import *
+from arkouda.numpy.emath import *
+from arkouda.numpy.exceptions import *
+from arkouda.numpy.fft import *
+from arkouda.numpy.lib import *
+from arkouda.numpy.linalg import *
+from arkouda.numpy.ma import *
+from arkouda.numpy.polynomial import *
+from arkouda.numpy.rec import *
+
 from ._numeric import floor
 
 __all__ = [
-    "char"
     "NAN",
     "NINF",
     "NZERO",
