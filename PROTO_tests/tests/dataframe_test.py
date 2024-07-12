@@ -1408,6 +1408,18 @@ class TestDataFrame:
             ),
         )
 
+    def test_round_trip_dataframe_conversion2(self):
+
+        size = 100
+        a = ak.arange(size, dtype="float64") + 0.001
+
+        idx = ak.Index(a)
+        df = ak.DataFrame({"col1": a}, index=idx)
+        pd_df = df.to_pandas(retain_index=True)
+        round_trip_df = ak.DataFrame(pd_df)
+
+        ak.assert_frame_equal(df, round_trip_df)
+
 
 def pda_to_str_helper(pda):
     return ak.array([f"str {i}" for i in pda.to_list()])
