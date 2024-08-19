@@ -2248,3 +2248,51 @@ def putmask(pda: pdarray, mask: Union[bool, pdarray], values: pdarray):
         result = result[:-(reduction)]
 
     pda[:] = where(mask, result, pda)  # pda[:] = allows us to return modified value
+
+
+def diff(pda: pdarray, n: int, axis: int):
+    """
+    Return a pdarray with zeros everywhere except along a diagonal, which is all ones.
+    The matrix need not be square.
+    Parameters
+    ----------
+    rows : int_scalars
+    cols : int_scalars
+    diag : int_scalars
+        if diag = 0, zeros start at element [0,0] and proceed along diagonal
+        if diag > 0, zeros start at element [0,diag] and proceed along diagonal
+        if diag < 0, zeros start at element [diag,0] and proceed along diagonal
+        etc.
+    Returns
+    -------
+    pdarray
+        an array of zeros with ones along the specified diagonal
+    Examples
+    --------
+    >>> ak.eye(rows=4,cols=4,diag=0,dt=ak.int64)
+    array([array([1 0 0 0]) array([0 1 0 0]) array([0 0 1 0]) array([0 0 0 1])])
+    >>> ak.eye(rows=3,cols=3,diag=1,dt=ak.float64)
+    array([array([0.00000000000000000 1.00000000000000000 0.00000000000000000])
+    array([0.00000000000000000  0.00000000000000000 1.00000000000000000])
+    array([0.00000000000000000 0.00000000000000000 0.00000000000000000])])
+    >>> ak.eye(rows=4,cols=4,diag=-1,dt=ak.bool_)
+    array([array([False False False False]) array([True False False False])
+    array([False True False False]) array([False False True False])]
+    Notes
+    -----
+    if rows = cols and diag = 0, the result is an identity matrix
+    Server returns an error if rank of pda < 2
+    """
+
+    cmd = f"diff<{pda.dtype},{pda.ndim}>"
+    args = {
+        "array": pda,
+        "n": n,
+        "axis": axis,
+    }
+    return create_pdarray(
+        generic_msg(
+            cmd=cmd,
+            args=args,
+        )
+    )
