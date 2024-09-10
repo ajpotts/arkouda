@@ -1,6 +1,7 @@
 import pytest
 
 import arkouda.array_api as xp
+from arkouda.array_api.array_object import Array
 
 
 class TestArrayCreation:
@@ -28,3 +29,11 @@ class TestArrayCreation:
         assert len(chunks) > 0
         assert chunks[0][0] == 0
         assert chunks[0][1] > 0
+
+    def test_new_error(self):
+        from arkouda import arange
+
+        a = xp.asarray(arange(10))
+
+        with pytest.raises(TypeError):
+            Array._new(a)

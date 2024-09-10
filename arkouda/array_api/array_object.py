@@ -29,6 +29,8 @@ from typing import (
     cast,
 )
 
+from arkouda import pdarray
+
 from ._dtypes import (  # _all_dtypes,; _integer_or_boolean_dtypes,; _numeric_dtypes,
     _boolean_dtypes,
     _complex_floating_dtypes,
@@ -45,7 +47,9 @@ if TYPE_CHECKING:
 import numpy as np
 
 import arkouda as ak
-from arkouda import array_api
+from arkouda import Strings, array_api
+from arkouda import dtype as akdtype
+from arkouda.dtypes import numeric_scalars
 from arkouda.pdarraycreation import scalar_array
 
 HANDLED_FUNCTIONS: Dict[str, Callable] = {}
@@ -73,7 +77,7 @@ class Array:
     # Use a custom constructor instead of __init__, as manually initializing
     # this class is not supported API.
     @classmethod
-    def _new(cls, x, /, empty: bool = False):
+    def _new(cls, x: pdarray, /, empty: bool = False):
         """
         This is a private method for initializing the array API Array
         object.
@@ -83,6 +87,9 @@ class Array:
         ``asarray``.
 
         """
+        if not isinstance(x, pdarray):
+            raise TypeError("In Array._new, x must be of type pdarray or numeric_scalars.")
+
         obj = super().__new__(cls)
         obj._array = x
         obj._empty = empty
