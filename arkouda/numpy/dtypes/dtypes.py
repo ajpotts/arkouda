@@ -198,7 +198,6 @@ numpy_scalars = Union[
 ]
 str_scalars = Union[str, np.str_]
 all_scalars = Union[bool_scalars, numeric_scalars, numpy_scalars, str_scalars]
-
 """
 The DType enum defines the supported Arkouda data types in string form.
 """

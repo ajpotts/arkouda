@@ -77,15 +77,14 @@ def asarray(
         res = ak.full(1, obj, xdtype)
         return Array._new(res)
     elif isinstance(obj, Array):
-        return Array._new(ak.array(obj._array))
+        arry = ak.array(obj._array)
+        if isinstance(arry, pdarray):
+            return Array._new(arry)
     elif isinstance(obj, ak.pdarray):
         return Array._new(obj)
     elif isinstance(obj, np.ndarray):
         return Array._new(_to_pdarray(obj, dt=dtype))
-    else:
-        raise ValueError(
-            "asarray not implemented for 'NestedSequence' or 'SupportsBufferProtocol'"
-        )
+    raise ValueError("asarray not implemented for 'NestedSequence' or 'SupportsBufferProtocol'")
 
 
 def arange(
@@ -155,9 +154,7 @@ def empty(
         )
 
 
-def empty_like(
-    x: Array, /, *, dtype: Optional[Dtype] = None, device: Optional[Device] = None
-) -> Array:
+def empty_like(x: Array, /, *, dtype: Optional[Dtype] = None, device: Optional[Device] = None) -> Array:
     """
     Return a new array whose shape and dtype match the input array, without initializing entries.
     """
@@ -312,9 +309,7 @@ def ones(
     return a
 
 
-def ones_like(
-    x: Array, /, *, dtype: Optional[Dtype] = None, device: Optional[Device] = None
-) -> Array:
+def ones_like(x: Array, /, *, dtype: Optional[Dtype] = None, device: Optional[Device] = None) -> Array:
     """
     Return a new array whose shape and dtype match the input array, filled with ones.
     """
@@ -394,9 +389,7 @@ def zeros(
     return Array._new(create_pdarray(repMsg))
 
 
-def zeros_like(
-    x: Array, /, *, dtype: Optional[Dtype] = None, device: Optional[Device] = None
-) -> Array:
+def zeros_like(x: Array, /, *, dtype: Optional[Dtype] = None, device: Optional[Device] = None) -> Array:
     """
     Return a new array whose shape and dtype match the input array, filled with zeros.
     """

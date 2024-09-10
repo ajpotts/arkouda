@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-from .array_object import Array, implements_numpy
-
 from typing import List, Optional, Tuple, Union, cast
-from arkouda.client import generic_msg
-from arkouda.pdarrayclass import create_pdarray, create_pdarrays
-from arkouda.pdarraycreation import scalar_array, promote_to_common_dtype
-from arkouda.util import broadcast_dims
 
 import numpy as np
+
+from arkouda import pdarray
+from arkouda.client import generic_msg
+from arkouda.pdarrayclass import create_pdarray, create_pdarrays
+from arkouda.pdarraycreation import promote_to_common_dtype, scalar_array
+from arkouda.util import broadcast_dims
+
+from .array_object import Array, implements_numpy
 
 
 def broadcast_arrays(*arrays: Array) -> List[Array]:
@@ -52,9 +54,7 @@ def broadcast_to(x: Array, /, shape: Tuple[int, ...]) -> Array:
         raise ValueError(f"Failed to broadcast array: {e}")
 
 
-def concat(
-    arrays: Union[Tuple[Array, ...], List[Array]], /, *, axis: Optional[int] = 0
-) -> Array:
+def concat(arrays: Union[Tuple[Array, ...], List[Array]], /, *, axis: Optional[int] = 0) -> Array:
     """
     Concatenate arrays along an axis.
 
@@ -70,9 +70,7 @@ def concat(
     ndim = arrays[0].ndim
     for a in arrays:
         if a.ndim != ndim:
-            raise ValueError(
-                "all input arrays must have the same number of dimensions to concatenate"
-            )
+            raise ValueError("all input arrays must have the same number of dimensions to concatenate")
 
     (common_dt, _arrays) = promote_to_common_dtype([a._array for a in arrays])
 
@@ -192,15 +190,11 @@ def moveaxis(
             for s, d in zip(source, destination):
                 perm[s] = d
         else:
-            raise ValueError(
-                "source and destination must both be tuples if source is a tuple"
-            )
+            raise ValueError("source and destination must both be tuples if source is a tuple")
     elif isinstance(destination, int):
         perm[source] = destination
     else:
-        raise ValueError(
-            "source and destination must both be integers if source is a tuple"
-        )
+        raise ValueError("source and destination must both be integers if source is a tuple")
 
     return permute_dims(x, axes=tuple(perm))
 
@@ -235,9 +229,7 @@ def permute_dims(x: Array, /, axes: Tuple[int, ...]) -> Array:
         raise IndexError(f"Failed to permute array dimensions: {e}")
 
 
-def repeat(
-    x: Array, repeats: Union[int, Array], /, *, axis: Optional[int] = None
-) -> Array:
+def repeat(x: Array, repeats: Union[int, Array], /, *, axis: Optional[int] = None) -> Array:
     """
     Repeat elements of an array.
 
@@ -277,9 +269,7 @@ def repeat(
         raise NotImplementedError("repeat with 'axis' argument is not yet implemented")
 
 
-def reshape(
-    x: Array, /, shape: Tuple[int, ...], *, copy: Optional[bool] = None
-) -> Array:
+def reshape(x: Array, /, shape: Tuple[int, ...], *, copy: Optional[bool] = None) -> Array:
     """
     Reshape an array to a new shape.
 
@@ -355,9 +345,7 @@ def roll(
                         args={
                             "name": x._array,
                             "nShifts": len(shift) if isinstance(shift, tuple) else 1,
-                            "shift": (
-                                list(shift) if isinstance(shift, tuple) else [shift]
-                            ),
+                            "shift": (list(shift) if isinstance(shift, tuple) else [shift]),
                             "nAxes": len(axisList),
                             "axis": axisList,
                         },
@@ -420,9 +408,7 @@ def stack(arrays: Union[Tuple[Array, ...], List[Array]], /, *, axis: int = 0) ->
     ndim = arrays[0].ndim
     for a in arrays:
         if a.ndim != ndim:
-            raise ValueError(
-                "all input arrays must have the same number of dimensions to stack"
-            )
+            raise ValueError("all input arrays must have the same number of dimensions to stack")
 
     (common_dt, _arrays) = promote_to_common_dtype([a._array for a in arrays])
 
@@ -495,20 +481,23 @@ def unstack(x: Array, /, *, axis: int = 0) -> Tuple[Array, ...]:
     axis : int, optional
         The axis along which to unstack the array. The default is 0.
     """
-    return tuple(
-        Array._new(
-            create_pdarrays(
-                cast(
-                    str,
-                    generic_msg(
-                        cmd=f"unstack<{x.dtype},{x.ndim}>",
-                        args={
-                            "name": x._array,
-                            "axis": axis,
-                            "numReturnArrays": x.shape[axis],
-                        },
-                    ),
-                )
-            )
+    arry = create_pdarrays(
+        cast(
+            str,
+            generic_msg(
+                cmd=f"unstack<{x.dtype},{x.ndim}>",
+                args={
+                    "name": x._array,
+                    "axis": axis,
+                    "numReturnArrays": x.shape[axis],
+                },
+            ),
         )
     )
+    print("\n")
+    print(type(arry))
+    print(arry)
+    if isinstance(arry, pdarray):
+        return tuple(Array._new(arry))
+    else:
+        raise RuntimeError

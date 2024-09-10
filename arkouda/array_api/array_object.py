@@ -50,6 +50,7 @@ import arkouda as ak
 from arkouda import Strings, array_api
 from arkouda import dtype as akdtype
 from arkouda.dtypes import numeric_scalars
+from arkouda.pdarrayclass import pdarray
 from arkouda.pdarraycreation import scalar_array
 
 HANDLED_FUNCTIONS: Dict[str, Callable] = {}
@@ -71,13 +72,15 @@ class Array:
 
     """
 
-    _array: ak.pdarray
+    from typing import Sequence
+
+    _array: Union[numeric_scalars, pdarray, Sequence[pdarray]]
     _empty: bool
 
     # Use a custom constructor instead of __init__, as manually initializing
     # this class is not supported API.
     @classmethod
-    def _new(cls, x: pdarray, /, empty: bool = False):
+    def _new(cls, x:, /, empty: bool = False):
         """
         This is a private method for initializing the array API Array
         object.
@@ -313,7 +316,12 @@ class Array:
         # behavior for integers within the bounds of the integer dtype.
         # Outside of those bounds we use the default NumPy behavior (either
         # cast or raise OverflowError).
-        return Array._new(np.array(scalar, self.dtype))
+        arry = ak.array(scalar, self.dtype)
+        print(arry)
+        if isinstance(arry, pdarray):
+            return Array._new(arry)
+        else:
+            raise RuntimeError("Could not promote scalar to Array.")
 
     @staticmethod
     def _normalize_two_args(x1, x2) -> Tuple[Array, Array]:
@@ -375,9 +383,14 @@ class Array:
         Compute the logical AND operation of this array and another array or scalar.
         """
         if isinstance(other, (int, float)):
-            return Array._new(self._array and other)
+            arry = self._array and other
         else:
-            return Array._new(self._array and other._array)
+            arry = self._array and other._array
+
+        if isinstance(arry, pdarray):
+            return Array._new(arry)
+        else:
+            raise RuntimeError
 
     def __array_namespace__(self: Array, /, *, api_version: Optional[str] = None) -> types.ModuleType:
         """
