@@ -25,7 +25,6 @@ from numpy import (
 )
 
 __all__ = [
-    "_datatype_check",
     "ARKOUDA_SUPPORTED_DTYPES",
     "DType",
     "DTypeObjects",
@@ -83,11 +82,6 @@ NUMBER_FORMAT_STRINGS = {
     "uint64": "{:n}",
     "bigint": "{:n}",
 }
-
-
-def _datatype_check(the_dtype, allowed_list, name):
-    if not (the_dtype in allowed_list):
-        raise TypeError(f"{name} only implements types {allowed_list}")
 
 
 def dtype(x):
