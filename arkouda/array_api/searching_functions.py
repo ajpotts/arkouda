@@ -37,8 +37,11 @@ def argmax(x: Array, /, *, axis: Optional[int] = None, keepdims: bool = False) -
     else:
         x_op = x
 
+    from arkouda import array as ak_array
+
+    axis = ak_array(axis, dtype="int64")
     resp = generic_msg(
-        cmd=f"reduce->idx{x_op.ndim}D",
+        cmd=f"reduce<{x_op.dtype},{x_op.ndim},{axis.ndim}>",
         args={
             "x": x_op._array,
             "op": "argmax",
@@ -81,8 +84,11 @@ def argmin(x: Array, /, *, axis: Optional[int] = None, keepdims: bool = False) -
     else:
         x_op = x
 
+    from arkouda import array as ak_array
+
+    axis = ak_array(axis, dtype="int64")
     resp = generic_msg(
-        cmd=f"reduce->idx{x_op.ndim}D",
+        cmd=f"reduce<{x_op.dtype},{x_op.ndim},{axis.ndim}>",
         args={
             "x": x_op._array,
             "op": "argmin",

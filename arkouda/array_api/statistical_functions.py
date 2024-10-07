@@ -53,13 +53,16 @@ def max(
     if axis is not None:
         axis_list = list(axis) if isinstance(axis, tuple) else [axis]
 
+    from arkouda import array as ak_array
+
+    axis = ak_array(axis, dtype="int64")
     resp = generic_msg(
-        cmd=f"reduce{x.ndim}D",
+        cmd=f"reduce<{x.dtype},{x.ndim},{axis.ndim}>",
         args={
             "x": x._array,
             "op": "max",
             "nAxes": len(axis_list),
-            "axis": axis_list,
+            "axis": axis,
             "skipNan": True,
         },
     )
@@ -158,13 +161,16 @@ def min(
     if axis is not None:
         axis_list = list(axis) if isinstance(axis, tuple) else [axis]
 
+    from arkouda import array as ak_array
+
+    axis = ak_array(axis, dtype="int64")
     resp = generic_msg(
-        cmd=f"reduce{x.ndim}D",
+        cmd=f"reduce<{x.dtype},{x.ndim},{axis.ndim}>",
         args={
             "x": x._array,
             "op": "min",
             "nAxes": len(axis_list),
-            "axis": axis_list,
+            "axis": axis,
             "skipNan": True,
         },
     )
@@ -217,13 +223,15 @@ def prod(
     else:
         x_op = x._array
 
+    from arkouda import array as ak_array
+    axis = ak_array(axis, dtype="int64")
     resp = generic_msg(
-        cmd=f"reduce{x.ndim}D",
+        cmd=f"reduce<{x.dtype},{x.ndim},{axis.ndim}>",
         args={
             "x": x_op,
             "op": "prod",
-            "nAxes": len(axis_list),
-            "axis": axis_list,
+            "nAxes": len(axis),
+            "axis": axis,
             "skipNan": True,
         },
     )
@@ -331,13 +339,15 @@ def sum(
     else:
         x_op = x._array
 
-    resp = generic_msg(
-        cmd=f"reduce{x.ndim}D",
+    from arkouda import array as ak_array
+    axis = ak_array(axis, dtype="int64")
+    repMsg = generic_msg(
+        cmd=f"reduce<{x_op.dtype},{x_op.ndim},{axis.ndim}>",
         args={
             "x": x_op,
             "op": "sum",
-            "nAxes": len(axis_list),
-            "axis": axis_list,
+            "nAxes": len(axis),
+            "axis": axis,
             "skipNan": True,
         },
     )
