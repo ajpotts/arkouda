@@ -88,15 +88,17 @@ module ReductionMsg
       // return 1:int;
     }
 
-    // proc reduceToScalarHelper(x:[?d] ?t, op: string, skipNan: bool, type: opType):  t throws
-    //   var s: opType;
-    //   select op {
-    //     when "sum" do s = if skipNan then sumSkipNan(x, opType) else (+ reduce x:opType):opType;
-    //     when "prod" do s = if skipNan then prodSkipNan(x, opType) else (* reduce x:opType):opType;
-    //     when "min" do s = if skipNan then getMinSkipNan(x) else min reduce x;
-    //     when "max" do s = if skipNan then getMaxSkipNan(x) else max reduce x;
-    //     otherwise halt("unreachable");
-    //   }
+    proc reduceToScalarHelper(x:[?d] ?t, op: string, skipNan: bool, type opType):  [] throws {
+      var s: opType;
+      select op {
+        when "sum" do s = if skipNan then sumSkipNan(x, opType) else (+ reduce x:opType):opType;
+        when "prod" do s = if skipNan then prodSkipNan(x, opType) else (* reduce x:opType):opType;
+        when "min" do s = if skipNan then getMinSkipNan(x) else min reduce x;
+        when "max" do s = if skipNan then getMaxSkipNan(x) else max reduce x;
+        otherwise halt("unreachable");
+      }
+      return [s];
+    }
 
     //   const scalarValue = if (t == bool && (op == "min" || op == "max"))
     //     then "bool " + bool2str(if s == 1 then true else false)
