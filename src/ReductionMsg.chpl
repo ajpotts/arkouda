@@ -42,25 +42,41 @@ module ReductionMsg
     */
 
     @arkouda.registerCommand(name="reduce")
-    proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, skipNan: bool):  t throws 
-      where (d.rank==1) && (t==int || t==real || t==uint(64) || t==bool) {
+    proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, axesRaw: [?d2] int, skipNan: bool):  t throws 
+      where (d.rank==1 && axesRaw.rank == 1) && (t==int || t==real || t==uint(64)) {
+      use SliceReductionOps;
+
+      if !basicReductionOps.contains(op) {
+        throw new Error("%s operation not recognized by argTypeReductionMessage".format(op));
+      }
+
+    //   type opType = if t == bool then int else t;
+
+    //   var s: opType;
+    //   select op {
+    //     when "sum" do s = if skipNan then sumSkipNan(x, opType) else (+ reduce x:opType):opType;
+    //     when "prod" do s = if skipNan then prodSkipNan(x, opType) else (* reduce x:opType):opType;
+    //     when "min" do s = if skipNan then getMinSkipNan(x) else min reduce x;
+    //     when "max" do s = if skipNan then getMaxSkipNan(x) else max reduce x;
+    //     otherwise halt("unreachable");
+    //   }
+
+    //   const scalarValue = if (t == bool && (op == "min" || op == "max"))
+    //     then "bool " + bool2str(if s == 1 then true else false)
+    //     else (type2str(opType) + " " + type2fmt(opType)).format(s);
+    //   return scalarValue;
       return 1:t;
     }
 
-    proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, skipNan: bool): [] t throws 
-      where (d.rank !=1) && ( t==int || t==real || t==uint(64) || t==bool) {
-      var ret = makeDistArray((..x.shape), int);
-      return ret;
+
+    proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, axesRaw: [?d2] int, skipNan: bool):  int throws 
+      where (d.rank==1 && axesRaw.rank == 1) && (t==bool) {
+      return 1:int;
     }
 
-    proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, skipNan: bool): t throws 
-      where (t!=int && t!=real && t!=uint(64) && t!=bool) {
-        throw new Error("argTypeReductionMessage does not support type %s".format(type2str(t)));
-      }
 
-
-    // proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, axesRaw: [?d2] int, skipNan: bool): ?t2 throws 
-    //   where (d.rank==1 && nAxes == 0) && (t==int || t==real || t==uint(64) || t==bool) {
+    // proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, axesRaw: [?d2] int, skipNan: bool):  t throws 
+    //   where (d.rank==1 && axesRaw.rank == 1) && (t==int || t==real || t==uint(64)) {
     //   use SliceReductionOps;
 
     //   if !basicReductionOps.contains(op) {
@@ -84,54 +100,52 @@ module ReductionMsg
     //   return scalarValue;
     // }
 
-    // proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, axesRaw: [?d2] int, skipNan: bool):  [] ?t2 throws 
-    //   where (d.rank>1 || nAxes != 0) && (t==int || t==real || t==uint(64) || t==bool)  {
-    //   use SliceReductionOps;
+    proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, axesRaw: [?d2] int, skipNan: bool):  [] throws 
+      where (d.rank>1 || axesRaw.rank != 1) && (t==int || t==real || t==uint(64) || t==bool)  {
+      use SliceReductionOps;
 
-    //   if !basicReductionOps.contains(op) {
-    //     throw new Error("%s operation not recognized by argTypeReductionMessage".format(op));
-    //   }
+      if !basicReductionOps.contains(op) {
+        throw new Error("%s operation not recognized by argTypeReductionMessage".format(op));
+      }
 
-    //   // const eIn = toSymEntry(gEnt, t, nd);
-    //   type opType = if t == bool then int else t;
+      // const eIn = toSymEntry(gEnt, t, nd);
+      type opType = if t == bool then int else t;
 
-    //   const (valid, axes) = validateNegativeAxes(axesRaw, x.rank);
-    //   if !valid {
-    //     throw new Error("Invalid axis value(s) '%?' in slicing reduction".format(axesRaw));
-    //   } else {
-    //     const outShape = reducedShape(x.shape, axes);
-    //     var ret = makeDistArray(outShape, opType);
+      const (valid, axes) = validateNegativeAxes(axesRaw, x.rank);
+      if !valid {
+        throw new Error("Invalid axis value(s) '%?' in slicing reduction".format(axesRaw));
+      } else {
+        const outShape = reducedShape(x.shape, axes);
+        var ret = makeDistArray(outShape, opType);
 
-    //     forall sliceIdx in domOffAxis(x.domain, axes) {
-    //       const sliceDom = domOnAxis(x.domain, sliceIdx, axes);
-    //       var s: opType;
-    //       select op {
-    //         when "sum" do s = if skipNan
-    //           then sumSkipNan(x, sliceDom, opType)
-    //           else sum(x, sliceDom, opType);
-    //         when "prod" do s =if skipNan
-    //           then prodSkipNan(x, sliceDom, opType)
-    //           else prod(x, sliceDom, opType);
-    //         when "min" do s = if skipNan
-    //           then getMinSkipNan(x, sliceDom)
-    //           else getMin(x, sliceDom);
-    //         when "max" do s = if skipNan
-    //           then getMaxSkipNan(x, sliceDom)
-    //           else getMax(x, sliceDom);
-    //         otherwise halt("unreachable");
-    //       }
-    //       ret[sliceIdx] = s;
-    //     }
+        forall sliceIdx in domOffAxis(x.domain, axes) {
+          const sliceDom = domOnAxis(x.domain, sliceIdx, axes);
+          var s: opType;
+          select op {
+            when "sum" do s = if skipNan
+              then sumSkipNan(x, sliceDom, opType)
+              else sum(x, sliceDom, opType);
+            when "prod" do s =if skipNan
+              then prodSkipNan(x, sliceDom, opType)
+              else prod(x, sliceDom, opType);
+            when "min" do s = if skipNan
+              then getMinSkipNan(x, sliceDom)
+              else getMin(x, sliceDom);
+            when "max" do s = if skipNan
+              then getMaxSkipNan(x, sliceDom)
+              else getMax(x, sliceDom);
+            otherwise halt("unreachable");
+          }
+          ret[sliceIdx] = s;
+        }
+        return ret;
+      }
+    }
 
-    //     return ret;
-        
-    //   }
-    // }
-
-    // proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, axesRaw: [?d2] int, skipNan: bool): [d] t throws 
-    //   where (t!=int && t!=real && t!=uint(64) && t!=bool) {
-    //     throw new Error("argTypeReductionMessage does not support type %s".format(type2str(t)));
-    //   }
+    proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, axesRaw: [?d2] int, skipNan: bool): t throws 
+    where (t!=int && t!=real && t!=uint(64) && t!=bool) {
+      throw new Error("argTypeReductionMessage does not support type %s".format(type2str(t)));
+    }
 
     // @arkouda.registerND(cmd_prefix="reduce")
     // proc argTypeReductionMessage(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, param nd: int): MsgTuple throws {
