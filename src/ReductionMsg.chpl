@@ -41,52 +41,50 @@ module ReductionMsg
       Supports: 'sum', 'prod', 'min', 'max'
     */
 
-    @arkouda.registerCommand(name="reduce")
-    proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, axis: [?d2] int, skipNan: bool):  t throws 
-      where (d.rank==1 && axis.rank == 1) && (t==int || t==real || t==uint(64)) {
-      use SliceReductionOps;
+    // @arkouda.registerCommand(name="reduce")
+    // proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, axis: [?d2] int, skipNan: bool):  t throws 
+    //   where (d.rank==1 && axis.rank == 1) && (t==int || t==real || t==uint(64)) {
+    //   use SliceReductionOps;
 
-      if !basicReductionOps.contains(op) {
-        throw new Error("%s operation not recognized by argTypeReductionMessage".format(op));
-      }
+    //   if !basicReductionOps.contains(op) {
+    //     throw new Error("%s operation not recognized by argTypeReductionMessage".format(op));
+    //   }
 
-      var s: t;
-      select op {
-        when "sum" do s = if skipNan then sumSkipNan(x, t) else (+ reduce x);
-        when "prod" do s = if skipNan then prodSkipNan(x, t) else (* reduce x);
-        when "min" do s = if skipNan then getMinSkipNan(x) else min reduce x;
-        when "max" do s = if skipNan then getMaxSkipNan(x) else max reduce x;
-        otherwise halt("unreachable");
-      }
+    //   var s: t;
+    //   select op {
+    //     when "sum" do s = if skipNan then sumSkipNan(x, t) else (+ reduce x);
+    //     when "prod" do s = if skipNan then prodSkipNan(x, t) else (* reduce x);
+    //     when "min" do s = if skipNan then getMinSkipNan(x) else min reduce x;
+    //     when "max" do s = if skipNan then getMaxSkipNan(x) else max reduce x;
+    //     otherwise halt("unreachable");
+    //   }
 
-      const scalarValue = if (t == bool && (op == "min" || op == "max"))
-        then (if s == 1 then true else false)
-        else s;
-      return scalarValue;
-      // return 1:t;
-    }
+    //   const scalarValue = if (t == bool && (op == "min" || op == "max"))
+    //     then (if s == 1 then true else false)
+    //     else s;
+    //   return scalarValue;
+    // }
 
 
-    proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, axis: [?d2] int, skipNan: bool):  int throws 
-      where (d.rank==1 && axis.rank == 1) && (t==bool) {
-      use SliceReductionOps;
+    // proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, axis: [?d2] int, skipNan: bool):  int throws 
+    //   where (d.rank==1 && axis.rank == 1) && (t==bool) {
+    //   use SliceReductionOps;
 
-      if !basicReductionOps.contains(op) {
-        throw new Error("%s operation not recognized by argTypeReductionMessage".format(op));
-      }
+    //   if !basicReductionOps.contains(op) {
+    //     throw new Error("%s operation not recognized by argTypeReductionMessage".format(op));
+    //   }
 
-      var s: int;
-      select op {
-        when "sum" do s = if skipNan then sumSkipNan(x, int) else (+ reduce x:int):int;
-        when "prod" do s = if skipNan then prodSkipNan(x, int) else (* reduce x:int):int;
-        when "min" do s = if skipNan then getMinSkipNan(x) else min reduce x;
-        when "max" do s = if skipNan then getMaxSkipNan(x) else max reduce x;
-        otherwise halt("unreachable");
-      }
+    //   var s: int;
+    //   select op {
+    //     when "sum" do s = if skipNan then sumSkipNan(x, int) else (+ reduce x:int):int;
+    //     when "prod" do s = if skipNan then prodSkipNan(x, int) else (* reduce x:int):int;
+    //     when "min" do s = if skipNan then getMinSkipNan(x) else min reduce x;
+    //     when "max" do s = if skipNan then getMaxSkipNan(x) else max reduce x;
+    //     otherwise halt("unreachable");
+    //   }
 
-      return s;
-      // return 1:int;
-    }
+    //   return s;
+    // }
 
     proc reduceToScalarHelper(x:[?d] ?t, op: string, skipNan: bool, type opType):  [] throws {
       var s: opType;
@@ -95,7 +93,9 @@ module ReductionMsg
         when "prod" do s = if skipNan then prodSkipNan(x, opType) else (* reduce x:opType):opType;
         when "min" do s = if skipNan then getMinSkipNan(x) else min reduce x;
         when "max" do s = if skipNan then getMaxSkipNan(x) else max reduce x;
-        otherwise halt("unreachable");
+        otherwise {
+          throw new Error("%s operation not recognized by argTypeReductionMessage".format(op));
+        }
       }
       return [s];
     }
@@ -132,49 +132,52 @@ module ReductionMsg
     //   return scalarValue;
     // }
 
+    @arkouda.registerCommand(name="reduce")
     proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, axis: [?d2] int, skipNan: bool):  [] throws 
-      where (d.rank>1 || axis.rank != 1) && (t==int || t==real || t==uint(64) || t==bool)  {
+      where (t==int || t==real || t==uint(64) || t==bool)  {
       use SliceReductionOps;
 
-      if !basicReductionOps.contains(op) {
-        throw new Error("%s operation not recognized by argTypeReductionMessage".format(op));
-      }
-
-      // const eIn = toSymEntry(gEnt, t, nd);
       type opType = if t == bool then int else t;
 
-      const (valid, axes) = validateNegativeAxes(axis, x.rank);
-      if !valid {
-        throw new Error("Invalid axis value(s) '%?' in slicing reduction".format(axis));
-      } else {
-        const outShape = reducedShape(x.shape, axes);
-        var ret = makeDistArray(outShape, opType);
+        if x.rank == 1 || nAxes == 0 {
+          return reduceToScalarHelper(x, op, skipNan, opType);
+        } else {
+        const (valid, axes) = validateNegativeAxes(axis, x.rank);
+        if !valid {
+          throw new Error("Invalid axis value(s) '%?' in slicing reduction".format(axis));
+          return x;
+        } else {
+          const outShape = reducedShape(x.shape, axes);
+          var ret = makeDistArray(outShape, opType);
 
-        forall sliceIdx in domOffAxis(x.domain, axes) {
-          const sliceDom = domOnAxis(x.domain, sliceIdx, axes);
-          var s: opType;
-          select op {
-            when "sum" do s = if skipNan
-              then sumSkipNan(x, sliceDom, opType)
-              else sum(x, sliceDom, opType);
-            when "prod" do s =if skipNan
-              then prodSkipNan(x, sliceDom, opType)
-              else prod(x, sliceDom, opType);
-            when "min" do s = if skipNan
-              then getMinSkipNan(x, sliceDom)
-              else getMin(x, sliceDom);
-            when "max" do s = if skipNan
-              then getMaxSkipNan(x, sliceDom)
-              else getMax(x, sliceDom);
-            otherwise halt("unreachable");
+          forall sliceIdx in domOffAxis(x.domain, axes) {
+            const sliceDom = domOnAxis(x.domain, sliceIdx, axes);
+            var s: opType;
+            select op {
+              when "sum" do s = if skipNan
+                then sumSkipNan(x, sliceDom, opType)
+                else sum(x, sliceDom, opType);
+              when "prod" do s =if skipNan
+                then prodSkipNan(x, sliceDom, opType)
+                else prod(x, sliceDom, opType);
+              when "min" do s = if skipNan
+                then getMinSkipNan(x, sliceDom)
+                else getMin(x, sliceDom);
+              when "max" do s = if skipNan
+                then getMaxSkipNan(x, sliceDom)
+                else getMax(x, sliceDom);
+              otherwise {
+                throw new Error("%s operation not recognized by argTypeReductionMessage".format(op));
+              }
+            }
+            ret[sliceIdx] = s;
           }
-          ret[sliceIdx] = s;
+          return ret;
         }
-        return ret;
       }
     }
 
-    proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, axis: [?d2] int, skipNan: bool): t throws 
+    proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, axis: [?d2] int, skipNan: bool): [d] t throws 
     where (t!=int && t!=real && t!=uint(64) && t!=bool) {
       throw new Error("argTypeReductionMessage does not support type %s".format(type2str(t)));
     }
