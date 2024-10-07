@@ -63,7 +63,6 @@ module ReductionMsg
         then (if s == 1 then true else false)
         else s;
       return scalarValue;
-      // return 1:t;
     }
 
 
@@ -85,7 +84,6 @@ module ReductionMsg
       }
 
       return s;
-      // return 1:int;
     }
 
     // proc reduceToScalarHelper(x:[?d] ?t, op: string, skipNan: bool, type: opType):  t throws
@@ -104,34 +102,8 @@ module ReductionMsg
     //   return scalarValue;
     // }
 
-
-    // proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, axis: [?d2] int, skipNan: bool):  t throws 
-    //   where (d.rank==1 && axis.rank == 1) && (t==int || t==real || t==uint(64)) {
-    //   use SliceReductionOps;
-
-    //   if !basicReductionOps.contains(op) {
-    //     throw new Error("%s operation not recognized by argTypeReductionMessage".format(op));
-    //   }
-
-    //   type opType = if t == bool then int else t;
-
-    //   var s: opType;
-    //   select op {
-    //     when "sum" do s = if skipNan then sumSkipNan(x, opType) else (+ reduce x:opType):opType;
-    //     when "prod" do s = if skipNan then prodSkipNan(x, opType) else (* reduce x:opType):opType;
-    //     when "min" do s = if skipNan then getMinSkipNan(x) else min reduce x;
-    //     when "max" do s = if skipNan then getMaxSkipNan(x) else max reduce x;
-    //     otherwise halt("unreachable");
-    //   }
-
-    //   const scalarValue = if (t == bool && (op == "min" || op == "max"))
-    //     then "bool " + bool2str(if s == 1 then true else false)
-    //     else (type2str(opType) + " " + type2fmt(opType)).format(s);
-    //   return scalarValue;
-    // }
-
     proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, axis: [?d2] int, skipNan: bool):  [] throws 
-      where (d.rank>1 || axis.rank != 1) && (t==int || t==real || t==uint(64) || t==bool)  {
+      where (axis.rank == 1) && (d.rank>1 ) && (t==int || t==real || t==uint(64) || t==bool)  {
       use SliceReductionOps;
 
       if !basicReductionOps.contains(op) {
@@ -170,6 +142,11 @@ module ReductionMsg
         }
         return ret;
       }
+    }
+
+    proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, axis: [?d2] int, skipNan: bool): t throws 
+    where (axis.rank != 1) {
+      throw new Error("argTypeReductionMessage only accepts axis of dimension 1");
     }
 
     proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, axis: [?d2] int, skipNan: bool): t throws 
