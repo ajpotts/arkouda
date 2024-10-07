@@ -59,17 +59,33 @@ module ReductionMsg
         otherwise halt("unreachable");
       }
 
-    //   const scalarValue = if (t == bool && (op == "min" || op == "max"))
-    //     then "bool " + bool2str(if s == 1 then true else false)
-    //     else (type2str(opType) + " " + type2fmt(opType)).format(s);
-    //   return scalarValue;
-      return 1:t;
+      const scalarValue = if (t == bool && (op == "min" || op == "max"))
+        then (if s == 1 then true else false)
+        else s;
+      return scalarValue;
+      // return 1:t;
     }
 
 
     proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, axis: [?d2] int, skipNan: bool):  int throws 
       where (d.rank==1 && axis.rank == 1) && (t==bool) {
-      return 1:int;
+      use SliceReductionOps;
+
+      if !basicReductionOps.contains(op) {
+        throw new Error("%s operation not recognized by argTypeReductionMessage".format(op));
+      }
+
+      var s: int;
+      select op {
+        when "sum" do s = if skipNan then sumSkipNan(x, int) else (+ reduce x:int):int;
+        when "prod" do s = if skipNan then prodSkipNan(x, int) else (* reduce x:int):int;
+        when "min" do s = if skipNan then getMinSkipNan(x) else min reduce x;
+        when "max" do s = if skipNan then getMaxSkipNan(x) else max reduce x;
+        otherwise halt("unreachable");
+      }
+
+      return s;
+      // return 1:int;
     }
 
     // proc reduceToScalarHelper(x:[?d] ?t, op: string, skipNan: bool, type: opType):  t throws
