@@ -42,18 +42,18 @@ module ReductionMsg
     */
 
     @arkouda.registerCommand(name="reduce")
-    proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int):  t throws 
+    proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, skipNan: bool):  t throws 
       where (d.rank==1) && (t==int || t==real || t==uint(64) || t==bool) {
       return 1:t;
     }
 
-    proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int): [] t throws 
+    proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, skipNan: bool): [] t throws 
       where (d.rank !=1) && ( t==int || t==real || t==uint(64) || t==bool) {
       var ret = makeDistArray((..x.shape), int);
       return ret;
     }
 
-    proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int): t throws 
+    proc argTypeReductionMessage(x:[?d] ?t, op: string, nAxes: int, skipNan: bool): t throws 
       where (t!=int && t!=real && t!=uint(64) && t!=bool) {
         throw new Error("argTypeReductionMessage does not support type %s".format(type2str(t)));
       }
