@@ -521,8 +521,7 @@ class pdarray:
             except ValueError:
                 raise ValueError(f"shape mismatch {self.shape} {other.shape}")
             repMsg = generic_msg(
-                cmd=f"binopvv<{self.dtype},{other.dtype},{x1.ndim}>",
-                args={"op": op, "a": x1, "b": x2}
+                cmd=f"binopvv<{self.dtype},{other.dtype},{x1.ndim}>", args={"op": op, "a": x1, "b": x2}
             )
             if tmp_x1:
                 del x1
@@ -779,7 +778,7 @@ class pdarray:
                 raise ValueError(f"shape mismatch {self.shape} {other.shape}")
             generic_msg(
                 cmd=f"opeqvv<{self.dtype},{other.dtype},{self.ndim}>",
-                args={"op": op, "a": self, "b": other}
+                args={"op": op, "a": self, "b": other},
             )
             return self
         # pdarray binop scalar
@@ -2716,8 +2715,12 @@ def sum(pda: pdarray) -> numeric_and_bool_scalars:
     RuntimeError
         Raised if there's a server-side error thrown
     """
+    from arkouda import array as ak_array
+
+    axis = ak_array([],dtype="int64")
     repMsg = generic_msg(
-        cmd=f"reduce{pda.ndim}D", args={"op": "sum", "x": pda, "nAxes": 0, "axis": [], "skipNan": False}
+        cmd=f"reduce<{pda.dtype.name},{pda.ndim},1>",
+        args={"op": "sum", "x": pda, "nAxes": 0, "axis": axis, "skipNan": False},
     )
     return parse_single_value(cast(str, repMsg))
 
@@ -2823,8 +2826,11 @@ def min(pda: pdarray) -> numpy_scalars:
     RuntimeError
         Raised if there's a server-side error thrown
     """
+    from arkouda import array as ak_array
+
+    axis = ak_array([])
     repMsg = generic_msg(
-        cmd=f"reduce{pda.ndim}D", args={"op": "min", "x": pda, "nAxes": 0, "axis": [], "skipNan": False}
+        cmd=f"reduce{pda.ndim}D", args={"op": "min", "x": pda, "nAxes": 0, "axis": axis, "skipNan": False}
     )
     return parse_single_value(cast(str, repMsg))
 
