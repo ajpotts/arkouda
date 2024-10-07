@@ -2719,7 +2719,7 @@ def sum(pda: pdarray) -> numeric_and_bool_scalars:
 
     axis = ak_array([],dtype="int64")
     repMsg = generic_msg(
-        cmd=f"reduce<{pda.dtype.name},{pda.ndim},1>",
+        cmd=f"reduce<{pda.dtype.name},{pda.ndim}>",
         args={"op": "sum", "x": pda, "nAxes": 0, "axis": axis, "skipNan": False},
     )
     return parse_single_value(cast(str, repMsg))
@@ -2802,7 +2802,7 @@ def prod(pda: pdarray) -> np.float64:
     from arkouda import array as ak_array
     axis = ak_array([], dtype="int64")
     repMsg = generic_msg(
-        cmd=f"reduce<{pda.dtype},{pda.ndim},{axis.ndim}>",
+        cmd=f"reduce<{pda.dtype},{pda.ndim}>",
         args={"op": "prod", "x": pda, "nAxes": 0, "axis": axis, "skipNan": False}
     )
     return np.float64(parse_single_value(cast(str, repMsg)))
@@ -2833,7 +2833,7 @@ def min(pda: pdarray) -> numpy_scalars:
 
     axis = ak_array([])
     repMsg = generic_msg(
-        cmd=f"reduce<{pda.dtype},{pda.ndim},{axis.ndim}>", args={"op": "min", "x": pda, "nAxes": 0, "axis": axis, "skipNan": False}
+        cmd=f"reduce<{pda.dtype},{pda.ndim}>", args={"op": "min", "x": pda, "nAxes": 0, "axis": axis, "skipNan": False}
     )
     return parse_single_value(cast(str, repMsg))
 
@@ -2863,7 +2863,7 @@ def max(pda: pdarray) -> numpy_scalars:
     from arkouda import array as ak_array
     axis = ak_array([], dtype="int64")
     repMsg = generic_msg(
-        cmd=f"reduce<{pda.dtype},{pda.ndim},{axis.ndim}>", args={"op": "max", "x": pda, "nAxes": 0, "axis": axis, "skipNan": False}
+        cmd=f"reduce<{pda.dtype},{pda.ndim}>", args={"op": "max", "x": pda, "nAxes": 0, "axis": axis, "skipNan": False}
     )
     return parse_single_value(cast(str, repMsg))
 

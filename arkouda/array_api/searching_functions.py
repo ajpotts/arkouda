@@ -41,7 +41,7 @@ def argmax(x: Array, /, *, axis: Optional[int] = None, keepdims: bool = False) -
 
     axis = ak_array(axis, dtype="int64")
     resp = generic_msg(
-        cmd=f"reduce<{x_op.dtype},{x_op.ndim},{axis.ndim}>",
+        cmd=f"reduce<{x_op.dtype},{x_op.ndim}>",
         args={
             "x": x_op._array,
             "op": "argmax",
@@ -88,7 +88,7 @@ def argmin(x: Array, /, *, axis: Optional[int] = None, keepdims: bool = False) -
 
     axis = ak_array(axis, dtype="int64")
     resp = generic_msg(
-        cmd=f"reduce<{x_op.dtype},{x_op.ndim},{axis.ndim}>",
+        cmd=f"reduce<{x_op.dtype},{x_op.ndim}>",
         args={
             "x": x_op._array,
             "op": "argmin",

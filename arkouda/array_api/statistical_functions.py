@@ -57,7 +57,7 @@ def max(
 
     axis = ak_array(axis, dtype="int64")
     resp = generic_msg(
-        cmd=f"reduce<{x.dtype},{x.ndim},{axis.ndim}>",
+        cmd=f"reduce<{x.dtype},{x.ndim}>",
         args={
             "x": x._array,
             "op": "max",
@@ -165,7 +165,7 @@ def min(
 
     axis = ak_array(axis, dtype="int64")
     resp = generic_msg(
-        cmd=f"reduce<{x.dtype},{x.ndim},{axis.ndim}>",
+        cmd=f"reduce<{x.dtype},{x.ndim}>",
         args={
             "x": x._array,
             "op": "min",
@@ -226,7 +226,7 @@ def prod(
     from arkouda import array as ak_array
     axis = ak_array(axis, dtype="int64")
     resp = generic_msg(
-        cmd=f"reduce<{x.dtype},{x.ndim},{axis.ndim}>",
+        cmd=f"reduce<{x.dtype},{x.ndim}>",
         args={
             "x": x_op,
             "op": "prod",
@@ -342,7 +342,7 @@ def sum(
     from arkouda import array as ak_array
     axis = ak_array(axis, dtype="int64")
     repMsg = generic_msg(
-        cmd=f"reduce<{x_op.dtype},{x_op.ndim},{axis.ndim}>",
+        cmd=f"reduce<{x_op.dtype},{x_op.ndim}>",
         args={
             "x": x_op,
             "op": "sum",
