@@ -22,8 +22,7 @@ import numpy as np
 from arkouda.client import generic_msg
 from arkouda.numpy import cast as akcast
 from arkouda.numpy.dtypes import dtype as akdtype
-from arkouda.pdarrayclass import create_pdarray, parse_single_value
-from arkouda.pdarraycreation import scalar_array
+from arkouda.pdarrayclass import create_pdarray
 
 
 def max(

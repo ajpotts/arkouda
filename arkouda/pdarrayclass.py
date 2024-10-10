@@ -2729,8 +2729,11 @@ def _get_axis_pdarray(axis: Optional[Union[int, Tuple[int, ...]]] = None):
 
     return ak_array(axis_list, dtype="int64")
 
+
 @typechecked
-def sum(pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None) -> Union[numeric_and_bool_scalars, pdarray]:
+def sum(
+    pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
+) -> Union[numeric_and_bool_scalars, pdarray]:
     """
     Return the sum of all elements in the array.
 
@@ -2763,6 +2766,7 @@ def sum(pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None) -> Uni
         return create_pdarray(cast(str, repMsg)).flatten()[0]
     else:
         return create_pdarray(cast(str, repMsg))
+
 
 @typechecked
 def dot(
@@ -2851,7 +2855,10 @@ def prod(pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None) -> Un
     else:
         return create_pdarray(cast(str, repMsg))
 
-def min(pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None)->  Union[numpy_scalars, pdarray]:
+
+def min(
+    pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
+) -> Union[numpy_scalars, pdarray]:
     """
     Return the minimum value of the array.
 
@@ -2887,7 +2894,9 @@ def min(pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None)->  Uni
 
 
 @typechecked
-def max(pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None)->  Union[numpy_scalars, pdarray]:
+def max(
+    pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
+) -> Union[numpy_scalars, pdarray]:
     """
     Return the maximum value of the array.
 
