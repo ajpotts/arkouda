@@ -52,6 +52,9 @@ class TestDTypes:
         assert "uint64" == dtypes.resolve_scalar_dtype(2**63 + 1)
         assert "bigint" == dtypes.resolve_scalar_dtype(2**64)
 
+        print("is connected?")
+        print()
+
     def test_is_dtype_in_union(self):
         from typing import Union
 

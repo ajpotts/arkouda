@@ -3,8 +3,15 @@ import pytest
 import arkouda as ak
 from arkouda.client import generic_msg
 from server_util.test.server_test_util import TestRunningMode, start_arkouda_server
-
+from conftest import manage_connection_base
 import subprocess
+
+
+# @pytest.fixture(scope="function", autouse=True)
+# def manage_connection2():
+#     print("\n\n\nmanage_connection2\n\n\n\n")
+#     with manage_connection_base() as result:
+#         yield result
 
 
 def assert_not_running(program_name):
@@ -56,7 +63,7 @@ class TestClient:
     #     assert not ak.client.connected
     #     ak.disconnect()
     #     ak.connect(server=pytest.server, port=pytest.port)
-
+    #
     # @pytest.mark.skipif(
     #     pytest.test_running_mode == TestRunningMode.CLIENT,
     #     reason="start_arkouda_server won't restart if running mode is client",
@@ -133,7 +140,7 @@ class TestClient:
     #     assert ak.get_mem_avail(as_percent=True), round((ak.get_mem_avail() / tot_mem) * 100)
     #
     #     assert 100 == ak.get_mem_used(as_percent=True) + ak.get_mem_avail(as_percent=True)
-
+    #
     # def test_no_op(self):
     #     """
     #     Tests the ak.client._no_op method
@@ -168,25 +175,29 @@ class TestClient:
     #     assert 1073741824 == ak.client.maxTransferBytes
     #     assert not ak.client.verbose
     #
-    # def test_client_get_server_commands(self):
-    #     """
-    #     Tests the ak.client.get_server_commands() method contains an expected
-    #     sample of commands.
-    #     """
-    #     cmds = ak.client.get_server_commands()
-    #     for cmd in ["connect", "info", "str"]:
-    #         assert cmd in cmds
-    #
-    # def test_client_nd_unimplemented_error(self):
-    #     """
-    #     Tests that a user will get a helpful error message if they attempt to
-    #     use a multi-dimensional command when only a 1D implementation exists.
-    #     """
-    #     with pytest.raises(RuntimeError) as cm:
-    #         resp = generic_msg("connect2D")
-    #
-    #     err_msg = "Error: Command 'connect' is not supported for multidimensional arrays"
-    #     cm.match(err_msg)  #   Asserts the error msg matches the expected value
+    def test_client_get_server_commands(self):
+        """
+        Tests the ak.client.get_server_commands() method contains an expected
+        sample of commands.
+        """
+        cmds = ak.client.get_server_commands()
+        for cmd in ["connect", "info", "str"]:
+            assert cmd in cmds
+
+    def test_client_nd_unimplemented_error(self):
+        """
+        Tests that a user will get a helpful error message if they attempt to
+        use a multi-dimensional command when only a 1D implementation exists.
+        """
+        with pytest.raises(RuntimeError) as cm:
+            resp = generic_msg("connect2D")
+
+        err_msg = "Error: Command 'connect' is not supported for multidimensional arrays"
+        cm.match(err_msg)  #   Asserts the error msg matches the expected value
 
     def test_fake_assert(self):
+        import time
+
+        time.sleep(5)
+        print("idk but printing slows thigns down sometimes")
         assert True == True

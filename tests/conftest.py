@@ -13,7 +13,7 @@ from server_util.test.server_test_util import (
     start_arkouda_server,
     stop_arkouda_server,
 )
-
+from contextlib import contextmanager
 os.environ["ARKOUDA_CLIENT_MODE"] = "API"
 
 
@@ -100,28 +100,68 @@ def startup_teardown():
             stop_arkouda_server()
         except Exception:
             pass
+    stop_arkouda_server()
 
 
-@pytest.fixture(scope="class", autouse=True)
-def manage_connection():
+@contextmanager
+def manage_connection_base():
     import arkouda as ak
 
+    print("\n\nSTART manage_connection_base\n\n\n")
+
     try:
+        import time
+
+        # time.sleep(5)
         ak.connect(server=pytest.server, port=pytest.port, timeout=pytest.timeout)
         pytest.max_rank = get_max_array_rank()
+        # time.sleep(5)
 
     except Exception as e:
         raise ConnectionError(e)
 
     yield
 
+    print("\n\nSTOP manage_connection_base\n\n\n")
+
     try:
+        # time.sleep(5)
         ak.disconnect()
+        print("\n\n\n\n\nDISCONNECTED\n\n\n\n")
+        # time.sleep(5)
     except Exception as e:
         raise ConnectionError(e)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope="module", autouse=True)
+def manage_connection():
+    with manage_connection_base() as result:
+        yield result
+
+
+# @pytest.fixture(scope="class", autouse=True)
+# def manage_connection():
+#     import arkouda as ak
+#
+#     try:
+#         import time
+#
+#         # time.sleep(5)
+#         ak.connect(server=pytest.server, port=pytest.port, timeout=pytest.timeout)
+#         pytest.max_rank = get_max_array_rank()
+#
+#     except Exception as e:
+#         raise ConnectionError(e)
+#
+#     yield
+#
+#     try:
+#         ak.disconnect()
+#     except Exception as e:
+#         raise ConnectionError(e)
+
+
+@pytest.fixture(scope="function", autouse=True)
 def skip_by_rank(request):
     if request.node.get_closest_marker("skip_if_max_rank_less_than"):
         if request.node.get_closest_marker("skip_if_max_rank_less_than").args[0] > pytest.max_rank:
