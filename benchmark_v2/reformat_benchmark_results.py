@@ -184,9 +184,9 @@ def create_parser():
         help="Directory containing graph infrastructure",
     )
     # parser.add_argument("--platform-name", default="", help="Test platform name")
-    # parser.add_argument(
-    #     "--description", default="", help="Description of this configuration"
-    # )
+    parser.add_argument(
+        "--description", default="", help="Description of this configuration"
+    )
     # parser.add_argument("--annotations", default="", help="File containing annotations")
     # parser.add_argument("--configs", help="comma seperate list of configurations")
     # parser.add_argument("--start-date", help="graph start date")
@@ -203,48 +203,25 @@ def create_parser():
     return parser
 
 
+# ./benchmark_v2/reformat_benchmark_results.py
 def main():
     parser = create_parser()
-    # args, client_args = parser.parse_known_args()
-    # args.graph_dir = args.graph_dir or os.path.join(args.dat_dir, "html")
-    # print("args.dat_dir")
-    # print(args.dat_dir)
-    # config_dat_dir = os.path.join(args.dat_dir, args.description)
-    # run_isolated = bool(args.isolated)
-    # print("config_dat_dir")
-    # print(config_dat_dir)
-    #
-    # if args.save_data or args.gen_graphs:
-    #     os.makedirs(config_dat_dir, exist_ok=True)
-    #
-    # if not run_isolated:
-    #     start_arkouda_server(
-    #         args.num_locales, port=args.server_port, server_args=args.server_args
-    #     )
-    #
-    # args.benchmarks = args.benchmarks or BENCHMARKS
-    # for benchmark in args.benchmarks:
-    #     if run_isolated:
-    #         start_arkouda_server(
-    #             args.num_locales,
-    #             port=args.server_port,
-    #             server_args=args.server_args,
-    #             within_slurm_alloc=bool(args.within_slrum_alloc),
-    #         )
-    #     for trial in range(args.numtrials):
-    #         benchmark_py = os.path.join(benchmark_dir, "{}.py".format(benchmark))
-    #         out = run_client(benchmark_py, client_args)
-    #         if args.save_data or args.gen_graphs:
-    #             add_to_dat(benchmark, out, config_dat_dir, args.graph_infra)
-    #         print(out)
-    #     if run_isolated:
-    #         stop_arkouda_server()
-    #
-    # if not run_isolated:
-    #     stop_arkouda_server()
-    #
-    # if args.save_data or args.gen_graphs:
-    #     comp_file = os.getenv("ARKOUDA_PRINT_PASSES_FILE", "")
+    args, client_args = parser.parse_known_args()
+    args.graph_dir = args.graph_dir or os.path.join(args.dat_dir, "html")
+    print("args.dat_dir")
+    print(args.dat_dir)
+    config_dat_dir = os.path.join(args.dat_dir, args.description)
+    print("config_dat_dir")
+    print(config_dat_dir)
+
+    if args.save_data or args.gen_graphs:
+        os.makedirs(config_dat_dir, exist_ok=True)
+
+
+    json_path = ""
+
+
+
     #     if os.path.isfile(comp_file):
     #         with open(comp_file, "r") as f:
     #             out = f.read()
