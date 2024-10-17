@@ -570,7 +570,7 @@ test-clean:
 
 size_bm = 10**8
 DATE := $(shell date '+%Y_%m_%d_%H_%M_%S')
-out=benchmark/bench_stats_$(DATE).json
+out=benchmark/benchmark_stats_$(DATE).json
 .PHONY: benchmark
 benchmark:
 	python3 -m pytest -c benchmark.ini --benchmark-autosave --benchmark-storage=file://benchmark_v2/.benchmarks --size=$(size_bm) --benchmark-json=$(out)

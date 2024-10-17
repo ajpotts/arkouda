@@ -7,14 +7,16 @@ automatically.
 """
 
 import argparse
+import json
 import logging
 import os
 import subprocess
 import sys
+
 from server_util.test.server_test_util import (
     get_arkouda_numlocales,
-    start_arkouda_server,
     run_client,
+    start_arkouda_server,
     stop_arkouda_server,
 )
 
@@ -218,7 +220,7 @@ def main():
         os.makedirs(config_dat_dir, exist_ok=True)
 
 
-    json_path = ""
+    json_path = "/home/amandapotts/git/arkouda/benchmark/bench_stats_2024_10_17_10_45_43.json"
 
 
 
@@ -237,6 +239,15 @@ def main():
     #         add_to_dat("emitted-code-size", out, config_dat_dir, args.graph_infra)
     #     if args.gen_graphs:
     #         generate_graphs(args)
+
+    with open(json_path, 'r') as file:
+        data = json.load(file)
+
+    # Print the data
+    # print(data)
+
+
+
 
 
 if __name__ == "__main__":
