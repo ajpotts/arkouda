@@ -98,8 +98,10 @@ def add_to_dat(benchmark, output, dat_dir, graph_infra):
     subprocess.check_output(
         [computePerfStats, benchmark, dat_dir, perfkeys, benchmark_out]
     )
-    os.remove(benchmark_out)
-
+    # os.remove(benchmark_out)
+    print("\n\n\n\n\n\nbenchmark_out\n\n\n\n")
+    print(benchmark_out)
+    exit()
 
 def generate_graphs(args):
     """
@@ -207,12 +209,8 @@ def main():
     parser = create_parser()
     args, client_args = parser.parse_known_args()
     args.graph_dir = args.graph_dir or os.path.join(args.dat_dir, "html")
-    print("args.dat_dir")
-    print(args.dat_dir)
     config_dat_dir = os.path.join(args.dat_dir, args.description)
     run_isolated = bool(args.isolated)
-    print("config_dat_dir")
-    print(config_dat_dir)
 
     if args.save_data or args.gen_graphs:
         os.makedirs(config_dat_dir, exist_ok=True)
@@ -249,10 +247,6 @@ def main():
             with open(comp_file, "r") as f:
                 out = f.read()
             add_to_dat("comp-time", out, config_dat_dir, args.graph_infra)
-        print("out")
-        print(out)
-        print("args.graph_infra")
-        print(args.graph_infra)
         emitted_code_file = os.getenv("ARKOUDA_EMITTED_CODE_SIZE_FILE", "")
         if os.path.isfile(emitted_code_file):
             with open(emitted_code_file, "r") as f:

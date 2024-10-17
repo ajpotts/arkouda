@@ -131,6 +131,7 @@ def generate_graphs(args):
     if args.annotations:
         cmd += ["--annotate", args.annotations]
 
+
     subprocess.check_output(cmd)
 
 
@@ -246,6 +247,12 @@ def main():
     # Print the data
     # print(data)
 
+    benchmark = "argsort"
+    benchmark_out = "{}.exec.out.tmp2".format(benchmark)
+    output="TEST"
+    output = "Average rate = " + str(data["benchmarks"][0]["extra_info"]["transfer_rate"])
+    with open(benchmark_out, "w") as f:
+        f.write(output)
 
 
 
