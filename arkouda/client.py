@@ -548,8 +548,10 @@ class AKSocket(zmq.Socket):
                 poller = zmq.Poller()
                 poller.register(self)
                 print("Start timer.....")
+                # time.sleep(1)
                 if not poller.poll(timeout):
                     print("STUFF")
+                    # time.sleep(1)
                     return self.on_timeout()
             return f(self, *args, **kwargs)
 
@@ -578,6 +580,11 @@ class ZmqChannel(Channel):
         size: int = -1,
         request_id: Optional[str] = None,
     ) -> Union[str, memoryview]:
+
+        from arkouda.client import connected
+        if not connected and "connect" not in cmd:
+            raise RuntimeError("Arkouda is not connected.")
+
         message = RequestMessage(
             user=username, token=self.token, cmd=cmd, format=MessageFormat.STRING, args=args, size=size
         )
@@ -587,10 +594,12 @@ class ZmqChannel(Channel):
 
         self.socket.send_string(json.dumps(message.asdict()))
         print("json.dumps(message.asdict())")
+        # time.sleep(1)
         print(json.dumps(message.asdict()))
 
         if recv_binary:
             print("BINARY!")
+            # time.sleep(1)
             # self.socket.send_string(json.dumps(message.asdict()))
             frame = self.socket.recv(copy=False)
             view = frame.buffer
@@ -622,6 +631,7 @@ class ZmqChannel(Channel):
             raw_message = self.socket.recv_string()
             try:
                 print("CASE1")
+                # time.sleep(1)
                 return_message = ReplyMessage.fromdict(json.loads(raw_message))
 
                 # raise errors or warnings sent back from the server
@@ -630,6 +640,7 @@ class ZmqChannel(Channel):
                 elif return_message.msgType == MessageType.WARNING:
                     warnings.warn(return_message.msg)
                 print("it worked!")
+                # time.sleep(1)
                 return return_message.msg
             except KeyError as ke:
                 raise ValueError(f"Return message is missing the {ke} field")
@@ -645,6 +656,9 @@ class ZmqChannel(Channel):
         size: int = -1,
         request_id: Optional[str] = None,
     ) -> Union[str, memoryview]:
+
+
+
         # Note - Size is a placeholder here because Binary msg not yet support json args and
         # request_id is a noop for now
         message = RequestMessage(
@@ -687,6 +701,7 @@ class ZmqChannel(Channel):
         context = zmq.Context()
 
         self.socket = AKSocket(context, zmq.REQ, default_timeout=op_timeout)  # context.socket(zmq.REQ)
+        self.socket.setsockopt(zmq.LINGER, 0)  # Don't wait on close
 
         logger.debug(f"ZMQ version: {zmq.zmq_version()}")
 
@@ -1098,6 +1113,7 @@ def generic_msg(
 
     size, msg_args = _json_args_to_str(args)
     print("msg_args")
+    # time.sleep(1)
     print(msg_args)
 
     try:
