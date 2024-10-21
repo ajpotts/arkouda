@@ -547,7 +547,9 @@ class AKSocket(zmq.Socket):
                 timeout = int(timeout * 1000)
                 poller = zmq.Poller()
                 poller.register(self)
+                print("Start timer.....")
                 if not poller.poll(timeout):
+                    print("STUFF")
                     return self.on_timeout()
             return f(self, *args, **kwargs)
 
