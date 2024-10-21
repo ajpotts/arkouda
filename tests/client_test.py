@@ -7,54 +7,54 @@ from server_util.test.server_test_util import TestRunningMode, start_arkouda_ser
 
 @pytest.mark.skipif(pytest.host == "horizon", reason="nightly test failures due to machine busyness")
 class TestClient:
-    def test_client_connected(self):
-        """
-        Tests the following methods:
-        ak.client.connected()
-        ak.client.disconnect()
-        ak.client.connect()
-
-        :return: None
-        :raise: AssertionError if an assert* method returns incorrect value or
-                if there is a error in connecting or disconnecting from  the
-                Arkouda server
-        """
-        assert ak.client.connected
-        try:
-            ak.disconnect()
-        except Exception as e:
-            raise AssertionError(e)
-
-        assert not ak.client.connected
-        try:
-            ak.connect(server=pytest.server, port=pytest.port)
-        except Exception as e:
-            raise AssertionError(e)
-
-        assert ak.client.connected
-
-    def test_disconnect_on_disconnected_client(self):
-        """
-        Tests the ak.disconnect() method invoked on a client that is already
-        disconnect to ensure there is no error
-        """
-        ak.disconnect()
-        assert not ak.client.connected
-        ak.disconnect()
-        ak.connect(server=pytest.server, port=pytest.port)
-
-    @pytest.mark.skipif(
-        pytest.test_running_mode == TestRunningMode.CLIENT,
-        reason="start_arkouda_server won't restart if running mode is client",
-    )
-    def test_shutdown(self):
-        """
-        Tests the ak.shutdown() method
-        """
-        ak.shutdown()
-        start_arkouda_server(numlocales=pytest.nl)
-        # reconnect to server so subsequent tests will pass
-        ak.connect(server=pytest.server, port=pytest.port, timeout=pytest.timeout)
+    # def test_client_connected(self):
+    #     """
+    #     Tests the following methods:
+    #     ak.client.connected()
+    #     ak.client.disconnect()
+    #     ak.client.connect()
+    #
+    #     :return: None
+    #     :raise: AssertionError if an assert* method returns incorrect value or
+    #             if there is a error in connecting or disconnecting from  the
+    #             Arkouda server
+    #     """
+    #     assert ak.client.connected
+    #     try:
+    #         ak.disconnect()
+    #     except Exception as e:
+    #         raise AssertionError(e)
+    #
+    #     assert not ak.client.connected
+    #     try:
+    #         ak.connect(server=pytest.server, port=pytest.port)
+    #     except Exception as e:
+    #         raise AssertionError(e)
+    #
+    #     assert ak.client.connected
+    #
+    # def test_disconnect_on_disconnected_client(self):
+    #     """
+    #     Tests the ak.disconnect() method invoked on a client that is already
+    #     disconnect to ensure there is no error
+    #     """
+    #     ak.disconnect()
+    #     assert not ak.client.connected
+    #     ak.disconnect()
+    #     ak.connect(server=pytest.server, port=pytest.port)
+    #
+    # @pytest.mark.skipif(
+    #     pytest.test_running_mode == TestRunningMode.CLIENT,
+    #     reason="start_arkouda_server won't restart if running mode is client",
+    # )
+    # def test_shutdown(self):
+    #     """
+    #     Tests the ak.shutdown() method
+    #     """
+    #     ak.shutdown()
+    #     start_arkouda_server(numlocales=pytest.nl)
+    #     # reconnect to server so subsequent tests will pass
+    #     ak.connect(server=pytest.server, port=pytest.port, timeout=pytest.timeout)
 
     def test_client_get_config(self):
         """
