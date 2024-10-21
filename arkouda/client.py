@@ -491,6 +491,37 @@ class Channel:
         raise NotImplementedError("connect must be implemented in derived class")
 
 
+from functools import update_wrapper
+import zmq
+
+class AKSocket(zmq.Socket):
+    default_timeout: int
+    def __init__(self, ctx, type, default_timeout=None):
+        zmq.Socket.__init__(self, ctx, type)
+        self.default_timeout = default_timeout
+
+    def on_timeout(self):
+        return None
+
+    def _timeout_wrapper(f):
+        def wrapper(self, *args, **kwargs):
+            timeout = kwargs.pop('timeout', self.default_timeout)
+            if timeout is not None:
+                timeout = int(timeout * 1000)
+                poller = zmq.Poller()
+                poller.register(self)
+                if not poller.poll(timeout):
+                    return self.on_timeout()
+            return f(self, *args, **kwargs)
+        return update_wrapper(wrapper, f, ('__name__', '__doc__'))
+
+    for _meth in dir(zmq.Socket):
+        if _meth.startswith(('send', 'recv')):
+            locals()[_meth] = _timeout_wrapper(getattr(zmq.Socket, _meth))
+
+    del _meth, _timeout_wrapper
+
+
 class ZmqChannel(Channel):
     """
     The ZmqChannel class implements the Channel methods for ZMQ request/reply communication
@@ -514,9 +545,13 @@ class ZmqChannel(Channel):
         # request_id is a noop for now
         logger.debug(f"sending message {json.dumps(message.asdict())}")
 
-        self.socket.send_string(json.dumps(message.asdict()))
+        # self.socket.send_string(json.dumps(message.asdict()))
+        print("json.dumps(message.asdict())")
+        print(json.dumps(message.asdict()))
 
         if recv_binary:
+            print("BINARY!")
+            self.socket.send_string(json.dumps(message.asdict()))
             frame = self.socket.recv(copy=False)
             view = frame.buffer
             # raise errors sent back from the server
@@ -524,8 +559,29 @@ class ZmqChannel(Channel):
                 raise RuntimeError(frame.bytes.decode())
             return view
         else:
-            raw_message = self.socket.recv_string()
+            print("Attempt loop")
+            raw_message = ""
+            max_retries = 10
+            timeout = 10000
+            self.socket.send_string(json.dumps(message.asdict()))
+            for attempt in range(max_retries):
+                print("tm")
+                tm = self.socket.poll(timeout)
+                print(tm)
+                if tm == 1:
+                    raw_message = self.socket.recv_string()
+                    print(raw_message)
+                    break
+                print(f"Timeout on attempt {attempt + 1}, retrying...")
+
+            if raw_message == "":
+                msg = "Could not create raw_msg"
+                print(msg)
+                raise RuntimeError(msg)
+
+            # raw_message = self.socket.recv_string()
             try:
+                print("CASE1")
                 return_message = ReplyMessage.fromdict(json.loads(raw_message))
 
                 # raise errors or warnings sent back from the server
@@ -533,6 +589,7 @@ class ZmqChannel(Channel):
                     raise RuntimeError(return_message.msg)
                 elif return_message.msgType == MessageType.WARNING:
                     warnings.warn(return_message.msg)
+                print("it worked!")
                 return return_message.msg
             except KeyError as ke:
                 raise ValueError(f"Return message is missing the {ke} field")
@@ -588,7 +645,7 @@ class ZmqChannel(Channel):
         import zmq
 
         context = zmq.Context()
-        self.socket = context.socket(zmq.REQ)
+        self.socket = AKSocket(context,zmq.REQ, default_timeout=100)#context.socket(zmq.REQ)
 
         logger.debug(f"ZMQ version: {zmq.zmq_version()}")
 
@@ -998,6 +1055,8 @@ def generic_msg(
         raise RuntimeError("client is not connected to a server")
 
     size, msg_args = _json_args_to_str(args)
+    print("msg_args")
+    print(msg_args)
 
     try:
         if send_binary:
