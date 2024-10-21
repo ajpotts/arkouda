@@ -494,8 +494,10 @@ class Channel:
 from functools import update_wrapper
 import zmq
 
+
 class AKSocket(zmq.Socket):
     default_timeout: int
+
     def __init__(self, ctx, type, default_timeout=None):
         zmq.Socket.__init__(self, ctx, type)
         self.default_timeout = default_timeout
@@ -505,7 +507,7 @@ class AKSocket(zmq.Socket):
 
     def _timeout_wrapper(f):
         def wrapper(self, *args, **kwargs):
-            timeout = kwargs.pop('timeout', self.default_timeout)
+            timeout = kwargs.pop("timeout", self.default_timeout)
             if timeout is not None:
                 timeout = int(timeout * 1000)
                 poller = zmq.Poller()
@@ -513,10 +515,11 @@ class AKSocket(zmq.Socket):
                 if not poller.poll(timeout):
                     return self.on_timeout()
             return f(self, *args, **kwargs)
-        return update_wrapper(wrapper, f, ('__name__', '__doc__'))
+
+        return update_wrapper(wrapper, f, ("__name__", "__doc__"))
 
     for _meth in dir(zmq.Socket):
-        if _meth.startswith(('send', 'recv')):
+        if _meth.startswith(("send", "recv")):
             locals()[_meth] = _timeout_wrapper(getattr(zmq.Socket, _meth))
 
     del _meth, _timeout_wrapper
@@ -645,7 +648,10 @@ class ZmqChannel(Channel):
         import zmq
 
         context = zmq.Context()
-        self.socket = AKSocket(context,zmq.REQ, default_timeout=100)#context.socket(zmq.REQ)
+        socket_timeout = None if timeout == 0 else timeout
+        self.socket = AKSocket(
+            context, zmq.REQ, default_timeout=socket_timeout
+        )  # context.socket(zmq.REQ)
 
         logger.debug(f"ZMQ version: {zmq.zmq_version()}")
 
