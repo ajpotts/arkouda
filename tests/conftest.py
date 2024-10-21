@@ -107,7 +107,7 @@ def manage_connection():
     import arkouda as ak
 
     try:
-        ak.connect(server=pytest.server, port=pytest.port, timeout=pytest.timeout)
+        ak.connect(server=pytest.server, port=pytest.port, timeout=pytest.timeout, op_timeout=1000)
         pytest.max_rank = get_max_array_rank()
 
     except Exception as e:

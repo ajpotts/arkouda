@@ -461,7 +461,7 @@ class Channel:
         """
         raise NotImplementedError("send_binary_message must be implemented in derived class")
 
-    def connect(self, timeout: int = 0) -> None:
+    def connect(self, timeout: int = 0, op_timeout: Union[int, None] = None) -> None:
         """
         Establishes a connection to the Arkouda server
 
@@ -493,6 +493,41 @@ class Channel:
 
 from functools import update_wrapper
 import zmq
+import time
+
+
+class HeartbeatSocket(zmq.Socket):
+    socket: zmq.Socket
+    poller: zmq.Poller
+
+    def __init__(self, ctx, type, default_timeout=None):
+        self.socket = ctx.socket(zmq.REQ)
+        self.socket.setsockopt(zmq.HEARTBEAT_IVL, 1000)
+        self.socket.setsockopt(zmq.HEARTBEAT_TIMEOUT, 3000)
+        self.poller = zmq.Poller()
+        self.poller.register(self, zmq.POLLIN)
+
+        while True:
+            self.send_heartbeat()
+            if not self.check_connection():
+                # Implement reconnection logic here
+                pass
+            time.sleep(1)  # Wait for 1 second before next heartbeat
+
+    def send_heartbeat(self):
+        self.socket.send_string("Heartbeat")
+
+    def check_connection(self):
+        events = dict(self.poller.poll(3000))  # Wait for 3 seconds
+        if socket in events:
+            message = socket.recv_string()
+            print(f"Received: {message}")
+            return True
+        else:
+            print("No response, connection may be lost")
+            return False
+
+# hb_socket = HeartbeatSocket(context, zmq.REQ)
 
 
 class AKSocket(zmq.Socket):
@@ -548,13 +583,13 @@ class ZmqChannel(Channel):
         # request_id is a noop for now
         logger.debug(f"sending message {json.dumps(message.asdict())}")
 
-        # self.socket.send_string(json.dumps(message.asdict()))
+        self.socket.send_string(json.dumps(message.asdict()))
         print("json.dumps(message.asdict())")
         print(json.dumps(message.asdict()))
 
         if recv_binary:
             print("BINARY!")
-            self.socket.send_string(json.dumps(message.asdict()))
+            # self.socket.send_string(json.dumps(message.asdict()))
             frame = self.socket.recv(copy=False)
             view = frame.buffer
             # raise errors sent back from the server
@@ -562,27 +597,27 @@ class ZmqChannel(Channel):
                 raise RuntimeError(frame.bytes.decode())
             return view
         else:
-            print("Attempt loop")
-            raw_message = ""
-            max_retries = 10
-            timeout = 10000
-            self.socket.send_string(json.dumps(message.asdict()))
-            for attempt in range(max_retries):
-                print("tm")
-                tm = self.socket.poll(timeout)
-                print(tm)
-                if tm == 1:
-                    raw_message = self.socket.recv_string()
-                    print(raw_message)
-                    break
-                print(f"Timeout on attempt {attempt + 1}, retrying...")
+            # print("Attempt loop")
+            # raw_message = ""
+            # max_retries = 10
+            # timeout = 10000
+            # self.socket.send_string(json.dumps(message.asdict()))
+            # for attempt in range(max_retries):
+            #     print("tm")
+            #     tm = self.socket.poll(timeout)
+            #     print(tm)
+            #     if tm == 1:
+            #         raw_message = self.socket.recv_string()
+            #         print(raw_message)
+            #         break
+            #     print(f"Timeout on attempt {attempt + 1}, retrying...")
+            #
+            # if raw_message == "":
+            #     msg = "Could not create raw_msg"
+            #     print(msg)
+            #     raise RuntimeError(msg)
 
-            if raw_message == "":
-                msg = "Could not create raw_msg"
-                print(msg)
-                raise RuntimeError(msg)
-
-            # raw_message = self.socket.recv_string()
+            raw_message = self.socket.recv_string()
             try:
                 print("CASE1")
                 return_message = ReplyMessage.fromdict(json.loads(raw_message))
@@ -643,15 +678,13 @@ class ZmqChannel(Channel):
             except json.decoder.JSONDecodeError:
                 raise ValueError(f"{raw_message} is not valid JSON, may be server-side error")
 
-    def connect(self, timeout: int = 0) -> None:
+    def connect(self, timeout: int = 0, op_timeout: Union[int, None] = None) -> None:
         # create and configure socket for connections to arkouda server
         import zmq
 
         context = zmq.Context()
-        socket_timeout = None if timeout == 0 else timeout
-        self.socket = AKSocket(
-            context, zmq.REQ, default_timeout=socket_timeout
-        )  # context.socket(zmq.REQ)
+
+        self.socket = AKSocket(context, zmq.REQ, default_timeout=op_timeout)  # context.socket(zmq.REQ)
 
         logger.debug(f"ZMQ version: {zmq.zmq_version()}")
 
@@ -725,6 +758,7 @@ def connect(
     server: str = "localhost",
     port: int = 5555,
     timeout: int = 0,
+    op_timeout: Union[int, None] = None,
     access_token: Optional[str] = None,
     connect_url: Optional[str] = None,
     access_channel: Optional[Channel] = None,
@@ -785,7 +819,7 @@ def connect(
         channel = get_channel(server=server, port=port, token=access_token, connect_url=connect_url)
 
     # connect via the channel
-    channel.connect(timeout)
+    channel.connect(timeout, op_timeout)
 
     # send connect request to server and get the response confirming if
     # the connect request succeeded and, if not not, the error message
