@@ -216,7 +216,7 @@ module ReductionMsg
 
       const (valid, axes) = validateNegativeAxes(axis, x.rank);
       if !valid {
-        throw new Error("Invalid axis value(s) '%?' in slicing reduction".format(axis));
+        throw new Error("Invalid axis value(s) '%?' in min slicing reduction".format(axis));
       } else {
         const outShape = reducedShape(x.shape, axes);
         var ret = makeDistArray((...outShape), opType);
@@ -238,6 +238,196 @@ module ReductionMsg
 
       Supports: 'any', 'all', is_sorted, is_locally_sorted
     */
+    // @arkouda.registerCommand
+    // proc all(ref x:[?d] ?t, axis: list(int)): [] bool throws {
+    //   use SliceReductionOps;
+
+    //   if d.rank == 1 { 
+    //     return makeDistArray([all(x)]);
+    //   }
+    //   const (valid, axes) = validateNegativeAxes(axis, x.rank);
+    //   if !valid {
+    //     throw new Error("Invalid axis value(s) '%?' in all slicing reduction".format(axis));
+    //   } else {
+    //     const outShape = reducedShape(x.shape, axes);
+    //     var ret = makeDistArray((...outShape), bool);
+    //     if (ret.size==1) {
+    //       ret[ret.domain.low] = all(x);
+    //     }else{
+    //       forall sliceIdx in domOffAxis(x.domain, axes) {
+    //         const sliceDom = domOnAxis(x.domain, sliceIdx, axes);
+    //         ret[sliceIdx] = all(x, sliceDom);
+    //       }
+    //     }
+    //     return ret;
+    //   }
+    // }
+
+    // proc all(ref x:[?d] ?t): bool throws {
+    //   return if t == bool
+    //             then  & reduce x
+    //             else (+ reduce (x != 0)) == x.size;
+    // }
+
+    // @arkouda.registerCommand
+    // proc any(ref x:[?d] ?t, axis: list(int)): [] bool throws 
+    //   where d.rank != 1 {
+    //   use SliceReductionOps;
+
+    //   const (valid, axes) = validateNegativeAxes(axis, x.rank);
+    //   if !valid {
+    //     throw new Error("Invalid axis value(s) '%?' in any slicing reduction".format(axis));
+    //   } else {
+    //     const outShape = reducedShape(x.shape, axes);
+    //     var ret = makeDistArray((...outShape), bool);
+    //     if (ret.size==1) {
+    //       ret[ret.domain.low] = any(x);
+    //     }else{
+    //       forall sliceIdx in domOffAxis(x.domain, axes) {
+    //         const sliceDom = domOnAxis(x.domain, sliceIdx, axes);
+    //         ret[sliceIdx] = any(x, sliceDom);
+    //       }
+    //     }
+    //     return ret;
+    //   }
+    // }
+
+    @arkouda.registerCommand
+    proc any(ref x:[?d] ?t, axis: list(int)): [] bool throws {
+      use SliceReductionOps;
+
+      if d.rank == 1 { 
+        return makeDistArray([any(x)]);
+      }
+      const (valid, axes) = validateNegativeAxes(axis, x.rank);
+      if !valid {
+        throw new Error("Invalid axis value(s) '%?' in all slicing reduction".format(axis));
+      } else {
+        const outShape = reducedShape(x.shape, axes);
+        var ret = makeDistArray((...outShape), bool);
+        if (ret.size==1) {
+          ret[ret.domain.low] = any(x);
+        }else{
+          forall sliceIdx in domOffAxis(x.domain, axes) {
+            const sliceDom = domOnAxis(x.domain, sliceIdx, axes);
+            ret[sliceIdx] = any(x, sliceDom);
+          }
+        }
+        return ret;
+      }
+    }
+
+    @arkouda.registerCommand
+    proc all(ref x:[?d] ?t, axis: list(int)): [] bool throws {
+      use SliceReductionOps;
+
+      if d.rank == 1 { 
+        return makeDistArray([all(x)]);
+      }
+      const (valid, axes) = validateNegativeAxes(axis, x.rank);
+      if !valid {
+        throw new Error("Invalid axis value(s) '%?' in all slicing reduction".format(axis));
+      } else {
+        const outShape = reducedShape(x.shape, axes);
+        var ret = makeDistArray((...outShape), bool);
+        if (ret.size==1) {
+          ret[ret.domain.low] = all(x);
+        }else{
+          forall sliceIdx in domOffAxis(x.domain, axes) {
+            const sliceDom = domOnAxis(x.domain, sliceIdx, axes);
+            ret[sliceIdx] = all(x, sliceDom);
+          }
+        }
+        return ret;
+      }
+    }
+
+    @arkouda.registerCommand
+    proc isSorted(ref x:[?d] ?t, axis: list(int)): [] bool throws {
+      use SliceReductionOps;
+      writeln("isSorted");
+
+      if d.rank == 1 { 
+        writeln("CASE 1");
+        return makeDistArray([isSorted(x)]);
+      }
+      const (valid, axes) = validateNegativeAxes(axis, x.rank);
+      if !valid {
+        throw new Error("Invalid axis value(s) '%?' in all slicing reduction".format(axis));
+      } else {
+        const outShape = reducedShape(x.shape, axes);
+        var ret = makeDistArray((...outShape), bool);
+        if (ret.size==1) {
+          writeln("CASE 2");
+          ret[ret.domain.low] = isSorted(x);
+        }else{
+          writeln("CASE 3");
+          forall sliceIdx in domOffAxis(x.domain, axes) {
+            const sliceDom = domOnAxis(x.domain, sliceIdx, axes);
+            ret[sliceIdx] = isSorted(x, sliceDom);
+          }
+        }
+        return ret;
+      }
+    }
+
+    @arkouda.registerCommand
+    proc isSortedLocally(ref x:[?d] ?t, axis: list(int)): [] bool throws {
+      use SliceReductionOps;
+      writeln("\n\nisSortedLocally\n\n");
+      if d.rank == 1 { 
+        writeln("CASE 1");
+        return makeDistArray([isSortedLocally(x)]);
+      }
+      const (valid, axes) = validateNegativeAxes(axis, x.rank);
+      if !valid {
+        throw new Error("Invalid axis value(s) '%?' in all slicing reduction".format(axis));
+      } else {
+        const outShape = reducedShape(x.shape, axes);
+        writeln("outShape");
+        writeln(outShape);
+        var ret = makeDistArray((...outShape), bool);
+        if (ret.size==1) {
+          writeln("case 2");
+          ret[ret.domain.low] = isSortedLocally(x);
+        }else{
+          writeln("case 3");
+          forall sliceIdx in domOffAxis(x.domain, axes) {
+            writeln("sliceIdx");
+            writeln(sliceIdx);
+            const sliceDom = domOnAxis(x.domain, sliceIdx, axes);
+            writeln("sliceDom");
+            writeln(sliceDom);
+            ret[sliceIdx] = isSortedLocally(x, sliceDom);
+          }
+        }
+        return ret;
+      }
+    }
+
+
+    proc any(ref x:[?d] ?t): bool throws {
+      return if t == bool
+                then | reduce x
+                else (+ reduce (x != 0)) != 0;
+    }
+
+    proc all(ref x:[?d] ?t): bool throws {
+      return if t == bool
+                then  & reduce x
+                else (+ reduce (x != 0)) == x.size;
+    }
+
+    proc isSortedLocally(ref a: [?D] ?t): bool {
+      writeln("isSortedLocally, whole domain");
+      // var s: bool = true;
+      // coforall loc in Locales with (&& reduce s) do on loc {
+      //   ref aLocal = a[a.localSubdomain()];
+      //   s &&= isSorted(aLocal);
+      // }
+      return isSortedLocally(a, D);
+    }
+
     @arkouda.registerND(cmd_prefix="reduce->bool")
     proc boolReductionMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, param nd: int): MsgTuple throws {
       use SliceReductionOps;
@@ -531,7 +721,7 @@ module ReductionMsg
       }
 
       proc any(ref a: [] ?t, slice): bool {
-        var sum = 0:t;
+        var sum = 0:int;
         forall i in slice with (+ reduce sum) do sum += (a[i] != 0):int;
         return sum != 0;
       }
@@ -543,10 +733,119 @@ module ReductionMsg
       }
 
       proc all(ref a: [] ?t, slice): bool {
-        var sum = 0:t;
+        var sum = 0:int;
         forall i in slice with (+ reduce sum) do sum += (a[i] != 0):int;
         return sum == a.size;
       }
+
+      proc isSortedLocally(A: [?D] ?t, slice) 
+        where D.rank != 1 {
+        writeln("isSortedLocally on slice, rank > 1");
+        var s = true;
+        coforall loc in Locales with (&& reduce s) do on loc {
+          writeln("loc:");
+          writeln(loc);
+
+          const localSliceDom = slice.localSubdomain();
+          ref aLocalSlice = A[localSliceDom];
+          writeln("aLocalSlice");
+          writeln(aLocalSlice);
+          writeln("aLocalSlice.rank");
+          writeln(aLocalSlice.rank);
+
+          for axisIdx in 0..#aLocalSlice.rank {
+            s &&= isSortedOver(aLocalSlice, localSliceDom, axisIdx);
+          }
+        }
+        return s;
+      }
+
+      proc isSortedLocally(A: [?D] ?t, slice) 
+        where D.rank == 1 {
+        writeln("isSortedLocally on slice, rank 1");
+        var s = true;
+        coforall loc in Locales with (&& reduce s) do on loc {
+          writeln("loc:");
+          writeln(loc);
+
+          const localSliceDom = slice.localSubdomain();
+          ref aLocalSlice = A[localSliceDom];
+          writeln("aLocalSlice");
+          writeln(aLocalSlice);
+          writeln("aLocalSlice.rank");
+          writeln(aLocalSlice.rank);
+
+
+          s &&= isSorted(aLocalSlice, localSliceDom);
+
+        }
+        return s;
+      }   
+
+      proc isSorted(A: [?D] ?t) 
+        where D.rank != 1 {
+        return isSorted(A, D);
+      }   
+
+      proc isSorted(A: [?D] ?t, slice) 
+        where D.rank != 1 {
+        var s = true;
+          for axisIdx in 0..#D.rank {
+            s &&= isSortedOver(A, D, axisIdx);
+          }
+        return s;
+      }
+
+      proc isSorted(A: [?D] ?t, slice) 
+        where D.rank == 1 {
+        var s = true;
+        const localSliceDom = slice.localSubdomain();
+        ref aSlice = A[slice];
+        s &&= isSorted(aSlice);
+        return s;
+      }
+
+
+      //       proc isSortedLocally(A: [?D] ?t, slice) {
+      //   var s = true;
+      //   coforall loc in Locales with (&& reduce s) do on loc {
+      //     writeln("loc:");
+      //     writeln(loc);
+
+      //     ref aLocalSlice = a[slice.localSubdomain()];
+      //     s &&= isSorted(aLocalSlice);
+
+      //     writeln("aLocalSlice");
+      //     writeln(aLocalSlice);
+      //     writeln("aLocalSlice.rank");
+      //     writeln(aLocalSlice.rank);
+
+      //     for axisIdx in 0..#aLocalSlice.rank{
+      //       writeln("axisIdx");
+      //       writeln(axisIdx);
+      //       forall i in slice with (&& reduce sorted, var im1: D.rank*int) {
+      //         writeln("i");
+      //         writeln(i);
+      //         if i[axisIdx] > slice.dim(axisIdx).low {
+      //             im1 = i;
+      //             im1[axisIdx] -= 1;
+      //             sorted &&= (A[im1] <= A[i]);
+      //         }
+      //       }
+      //     }
+      //   }
+      //   return s;
+      // }
+
+
+    //     proc isSortedLocally(ref a: [] ?t): bool {
+    //   var s: bool;
+    //   coforall loc in Locales with (&& reduce s) do on loc {
+    //     ref aLocal = a[a.localSubdomain()];
+    //     s &&= isSorted(aLocal);
+    //   }
+    //   return s;
+    // }
 
       proc sumSlice(ref a: [?d] ?t, slice, type opType, skipNan: bool): opType {
         var sum = 0:opType;

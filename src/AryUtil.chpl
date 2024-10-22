@@ -96,11 +96,21 @@ module AryUtil
       :arg A: array to check
 
     */
-    proc isSorted(A:[?D] ?t): bool {
+    proc isSorted(A:[?D] ?t): bool where D.rank == 1{
+        writeln("isSorted in AryUtil.chpl");
         var sorted: bool;
         sorted = true;
-        forall (a,i) in zip(A,D) with (&& reduce sorted) {
+        // forall (a,i) in zip(A,D) with (&& reduce sorted) {
+        for (a,i) in zip(A,D){ //with (&& reduce sorted) {
+            writeln("a");
+            writeln(a);
+            writeln("i");
+            writeln(i);
+            writeln("D.low");
+            writeln(D.low);
             if i > D.low {
+                writeln("(A[i-1] <= a)");
+                writeln((A[i-1] <= a));
                 sorted &&= (A[i-1] <= a);
             }
         }

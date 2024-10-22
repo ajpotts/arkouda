@@ -2638,34 +2638,9 @@ def clear() -> None:
 
 
 @typechecked
-def any(pda: pdarray) -> np.bool_:
-    """
-    Return True iff any element of the array evaluates to True.
-
-    Parameters
-    ----------
-    pda : pdarray
-        The pdarray instance to be evaluated
-
-    Returns
-    -------
-    bool
-        Indicates if 1..n pdarray elements evaluate to True
-
-    Raises
-    ------
-    TypeError
-        Raised if pda is not a pdarray instance
-    RuntimeError
-        Raised if there's a server-side error thrown
-    """
-    return parse_single_value(
-        generic_msg(cmd=f"reduce->bool{pda.ndim}D", args={"op": "any", "x": pda, "nAxes": 0, "axis": []})
-    )
-
-
-@typechecked
-def all(pda: pdarray) -> np.bool_:
+def any(
+    pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
+) -> Union[numpy_scalars, pdarray]:
     """
     Return True iff all elements of the array evaluate to True.
 
@@ -2673,6 +2648,9 @@ def all(pda: pdarray) -> np.bool_:
     ----------
     pda : pdarray
         The pdarray instance to be evaluated
+    axis : int or Tuple[int, ...], optional
+        The axis or axes along which to compute the sum. If None, the sum of the entire array is
+        computed (returning a scalar).
 
     Returns
     -------
@@ -2686,25 +2664,46 @@ def all(pda: pdarray) -> np.bool_:
     RuntimeError
         Raised if there's a server-side error thrown
     """
-    return parse_single_value(
-        generic_msg(cmd=f"reduce->bool{pda.ndim}D", args={"op": "all", "x": pda, "nAxes": 0, "axis": []})
+    axis_ = (
+        []
+        if axis is None
+        else (
+            [
+                axis,
+            ]
+            if isinstance(axis, int)
+            else list(axis)
+        )
     )
+    repMsg = generic_msg(
+        cmd=f"any<{pda.dtype.name},{pda.ndim}>",
+        args={"x": pda, "axis": axis_, "skipNan": False},
+    )
+    if axis is None or len(axis_) == 0 or pda.ndim == 1:
+        return create_pdarray(cast(str, repMsg)).flatten()[0]
+    else:
+        return create_pdarray(cast(str, repMsg))
 
 
 @typechecked
-def is_sorted(pda: pdarray) -> np.bool_:
+def all(
+    pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
+) -> Union[numpy_scalars, pdarray]:
     """
-    Return True iff the array is monotonically non-decreasing.
+    Return True iff all elements of the array evaluate to True.
 
     Parameters
     ----------
     pda : pdarray
         The pdarray instance to be evaluated
+    axis : int or Tuple[int, ...], optional
+        The axis or axes along which to compute the sum. If None, the sum of the entire array is
+        computed (returning a scalar).
 
     Returns
     -------
     bool
-        Indicates if the array is monotonically non-decreasing
+        Indicates if all pdarray elements evaluate to True
 
     Raises
     ------
@@ -2713,12 +2712,163 @@ def is_sorted(pda: pdarray) -> np.bool_:
     RuntimeError
         Raised if there's a server-side error thrown
     """
-    return parse_single_value(
-        generic_msg(
-            cmd=f"reduce->bool{pda.ndim}D", args={"op": "is_sorted", "x": pda, "nAxes": 0, "axis": []}
+    axis_ = (
+        []
+        if axis is None
+        else (
+            [
+                axis,
+            ]
+            if isinstance(axis, int)
+            else list(axis)
         )
     )
+    repMsg = generic_msg(
+        cmd=f"all<{pda.dtype.name},{pda.ndim}>",
+        args={"x": pda, "axis": axis_, "skipNan": False},
+    )
+    if axis is None or len(axis_) == 0 or pda.ndim == 1:
+        return create_pdarray(cast(str, repMsg)).flatten()[0]
+    else:
+        return create_pdarray(cast(str, repMsg))
 
+
+# @typechecked
+# def is_sorted(pda: pdarray) -> np.bool_:
+#     """
+#     Return True iff the array is monotonically non-decreasing.
+#
+#     Parameters
+#     ----------
+#     pda : pdarray
+#         The pdarray instance to be evaluated
+#
+#     Returns
+#     -------
+#     bool
+#         Indicates if the array is monotonically non-decreasing
+#
+#     Raises
+#     ------
+#     TypeError
+#         Raised if pda is not a pdarray instance
+#     RuntimeError
+#         Raised if there's a server-side error thrown
+#     """
+#     axis_ = (
+#         []
+#         if axis is None
+#         else (
+#             [
+#                 axis,
+#             ]
+#             if isinstance(axis, int)
+#             else list(axis)
+#         )
+#     )
+#     return parse_single_value(
+#         generic_msg(
+#             cmd=f"reduce->bool{pda.ndim}D", args={"op": "is_sorted", "x": pda, "nAxes": 0, "axis": []}
+#         )
+#     )
+
+
+
+
+@typechecked
+def is_sorted(
+    pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
+) -> Union[numpy_scalars, pdarray]:
+    """
+    Return True iff the array is monotonically non-decreasing.
+
+    Parameters
+    ----------
+    pda : pdarray
+        The pdarray instance to be evaluated
+    axis : int or Tuple[int, ...], optional
+        The axis or axes along which to compute the sum. If None, the sum of the entire array is
+        computed (returning a scalar).
+
+    Returns
+    -------
+    bool
+        Indicates if all pdarray elements evaluate to True
+
+    Raises
+    ------
+    TypeError
+        Raised if pda is not a pdarray instance
+    RuntimeError
+        Raised if there's a server-side error thrown
+    """
+    axis_ = (
+        []
+        if axis is None
+        else (
+            [
+                axis,
+            ]
+            if isinstance(axis, int)
+            else list(axis)
+        )
+    )
+    repMsg = generic_msg(
+        cmd=f"isSorted<{pda.dtype.name},{pda.ndim}>",
+        args={"x": pda, "axis": axis_, "skipNan": False},
+    )
+    if axis is None or len(axis_) == 0 or pda.ndim == 1:
+        return create_pdarray(cast(str, repMsg)).flatten()[0]
+    else:
+        return create_pdarray(cast(str, repMsg))
+
+
+@typechecked
+def is_locally_sorted(
+    pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
+) -> Union[numpy_scalars, pdarray]:
+    """
+    Return True iff the array is monotonically non-decreasing on each locale where the data is stored.
+
+    Parameters
+    ----------
+    pda : pdarray
+        The pdarray instance to be evaluated
+    axis : int or Tuple[int, ...], optional
+        The axis or axes along which to compute the sum. If None, the sum of the entire array is
+        computed (returning a scalar).
+
+    Returns
+    -------
+    bool
+        Indicates if all pdarray elements evaluate to True
+
+    Raises
+    ------
+    TypeError
+        Raised if pda is not a pdarray instance
+    RuntimeError
+        Raised if there's a server-side error thrown
+    """
+    axis_ = (
+        []
+        if axis is None
+        else (
+            [
+                axis,
+            ]
+            if isinstance(axis, int)
+            else list(axis)
+        )
+    )
+    repMsg = generic_msg(
+        cmd=f"isSortedLocally<{pda.dtype.name},{pda.ndim}>",
+        args={"x": pda, "axis": axis_, "skipNan": False},
+    )
+    if axis is None or len(axis_) == 0 or pda.ndim == 1:
+        return create_pdarray(cast(str, repMsg)).flatten()[0]
+    else:
+        return create_pdarray(cast(str, repMsg))
 
 @typechecked
 def sum(
@@ -2747,7 +2897,17 @@ def sum(
     RuntimeError
         Raised if there's a server-side error thrown
     """
-    axis_ = [] if axis is None else ([axis,] if isinstance(axis, int) else list(axis))
+    axis_ = (
+        []
+        if axis is None
+        else (
+            [
+                axis,
+            ]
+            if isinstance(axis, int)
+            else list(axis)
+        )
+    )
     repMsg = generic_msg(
         cmd=f"sum<{pda.dtype.name},{pda.ndim}>",
         args={"x": pda, "axis": axis_, "skipNan": False},
@@ -2836,7 +2996,17 @@ def prod(pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None) -> Un
     RuntimeError
         Raised if there's a server-side error thrown
     """
-    axis_ = [] if axis is None else ([axis,] if isinstance(axis, int) else list(axis))
+    axis_ = (
+        []
+        if axis is None
+        else (
+            [
+                axis,
+            ]
+            if isinstance(axis, int)
+            else list(axis)
+        )
+    )
     repMsg = generic_msg(
         cmd=f"prod<{pda.dtype.name},{pda.ndim}>",
         args={"x": pda, "axis": axis_, "skipNan": False},
@@ -2873,7 +3043,17 @@ def min(
     RuntimeError
         Raised if there's a server-side error thrown
     """
-    axis_ = [] if axis is None else ([axis,] if isinstance(axis, int) else list(axis))
+    axis_ = (
+        []
+        if axis is None
+        else (
+            [
+                axis,
+            ]
+            if isinstance(axis, int)
+            else list(axis)
+        )
+    )
     repMsg = generic_msg(
         cmd=f"min<{pda.dtype.name},{pda.ndim}>",
         args={"x": pda, "axis": axis_, "skipNan": False},
@@ -2911,7 +3091,17 @@ def max(
     RuntimeError
         Raised if there's a server-side error thrown
     """
-    axis_ = [] if axis is None else ([axis,] if isinstance(axis, int) else list(axis))
+    axis_ = (
+        []
+        if axis is None
+        else (
+            [
+                axis,
+            ]
+            if isinstance(axis, int)
+            else list(axis)
+        )
+    )
     repMsg = generic_msg(
         cmd=f"max<{pda.dtype.name},{pda.ndim}>",
         args={"x": pda, "axis": axis_, "skipNan": False},
