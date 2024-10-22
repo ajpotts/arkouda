@@ -41,6 +41,8 @@ class TestCoargsort:
                 [[a], [n], [a, b], [b, a], [a, b, c, d], [z, b, c, d], [z, z, c, d], [z, z, z, d]]
             )
 
+
+
         for arr_list in arr_lists:
             if not isinstance(arr_list, list):
                 arr_list = list(arr_list)
@@ -59,6 +61,9 @@ class TestCoargsort:
                 list(set(NUMERIC_TYPES) - {dt}), size=len(NUMERIC_TYPES) - 1, replace=False
             ).tolist()
             arr_list = [make_ak_arrays(prob_size, dt, 0, 2**63) for dt in dtypes]
+
+            ak.disconnect()
+
             if not isinstance(arr_list, list):
                 arr_list = list(arr_list)
             perm = ak.coargsort(arr_list, algo)
