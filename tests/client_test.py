@@ -114,23 +114,23 @@ class TestClient:
     #
     #     assert 100 == ak.get_mem_used(as_percent=True) + ak.get_mem_avail(as_percent=True)
     #
-    # def test_no_op(self):
-    #     """
-    #     Tests the ak.client._no_op method
-    #
-    #     :return: None
-    #     :raise: AssertionError if return message is not 'noop'
-    #     """
-    #     assert "noop" == ak.client._no_op()
-    #
-    # def test_ruok(self):
-    #     """
-    #     Tests the ak.client.ruok method
-    #
-    #     :return: None
-    #     :raise: AssertionError if return message is not 'imok'
-    #     """
-    #     assert "imok" == ak.client.ruok()
+    def test_no_op(self):
+        """
+        Tests the ak.client._no_op method
+
+        :return: None
+        :raise: AssertionError if return message is not 'noop'
+        """
+        assert "noop" == ak.client._no_op()
+
+    def test_ruok(self):
+        """
+        Tests the ak.client.ruok method
+
+        :return: None
+        :raise: AssertionError if return message is not 'imok'
+        """
+        assert "imok" == ak.client.ruok()
 
     def test_client_configuration(self):
         """
