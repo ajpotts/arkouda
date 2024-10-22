@@ -131,23 +131,23 @@ class TestClient:
     #     :raise: AssertionError if return message is not 'imok'
     #     """
     #     assert "imok" == ak.client.ruok()
-    #
-    # def test_client_configuration(self):
-    #     """
-    #     Tests the ak.client.set_defaults() method as well as set/get
-    #     parrayIterThresh, maxTransferBytes, and verbose config params.
-    #     """
-    #     ak.client.pdarrayIterThresh = 50
-    #     ak.client.maxTransferBytes = 1048576000
-    #     ak.client.verbose = True
-    #     assert 50 == ak.client.pdarrayIterThresh
-    #     assert 1048576000 == ak.client.maxTransferBytes
-    #     assert ak.client.verbose
-    #     ak.client.set_defaults()
-    #     assert 100 == ak.client.pdarrayIterThresh
-    #     assert 1073741824 == ak.client.maxTransferBytes
-    #     assert not ak.client.verbose
-    #
+
+    def test_client_configuration(self):
+        """
+        Tests the ak.client.set_defaults() method as well as set/get
+        parrayIterThresh, maxTransferBytes, and verbose config params.
+        """
+        ak.client.pdarrayIterThresh = 50
+        ak.client.maxTransferBytes = 1048576000
+        ak.client.verbose = True
+        assert 50 == ak.client.pdarrayIterThresh
+        assert 1048576000 == ak.client.maxTransferBytes
+        assert ak.client.verbose
+        ak.client.set_defaults()
+        assert 100 == ak.client.pdarrayIterThresh
+        assert 1073741824 == ak.client.maxTransferBytes
+        assert not ak.client.verbose
+
     def test_client_get_server_commands(self):
         """
         Tests the ak.client.get_server_commands() method contains an expected
