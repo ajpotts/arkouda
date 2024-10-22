@@ -56,34 +56,34 @@ class TestClient:
     #     # reconnect to server so subsequent tests will pass
     #     ak.connect(server=pytest.server, port=pytest.port, timeout=pytest.timeout)
     #
-    # def test_client_get_config(self):
-    #     """
-    #     Tests the ak.client.get_config() method
-    #
-    #     :return: None
-    #     :raise: AssertionError if one or more Config values are not as expected
-    #             or the call to ak.client.get_config() fails
-    #     """
-    #     try:
-    #         config = ak.client.get_config()
-    #     except Exception as e:
-    #         raise AssertionError(e)
-    #     assert pytest.port == config["ServerPort"]
-    #     assert "arkoudaVersion" in config
-    #     assert "INFO" == config["logLevel"]
-    #
-    #     import json
-    #
-    #     def get_server_max_array_dims():
-    #         try:
-    #             return max(
-    #                 json.load(open("registration-config.json", "r"))["parameter_classes"]["array"]["nd"]
-    #             )
-    #         except (ValueError, FileNotFoundError, TypeError, KeyError):
-    #             return 1
-    #
-    #     assert get_server_max_array_dims() == ak.client.get_max_array_rank()
-    #
+    def test_client_get_config(self):
+        """
+        Tests the ak.client.get_config() method
+
+        :return: None
+        :raise: AssertionError if one or more Config values are not as expected
+                or the call to ak.client.get_config() fails
+        """
+        try:
+            config = ak.client.get_config()
+        except Exception as e:
+            raise AssertionError(e)
+        assert pytest.port == config["ServerPort"]
+        assert "arkoudaVersion" in config
+        assert "INFO" == config["logLevel"]
+
+        import json
+
+        def get_server_max_array_dims():
+            try:
+                return max(
+                    json.load(open("registration-config.json", "r"))["parameter_classes"]["array"]["nd"]
+                )
+            except (ValueError, FileNotFoundError, TypeError, KeyError):
+                return 1
+
+        assert get_server_max_array_dims() == ak.client.get_max_array_rank()
+
     def test_get_mem_used(self):
         """
         Tests the ak.get_mem_used and ak.get_mem_avail methods
