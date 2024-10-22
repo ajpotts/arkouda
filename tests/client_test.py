@@ -148,14 +148,14 @@ class TestClient:
     #     assert 1073741824 == ak.client.maxTransferBytes
     #     assert not ak.client.verbose
     #
-    # def test_client_get_server_commands(self):
-    #     """
-    #     Tests the ak.client.get_server_commands() method contains an expected
-    #     sample of commands.
-    #     """
-    #     cmds = ak.client.get_server_commands()
-    #     for cmd in ["connect", "info", "str"]:
-    #         assert cmd in cmds
+    def test_client_get_server_commands(self):
+        """
+        Tests the ak.client.get_server_commands() method contains an expected
+        sample of commands.
+        """
+        cmds = ak.client.get_server_commands()
+        for cmd in ["connect", "info", "str"]:
+            assert cmd in cmds
 
 
 
