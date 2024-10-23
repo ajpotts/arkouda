@@ -2666,7 +2666,7 @@ def _reduce_by_op(
     ValueError
         Raised op is not a supported reduction operation.
     """
-    supported_ops = ["any", "all", "isSorted", "isSortedLocally", "max", "min","sum"]
+    supported_ops = ["any", "all", "isSorted", "isSortedLocally", "max", "min", "sum", "prod"]
     if op not in supported_ops:
         raise ValueError(f"value {op} not supported by _reduce_by_op.")
     axis_ = (
@@ -2918,25 +2918,7 @@ def prod(pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None) -> Un
     RuntimeError
         Raised if there's a server-side error thrown
     """
-    axis_ = (
-        []
-        if axis is None
-        else (
-            [
-                axis,
-            ]
-            if isinstance(axis, int)
-            else list(axis)
-        )
-    )
-    repMsg = generic_msg(
-        cmd=f"prod<{pda.dtype.name},{pda.ndim}>",
-        args={"x": pda, "axis": axis_, "skipNan": False},
-    )
-    if axis is None or len(axis_) == 0 or pda.ndim == 1:
-        return create_pdarray(cast(str, repMsg)).flatten()[0]
-    else:
-        return create_pdarray(cast(str, repMsg))
+    return _reduce_by_op("prod", pda, axis)
 
 
 def min(
@@ -2965,25 +2947,7 @@ def min(
     RuntimeError
         Raised if there's a server-side error thrown
     """
-    axis_ = (
-        []
-        if axis is None
-        else (
-            [
-                axis,
-            ]
-            if isinstance(axis, int)
-            else list(axis)
-        )
-    )
-    repMsg = generic_msg(
-        cmd=f"min<{pda.dtype.name},{pda.ndim}>",
-        args={"x": pda, "axis": axis_, "skipNan": False},
-    )
-    if axis is None or len(axis_) == 0 or pda.ndim == 1:
-        return create_pdarray(cast(str, repMsg)).flatten()[0]
-    else:
-        return create_pdarray(cast(str, repMsg))
+    return _reduce_by_op("min", pda, axis)
 
 
 @typechecked
@@ -3013,25 +2977,7 @@ def max(
     RuntimeError
         Raised if there's a server-side error thrown
     """
-    axis_ = (
-        []
-        if axis is None
-        else (
-            [
-                axis,
-            ]
-            if isinstance(axis, int)
-            else list(axis)
-        )
-    )
-    repMsg = generic_msg(
-        cmd=f"max<{pda.dtype.name},{pda.ndim}>",
-        args={"x": pda, "axis": axis_, "skipNan": False},
-    )
-    if axis is None or len(axis_) == 0 or pda.ndim == 1:
-        return create_pdarray(cast(str, repMsg)).flatten()[0]
-    else:
-        return create_pdarray(cast(str, repMsg))
+    return _reduce_by_op("max", pda, axis)
 
 
 @typechecked
