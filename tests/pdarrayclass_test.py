@@ -224,10 +224,10 @@ class TestPdarrayClass:
         # TODO: remove cast when #3864 is resolved.
         ak_result = ak_op(pda, axis=axis)
         if op in ["max", "min"] and pda.dtype == ak.bool_:
-            if isinstance(ak_result,ak.pdarray):
+            if isinstance(ak_result, ak.pdarray):
                 ak_result = ak.cast(ak_result, dt=ak.bool_)
             else:
-                ak_result = np.bool_(ak_result )
+                ak_result = np.bool_(ak_result)
 
         ak_assert_equivalent(ak_result, np_op(nda, axis=axis))
 
@@ -263,8 +263,10 @@ class TestPdarrayClass:
         size = min(size // 3, 100) if op == "prod" else size // 3
         pda = ak.zeros((size, size, size), dtype=dtype)
         self.assert_reduction_ops_match(op, pda)
-
         self.assert_reduction_ops_match(op, pda, axis=0)
+        self.assert_reduction_ops_match(op, pda, axis=1)
+        self.assert_reduction_ops_match(op, pda, axis=(0, 2))
+        self.assert_reduction_ops_match(op, pda, axis=(0, 1, 2))
 
         pda = ak.ones((size, size, size), dtype=dtype)
         self.assert_reduction_ops_match(op, pda)

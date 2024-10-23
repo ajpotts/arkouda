@@ -2686,11 +2686,12 @@ def _reduce_by_op(
         cmd=f"{op}<{pda.dtype.name},{pda.ndim}>",
         args={"x": pda, "axis": axis_, "skipNan": False},
     )
-    if axis is None or len(axis_) == 0 or pda.ndim == 1:
+    ret = create_pdarray(cast(str, repMsg))
+    if ret.size == 1:
         # TODO: remove call to 'flatten'
-        return create_pdarray(cast(str, repMsg)).flatten()[0]
+        return ret.flatten()[0]
     else:
-        return create_pdarray(cast(str, repMsg))
+        return ret
 
 
 @typechecked
