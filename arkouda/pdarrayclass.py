@@ -2642,7 +2642,7 @@ def any(
     pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
 ) -> Union[numpy_scalars, pdarray]:
     """
-    Return True iff all elements of the array evaluate to True.
+    Return True iff any element of the array evaluates to True.
 
     Parameters
     ----------
@@ -2655,7 +2655,7 @@ def any(
     Returns
     -------
     bool
-        Indicates if all pdarray elements evaluate to True
+        Indicates if any pdarray element evaluates to True
 
     Raises
     ------
@@ -2733,47 +2733,6 @@ def all(
         return create_pdarray(cast(str, repMsg))
 
 
-# @typechecked
-# def is_sorted(pda: pdarray) -> np.bool_:
-#     """
-#     Return True iff the array is monotonically non-decreasing.
-#
-#     Parameters
-#     ----------
-#     pda : pdarray
-#         The pdarray instance to be evaluated
-#
-#     Returns
-#     -------
-#     bool
-#         Indicates if the array is monotonically non-decreasing
-#
-#     Raises
-#     ------
-#     TypeError
-#         Raised if pda is not a pdarray instance
-#     RuntimeError
-#         Raised if there's a server-side error thrown
-#     """
-#     axis_ = (
-#         []
-#         if axis is None
-#         else (
-#             [
-#                 axis,
-#             ]
-#             if isinstance(axis, int)
-#             else list(axis)
-#         )
-#     )
-#     return parse_single_value(
-#         generic_msg(
-#             cmd=f"reduce->bool{pda.ndim}D", args={"op": "is_sorted", "x": pda, "nAxes": 0, "axis": []}
-#         )
-#     )
-
-
-
 
 @typechecked
 def is_sorted(
@@ -2793,7 +2752,7 @@ def is_sorted(
     Returns
     -------
     bool
-        Indicates if all pdarray elements evaluate to True
+        Indicates if the array is monotonically non-decreasing
 
     Raises
     ------
@@ -2841,7 +2800,7 @@ def is_locally_sorted(
     Returns
     -------
     bool
-        Indicates if all pdarray elements evaluate to True
+        Indicates if the array is monotonically non-decreasing on each locale
 
     Raises
     ------

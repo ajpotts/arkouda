@@ -131,20 +131,16 @@ class TestPdarrayClass:
 
     @pytest.mark.skip_if_max_rank_less_than(3)
     def test_all_multidim(self):
-        a = ak.array(ak.randint(0, 100, (5, 7, 4), dtype=ak.int64, seed=SEED))
-        a[3, 6, 2] = -1
 
-        assert ak.min(a) == -1
+        a = ak.ones((10, 10), dtype=bool)
+        assert ak.all(a)
 
-        aMin0 = ak.min(a, axis=0)
-        assert aMin0.shape == (1, 7, 4)
-        assert aMin0[0, 6, 2] == -1
+        b = ak.zeros((10, 10), dtype=bool)
+        assert not ak.all(b)
 
-        aMin02 = ak.min(a, axis=(0, 2))
-        assert aMin02.shape == (1, 7, 1)
-        assert aMin02[0, 6, 0] == -1
+        c = ak.array([True, True, False, True]).reshape((2, 2))
+        assert not ak.all(c)
 
-        assert False
 
     def test_any(self):
         a = ak.ones(10, dtype=bool)
@@ -158,20 +154,14 @@ class TestPdarrayClass:
 
     @pytest.mark.skip_if_max_rank_less_than(3)
     def test_any_multidim(self):
-        a = ak.array(ak.randint(0, 100, (5, 7, 4), dtype=ak.int64, seed=SEED))
-        a[3, 6, 2] = -1
+        a = ak.ones(10, dtype=bool)
+        assert ak.any(a)
 
-        assert ak.min(a) == -1
+        b = ak.zeros(10, dtype=bool)
+        assert not ak.any(b)
 
-        aMin0 = ak.min(a, axis=0)
-        assert aMin0.shape == (1, 7, 4)
-        assert aMin0[0, 6, 2] == -1
-
-        aMin02 = ak.min(a, axis=(0, 2))
-        assert aMin02.shape == (1, 7, 1)
-        assert aMin02[0, 6, 0] == -1
-
-        assert False
+        c = ak.array([True, True, False, True])
+        assert ak.any(c)
 
     def test_is_sorted(self):
         a = ak.arange(10)
@@ -206,7 +196,7 @@ class TestPdarrayClass:
     @pytest.mark.skip_if_max_rank_less_than(3)
     def test_is_locally_sorted_multidim(self):
         from arkouda.pdarrayclass import is_locally_sorted
-        
+
         a = ak.array(ak.randint(0, 100, (5, 7, 4), dtype=ak.int64, seed=SEED))
         assert not is_locally_sorted(a)
 
