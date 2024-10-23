@@ -100,10 +100,7 @@ module AryUtil
         var sorted: bool;
         sorted = true;
         forall (a,i) in zip(A,D) with (&& reduce sorted) {
-        // for (a,i) in zip(A,D){ //with (&& reduce sorted) {
             if i > D.low {
-                writeln("(A[i-1] <= a)");
-                writeln((A[i-1] <= a));
                 sorted &&= (A[i-1] <= a);
             }
         }

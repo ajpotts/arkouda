@@ -72,6 +72,8 @@ __all__ = [
 
 logger = getArkoudaLogger(name="pdarrayclass")
 
+supported_reduction_ops = ["any", "all", "isSorted", "isSortedLocally", "max", "min", "sum", "prod"]
+
 
 @typechecked
 def parse_single_value(msg: str) -> object:
@@ -2666,8 +2668,8 @@ def _reduce_by_op(
     ValueError
         Raised op is not a supported reduction operation.
     """
-    supported_ops = ["any", "all", "isSorted", "isSortedLocally", "max", "min", "sum", "prod"]
-    if op not in supported_ops:
+
+    if op not in supported_reduction_ops:
         raise ValueError(f"value {op} not supported by _reduce_by_op.")
     axis_ = (
         []
