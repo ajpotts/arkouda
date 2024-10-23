@@ -2638,6 +2638,60 @@ def clear() -> None:
 
 
 @typechecked
+def _reduce_by_op(
+    op: str, pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
+) -> Union[numpy_scalars, pdarray]:
+    """
+    Return reduction of a pdarray by an operation along an axis.
+
+    Parameters
+    ----------
+    pda : pdarray
+        The pdarray instance to be evaluated
+    axis : int or Tuple[int, ...], optional
+        The axis or axes along which to compute the sum. If None, the sum of the entire array is
+        computed (returning a scalar).
+
+    Returns
+    -------
+    bool
+        Indicates if the array is monotonically non-decreasing on each locale
+
+    Raises
+    ------
+    TypeError
+        Raised if pda is not a pdarray instance
+    RuntimeError
+        Raised if there's a server-side error thrown
+    ValueError
+        Raised op is not a supported reduction operation.
+    """
+    supported_ops = ["any", "all", "isSorted", "isSortedLocally", "max", "min","sum"]
+    if op not in supported_ops:
+        raise ValueError(f"value {op} not supported by _reduce_by_op.")
+    axis_ = (
+        []
+        if axis is None
+        else (
+            [
+                axis,
+            ]
+            if isinstance(axis, int)
+            else list(axis)
+        )
+    )
+    repMsg = generic_msg(
+        cmd=f"{op}<{pda.dtype.name},{pda.ndim}>",
+        args={"x": pda, "axis": axis_, "skipNan": False},
+    )
+    if axis is None or len(axis_) == 0 or pda.ndim == 1:
+        # TODO: remove call to 'flatten'
+        return create_pdarray(cast(str, repMsg)).flatten()[0]
+    else:
+        return create_pdarray(cast(str, repMsg))
+
+
+@typechecked
 def any(
     pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
 ) -> Union[numpy_scalars, pdarray]:
@@ -2664,25 +2718,7 @@ def any(
     RuntimeError
         Raised if there's a server-side error thrown
     """
-    axis_ = (
-        []
-        if axis is None
-        else (
-            [
-                axis,
-            ]
-            if isinstance(axis, int)
-            else list(axis)
-        )
-    )
-    repMsg = generic_msg(
-        cmd=f"any<{pda.dtype.name},{pda.ndim}>",
-        args={"x": pda, "axis": axis_, "skipNan": False},
-    )
-    if axis is None or len(axis_) == 0 or pda.ndim == 1:
-        return create_pdarray(cast(str, repMsg)).flatten()[0]
-    else:
-        return create_pdarray(cast(str, repMsg))
+    return _reduce_by_op("any", pda, axis)
 
 
 @typechecked
@@ -2712,26 +2748,7 @@ def all(
     RuntimeError
         Raised if there's a server-side error thrown
     """
-    axis_ = (
-        []
-        if axis is None
-        else (
-            [
-                axis,
-            ]
-            if isinstance(axis, int)
-            else list(axis)
-        )
-    )
-    repMsg = generic_msg(
-        cmd=f"all<{pda.dtype.name},{pda.ndim}>",
-        args={"x": pda, "axis": axis_, "skipNan": False},
-    )
-    if axis is None or len(axis_) == 0 or pda.ndim == 1:
-        return create_pdarray(cast(str, repMsg)).flatten()[0]
-    else:
-        return create_pdarray(cast(str, repMsg))
-
+    return _reduce_by_op("all", pda, axis)
 
 
 @typechecked
@@ -2761,25 +2778,7 @@ def is_sorted(
     RuntimeError
         Raised if there's a server-side error thrown
     """
-    axis_ = (
-        []
-        if axis is None
-        else (
-            [
-                axis,
-            ]
-            if isinstance(axis, int)
-            else list(axis)
-        )
-    )
-    repMsg = generic_msg(
-        cmd=f"isSorted<{pda.dtype.name},{pda.ndim}>",
-        args={"x": pda, "axis": axis_, "skipNan": False},
-    )
-    if axis is None or len(axis_) == 0 or pda.ndim == 1:
-        return create_pdarray(cast(str, repMsg)).flatten()[0]
-    else:
-        return create_pdarray(cast(str, repMsg))
+    return _reduce_by_op("isSorted", pda, axis)
 
 
 @typechecked
@@ -2809,25 +2808,8 @@ def is_locally_sorted(
     RuntimeError
         Raised if there's a server-side error thrown
     """
-    axis_ = (
-        []
-        if axis is None
-        else (
-            [
-                axis,
-            ]
-            if isinstance(axis, int)
-            else list(axis)
-        )
-    )
-    repMsg = generic_msg(
-        cmd=f"isSortedLocally<{pda.dtype.name},{pda.ndim}>",
-        args={"x": pda, "axis": axis_, "skipNan": False},
-    )
-    if axis is None or len(axis_) == 0 or pda.ndim == 1:
-        return create_pdarray(cast(str, repMsg)).flatten()[0]
-    else:
-        return create_pdarray(cast(str, repMsg))
+    return _reduce_by_op("isSortedLocally", pda, axis)
+
 
 @typechecked
 def sum(
@@ -2856,26 +2838,7 @@ def sum(
     RuntimeError
         Raised if there's a server-side error thrown
     """
-    axis_ = (
-        []
-        if axis is None
-        else (
-            [
-                axis,
-            ]
-            if isinstance(axis, int)
-            else list(axis)
-        )
-    )
-    repMsg = generic_msg(
-        cmd=f"sum<{pda.dtype.name},{pda.ndim}>",
-        args={"x": pda, "axis": axis_, "skipNan": False},
-    )
-    if axis is None or len(axis_) == 0 or pda.ndim == 1:
-        # TODO: remove call to 'flatten'
-        return create_pdarray(cast(str, repMsg)).flatten()[0]
-    else:
-        return create_pdarray(cast(str, repMsg))
+    return _reduce_by_op("sum", pda, axis)
 
 
 @typechecked
