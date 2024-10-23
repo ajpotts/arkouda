@@ -1,3 +1,5 @@
+from typing import Optional, Tuple, Union
+
 import numpy as np
 import pytest
 
@@ -5,8 +7,9 @@ import arkouda as ak
 from arkouda.testing import assert_equal as ak_assert_equal
 
 SEED = 314159
-import arkouda.pdarrayclass
 import numpy
+
+import arkouda.pdarrayclass
 
 REDUCTION_OPS = list(set(ak.pdarrayclass.supported_reduction_ops) - set(["isSorted", "isSortedLocally"]))
 DTYPES = ["int64", "float64", "bool", "uint64"]
@@ -209,11 +212,24 @@ class TestPdarrayClass:
         x = ak.arange(10).reshape((2, 5))
         assert is_locally_sorted(x)
 
-    def assert_ops_match(self, op: str, pda: ak.pdarray):
+    def assert_reduction_ops_match(
+        self, op: str, pda: ak.pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
+    ):
+        from arkouda.testing import assert_equivalent as ak_assert_equivalent
+
         ak_op = getattr(arkouda.pdarrayclass, op)
         np_op = getattr(numpy, op)
         nda = pda.to_ndarray()
-        assert ak_op(pda) == np_op(nda)
+
+        # TODO: remove cast when #3864 is resolved.
+        ak_result = ak_op(pda, axis=axis)
+        if op in ["max", "min"] and pda.dtype == ak.bool_:
+            if isinstance(ak_result,ak.pdarray):
+                ak_result = ak.cast(ak_result, dt=ak.bool_)
+            else:
+                ak_result = np.bool_(ak_result )
+
+        ak_assert_equivalent(ak_result, np_op(nda, axis=axis))
 
     @pytest.mark.parametrize("op", REDUCTION_OPS)
     @pytest.mark.parametrize("size", pytest.prob_size)
@@ -221,7 +237,7 @@ class TestPdarrayClass:
     def test_reductions_match_numpy_1D_arange(self, op, size, dtype):
         size = min(size, 1000) if op == "prod" else size
         pda = ak.arange(size, dtype=dtype)
-        self.assert_ops_match(op, pda)
+        self.assert_reduction_ops_match(op, pda)
 
     @pytest.mark.parametrize("op", REDUCTION_OPS)
     @pytest.mark.parametrize("size", pytest.prob_size)
@@ -229,8 +245,7 @@ class TestPdarrayClass:
     def test_reductions_match_numpy_1D_ones(self, op, size, dtype):
         size = min(size, 1000) if op == "prod" else size
         pda = ak.ones(size, dtype=dtype)
-        self.assert_ops_match(op, pda)
-
+        self.assert_reduction_ops_match(op, pda)
 
     @pytest.mark.parametrize("op", REDUCTION_OPS)
     @pytest.mark.parametrize("size", pytest.prob_size)
@@ -238,18 +253,32 @@ class TestPdarrayClass:
     def test_reductions_match_numpy_1D_zeros(self, op, size, dtype):
         size = min(size, 1000) if op == "prod" else size
         pda = ak.zeros(size, dtype=dtype)
-        self.assert_ops_match(op, pda)
-
-    @pytest.mark.parametrize("op", REDUCTION_OPS)
-    def test_reductions_match_numpy_1D_TF(self, op):
-        pda = ak.array([True, True, False, True])
-        self.assert_ops_match(op, pda)
+        self.assert_reduction_ops_match(op, pda)
 
     @pytest.mark.skip_if_max_rank_less_than(3)
     @pytest.mark.parametrize("op", REDUCTION_OPS)
+    @pytest.mark.parametrize("size", pytest.prob_size)
+    @pytest.mark.parametrize("dtype", DTYPES)
+    def test_reductions_match_numpy_3D_zeros(self, op, size, dtype):
+        size = min(size // 3, 100) if op == "prod" else size // 3
+        pda = ak.zeros((size, size, size), dtype=dtype)
+        self.assert_reduction_ops_match(op, pda)
+
+        self.assert_reduction_ops_match(op, pda, axis=0)
+
+        pda = ak.ones((size, size, size), dtype=dtype)
+        self.assert_reduction_ops_match(op, pda)
+
+    @pytest.mark.parametrize("op", REDUCTION_OPS)
     def test_reductions_match_numpy_1D_TF(self, op):
         pda = ak.array([True, True, False, True])
-        self.assert_ops_match(op, pda)
+        self.assert_reduction_ops_match(op, pda)
+
+    @pytest.mark.skip_if_max_rank_less_than(3)
+    @pytest.mark.parametrize("op", REDUCTION_OPS)
+    def test_reductions_match_numpy_3D_TF(self, op):
+        pda = ak.array([True, True, False, True, True, True, True, True]).reshape((2, 2, 2))
+        self.assert_reduction_ops_match(op, pda)
 
     @pytest.mark.skip_if_max_rank_less_than(3)
     def test_any_multidim(self):
@@ -258,6 +287,3 @@ class TestPdarrayClass:
 
         b = ak.zeros(10, dtype=bool)
         assert not ak.any(b)
-
-        c = ak.array([True, True, False, True]).reshape((2,2))
-        assert ak.any(c)
