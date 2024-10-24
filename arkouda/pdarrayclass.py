@@ -2639,6 +2639,7 @@ def clear() -> None:
     generic_msg(cmd="clear")
 
 
+
 @typechecked
 def _reduce_by_op(
     op: str, pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
@@ -2657,7 +2658,6 @@ def _reduce_by_op(
     Returns
     -------
     bool
-        Indicates if the array is monotonically non-decreasing on each locale
 
     Raises
     ------
@@ -2693,35 +2693,48 @@ def _reduce_by_op(
     else:
         return ret
 
+def _make_reduction_func(op,function_descriptor, return_descriptor, return_dtype):
+    if op not in supported_reduction_ops:
+        raise ValueError(f"value {op} not supported by _reduce_by_op.")
 
-@typechecked
-def any(
-    pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
-) -> Union[numpy_scalars, pdarray]:
-    """
-    Return True iff any element of the array evaluates to True.
+    @typechecked
+    def op_func( pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
+        ) -> Union[numpy_scalars, pdarray]:
+        return _reduce_by_op(op, pda, axis)
+    op_func.__doc__ = "Doc STring Test"
+    return op_func
 
-    Parameters
-    ----------
-    pda : pdarray
-        The pdarray instance to be evaluated
-    axis : int or Tuple[int, ...], optional
-        The axis or axes along which to compute the sum. If None, the sum of the entire array is
-        computed (returning a scalar).
+globals()["any"] = _make_reduction_func("any","", "", "")
 
-    Returns
-    -------
-    bool
-        Indicates if any pdarray element evaluates to True
 
-    Raises
-    ------
-    TypeError
-        Raised if pda is not a pdarray instance
-    RuntimeError
-        Raised if there's a server-side error thrown
-    """
-    return _reduce_by_op("any", pda, axis)
+# @typechecked
+# def any(
+#     pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
+# ) -> Union[numpy_scalars, pdarray]:
+#     """
+#     Return True iff any element of the array evaluates to True.
+#
+#     Parameters
+#     ----------
+#     pda : pdarray
+#         The pdarray instance to be evaluated
+#     axis : int or Tuple[int, ...], optional
+#         The axis or axes along which to compute the sum. If None, the sum of the entire array is
+#         computed (returning a scalar).
+#
+#     Returns
+#     -------
+#     bool
+#         Indicates if any pdarray element evaluates to True
+#
+#     Raises
+#     ------
+#     TypeError
+#         Raised if pda is not a pdarray instance
+#     RuntimeError
+#         Raised if there's a server-side error thrown
+#     """
+#     return _reduce_by_op("any", pda, axis)
 
 
 @typechecked
