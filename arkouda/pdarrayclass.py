@@ -2639,7 +2639,6 @@ def clear() -> None:
     generic_msg(cmd="clear")
 
 
-
 @typechecked
 def _reduce_by_op(
     op: str, pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
@@ -2693,26 +2692,67 @@ def _reduce_by_op(
     else:
         return ret
 
-def _make_reduction_func(op,function_descriptor, return_descriptor, return_dtype):
+
+def _make_reduction_func(
+    op, function_descriptor="", return_descriptor="", return_dtype="numeric_scalars"
+):
     if op not in supported_reduction_ops:
         raise ValueError(f"value {op} not supported by _reduce_by_op.")
 
     @typechecked
-    def op_func( pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
-        ) -> Union[numpy_scalars, pdarray]:
+    def op_func(
+        pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
+    ) -> Union[numpy_scalars, pdarray]:
         return _reduce_by_op(op, pda, axis)
-    op_func.__doc__ = "Doc STring Test"
+
+    op_func.__doc__ = f"""
+    {function_descriptor}
+
+    Parameters
+    ----------
+    pda : pdarray
+        The pdarray instance to be evaluated
+    axis : int or Tuple[int, ...], optional
+        The axis or axes along which to compute the sum. If None, the sum of the entire array is
+        computed (returning a scalar).
+
+    Returns
+    -------
+    pdarray or {return_dtype}
+        {return_descriptor}
+
+    Raises
+    ------
+    TypeError
+        Raised if pda is not a pdarray instance
+    RuntimeError
+        Raised if there's a server-side error thrown
+     """
+
     return op_func
 
-globals()["any"] = _make_reduction_func("any","", "", "")
+
+globals()["any"] = _make_reduction_func(
+    "any",
+    function_descriptor="Return True iff any element of the array evaluates to True.",
+    return_descriptor="Indicates if any pdarray element evaluates to True.",
+    return_dtype="bool",
+)
+
+globals()["all"] = _make_reduction_func(
+    "all",
+    function_descriptor="Return True iff all elements of the array evaluate to True.",
+    return_descriptor="Indicates if all pdarray elements evaluate to True.",
+    return_dtype="bool",
+)
 
 
 # @typechecked
-# def any(
+# def all(
 #     pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
 # ) -> Union[numpy_scalars, pdarray]:
 #     """
-#     Return True iff any element of the array evaluates to True.
+#     Return True iff all elements of the array evaluate to True.
 #
 #     Parameters
 #     ----------
@@ -2725,7 +2765,7 @@ globals()["any"] = _make_reduction_func("any","", "", "")
 #     Returns
 #     -------
 #     bool
-#         Indicates if any pdarray element evaluates to True
+#         Indicates if all pdarray elements evaluate to True
 #
 #     Raises
 #     ------
@@ -2734,97 +2774,79 @@ globals()["any"] = _make_reduction_func("any","", "", "")
 #     RuntimeError
 #         Raised if there's a server-side error thrown
 #     """
-#     return _reduce_by_op("any", pda, axis)
+#     return _reduce_by_op("all", pda, axis)
 
+globals()["is_sorted"] = _make_reduction_func(
+    "isSorted",
+    function_descriptor="Return True iff the array is monotonically non-decreasing.",
+    return_descriptor="Indicates if the array is monotonically non-decreasing.",
+    return_dtype="bool",
+)
 
-@typechecked
-def all(
-    pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
-) -> Union[numpy_scalars, pdarray]:
-    """
-    Return True iff all elements of the array evaluate to True.
+# @typechecked
+# def is_sorted(
+#     pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
+# ) -> Union[numpy_scalars, pdarray]:
+#     """
+#     Return True iff the array is monotonically non-decreasing.
+#
+#     Parameters
+#     ----------
+#     pda : pdarray
+#         The pdarray instance to be evaluated
+#     axis : int or Tuple[int, ...], optional
+#         The axis or axes along which to compute the sum. If None, the sum of the entire array is
+#         computed (returning a scalar).
+#
+#     Returns
+#     -------
+#     bool
+#         Indicates if the array is monotonically non-decreasing
+#
+#     Raises
+#     ------
+#     TypeError
+#         Raised if pda is not a pdarray instance
+#     RuntimeError
+#         Raised if there's a server-side error thrown
+#     """
+#     return _reduce_by_op("isSorted", pda, axis)
 
-    Parameters
-    ----------
-    pda : pdarray
-        The pdarray instance to be evaluated
-    axis : int or Tuple[int, ...], optional
-        The axis or axes along which to compute the sum. If None, the sum of the entire array is
-        computed (returning a scalar).
+globals()["is_locally_sorted"] = _make_reduction_func(
+    "isSortedLocally",
+    function_descriptor="Return True iff the array is monotonically non-decreasing on each locale where the data is stored.",
+    return_descriptor="Indicates if the array is monotonically non-decreasing on each locale.",
+    return_dtype="bool",
+)
 
-    Returns
-    -------
-    bool
-        Indicates if all pdarray elements evaluate to True
-
-    Raises
-    ------
-    TypeError
-        Raised if pda is not a pdarray instance
-    RuntimeError
-        Raised if there's a server-side error thrown
-    """
-    return _reduce_by_op("all", pda, axis)
-
-
-@typechecked
-def is_sorted(
-    pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
-) -> Union[numpy_scalars, pdarray]:
-    """
-    Return True iff the array is monotonically non-decreasing.
-
-    Parameters
-    ----------
-    pda : pdarray
-        The pdarray instance to be evaluated
-    axis : int or Tuple[int, ...], optional
-        The axis or axes along which to compute the sum. If None, the sum of the entire array is
-        computed (returning a scalar).
-
-    Returns
-    -------
-    bool
-        Indicates if the array is monotonically non-decreasing
-
-    Raises
-    ------
-    TypeError
-        Raised if pda is not a pdarray instance
-    RuntimeError
-        Raised if there's a server-side error thrown
-    """
-    return _reduce_by_op("isSorted", pda, axis)
-
-
-@typechecked
-def is_locally_sorted(
-    pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
-) -> Union[numpy_scalars, pdarray]:
-    """
-    Return True iff the array is monotonically non-decreasing on each locale where the data is stored.
-
-    Parameters
-    ----------
-    pda : pdarray
-        The pdarray instance to be evaluated
-    axis : int or Tuple[int, ...], optional
-        The axis or axes along which to compute the sum. If None, the sum of the entire array is
-        computed (returning a scalar).
-
-    Returns
-    -------
-    bool
-        Indicates if the array is monotonically non-decreasing on each locale
-
-    Raises
-    ------
-    TypeError
-        Raised if pda is not a pdarray instance
-    RuntimeError
-        Raised if there's a server-side error thrown
-    """
-    return _reduce_by_op("isSortedLocally", pda, axis)
+# @typechecked
+# def is_locally_sorted(
+#     pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
+# ) -> Union[numpy_scalars, pdarray]:
+#     """
+#     Return True iff the array is monotonically non-decreasing on each locale where the data is stored.
+#
+#     Parameters
+#     ----------
+#     pda : pdarray
+#         The pdarray instance to be evaluated
+#     axis : int or Tuple[int, ...], optional
+#         The axis or axes along which to compute the sum. If None, the sum of the entire array is
+#         computed (returning a scalar).
+#
+#     Returns
+#     -------
+#     bool
+#         Indicates if the array is monotonically non-decreasing on each locale
+#
+#     Raises
+#     ------
+#     TypeError
+#         Raised if pda is not a pdarray instance
+#     RuntimeError
+#         Raised if there's a server-side error thrown
+#     """
+#     return _reduce_by_op("isSortedLocally", pda, axis)
 
 
 @typechecked
