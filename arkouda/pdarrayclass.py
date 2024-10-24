@@ -2746,36 +2746,6 @@ globals()["all"] = _make_reduction_func(
     return_dtype="bool",
 )
 
-
-# @typechecked
-# def all(
-#     pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
-# ) -> Union[numpy_scalars, pdarray]:
-#     """
-#     Return True iff all elements of the array evaluate to True.
-#
-#     Parameters
-#     ----------
-#     pda : pdarray
-#         The pdarray instance to be evaluated
-#     axis : int or Tuple[int, ...], optional
-#         The axis or axes along which to compute the sum. If None, the sum of the entire array is
-#         computed (returning a scalar).
-#
-#     Returns
-#     -------
-#     bool
-#         Indicates if all pdarray elements evaluate to True
-#
-#     Raises
-#     ------
-#     TypeError
-#         Raised if pda is not a pdarray instance
-#     RuntimeError
-#         Raised if there's a server-side error thrown
-#     """
-#     return _reduce_by_op("all", pda, axis)
-
 globals()["is_sorted"] = _make_reduction_func(
     "isSorted",
     function_descriptor="Return True iff the array is monotonically non-decreasing.",
@@ -2783,34 +2753,6 @@ globals()["is_sorted"] = _make_reduction_func(
     return_dtype="bool",
 )
 
-# @typechecked
-# def is_sorted(
-#     pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
-# ) -> Union[numpy_scalars, pdarray]:
-#     """
-#     Return True iff the array is monotonically non-decreasing.
-#
-#     Parameters
-#     ----------
-#     pda : pdarray
-#         The pdarray instance to be evaluated
-#     axis : int or Tuple[int, ...], optional
-#         The axis or axes along which to compute the sum. If None, the sum of the entire array is
-#         computed (returning a scalar).
-#
-#     Returns
-#     -------
-#     bool
-#         Indicates if the array is monotonically non-decreasing
-#
-#     Raises
-#     ------
-#     TypeError
-#         Raised if pda is not a pdarray instance
-#     RuntimeError
-#         Raised if there's a server-side error thrown
-#     """
-#     return _reduce_by_op("isSorted", pda, axis)
 
 globals()["is_locally_sorted"] = _make_reduction_func(
     "isSortedLocally",
@@ -2819,64 +2761,12 @@ globals()["is_locally_sorted"] = _make_reduction_func(
     return_dtype="bool",
 )
 
-# @typechecked
-# def is_locally_sorted(
-#     pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
-# ) -> Union[numpy_scalars, pdarray]:
-#     """
-#     Return True iff the array is monotonically non-decreasing on each locale where the data is stored.
-#
-#     Parameters
-#     ----------
-#     pda : pdarray
-#         The pdarray instance to be evaluated
-#     axis : int or Tuple[int, ...], optional
-#         The axis or axes along which to compute the sum. If None, the sum of the entire array is
-#         computed (returning a scalar).
-#
-#     Returns
-#     -------
-#     bool
-#         Indicates if the array is monotonically non-decreasing on each locale
-#
-#     Raises
-#     ------
-#     TypeError
-#         Raised if pda is not a pdarray instance
-#     RuntimeError
-#         Raised if there's a server-side error thrown
-#     """
-#     return _reduce_by_op("isSortedLocally", pda, axis)
-
-
-@typechecked
-def sum(
-    pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
-) -> Union[numeric_and_bool_scalars, pdarray]:
-    """
-    Return the sum of all elements in the array.
-
-    Parameters
-    ----------
-    pda : pdarray
-        Values for which to calculate the sum
-    axis : int or Tuple[int, ...], optional
-        The axis or axes along which to compute the sum. If None, the sum of the entire array is
-        computed (returning a scalar).
-
-    Returns
-    -------
-    np.float64
-        The sum of all elements in the array
-
-    Raises
-    ------
-    TypeError
-        Raised if pda is not a pdarray instance
-    RuntimeError
-        Raised if there's a server-side error thrown
-    """
-    return _reduce_by_op("sum", pda, axis)
+globals()["sum"] = _make_reduction_func(
+    "sum",
+    function_descriptor="Return the sum of all elements in the array.",
+    return_descriptor="The sum of all elements in the array.",
+    return_dtype="float64",
+)
 
 
 @typechecked
@@ -2930,92 +2820,27 @@ def dot(
         return pda1 * pda2
 
 
-@typechecked
-def prod(pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None) -> Union[np.float64, pdarray]:
-    """
-    Return the product of all elements in the array. Return value is
-    always a np.float64 or np.int64
+globals()["prod"] = _make_reduction_func(
+    "prod",
+    function_descriptor="Return the product of all elements in the array. Return value is always a np.float64 or np.int64",
+    return_descriptor="The product calculated from the pda.",
+    return_dtype="numpy_scalars",
+)
 
-    Parameters
-    ----------
-    pda : pdarray
-        Values for which to calculate the product
-    axis : int or Tuple[int, ...], optional
-        The axis or axes along which to compute the sum. If None, the sum of the entire array is
-        computed (returning a scalar).
-
-    Returns
-    -------
-    numpy_scalars
-        The product calculated from the pda
-
-    Raises
-    ------
-    TypeError
-        Raised if pda is not a pdarray instance
-    RuntimeError
-        Raised if there's a server-side error thrown
-    """
-    return _reduce_by_op("prod", pda, axis)
+globals()["min"] = _make_reduction_func(
+    "min",
+    function_descriptor="Return the minimum value of the array.",
+    return_descriptor="The min calculated from the pda.",
+    return_dtype="numpy_scalars",
+)
 
 
-def min(
-    pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
-) -> Union[numpy_scalars, pdarray]:
-    """
-    Return the minimum value of the array.
-
-    Parameters
-    ----------
-    pda : pdarray
-        Values for which to calculate the min
-    axis : int or Tuple[int, ...], optional
-        The axis or axes along which to compute the sum. If None, the sum of the entire array is
-        computed (returning a scalar).
-
-    Returns
-    -------
-    numpy_scalars
-        The min calculated from the pda
-
-    Raises
-    ------
-    TypeError
-        Raised if pda is not a pdarray instance
-    RuntimeError
-        Raised if there's a server-side error thrown
-    """
-    return _reduce_by_op("min", pda, axis)
-
-
-@typechecked
-def max(
-    pda: pdarray, axis: Optional[Union[int, Tuple[int, ...]]] = None
-) -> Union[numpy_scalars, pdarray]:
-    """
-    Return the maximum value of the array.
-
-    Parameters
-    ----------
-    pda : pdarray
-        Values for which to calculate the max
-    axis : int or Tuple[int, ...], optional
-        The axis or axes along which to compute the sum. If None, the sum of the entire array is
-        computed (returning a scalar).
-
-    Returns
-    -------
-    numpy_scalars:
-        The max calculated from the pda
-
-    Raises
-    ------
-    TypeError
-        Raised if pda is not a pdarray instance
-    RuntimeError
-        Raised if there's a server-side error thrown
-    """
-    return _reduce_by_op("max", pda, axis)
+globals()["max"] = _make_reduction_func(
+    "max",
+    function_descriptor="Return the maximum value of the array.",
+    return_descriptor="The max calculated from the pda.",
+    return_dtype="numpy_scalars",
+)
 
 
 @typechecked
