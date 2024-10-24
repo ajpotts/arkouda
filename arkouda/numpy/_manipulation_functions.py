@@ -12,7 +12,7 @@ from arkouda.strings import Strings
 from arkouda.categorical import Categorical
 
 
-__all__ = ["flip"]
+__all__ = ["flip", "squeeze"]
 
 
 def flip(
@@ -86,3 +86,69 @@ def flip(
         return Strings.from_return_msg(cast(str, rep_msg))
     else:
         raise TypeError("flip only accepts type pdarray, Strings, or Categorical.")
+
+
+def squeeze(x: pdarray, /, axis: Union[None, int, Tuple[int, ...]]=None) -> pdarray:
+    """
+    Remove degenerate (size one) dimensions from an array.
+
+    Parameters
+    ----------
+    x : Array
+        The array to squeeze
+    axis : int or Tuple[int, ...]
+        The axis or axes to squeeze (must have a size of one).
+        If axis = None, all dimensions of size 1 will be squeezed.
+
+    Returns
+    -------
+    pdarray
+        A copy of x with the dimensions specified in the axis argument removed.
+
+    Examples
+    --------
+    >>> import arkouda as ak
+    >>> ak.connect()
+    >>> x = ak.arange(10).reshape((1, 10, 1))
+    >>> x
+    array([array([array([0]) array([1]) array([2]) array([3]) array([4]) array([5]) array([6]) array([7]) array([8]) array([9])])])
+    >>> x.shape
+    (1, 10, 1)
+
+    >>> ak.squeeze(x,axis=None)
+    array([0 1 2 3 4 5 6 7 8 9])
+    >>> ak.squeeze(x,axis=None).shape
+    (10,)
+
+    >>> ak.squeeze(x,axis=2)
+    array([array([0 1 2 3 4 5 6 7 8 9])])
+    >>> ak.squeeze(x,axis=2).shape
+    (1, 10)
+
+    >>> ak.squeeze(x,axis=(0,2))
+    array([0 1 2 3 4 5 6 7 8 9])
+    >>> ak.squeeze(x,axis=(0,2)).shape
+    (10,)
+
+    """
+    if axis is None:
+        axis = tuple([i for i in range(x.ndim) if x.shape[i] == 1])
+
+    nAxes = len(axis) if isinstance(axis, tuple) else 1
+    try:
+        return create_pdarray(
+            cast(
+                str,
+                generic_msg(
+                    cmd=f"squeeze<{x.dtype},{x.ndim},{x.ndim - nAxes}>",
+                    args={
+                        "name": x,
+                        "nAxes": nAxes,
+                        "axes": list(axis) if isinstance(axis, tuple) else [axis],
+                    },
+                ),
+            )
+        )
+
+    except RuntimeError as e:
+        raise ValueError(f"Failed to squeeze array: {e}")

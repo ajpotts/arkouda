@@ -2694,7 +2694,10 @@ def _reduce_by_op(
 
 
 def _make_reduction_func(
-    op, function_descriptor="", return_descriptor="", return_dtype="numeric_scalars"
+    op,
+    function_descriptor="Return reduction of a pdarray by an operation along an axis.",
+    return_descriptor="",
+    return_dtype="numpy_scalars",
 ):
     if op not in supported_reduction_ops:
         raise ValueError(f"value {op} not supported by _reduce_by_op.")
