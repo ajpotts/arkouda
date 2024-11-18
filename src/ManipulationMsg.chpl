@@ -435,47 +435,85 @@ module ManipulationMsg {
   }
 
   // https://data-apis.org/array-api/latest/API_specification/generated/array_api.reshape.html#array_api.reshape
-  @arkouda.instantiateAndRegister(prefix='reshape')
-  proc reshapeMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab,
-    type array_dtype,
-    param array_nd_in: int,
-    param array_nd_out: int
-  ): MsgTuple throws {
-    param pn = Reflection.getRoutineName();
-    const name = msgArgs["name"],
-          rawShape = msgArgs["shape"].toScalarTuple(int, array_nd_out);
+  // @arkouda.instantiateAndRegister(prefix='reshape')
+  // proc reshapeMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab,
+  //   type array_dtype,
+  //   param array_nd_in: int,
+  //   param array_nd_out: int
+  // ): MsgTuple throws {
+  //   param pn = Reflection.getRoutineName();
+  //   const name = msgArgs["name"],
+  //         rawShape = msgArgs["shape"].toScalarTuple(int, array_nd_out);
 
-    var eIn = st[name]: borrowed SymEntry(array_dtype, array_nd_in),
-        (valid, outShape) = validateShape(rawShape, eIn.a.size);
+  //   var eIn = st[name]: borrowed SymEntry(array_dtype, array_nd_in),
+  //       (valid, outShape) = validateShape(rawShape, eIn.a.size);
+
+  //   if !valid {
+  //     const errMsg = "Cannot reshape array of shape %? into shape %?. The total number of elements must match".format(eIn.tupShape, rawShape);
+  //     mLogger.error(getModuleName(),pn,getLineNumber(),errMsg);
+  //     return MsgTuple.error(errMsg);
+  //   } else {
+  //     if array_nd_in == 1 && array_nd_out == 1 {
+  //       return st.insert(createSymEntry(eIn.a));
+  //     } else if array_nd_in == 1 {
+  //       // special case: unflatten a 1D array into a higher-dimensional array
+  //       return st.insert(createSymEntry(unflatten(eIn.a, outShape)));
+  //     } else if array_nd_out == 1 {
+  //       // special case: flatten an array into a 1D array
+  //       return st.insert(createSymEntry(flatten(eIn.a)));
+  //     } else {
+  //       // general case
+  //       var eOut = createSymEntry((...outShape), array_dtype);
+
+  //       // copy the data from the input array to the output array while reshaping
+  //       forall idx in eIn.a.domain with (
+  //         var agg = newDstAggregator(array_dtype),
+  //         const output = eOut.a.domain,
+  //         const input = new orderer(eIn.tupShape)
+  //       ) {
+  //         const outIdx = output.orderToIndex(input.indexToOrder(if array_nd_in == 1 then (idx,) else idx));
+  //         agg.copy(eOut.a[outIdx], eIn.a[idx]);
+  //       }
+
+  //       return st.insert(eOut);
+  //     }
+  //   }
+  // }
+
+  @arkouda.registerCommand
+  proc reshape(const ref x:[?d] ?t, shape: list(int)): [] t throws {
+
+    const rawShape = shape;
+
+    var (valid, outShape) = validateShape(rawShape, x.size);
 
     if !valid {
-      const errMsg = "Cannot reshape array of shape %? into shape %?. The total number of elements must match".format(eIn.tupShape, rawShape);
-      mLogger.error(getModuleName(),pn,getLineNumber(),errMsg);
-      return MsgTuple.error(errMsg);
+      throw new Error("Invalid shape value(s) '%?' in reshape".format(shape));
     } else {
-      if array_nd_in == 1 && array_nd_out == 1 {
-        return st.insert(createSymEntry(eIn.a));
-      } else if array_nd_in == 1 {
+      if d.rank == 1 && shape.size == 1 {
+        const y : [d] t = x;
+        return y;
+      } else if d.rank == 1 {
         // special case: unflatten a 1D array into a higher-dimensional array
-        return st.insert(createSymEntry(unflatten(eIn.a, outShape)));
-      } else if array_nd_out == 1 {
+        return unflatten(x, outShape);
+      } else if shape.size == 1 {
         // special case: flatten an array into a 1D array
-        return st.insert(createSymEntry(flatten(eIn.a)));
+        return flatten(x);
       } else {
         // general case
-        var eOut = createSymEntry((...outShape), array_dtype);
+        var ret = makeDistArray((...outShape), t);
 
         // copy the data from the input array to the output array while reshaping
-        forall idx in eIn.a.domain with (
-          var agg = newDstAggregator(array_dtype),
-          const output = eOut.a.domain,
-          const input = new orderer(eIn.tupShape)
+        forall idx in d with (
+          var agg = newDstAggregator(t),
+          const output = ret.domain,
+          const input = new orderer(d.shape)
         ) {
-          const outIdx = output.orderToIndex(input.indexToOrder(if array_nd_in == 1 then (idx,) else idx));
-          agg.copy(eOut.a[outIdx], eIn.a[idx]);
+          const outIdx = output.orderToIndex(input.indexToOrder(if d.rank == 1 then (idx,) else idx));
+          agg.copy(ret[outIdx], x[idx]);
         }
 
-        return st.insert(eOut);
+        return ret;
       }
     }
   }
