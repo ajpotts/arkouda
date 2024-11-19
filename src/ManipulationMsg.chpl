@@ -9,6 +9,7 @@ module ManipulationMsg {
   use ServerErrorStrings;
   use CommAggregation;
   use AryUtil;
+  use List;
 
   use Reflection;
 
@@ -522,10 +523,12 @@ module ManipulationMsg {
   //  * has the same total size as the target size
   //  * has one negative dimension (in this case, that dimension's size
   //    is computed to make the total size match the target size)
-  private proc validateShape(shape: ?N*int, targetSize: int): (bool, N*int) {
-    var ret: N*int,
+  private proc validateShape(shape: list(int), targetSize: int): (bool, list(int)) {
+    var ret: new list(int),
         neg = -1,
         size = 1;
+
+    const N = shape.size;
 
     for param i in 0..<N {
       if shape[i] < 0 {
@@ -553,6 +556,38 @@ module ManipulationMsg {
       return (size == targetSize, ret);
     }
   }
+
+  // private proc validateShape(shape: ?N*int, targetSize: int): (bool, N*int) {
+  //   var ret: N*int,
+  //       neg = -1,
+  //       size = 1;
+
+  //   for param i in 0..<N {
+  //     if shape[i] < 0 {
+  //       if neg >=0 {
+  //         // more than one negative dimension
+  //         return (false, ret);
+  //       } else {
+  //         neg = i;
+  //       }
+  //     } else {
+  //       size *= shape[i];
+  //       ret[i] = shape[i];
+  //     }
+  //   }
+
+  //   if neg >= 0 {
+  //     if size > targetSize || targetSize % size != 0 {
+  //       // cannot compute a valid size for the negative dimension
+  //       return (false, ret);
+  //     } else {
+  //       ret[neg] = targetSize / size;
+  //       return (true, ret);
+  //     }
+  //   } else {
+  //     return (size == targetSize, ret);
+  //   }
+  // }
 
   // https://data-apis.org/array-api/latest/API_specification/generated/array_api.roll.html#array_api.roll
   @arkouda.instantiateAndRegister(prefix='roll')
