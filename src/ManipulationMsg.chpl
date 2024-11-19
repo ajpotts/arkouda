@@ -524,9 +524,9 @@ module ManipulationMsg {
   //  * has one negative dimension (in this case, that dimension's size
   //    is computed to make the total size match the target size)
   private proc validateShape(shape: list(int), targetSize: int): (bool, list(int)) {
-    var ret: new list(int),
-        neg = -1,
-        size = 1;
+    var ret: new list(int);
+    var neg = -1;
+    var size = 1;
 
     const N = shape.size;
 
