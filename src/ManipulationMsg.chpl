@@ -519,18 +519,19 @@ module ManipulationMsg {
     }
   }
 
+
   // ensures that the shape either:
   //  * has the same total size as the target size
   //  * has one negative dimension (in this case, that dimension's size
   //    is computed to make the total size match the target size)
-  private proc validateShape(shape: list(int), targetSize: int): (bool, list(int)) {
-    var ret: new list(int);
+  proc validateShape(shape: list(int), targetSize: int): (bool, list(int)) {
+    var ret = new list(int);
     var neg = -1;
     var size = 1;
 
     const N = shape.size;
 
-    for param i in 0..<N {
+    for i in 0..<N {
       if shape[i] < 0 {
         if neg >=0 {
           // more than one negative dimension
