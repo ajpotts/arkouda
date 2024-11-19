@@ -496,7 +496,7 @@ module ManipulationMsg {
         return y;
       } else if d.rank == 1 {
         // special case: unflatten a 1D array into a higher-dimensional array
-        return unflatten(x, outShape.size, outShape);
+        return unflatten(x, outShape);
       } else if shape.size == 1 {
         // special case: flatten an array into a 1D array
         return flatten(x);

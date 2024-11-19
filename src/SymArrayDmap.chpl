@@ -29,11 +29,11 @@ module SymArrayDmap {
     }
 
     proc makeDistDom(shape: list(int)) {
-      var rngs: list(int);
-      for i in 0..#shape.size do rngs[i] = 0..#shape[i];
-      const dom = {rngs};
+      // var rngs: list(range);
+      // for i in 0..#shape.size do rngs[i] = 0..#shape[i];
+      // const dom = {rngs};
 
-      return makeDistDom(dom);
+      return makeDistDom(shape.toArray());
     }
 
     proc makeDistDom(dom: domain(?)) {
@@ -125,6 +125,12 @@ module SymArrayDmap {
     {
       var res: [D] t = initExpr;
       return res;
+    }
+
+    proc makeDistArray(shape: list(int), type etype) throws
+    {
+      var dom = makeDistDom(shape);
+      return dom.tryCreateArray(etype);
     }
 
     /*

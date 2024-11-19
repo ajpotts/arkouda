@@ -905,13 +905,17 @@ module AryUtil
     /*
       unflatten a 1D array into a multi-dimensional array of the given shape
     */
-    proc unflatten(const ref a: [?d] ?t, shape: ?N*int): [] t throws {
-      var unflat = makeDistArray((...shape), t);
+    proc unflatten(const ref a: [?d] ?t, shape:list(int)): [] t throws {
+
+
+      const N = shape.size;
 
       if N == 1 {
-        unflat = a;
+        var unflat = a;
         return unflat;
       }
+
+      var unflat = makeDistArray(shape, t);
 
       // ranges of flat indices owned by each locale
       const flatLocRanges = [loc in Locales] d.localSubdomain(loc).dim(0);
@@ -965,14 +969,6 @@ module AryUtil
       }
 
       return unflat;
-    }
-
-    proc unflatten(const ref a: [?d] ?t, N: int, shape: list(int)): [] t throws {
-      var tupShape : N * int;
-      for i in 0..#N{
-        tupShape[i] = shape[i];
-      }
-      return unflatten(a, tupShape);
     }
 
     /*
@@ -1044,6 +1040,13 @@ module AryUtil
       const accumRankSizes: [0..<rank] int;
 
       proc init(shape: ?N*int) {
+        this.rank = N;
+        const sizesRev = [i in 0..<N] shape[N - i - 1];
+        this.accumRankSizes = * scan sizesRev / sizesRev;
+      }
+
+      proc init(shape: list(int)) {
+        const N = shape.size;
         this.rank = N;
         const sizesRev = [i in 0..<N] shape[N - i - 1];
         this.accumRankSizes = * scan sizesRev / sizesRev;
