@@ -484,7 +484,7 @@ module ManipulationMsg {
   @arkouda.registerCommand
   proc reshape(const ref x:[?d] ?t, shape: list(int)): [] t throws {
 
-    const rawShape = shape;
+    var rawShape = shape;
 
     var (valid, outShape) = validateShape(rawShape, x.size);
 
@@ -496,7 +496,7 @@ module ManipulationMsg {
         return y;
       } else if d.rank == 1 {
         // special case: unflatten a 1D array into a higher-dimensional array
-        return unflatten(x, outShape);
+        return unflatten(x, outShape.size, outShape);
       } else if shape.size == 1 {
         // special case: flatten an array into a 1D array
         return flatten(x);

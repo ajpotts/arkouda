@@ -3,7 +3,8 @@ module SymArrayDmap {
     import SparseMatrix.Layout;
     public use BlockDist;
     use ArkoudaSparseMatrixCompat;
-
+    use List;
+    
     /*
         Available domain maps.
     */
@@ -23,6 +24,14 @@ module SymArrayDmap {
       var rngs: N*range;
       for i in 0..#N do rngs[i] = 0..#shape[i];
       const dom = {(...rngs)};
+
+      return makeDistDom(dom);
+    }
+
+    proc makeDistDom(shape: list(int)) {
+      var rngs: list(int);
+      for i in 0..#shape.size do rngs[i] = 0..#shape[i];
+      const dom = {rngs};
 
       return makeDistDom(dom);
     }

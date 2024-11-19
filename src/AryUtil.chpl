@@ -967,6 +967,14 @@ module AryUtil
       return unflat;
     }
 
+    proc unflatten(const ref a: [?d] ?t, N: int, shape: list(int)): [] t throws {
+      var tupShape : N * int;
+      for i in 0..#N{
+        tupShape[i] = shape[i];
+      }
+      return unflatten(a, tupShape);
+    }
+
     /*
       flatten a multi-dimensional array into a 1D array
     */
