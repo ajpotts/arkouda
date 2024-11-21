@@ -312,6 +312,74 @@ module ReductionMsg
         return isSorted(aSlice);
       }
 
+
+          /* Implements + reduction over numeric data, converting all elements to int before summing. */
+      class PlusIntReduceOp: ReduceScanOp {
+          type eltType;
+
+          var value: int;
+
+          proc identity      do return 0: int;
+
+          proc accumulate(elm)  { value = value + elm:int; }
+
+          proc accumulateOntoState(ref state, elm)  { state = state + elm:int; }
+
+          proc initialAccumulate(outerVar) { value = value + outerVar: int; }
+
+          proc combine(other: borrowed PlusIntReduceOp(?))   { value = value + other.value; }
+
+          proc generate()    do return value;
+
+          proc clone()       do return new unmanaged PlusIntReduceOp(eltType=eltType);
+      }
+
+
+      class MyPlusReduceOp: ReduceScanOp {
+          type eltType;
+
+          type returnType = reductionReturnType(eltType);
+
+          var value: returnType;
+
+          proc identity      do return 0: returnType;
+
+          proc accumulate(elm)  { value = value + elm:returnType; }
+
+          proc accumulateOntoState(ref state, elm)  { state = state + elm:returnType; }
+
+          proc initialAccumulate(outerVar) { value = value + outerVar: returnType; }
+
+          proc combine(other: borrowed MyPlusReduceOp(?))   { value = value + other.value; }
+
+          proc generate()    do return value;
+
+          proc clone()       do return new unmanaged MyPlusReduceOp(eltType=eltType);
+      }
+
+      class NanPlusReduceOp: ReduceScanOp {
+          type eltType;
+
+          type returnType = reductionReturnType(eltType);
+
+          var value: returnType;
+
+          proc identity      do return 0: returnType;
+
+          proc accumulate(elm)  { value = if isNan(elm) then value else value + elm:returnType; }
+
+          proc accumulateOntoState(ref state, elm)  { state = if isNan(elm) then state else state + elm:returnType; }
+
+          proc initialAccumulate(outerVar) { value = if isNan(outerVar) then value else value + outerVar:returnType;}
+
+          proc combine(other: borrowed NanPlusReduceOp(?))   { value = value + other.value; }
+
+          proc generate()    do return value;
+
+          proc clone()       do return new unmanaged NanPlusReduceOp(eltType=eltType);
+      }
+
+
       proc sumSlice(const ref a: [?d] ?t, slice, type opType, skipNan: bool): opType {
         var sum = 0:opType;
         if skipNan{
@@ -320,7 +388,8 @@ module ReductionMsg
             sum += a[i]:opType;
           }
         }else{
-          forall i in slice with (+ reduce sum) do sum += a[i]:opType;
+          // forall i in slice with (+ reduce sum) do sum += a[i]:opType;
+          return MyPlusReduceOp reduce a[slice];
         }
         return sum;
       }
