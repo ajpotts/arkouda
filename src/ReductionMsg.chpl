@@ -38,12 +38,32 @@ module ReductionMsg
     proc reductionReturnType(type t) type
       do return if t == bool then int else t;
 
-    @arkouda.registerCommand
+    // @arkouda.registerCommand
+    // proc sumAll(const ref x: [?d] ?t, skipNan: bool): reductionReturnType(t) throws
+    //   where t==int || t==real || t==uint(64) || t==bool
+    // {
+    //   use SliceReductionOps;
+    //   return + reduce x :reductionReturnType(t);//sumSlice(x, x.domain, reductionReturnType(t), skipNan);
+    // }
+
+    @arkouda.registerCommand(ignoreWhereClause=true)
+    proc sumAll(const ref x: [?d] ?t, skipNan: bool): t throws
+      where t==int || t==real || t==uint(64) 
+    {
+      return + reduce x;//sumSlice(x, x.domain, reductionReturnType(t), skipNan);
+    }
+
     proc sumAll(const ref x: [?d] ?t, skipNan: bool): reductionReturnType(t) throws
-      where t==int || t==real || t==uint(64) || t==bool
+      where t==bool
     {
       use SliceReductionOps;
-      return sumSlice(x, x.domain, reductionReturnType(t), skipNan);
+      return MyPlusReduceOp reduce x;//sumSlice(x, x.domain, reductionReturnType(t), skipNan);
+    }
+
+    proc sumAll(const ref x: [?d] ?t, skipNan: bool): t throws
+      where !(t==int || t==real || t==uint(64) || t==bool)
+    {
+      throw new Error ("Message TBD") ;
     }
 
     @arkouda.registerCommand
@@ -388,8 +408,7 @@ module ReductionMsg
             sum += a[i]:opType;
           }
         }else{
-          // forall i in slice with (+ reduce sum) do sum += a[i]:opType;
-          return MyPlusReduceOp reduce a[slice];
+          forall i in slice with (MyPlusReduceOp reduce sum) do sum += a[i]:opType;
         }
         return sum;
       }
