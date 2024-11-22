@@ -70,6 +70,30 @@ module ReductionMsg
     proc sum(const ref x: [?d] ?t, axis: list(int), skipNan: bool): [] reductionReturnType(t) throws
       where t==int || t==real || t==uint(64) || t==bool
     {
+      // use SliceReductionOps;
+      // type opType = reductionReturnType(t);
+      // const (valid, axes) = validateNegativeAxes(axis, x.rank);
+      // if !valid {
+      //   throw new Error("Invalid axis value(s) '%?' in slicing reduction".format(axis));
+      // } else {
+      //   const outShape = reducedShape(x.shape, axes);
+      //   var ret = makeDistArray((...outShape), opType);
+      //   forall (sliceDom, sliceIdx) in axisSlices(x.domain, axes)
+      //     do ret[sliceIdx] = sumSlice(x, sliceDom, opType, skipNan);
+      //   return ret;
+      // }
+      use SliceReductionOps;
+      const reducer: myReducer = new myReducer();
+      return testOp(x, axis, skipNan, reducer);
+    }
+
+
+    private proc isArgandType(type t) param: bool do
+      return isRealType(t) || isImagType(t) || isComplexType(t);
+
+    proc testOp(const ref x: [?d] ?t, axis: list(int), skipNan: bool, reducer: myReducer): [] reductionReturnType(t) throws
+      where t==int || t==real || t==uint(64) || t==bool
+    {
       use SliceReductionOps;
       type opType = reductionReturnType(t);
       const (valid, axes) = validateNegativeAxes(axis, x.rank);
@@ -79,10 +103,33 @@ module ReductionMsg
         const outShape = reducedShape(x.shape, axes);
         var ret = makeDistArray((...outShape), opType);
         forall (sliceDom, sliceIdx) in axisSlices(x.domain, axes)
-          do ret[sliceIdx] = sumSlice(x, sliceDom, opType, skipNan);
+          do ret[sliceIdx] = reducer.reduce2(x, sliceDom, opType, skipNan);
         return ret;
       }
     }
+
+
+    record myReducer {
+
+      proc init() {
+
+      }
+
+      proc reduce2(const ref a: [?d] ?t, slice, type opType, skipNan: bool): opType {
+          use SliceReductionOps;
+          var sum = 0:opType;
+          if skipNan{
+            forall i in slice with (+ reduce sum) {
+              if isArgandType(t) { if isNan(a[i]) then continue; }
+              sum += a[i]:opType;
+            }
+          }else{
+            forall i in slice with (MyPlusReduceOp reduce sum) do sum += a[i]:opType;
+          }
+          return sum;
+        }
+    }
+
 
     @arkouda.registerCommand
     proc prodAll(const ref x:[?d] ?t, skipNan: bool): reductionReturnType(t) throws
@@ -399,7 +446,6 @@ module ReductionMsg
           proc clone()       do return new unmanaged NanPlusReduceOp(eltType=eltType);
       }
 
-
       proc sumSlice(const ref a: [?d] ?t, slice, type opType, skipNan: bool): opType {
         var sum = 0:opType;
         if skipNan{
@@ -412,6 +458,22 @@ module ReductionMsg
         }
         return sum;
       }
+
+      // proc sumSlice(const ref a: [?d] ?t, slice, skipNan: bool): reductionReturnType(t) throws
+      // where t==int || t==real || t==uint {
+      //   type opType = reductionReturnType(t);
+      //   var sum: opType = 0;
+      //   if skipNan{
+      //     // forall i in slice with (+ reduce sum) {
+      //     //   if isArgandType(t) { if isNan(a[i]) then continue; }
+      //     //   sum += a[i]:opType;
+      //     // }
+      //     forall i in slice with (NanPlusReduceOp reduce sum) do sum += a[i]:opType;
+      //   }else{
+      //     forall i in slice with (MyPlusReduceOp reduce sum) do sum += a[i]:opType;
+      //   }
+      //   return sum;
+      // }
 
       proc prodSlice(const ref a: [] ?t, slice, type opType, skipNan: bool): opType {
         var prod = 1.0; // always use real(64) to avoid int overflow
