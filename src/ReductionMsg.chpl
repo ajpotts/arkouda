@@ -50,7 +50,7 @@ module ReductionMsg
         const outShape = reducedShape(x.shape, axes);
         var ret = makeDistArray((...outShape), opType);
         forall (sliceDom, sliceIdx) in axisSlices(x.domain, axes)
-          do ret[sliceIdx] = reducer.reduceSlice(x, sliceDom, opType, skipNan);
+          do ret[sliceIdx] = reducer.reduceSlice(x, sliceDom, skipNan);
         return ret;
       }
     }
@@ -415,8 +415,8 @@ module ReductionMsg
 
         proc init() {}
 
-        proc reduceSlice(const ref a: [?d] ?t, slice, type opType, skipNan: bool): opType {
-            return sumSlice(a, slice, opType, skipNan);
+        proc reduceSlice(const ref a: [?d] ?t, slice, skipNan: bool): reductionReturnType(t) {
+            return sumSlice(a, slice, reductionReturnType(t), skipNan);
           }
 
         proc clone()       do return new unmanaged sumReductionOperator();
@@ -426,8 +426,8 @@ module ReductionMsg
 
         proc init() {}
 
-        proc reduceSlice(const ref a: [?d] ?t, slice, type opType, skipNan: bool): opType {
-            return prodSlice(a, slice, opType, skipNan);
+        proc reduceSlice(const ref a: [?d] ?t, slice, skipNan: bool): reductionReturnType(t) {
+            return prodSlice(a, slice, reductionReturnType(t), skipNan);
           }
 
         proc clone()       do return new unmanaged prodReductionOperator();
@@ -437,8 +437,8 @@ module ReductionMsg
 
         proc init() {}
 
-        proc reduceSlice(const ref a: [?d] ?t, slice, type opType, skipNan: bool): opType {
-            return getMinSlice(a, slice, opType, skipNan);
+        proc reduceSlice(const ref a: [?d] ?t, slice, skipNan: bool): reductionReturnType(t) {
+            return getMinSlice(a, slice, reductionReturnType(t), skipNan);
           }
 
         proc clone()       do return new unmanaged minReductionOperator();
@@ -448,8 +448,8 @@ module ReductionMsg
 
         proc init() {}
 
-        proc reduceSlice(const ref a: [?d] ?t, slice, type opType, skipNan: bool): opType {
-            return getMaxSlice(a, slice, opType, skipNan);
+        proc reduceSlice(const ref a: [?d] ?t, slice, skipNan: bool): reductionReturnType(t) {
+            return getMaxSlice(a, slice, reductionReturnType(t), skipNan);
           }
 
         proc clone()       do return new unmanaged maxReductionOperator();
