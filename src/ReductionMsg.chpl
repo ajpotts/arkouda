@@ -106,17 +106,8 @@ module ReductionMsg
     proc prod(const ref x:[?d] ?t, axis: list(int), skipNan: bool): [] reductionReturnType(t) throws
       where t==int || t==real || t==uint(64) || t==bool {
       use SliceReductionOps;
-      type opType = reductionReturnType(t);
-      const (valid, axes) = validateNegativeAxes(axis, x.rank);
-      if !valid {
-        throw new Error("Invalid axis value(s) '%?' in slicing reduction".format(axis));
-      } else {
-        const outShape = reducedShape(x.shape, axes);
-        var ret = makeDistArray((...outShape), opType);
-        forall (sliceDom, sliceIdx) in axisSlices(x.domain, axes)
-          do ret[sliceIdx] = prodSlice(x, sliceDom, opType, skipNan);
-        return ret;
-      }
+      const reducer = new prodReductionOperator();
+      return reduceByReductionOperator(x, axis, skipNan, reducer);
     }
 
     @arkouda.registerCommand
@@ -420,10 +411,6 @@ module ReductionMsg
         return sum;
       }
 
-      class reductionOperator{
-
-      }
-
       record sumReductionOperator {
 
         proc init() {}
@@ -431,7 +418,43 @@ module ReductionMsg
         proc reduceSlice(const ref a: [?d] ?t, slice, type opType, skipNan: bool): opType {
             return sumSlice(a, slice, opType, skipNan);
           }
+
+        proc clone()       do return new unmanaged sumReductionOperator();
       }
+
+      record prodReductionOperator {
+
+        proc init() {}
+
+        proc reduceSlice(const ref a: [?d] ?t, slice, type opType, skipNan: bool): opType {
+            return prodSlice(a, slice, opType, skipNan);
+          }
+
+        proc clone()       do return new unmanaged prodReductionOperator();
+      }
+
+      record minReductionOperator {
+
+        proc init() {}
+
+        proc reduceSlice(const ref a: [?d] ?t, slice, type opType, skipNan: bool): opType {
+            return getMinSlice(a, slice, opType, skipNan);
+          }
+
+        proc clone()       do return new unmanaged minReductionOperator();
+      }
+
+      record maxReductionOperator {
+
+        proc init() {}
+
+        proc reduceSlice(const ref a: [?d] ?t, slice, type opType, skipNan: bool): opType {
+            return getMaxSlice(a, slice, opType, skipNan);
+          }
+
+        proc clone()       do return new unmanaged maxReductionOperator();
+      }
+
 
       // proc sumSlice(const ref a: [?d] ?t, slice, skipNan: bool): reductionReturnType(t) throws
       // where t==int || t==real || t==uint {
