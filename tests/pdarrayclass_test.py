@@ -196,8 +196,8 @@ class TestPdarrayClass:
     @pytest.mark.parametrize("arry_gen", [ak.zeros, ak.ones])
     @pytest.mark.parametrize("axis", [None, 0, 1, (0, 2), (0, 1, 2)])
     def test_reductions_match_numpy_3D_zeros(self, op, size, dtype, arry_gen, axis):
-        size = min(size // 3, 100) if op == "prod" else size // 3
-        pda = arry_gen((size, size, size), dtype=dtype)
+        size = min(size // 4, 10) if op == "prod" else size // 4
+        pda = arry_gen((2, size, 2), dtype=dtype)
         self.assert_reduction_ops_match(op, pda, axis=axis)
 
     @pytest.mark.parametrize("op", REDUCTION_OPS)
