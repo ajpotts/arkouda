@@ -19,7 +19,7 @@ from .base import (
 )
 from .covariance import empirical_covariance, ledoit_wolf, shrunk_covariance
 from .linear_model._base import LinearClassifierMixin
-from .preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler
 from .utils._array_api import _expit, device, get_namespace, size
 from .utils._param_validation import HasMethods, Interval, StrOptions
 from .utils.extmath import softmax

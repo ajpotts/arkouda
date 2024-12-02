@@ -35,7 +35,7 @@ from ..utils.validation import (
     check_non_negative,
     validate_data,
 )
-from ._cdnmf_fast import _update_cdnmf_fast
+from sklearn.decomposition._cdnmf_fast import _update_cdnmf_fast
 
 EPSILON = np.finfo(np.float32).eps
 

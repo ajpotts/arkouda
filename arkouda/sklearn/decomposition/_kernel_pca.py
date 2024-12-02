@@ -18,7 +18,7 @@ from ..base import (
 )
 from ..exceptions import NotFittedError
 from ..metrics.pairwise import pairwise_kernels
-from ..preprocessing import KernelCenterer
+from sklearn.preprocessing import KernelCenterer
 from ..utils._arpack import _init_arpack_v0
 from ..utils._param_validation import Interval, StrOptions
 from ..utils.extmath import _randomized_eigsh, svd_flip

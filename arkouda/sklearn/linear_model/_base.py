@@ -32,7 +32,7 @@ from ..utils._array_api import (
     indexing_dtype,
     supported_float_dtypes,
 )
-from ..utils._seq_dataset import (
+from sklearn.utils._seq_dataset import (
     ArrayDataset32,
     ArrayDataset64,
     CSRDataset32,

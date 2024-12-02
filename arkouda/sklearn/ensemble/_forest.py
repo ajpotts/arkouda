@@ -55,7 +55,7 @@ from ..base import (
 )
 from ..exceptions import DataConversionWarning
 from ..metrics import accuracy_score, r2_score
-from ..preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder
 from ..tree import (
     BaseDecisionTree,
     DecisionTreeClassifier,
@@ -63,7 +63,7 @@ from ..tree import (
     ExtraTreeClassifier,
     ExtraTreeRegressor,
 )
-from ..tree._tree import DOUBLE, DTYPE
+from sklearn.tree._tree import DOUBLE, DTYPE
 from ..utils import check_random_state, compute_sample_weight
 from ..utils._param_validation import Interval, RealNotInt, StrOptions
 from ..utils._tags import get_tags

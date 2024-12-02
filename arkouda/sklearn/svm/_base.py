@@ -24,12 +24,12 @@ from ..utils.validation import (
     check_is_fitted,
     validate_data,
 )
-from . import _liblinear as liblinear  # type: ignore
+from sklearn.svm import _liblinear as liblinear  # type: ignore
 
 # mypy error: error: Module 'sklearn.svm' has no attribute '_libsvm'
 # (and same for other imports)
-from . import _libsvm as libsvm  # type: ignore
-from . import _libsvm_sparse as libsvm_sparse  # type: ignore
+from sklearn.svm import _libsvm as libsvm  # type: ignore
+from sklearn.svm import _libsvm_sparse as libsvm_sparse  # type: ignore
 
 LIBSVM_IMPL = ["c_svc", "nu_svc", "one_class", "epsilon_svr", "nu_svr"]
 

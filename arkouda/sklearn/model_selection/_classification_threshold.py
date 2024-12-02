@@ -13,6 +13,7 @@ from ..base import (
     _fit_context,
     clone,
 )
+
 from ..exceptions import NotFittedError
 from ..metrics import (
     check_scoring,

@@ -15,8 +15,9 @@ from ..base import (
     ClassNamePrefixFeaturesOutMixin,
     TransformerMixin,
     _fit_context,
-    _UnstableArchMixin,
+    # _UnstableArchMixin,
 )
+from sklearn.base import  _UnstableArchMixin
 from ..neighbors import NearestNeighbors
 from ..utils import check_array, check_random_state
 from ..utils._arpack import _init_arpack_v0

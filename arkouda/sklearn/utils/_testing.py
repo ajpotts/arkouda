@@ -37,8 +37,7 @@ from numpy.testing import (
     assert_array_less,
 )
 
-import sklearn
-from sklearn.utils import (
+from ..utils import (
     ClassifierTags,
     RegressorTags,
     Tags,

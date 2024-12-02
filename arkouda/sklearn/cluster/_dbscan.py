@@ -16,7 +16,7 @@ from ..metrics.pairwise import _VALID_METRICS
 from ..neighbors import NearestNeighbors
 from ..utils._param_validation import Interval, StrOptions, validate_params
 from ..utils.validation import _check_sample_weight, validate_data
-from ._dbscan_inner import dbscan_inner
+from sklearn.cluster._dbscan_inner import dbscan_inner
 
 
 @validate_params(

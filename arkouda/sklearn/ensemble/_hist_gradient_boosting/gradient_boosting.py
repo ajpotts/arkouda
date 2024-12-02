@@ -32,10 +32,10 @@ from ...compose import ColumnTransformer
 from ...metrics import check_scoring
 from ...metrics._scorer import _SCORERS
 from ...model_selection import train_test_split
-from ...preprocessing import FunctionTransformer, LabelEncoder, OrdinalEncoder
+from sklearn.preprocessing import FunctionTransformer, LabelEncoder, OrdinalEncoder
 from ...utils import check_random_state, compute_sample_weight, resample
 from ...utils._missing import is_scalar_nan
-from ...utils._openmp_helpers import _openmp_effective_n_threads
+from sklearn.utils._openmp_helpers import _openmp_effective_n_threads
 from ...utils._param_validation import Interval, RealNotInt, StrOptions
 from ...utils.multiclass import check_classification_targets
 from ...utils.validation import (
@@ -48,9 +48,9 @@ from ...utils.validation import (
     check_is_fitted,
     validate_data,
 )
-from ._gradient_boosting import _update_raw_predictions
+from sklearn.ensemble._hist_gradient_boosting._gradient_boosting import _update_raw_predictions
 from .binning import _BinMapper
-from .common import G_H_DTYPE, X_DTYPE, Y_DTYPE
+from sklearn.ensemble._hist_gradient_boosting.common import G_H_DTYPE, X_DTYPE, Y_DTYPE
 from .grower import TreeGrower
 
 _LOSSES = _LOSSES.copy()

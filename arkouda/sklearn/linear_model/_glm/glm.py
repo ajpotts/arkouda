@@ -19,7 +19,7 @@ from ..._loss.loss import (
 )
 from ...base import BaseEstimator, RegressorMixin, _fit_context
 from ...utils import check_array
-from ...utils._openmp_helpers import _openmp_effective_n_threads
+from sklearn.utils._openmp_helpers import _openmp_effective_n_threads
 from ...utils._param_validation import Hidden, Interval, StrOptions
 from ...utils.optimize import _check_optimize_result
 from ...utils.validation import _check_sample_weight, check_is_fitted, validate_data

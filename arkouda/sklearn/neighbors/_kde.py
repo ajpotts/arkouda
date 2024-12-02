@@ -18,8 +18,8 @@ from ..utils import check_random_state
 from ..utils._param_validation import Interval, StrOptions
 from ..utils.extmath import row_norms
 from ..utils.validation import _check_sample_weight, check_is_fitted, validate_data
-from ._ball_tree import BallTree
-from ._kd_tree import KDTree
+from sklearn.neighbors._ball_tree import BallTree
+from sklearn.neighbors._kd_tree import KDTree
 
 VALID_KERNELS = [
     "gaussian",

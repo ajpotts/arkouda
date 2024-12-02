@@ -8,7 +8,7 @@ import numpy as np
 from ..base import BaseEstimator, RegressorMixin, _fit_context, clone
 from ..exceptions import NotFittedError
 from ..linear_model import LinearRegression
-from ..preprocessing import FunctionTransformer
+from sklearn.preprocessing import FunctionTransformer
 from ..utils import Bunch, _safe_indexing, check_array
 from ..utils._metadata_requests import (
     MetadataRouter,

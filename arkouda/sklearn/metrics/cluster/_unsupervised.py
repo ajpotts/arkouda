@@ -10,7 +10,7 @@ from numbers import Integral
 import numpy as np
 from scipy.sparse import issparse
 
-from ...preprocessing import LabelEncoder
+from arkouda.sklearn.preprocessing import LabelEncoder
 from ...utils import _safe_indexing, check_random_state, check_X_y
 from ...utils._array_api import _atol_for_type
 from ...utils._param_validation import (

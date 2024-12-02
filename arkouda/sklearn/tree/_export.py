@@ -14,7 +14,8 @@ import numpy as np
 from ..base import is_classifier
 from ..utils._param_validation import HasMethods, Interval, StrOptions, validate_params
 from ..utils.validation import check_array, check_is_fitted
-from . import DecisionTreeClassifier, DecisionTreeRegressor, _criterion, _tree
+from . import DecisionTreeClassifier, DecisionTreeRegressor
+from sklearn.tree import _criterion, _tree
 from ._reingold_tilford import Tree, buchheim
 
 

@@ -6,7 +6,7 @@ from numbers import Real
 
 import numpy as np
 
-from ..base import OutlierMixin, _fit_context
+from sklearn.base import OutlierMixin, _fit_context
 from ..utils import check_array
 from ..utils._param_validation import Interval, StrOptions
 from ..utils.metaestimators import available_if

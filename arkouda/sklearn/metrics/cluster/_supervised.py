@@ -19,7 +19,7 @@ from ...utils._array_api import _max_precision_float_dtype, get_namespace_and_de
 from ...utils._param_validation import Interval, StrOptions, validate_params
 from ...utils.multiclass import type_of_target
 from ...utils.validation import check_array, check_consistent_length
-from ._expected_mutual_info_fast import expected_mutual_information
+# from ._expected_mutual_info_fast import expected_mutual_information
 
 
 def check_clusterings(labels_true, labels_pred):

@@ -19,7 +19,7 @@ from ..base import (
 from ..decomposition import KernelPCA
 from ..metrics.pairwise import _VALID_METRICS
 from ..neighbors import NearestNeighbors, kneighbors_graph, radius_neighbors_graph
-from ..preprocessing import KernelCenterer
+from sklearn.preprocessing import KernelCenterer
 from ..utils._param_validation import Interval, StrOptions
 from ..utils.graph import _fix_connected_components
 from ..utils.validation import check_is_fitted

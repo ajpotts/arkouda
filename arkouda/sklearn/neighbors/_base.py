@@ -16,7 +16,7 @@ from scipy.sparse import csr_matrix, issparse
 
 from ..base import BaseEstimator, MultiOutputMixin, is_classifier
 from ..exceptions import DataConversionWarning, EfficiencyWarning
-from ..metrics import DistanceMetric, pairwise_distances_chunked
+from sklearn.metrics import DistanceMetric, pairwise_distances_chunked
 from ..metrics._pairwise_distances_reduction import (
     ArgKmin,
     RadiusNeighbors,
@@ -32,8 +32,8 @@ from ..utils.fixes import parse_version, sp_base_version
 from ..utils.multiclass import check_classification_targets
 from ..utils.parallel import Parallel, delayed
 from ..utils.validation import _to_object_array, check_is_fitted, validate_data
-from ._ball_tree import BallTree
-from ._kd_tree import KDTree
+from sklearn.neighbors._ball_tree import BallTree
+from sklearn.neighbors._kd_tree import KDTree
 
 SCIPY_METRICS = [
     "braycurtis",

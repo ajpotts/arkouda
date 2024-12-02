@@ -22,10 +22,11 @@ from ..model_selection import check_cv
 # mypy error: Module 'sklearn.utils' has no attribute 'arrayfuncs'
 from ..utils import (  # type: ignore
     Bunch,
-    arrayfuncs,
+    # arrayfuncs,
     as_float_array,
     check_random_state,
 )
+from sklearn.utils import arrayfuncs
 from ..utils._metadata_requests import (
     MetadataRouter,
     MethodMapping,

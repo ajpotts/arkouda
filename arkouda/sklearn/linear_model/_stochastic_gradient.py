@@ -11,7 +11,7 @@ from numbers import Integral, Real
 
 import numpy as np
 
-from .._loss._loss import CyHalfBinomialLoss, CyHalfSquaredError, CyHuberLoss
+from sklearn._loss._loss import CyHalfBinomialLoss, CyHalfSquaredError#, CyHuberLoss
 from ..base import (
     BaseEstimator,
     OutlierMixin,
@@ -30,14 +30,14 @@ from ..utils.multiclass import _check_partial_fit_first_call
 from ..utils.parallel import Parallel, delayed
 from ..utils.validation import _check_sample_weight, check_is_fitted, validate_data
 from ._base import LinearClassifierMixin, SparseCoefMixin, make_dataset
-from ._sgd_fast import (
+from sklearn.linear_model._sgd_fast import (
     EpsilonInsensitive,
     Hinge,
     ModifiedHuber,
     SquaredEpsilonInsensitive,
     SquaredHinge,
-    _plain_sgd32,
-    _plain_sgd64,
+    # _plain_sgd32,
+    # _plain_sgd64,
 )
 
 LEARNING_RATE_TYPES = {
@@ -506,7 +506,7 @@ class BaseSGDClassifier(LinearClassifierMixin, BaseSGD, metaclass=ABCMeta):
         "log_loss": (CyHalfBinomialLoss,),
         "modified_huber": (ModifiedHuber,),
         "squared_error": (CyHalfSquaredError,),
-        "huber": (CyHuberLoss, DEFAULT_EPSILON),
+        # "huber": (CyHuberLoss, DEFAULT_EPSILON),
         "epsilon_insensitive": (EpsilonInsensitive, DEFAULT_EPSILON),
         "squared_epsilon_insensitive": (SquaredEpsilonInsensitive, DEFAULT_EPSILON),
     }
@@ -1386,7 +1386,7 @@ class SGDClassifier(BaseSGDClassifier):
 class BaseSGDRegressor(RegressorMixin, BaseSGD):
     loss_functions = {
         "squared_error": (CyHalfSquaredError,),
-        "huber": (CyHuberLoss, DEFAULT_EPSILON),
+        # "huber": (CyHuberLoss, DEFAULT_EPSILON),
         "epsilon_insensitive": (EpsilonInsensitive, DEFAULT_EPSILON),
         "squared_epsilon_insensitive": (SquaredEpsilonInsensitive, DEFAULT_EPSILON),
     }

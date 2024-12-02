@@ -26,9 +26,9 @@ from scipy.special import xlogy
 
 from ..utils import check_scalar
 from ..utils.stats import _weighted_percentile
-from ._loss import (
+from sklearn._loss._loss import (
     CyAbsoluteError,
-    CyExponentialLoss,
+    # CyExponentialLoss,
     CyHalfBinomialLoss,
     CyHalfGammaLoss,
     CyHalfMultinomialLoss,
@@ -36,7 +36,7 @@ from ._loss import (
     CyHalfSquaredError,
     CyHalfTweedieLoss,
     CyHalfTweedieLossIdentity,
-    CyHuberLoss,
+    # CyHuberLoss,
     CyPinballLoss,
 )
 from .link import (

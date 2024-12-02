@@ -44,14 +44,14 @@ from ..exceptions import NotFittedError
 from ..model_selection import train_test_split
 from ..preprocessing import LabelEncoder
 from ..tree import DecisionTreeRegressor
-from ..tree._tree import DOUBLE, DTYPE, TREE_LEAF
+from sklearn.tree._tree import DOUBLE, DTYPE, TREE_LEAF
 from ..utils import check_array, check_random_state, column_or_1d
 from ..utils._param_validation import HasMethods, Interval, StrOptions
 from ..utils.multiclass import check_classification_targets
 from ..utils.stats import _weighted_percentile
 from ..utils.validation import _check_sample_weight, check_is_fitted, validate_data
 from ._base import BaseEnsemble
-from ._gradient_boosting import _random_sample_mask, predict_stage, predict_stages
+from sklearn.ensemble._gradient_boosting import _random_sample_mask, predict_stage, predict_stages
 
 _LOSSES = _LOSSES.copy()
 _LOSSES.update(

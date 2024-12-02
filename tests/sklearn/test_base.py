@@ -10,7 +10,7 @@ import pytest
 import scipy.sparse as sp
 from numpy.testing import assert_allclose
 
-import arkouda.sklearn
+import arkouda.sklearn as sklearn
 # from arkouda.sklearn import config_context, datasets
 from arkouda.sklearn.base import (
 #     BaseEstimator,
@@ -22,22 +22,22 @@ from arkouda.sklearn.base import (
 #     is_outlier_detector,
 #     is_regressor,
 )
-# from sklearn.cluster import KMeans
-# from sklearn.decomposition import PCA
-# from sklearn.ensemble import IsolationForest
-# from sklearn.exceptions import InconsistentVersionWarning
-# from sklearn.model_selection import GridSearchCV
-# from sklearn.pipeline import Pipeline
-# from sklearn.preprocessing import StandardScaler
-# from sklearn.svm import SVC, SVR
-# from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
-# from sklearn.utils._mocking import MockDataFrame
-# from sklearn.utils._set_output import _get_output_config
-# from sklearn.utils._testing import (
-#     _convert_container,
-#     assert_array_equal,
-# )
-# from sklearn.utils.validation import _check_n_features, validate_data
+from arkouda.sklearn.cluster import KMeans
+from arkouda.sklearn.decomposition import PCA
+from arkouda.sklearn.ensemble import IsolationForest
+from arkouda.sklearn.exceptions import InconsistentVersionWarning
+from arkouda.sklearn.model_selection import GridSearchCV
+from arkouda.sklearn.pipeline import Pipeline
+# from arkouda.sklearn.preprocessing import StandardScaler
+from arkouda.sklearn.svm import SVC, SVR
+from arkouda.sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+from arkouda.sklearn.utils._mocking import MockDataFrame
+from arkouda.sklearn.utils._set_output import _get_output_config
+from arkouda.sklearn.utils._testing import (
+    _convert_container,
+    assert_array_equal,
+)
+from arkouda.sklearn.utils.validation import _check_n_features, validate_data
 
 
 #############################################################################
@@ -145,21 +145,21 @@ def test_clone():
     new_selector = clone(selector)
     assert selector is not new_selector
 
-#
-# def test_clone_2():
-#     # Tests that clone doesn't copy everything.
-#     # We first create an estimator, give it an own attribute, and
-#     # make a copy of its original state. Then we check that the copy doesn't
-#     # have the specific attribute we manually added to the initial estimator.
-#
-#     from sklearn.feature_selection import SelectFpr, f_classif
-#
-#     selector = SelectFpr(f_classif, alpha=0.1)
-#     selector.own_attribute = "test"
-#     new_selector = clone(selector)
-#     assert not hasattr(new_selector, "own_attribute")
-#
-#
+
+def test_clone_2():
+    # Tests that clone doesn't copy everything.
+    # We first create an estimator, give it an own attribute, and
+    # make a copy of its original state. Then we check that the copy doesn't
+    # have the specific attribute we manually added to the initial estimator.
+
+    from arkouda.sklearn.feature_selection import SelectFpr, f_classif
+
+    selector = SelectFpr(f_classif, alpha=0.1)
+    selector.own_attribute = "test"
+    new_selector = clone(selector)
+    assert not hasattr(new_selector, "own_attribute")
+
+
 # def test_clone_buggy():
 #     # Check that clone raises an error on buggy estimators.
 #     buggy = Buggy()

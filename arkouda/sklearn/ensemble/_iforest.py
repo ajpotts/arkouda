@@ -11,7 +11,7 @@ from scipy.sparse import issparse
 
 from ..base import OutlierMixin, _fit_context
 from ..tree import ExtraTreeRegressor
-from ..tree._tree import DTYPE as tree_dtype
+from sklearn.tree._tree import DTYPE as tree_dtype
 from ..utils import (
     check_array,
     check_random_state,

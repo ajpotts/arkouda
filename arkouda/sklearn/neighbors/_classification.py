@@ -16,7 +16,7 @@ from ..metrics._pairwise_distances_reduction import (
     RadiusNeighborsClassMode,
 )
 from ..utils._param_validation import StrOptions
-from ..utils.arrayfuncs import _all_with_any_reduction_axis_1
+from sklearn.utils.arrayfuncs import _all_with_any_reduction_axis_1
 from ..utils.extmath import weighted_mode
 from ..utils.fixes import _mode
 from ..utils.validation import (

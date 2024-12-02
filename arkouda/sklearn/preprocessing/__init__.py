@@ -3,7 +3,7 @@
 # Authors: The scikit-learn developers
 # SPDX-License-Identifier: BSD-3-Clause
 
-# from ._data import (
+from ._data import (
 #     Binarizer,
 #     KernelCenterer,
 #     MaxAbsScaler,
@@ -17,26 +17,26 @@
 #     binarize,
 #     maxabs_scale,
 #     minmax_scale,
-#     normalize,
+    normalize,
 #     power_transform,
 #     quantile_transform,
 #     robust_scale,
 #     scale,
-# )
+)
 # from ._discretization import KBinsDiscretizer
 # from ._encoders import OneHotEncoder, OrdinalEncoder
 # from ._function_transformer import FunctionTransformer
-# from ._label import LabelBinarizer, LabelEncoder, MultiLabelBinarizer, label_binarize
+from ._label import LabelBinarizer, LabelEncoder, MultiLabelBinarizer, label_binarize
 # from ._polynomial import PolynomialFeatures, SplineTransformer
 # from ._target_encoder import TargetEncoder
 #
-# __all__ = [
+__all__ = [
 #     "Binarizer",
 #     "FunctionTransformer",
 #     "KBinsDiscretizer",
 #     "KernelCenterer",
 #     "LabelBinarizer",
-#     "LabelEncoder",
+    "LabelEncoder",
 #     "MultiLabelBinarizer",
 #     "MinMaxScaler",
 #     "MaxAbsScaler",
@@ -52,7 +52,7 @@
 #     "add_dummy_feature",
 #     "PolynomialFeatures",
 #     "binarize",
-#     "normalize",
+    "normalize",
 #     "scale",
 #     "robust_scale",
 #     "maxabs_scale",
@@ -60,4 +60,4 @@
 #     "label_binarize",
 #     "quantile_transform",
 #     "power_transform",
-# ]
+]

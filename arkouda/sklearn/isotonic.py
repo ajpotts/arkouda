@@ -13,7 +13,7 @@ from scipy.stats import spearmanr
 
 from sklearn.utils import metadata_routing
 
-from ._isotonic import _inplace_contiguous_isotonic_regression, _make_unique
+from sklearn._isotonic import _inplace_contiguous_isotonic_regression, _make_unique
 from .base import BaseEstimator, RegressorMixin, TransformerMixin, _fit_context
 from .utils import check_array, check_consistent_length
 from .utils._param_validation import Interval, StrOptions, validate_params

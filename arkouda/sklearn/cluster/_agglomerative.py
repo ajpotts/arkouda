@@ -25,11 +25,11 @@ from ..base import (
     ClusterMixin,
     _fit_context,
 )
-from ..metrics import DistanceMetric
-from ..metrics._dist_metrics import METRIC_MAPPING64
+from sklearn.metrics import DistanceMetric
+# from sklearn.metrics._dist_metrics import METRIC_MAPPING64
 from ..metrics.pairwise import _VALID_METRICS, paired_distances
 from ..utils import check_array
-from ..utils._fast_dict import IntFloatDict
+from sklearn.utils._fast_dict import IntFloatDict
 from ..utils._param_validation import (
     HasMethods,
     Interval,
@@ -40,7 +40,7 @@ from ..utils.graph import _fix_connected_components
 from ..utils.validation import check_memory, validate_data
 
 # mypy error: Module 'sklearn.cluster' has no attribute '_hierarchical_fast'
-from . import _hierarchical_fast as _hierarchical  # type: ignore
+from sklearn.cluster import _hierarchical_fast as _hierarchical  # type: ignore
 from ._feature_agglomeration import AgglomerationTransform
 
 ###############################################################################

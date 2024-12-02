@@ -15,7 +15,7 @@ from scipy.spatial import distance
 
 from .. import config_context
 from ..exceptions import DataConversionWarning
-from ..preprocessing import normalize
+from arkouda.sklearn.preprocessing import normalize
 from ..utils import check_array, gen_batches, gen_even_slices
 from ..utils._array_api import (
     _fill_or_add_to_diagonal,
@@ -44,7 +44,7 @@ from ..utils.fixes import parse_version, sp_base_version
 from ..utils.parallel import Parallel, delayed
 from ..utils.validation import _num_samples, check_non_negative
 from ._pairwise_distances_reduction import ArgKmin
-from ._pairwise_fast import _chi2_kernel_fast, _sparse_manhattan
+# from ._pairwise_fast import _chi2_kernel_fast, _sparse_manhattan
 
 
 # Utility Functions

@@ -8,28 +8,28 @@ import numpy as np
 from scipy.sparse import issparse
 
 from ... import get_config
-from .._dist_metrics import (
+from sklearn.metrics._dist_metrics import (
     BOOL_METRICS,
     METRIC_MAPPING64,
     DistanceMetric,
 )
-from ._argkmin import (
-    ArgKmin32,
-    ArgKmin64,
-)
-from ._argkmin_classmode import (
-    ArgKminClassMode32,
-    ArgKminClassMode64,
-)
-from ._base import _sqeuclidean_row_norms32, _sqeuclidean_row_norms64
-from ._radius_neighbors import (
-    RadiusNeighbors32,
-    RadiusNeighbors64,
-)
-from ._radius_neighbors_classmode import (
-    RadiusNeighborsClassMode32,
-    RadiusNeighborsClassMode64,
-)
+# from ._argkmin import (
+#     ArgKmin32,
+#     ArgKmin64,
+# )
+# from ._argkmin_classmode import (
+#     ArgKminClassMode32,
+#     ArgKminClassMode64,
+# )
+# from ._base import _sqeuclidean_row_norms32, _sqeuclidean_row_norms64
+# from ._radius_neighbors import (
+#     RadiusNeighbors32,
+#     RadiusNeighbors64,
+# )
+# from ._radius_neighbors_classmode import (
+#     RadiusNeighborsClassMode32,
+#     RadiusNeighborsClassMode64,
+# )
 
 
 def sqeuclidean_row_norms(X, num_threads):
