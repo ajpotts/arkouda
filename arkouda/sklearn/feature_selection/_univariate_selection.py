@@ -12,11 +12,11 @@ from scipy import special, stats
 from scipy.sparse import issparse
 
 from ..base import BaseEstimator, _fit_context
-# from ..preprocessing import LabelBinarizer
-from ..utils import as_float_array, check_array, check_X_y, safe_mask, safe_sqr
-from ..utils._param_validation import Interval, StrOptions, validate_params
-# from ..utils.extmath import row_norms, safe_sparse_dot
-# from ..utils.validation import check_is_fitted, validate_data
+# from arkouda.sklearn.preprocessing import LabelBinarizer
+from arkouda.sklearn.utils import as_float_array, check_array, check_X_y, safe_mask, safe_sqr
+from arkouda.sklearn.utils._param_validation import Interval, StrOptions, validate_params
+# from arkouda.sklearn.utils.extmath import row_norms, safe_sparse_dot
+from arkouda.sklearn.utils.validation import check_is_fitted, validate_data
 from ._base import SelectorMixin
 #
 #
@@ -33,89 +33,89 @@ from ._base import SelectorMixin
 #
 #
 # ######################################################################
-# # Scoring functions
-#
-#
-# # The following function is a rewriting of scipy.stats.f_oneway
-# # Contrary to the scipy.stats.f_oneway implementation it does not
-# # copy the data while keeping the inputs unchanged.
-# def f_oneway(*args):
-#     """Perform a 1-way ANOVA.
-#
-#     The one-way ANOVA tests the null hypothesis that 2 or more groups have
-#     the same population mean. The test is applied to samples from two or
-#     more groups, possibly with differing sizes.
-#
-#     Read more in the :ref:`User Guide <univariate_feature_selection>`.
-#
-#     Parameters
-#     ----------
-#     *args : {array-like, sparse matrix}
-#         Sample1, sample2... The sample measurements should be given as
-#         arguments.
-#
-#     Returns
-#     -------
-#     f_statistic : float
-#         The computed F-value of the test.
-#     p_value : float
-#         The associated p-value from the F-distribution.
-#
-#     Notes
-#     -----
-#     The ANOVA test has important assumptions that must be satisfied in order
-#     for the associated p-value to be valid.
-#
-#     1. The samples are independent
-#     2. Each sample is from a normally distributed population
-#     3. The population standard deviations of the groups are all equal. This
-#        property is known as homoscedasticity.
-#
-#     If these assumptions are not true for a given set of data, it may still be
-#     possible to use the Kruskal-Wallis H-test (`scipy.stats.kruskal`_) although
-#     with some loss of power.
-#
-#     The algorithm is from Heiman[2], pp.394-7.
-#
-#     See ``scipy.stats.f_oneway`` that should give the same results while
-#     being less efficient.
-#
-#     References
-#     ----------
-#     .. [1] Lowry, Richard.  "Concepts and Applications of Inferential
-#            Statistics". Chapter 14.
-#            http://vassarstats.net/textbook
-#
-#     .. [2] Heiman, G.W.  Research Methods in Statistics. 2002.
-#     """
-#     n_classes = len(args)
-#     args = [as_float_array(a) for a in args]
-#     n_samples_per_class = np.array([a.shape[0] for a in args])
-#     n_samples = np.sum(n_samples_per_class)
-#     ss_alldata = sum(safe_sqr(a).sum(axis=0) for a in args)
-#     sums_args = [np.asarray(a.sum(axis=0)) for a in args]
-#     square_of_sums_alldata = sum(sums_args) ** 2
-#     square_of_sums_args = [s**2 for s in sums_args]
-#     sstot = ss_alldata - square_of_sums_alldata / float(n_samples)
-#     ssbn = 0.0
-#     for k, _ in enumerate(args):
-#         ssbn += square_of_sums_args[k] / n_samples_per_class[k]
-#     ssbn -= square_of_sums_alldata / float(n_samples)
-#     sswn = sstot - ssbn
-#     dfbn = n_classes - 1
-#     dfwn = n_samples - n_classes
-#     msb = ssbn / float(dfbn)
-#     msw = sswn / float(dfwn)
-#     constant_features_idx = np.where(msw == 0.0)[0]
-#     if np.nonzero(msb)[0].size != msb.size and constant_features_idx.size:
-#         warnings.warn("Features %s are constant." % constant_features_idx, UserWarning)
-#     f = msb / msw
-#     # flatten matrix to vector in sparse case
-#     f = np.asarray(f).ravel()
-#     prob = special.fdtrc(dfbn, dfwn, f)
-#     return f, prob
-#
-#
+# Scoring functions
+
+
+# The following function is a rewriting of scipy.stats.f_oneway
+# Contrary to the scipy.stats.f_oneway implementation it does not
+# copy the data while keeping the inputs unchanged.
+def f_oneway(*args):
+    """Perform a 1-way ANOVA.
+
+    The one-way ANOVA tests the null hypothesis that 2 or more groups have
+    the same population mean. The test is applied to samples from two or
+    more groups, possibly with differing sizes.
+
+    Read more in the :ref:`User Guide <univariate_feature_selection>`.
+
+    Parameters
+    ----------
+    *args : {array-like, sparse matrix}
+        Sample1, sample2... The sample measurements should be given as
+        arguments.
+
+    Returns
+    -------
+    f_statistic : float
+        The computed F-value of the test.
+    p_value : float
+        The associated p-value from the F-distribution.
+
+    Notes
+    -----
+    The ANOVA test has important assumptions that must be satisfied in order
+    for the associated p-value to be valid.
+
+    1. The samples are independent
+    2. Each sample is from a normally distributed population
+    3. The population standard deviations of the groups are all equal. This
+       property is known as homoscedasticity.
+
+    If these assumptions are not true for a given set of data, it may still be
+    possible to use the Kruskal-Wallis H-test (`scipy.stats.kruskal`_) although
+    with some loss of power.
+
+    The algorithm is from Heiman[2], pp.394-7.
+
+    See ``scipy.stats.f_oneway`` that should give the same results while
+    being less efficient.
+
+    References
+    ----------
+    .. [1] Lowry, Richard.  "Concepts and Applications of Inferential
+           Statistics". Chapter 14.
+           http://vassarstats.net/textbook
+
+    .. [2] Heiman, G.W.  Research Methods in Statistics. 2002.
+    """
+    n_classes = len(args)
+    args = [as_float_array(a) for a in args]
+    n_samples_per_class = np.array([a.shape[0] for a in args])
+    n_samples = np.sum(n_samples_per_class)
+    ss_alldata = sum(safe_sqr(a).sum(axis=0) for a in args)
+    sums_args = [np.asarray(a.sum(axis=0)) for a in args]
+    square_of_sums_alldata = sum(sums_args) ** 2
+    square_of_sums_args = [s**2 for s in sums_args]
+    sstot = ss_alldata - square_of_sums_alldata / float(n_samples)
+    ssbn = 0.0
+    for k, _ in enumerate(args):
+        ssbn += square_of_sums_args[k] / n_samples_per_class[k]
+    ssbn -= square_of_sums_alldata / float(n_samples)
+    sswn = sstot - ssbn
+    dfbn = n_classes - 1
+    dfwn = n_samples - n_classes
+    msb = ssbn / float(dfbn)
+    msw = sswn / float(dfwn)
+    constant_features_idx = np.where(msw == 0.0)[0]
+    if np.nonzero(msb)[0].size != msb.size and constant_features_idx.size:
+        warnings.warn("Features %s are constant." % constant_features_idx, UserWarning)
+    f = msb / msw
+    # flatten matrix to vector in sparse case
+    f = np.asarray(f).ravel()
+    prob = special.fdtrc(dfbn, dfwn, f)
+    return f, prob
+
+
 # @validate_params(
 #     {
 #         "X": ["array-like", "sparse matrix"],

@@ -12,16 +12,16 @@ from numpy.testing import assert_allclose
 
 import arkouda.sklearn
 # from arkouda.sklearn import config_context, datasets
-# from sklearn.base import (
+from arkouda.sklearn.base import (
 #     BaseEstimator,
 #     OutlierMixin,
 #     TransformerMixin,
-#     clone,
+    clone,
 #     is_classifier,
 #     is_clusterer,
 #     is_outlier_detector,
 #     is_regressor,
-# )
+)
 # from sklearn.cluster import KMeans
 # from sklearn.decomposition import PCA
 # from sklearn.ensemble import IsolationForest
@@ -136,14 +136,14 @@ def test_clone():
 
     from arkouda.sklearn.feature_selection import SelectFpr, f_classif
 
-    # selector = SelectFpr(f_classif, alpha=0.1)
-    # new_selector = clone(selector)
-    # assert selector is not new_selector
-    # assert selector.get_params() == new_selector.get_params()
-    #
-    # selector = SelectFpr(f_classif, alpha=np.zeros((10, 2)))
-    # new_selector = clone(selector)
-    # assert selector is not new_selector
+    selector = SelectFpr(f_classif, alpha=0.1)
+    new_selector = clone(selector)
+    assert selector is not new_selector
+    assert selector.get_params() == new_selector.get_params()
+
+    selector = SelectFpr(f_classif, alpha=np.zeros((10, 2)))
+    new_selector = clone(selector)
+    assert selector is not new_selector
 
 #
 # def test_clone_2():
