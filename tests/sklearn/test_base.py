@@ -13,14 +13,14 @@ from numpy.testing import assert_allclose
 import arkouda.sklearn as sklearn
 # from arkouda.sklearn import config_context, datasets
 from arkouda.sklearn.base import (
-#     BaseEstimator,
-#     OutlierMixin,
-#     TransformerMixin,
+    BaseEstimator,
+    OutlierMixin,
+    TransformerMixin,
     clone,
-#     is_classifier,
-#     is_clusterer,
-#     is_outlier_detector,
-#     is_regressor,
+    is_classifier,
+    is_clusterer,
+    is_outlier_detector,
+    is_regressor,
 )
 from arkouda.sklearn.cluster import KMeans
 from arkouda.sklearn.decomposition import PCA
@@ -42,86 +42,86 @@ from arkouda.sklearn.utils.validation import _check_n_features, validate_data
 
 #############################################################################
 # A few test classes
-# class MyEstimator(BaseEstimator):
-#     def __init__(self, l1=0, empty=None):
-#         self.l1 = l1
-#         self.empty = empty
-#
-#
-# class K(BaseEstimator):
-#     def __init__(self, c=None, d=None):
-#         self.c = c
-#         self.d = d
-#
-#
-# class T(BaseEstimator):
-#     def __init__(self, a=None, b=None):
-#         self.a = a
-#         self.b = b
-#
-#
-# class NaNTag(BaseEstimator):
-#     def __sklearn_tags__(self):
-#         tags = super().__sklearn_tags__()
-#         tags.input_tags.allow_nan = True
-#         return tags
-#
-#
-# class NoNaNTag(BaseEstimator):
-#     def __sklearn_tags__(self):
-#         tags = super().__sklearn_tags__()
-#         tags.input_tags.allow_nan = False
-#         return tags
-#
-#
-# class OverrideTag(NaNTag):
-#     def __sklearn_tags__(self):
-#         tags = super().__sklearn_tags__()
-#         tags.input_tags.allow_nan = False
-#         return tags
-#
-#
-# class DiamondOverwriteTag(NaNTag, NoNaNTag):
-#     pass
-#
-#
-# class InheritDiamondOverwriteTag(DiamondOverwriteTag):
-#     pass
-#
-#
-# class ModifyInitParams(BaseEstimator):
-#     """Deprecated behavior.
-#     Equal parameters but with a type cast.
-#     Doesn't fulfill a is a
-#     """
-#
-#     def __init__(self, a=np.array([0])):
-#         self.a = a.copy()
-#
-#
-# class Buggy(BaseEstimator):
-#     "A buggy estimator that does not set its parameters right."
-#
-#     def __init__(self, a=None):
-#         self.a = 1
-#
-#
-# class NoEstimator:
-#     def __init__(self):
-#         pass
-#
-#     def fit(self, X=None, y=None):
-#         return self
-#
-#     def predict(self, X=None):
-#         return None
-#
-#
-# class VargEstimator(BaseEstimator):
-#     """scikit-learn estimators shouldn't have vargs."""
-#
-#     def __init__(self, *vargs):
-#         pass
+class MyEstimator(BaseEstimator):
+    def __init__(self, l1=0, empty=None):
+        self.l1 = l1
+        self.empty = empty
+
+
+class K(BaseEstimator):
+    def __init__(self, c=None, d=None):
+        self.c = c
+        self.d = d
+
+
+class T(BaseEstimator):
+    def __init__(self, a=None, b=None):
+        self.a = a
+        self.b = b
+
+
+class NaNTag(BaseEstimator):
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = True
+        return tags
+
+
+class NoNaNTag(BaseEstimator):
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = False
+        return tags
+
+
+class OverrideTag(NaNTag):
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = False
+        return tags
+
+
+class DiamondOverwriteTag(NaNTag, NoNaNTag):
+    pass
+
+
+class InheritDiamondOverwriteTag(DiamondOverwriteTag):
+    pass
+
+
+class ModifyInitParams(BaseEstimator):
+    """Deprecated behavior.
+    Equal parameters but with a type cast.
+    Doesn't fulfill a is a
+    """
+
+    def __init__(self, a=np.array([0])):
+        self.a = a.copy()
+
+
+class Buggy(BaseEstimator):
+    "A buggy estimator that does not set its parameters right."
+
+    def __init__(self, a=None):
+        self.a = 1
+
+
+class NoEstimator:
+    def __init__(self):
+        pass
+
+    def fit(self, X=None, y=None):
+        return self
+
+    def predict(self, X=None):
+        return None
+
+
+class VargEstimator(BaseEstimator):
+    """scikit-learn estimators shouldn't have vargs."""
+
+    def __init__(self, *vargs):
+        pass
 
 
 #############################################################################
@@ -160,26 +160,26 @@ def test_clone_2():
     assert not hasattr(new_selector, "own_attribute")
 
 
-# def test_clone_buggy():
-#     # Check that clone raises an error on buggy estimators.
-#     buggy = Buggy()
-#     buggy.a = 2
-#     with pytest.raises(RuntimeError):
-#         clone(buggy)
-#
-#     no_estimator = NoEstimator()
-#     with pytest.raises(TypeError):
-#         clone(no_estimator)
-#
-#     varg_est = VargEstimator()
-#     with pytest.raises(RuntimeError):
-#         clone(varg_est)
-#
-#     est = ModifyInitParams()
-#     with pytest.raises(RuntimeError):
-#         clone(est)
-#
-#
+def test_clone_buggy():
+    # Check that clone raises an error on buggy estimators.
+    buggy = Buggy()
+    buggy.a = 2
+    with pytest.raises(RuntimeError):
+        clone(buggy)
+
+    no_estimator = NoEstimator()
+    with pytest.raises(TypeError):
+        clone(no_estimator)
+
+    varg_est = VargEstimator()
+    with pytest.raises(RuntimeError):
+        clone(varg_est)
+
+    est = ModifyInitParams()
+    with pytest.raises(RuntimeError):
+        clone(est)
+
+
 # def test_clone_empty_array():
 #     # Regression test for cloning estimators with empty arrays
 #     clf = MyEstimator(empty=np.array([]))
