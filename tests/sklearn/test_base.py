@@ -406,88 +406,88 @@ def test_score_sample_weight(tree, dataset):
     assert score_unweighted != score_weighted, msg
 
 
-# def test_clone_pandas_dataframe():
-#     class DummyEstimator(TransformerMixin, BaseEstimator):
-#         """This is a dummy class for generating numerical features
-#
-#         This feature extractor extracts numerical features from pandas data
-#         frame.
-#
-#         Parameters
-#         ----------
-#
-#         df: pandas data frame
-#             The pandas data frame parameter.
-#
-#         Notes
-#         -----
-#         """
-#
-#         def __init__(self, df=None, scalar_param=1):
-#             self.df = df
-#             self.scalar_param = scalar_param
-#
-#         def fit(self, X, y=None):
-#             pass
-#
-#         def transform(self, X):
-#             pass
-#
-#     # build and clone estimator
-#     d = np.arange(10)
-#     df = MockDataFrame(d)
-#     e = DummyEstimator(df, scalar_param=1)
-#     cloned_e = clone(e)
-#
-#     # the test
-#     assert (e.df == cloned_e.df).values.all()
-#     assert e.scalar_param == cloned_e.scalar_param
-#
-#
-# def test_clone_protocol():
-#     """Checks that clone works with `__sklearn_clone__` protocol."""
-#
-#     class FrozenEstimator(BaseEstimator):
-#         def __init__(self, fitted_estimator):
-#             self.fitted_estimator = fitted_estimator
-#
-#         def __getattr__(self, name):
-#             return getattr(self.fitted_estimator, name)
-#
-#         def __sklearn_clone__(self):
-#             return self
-#
-#         def fit(self, *args, **kwargs):
-#             return self
-#
-#         def fit_transform(self, *args, **kwargs):
-#             return self.fitted_estimator.transform(*args, **kwargs)
-#
-#     X = np.array([[-1, -1], [-2, -1], [-3, -2]])
-#     pca = PCA().fit(X)
-#     components = pca.components_
-#
-#     frozen_pca = FrozenEstimator(pca)
-#     assert_allclose(frozen_pca.components_, components)
-#
-#     # Calling PCA methods such as `get_feature_names_out` still works
-#     assert_array_equal(frozen_pca.get_feature_names_out(), pca.get_feature_names_out())
-#
-#     # Fitting on a new data does not alter `components_`
-#     X_new = np.asarray([[-1, 2], [3, 4], [1, 2]])
-#     frozen_pca.fit(X_new)
-#     assert_allclose(frozen_pca.components_, components)
-#
-#     # `fit_transform` does not alter state
-#     frozen_pca.fit_transform(X_new)
-#     assert_allclose(frozen_pca.components_, components)
-#
-#     # Cloning estimator is a no-op
-#     clone_frozen_pca = clone(frozen_pca)
-#     assert clone_frozen_pca is frozen_pca
-#     assert_allclose(clone_frozen_pca.components_, components)
-#
-#
+def test_clone_pandas_dataframe():
+    class DummyEstimator(TransformerMixin, BaseEstimator):
+        """This is a dummy class for generating numerical features
+
+        This feature extractor extracts numerical features from pandas data
+        frame.
+
+        Parameters
+        ----------
+
+        df: pandas data frame
+            The pandas data frame parameter.
+
+        Notes
+        -----
+        """
+
+        def __init__(self, df=None, scalar_param=1):
+            self.df = df
+            self.scalar_param = scalar_param
+
+        def fit(self, X, y=None):
+            pass
+
+        def transform(self, X):
+            pass
+
+    # build and clone estimator
+    d = np.arange(10)
+    df = MockDataFrame(d)
+    e = DummyEstimator(df, scalar_param=1)
+    cloned_e = clone(e)
+
+    # the test
+    assert (e.df == cloned_e.df).values.all()
+    assert e.scalar_param == cloned_e.scalar_param
+
+
+def test_clone_protocol():
+    """Checks that clone works with `__sklearn_clone__` protocol."""
+
+    class FrozenEstimator(BaseEstimator):
+        def __init__(self, fitted_estimator):
+            self.fitted_estimator = fitted_estimator
+
+        def __getattr__(self, name):
+            return getattr(self.fitted_estimator, name)
+
+        def __sklearn_clone__(self):
+            return self
+
+        def fit(self, *args, **kwargs):
+            return self
+
+        def fit_transform(self, *args, **kwargs):
+            return self.fitted_estimator.transform(*args, **kwargs)
+
+    X = np.array([[-1, -1], [-2, -1], [-3, -2]])
+    pca = PCA().fit(X)
+    components = pca.components_
+
+    frozen_pca = FrozenEstimator(pca)
+    assert_allclose(frozen_pca.components_, components)
+
+    # Calling PCA methods such as `get_feature_names_out` still works
+    assert_array_equal(frozen_pca.get_feature_names_out(), pca.get_feature_names_out())
+
+    # Fitting on a new data does not alter `components_`
+    X_new = np.asarray([[-1, 2], [3, 4], [1, 2]])
+    frozen_pca.fit(X_new)
+    assert_allclose(frozen_pca.components_, components)
+
+    # `fit_transform` does not alter state
+    frozen_pca.fit_transform(X_new)
+    assert_allclose(frozen_pca.components_, components)
+
+    # Cloning estimator is a no-op
+    clone_frozen_pca = clone(frozen_pca)
+    assert clone_frozen_pca is frozen_pca
+    assert_allclose(clone_frozen_pca.components_, components)
+
+
 # def test_pickle_version_warning_is_not_raised_with_matching_version():
 #     iris = datasets.load_iris()
 #     tree = DecisionTreeClassifier().fit(iris.data, iris.target)
@@ -502,22 +502,22 @@ def test_score_sample_weight(tree, dataset):
 #     score_of_original = tree.score(iris.data, iris.target)
 #     score_of_restored = tree_restored.score(iris.data, iris.target)
 #     assert score_of_original == score_of_restored
-#
-#
-# class TreeBadVersion(DecisionTreeClassifier):
-#     def __getstate__(self):
-#         return dict(self.__dict__.items(), _sklearn_version="something")
-#
-#
-# pickle_error_message = (
-#     "Trying to unpickle estimator {estimator} from "
-#     "version {old_version} when using version "
-#     "{current_version}. This might "
-#     "lead to breaking code or invalid results. "
-#     "Use at your own risk."
-# )
-#
-#
+
+
+class TreeBadVersion(DecisionTreeClassifier):
+    def __getstate__(self):
+        return dict(self.__dict__.items(), _sklearn_version="something")
+
+
+pickle_error_message = (
+    "Trying to unpickle estimator {estimator} from "
+    "version {old_version} when using version "
+    "{current_version}. This might "
+    "lead to breaking code or invalid results. "
+    "Use at your own risk."
+)
+
+
 # def test_pickle_version_warning_is_issued_upon_different_version():
 #     iris = datasets.load_iris()
 #     tree = TreeBadVersion().fit(iris.data, iris.target)
@@ -535,13 +535,13 @@ def test_score_sample_weight(tree, dataset):
 #     assert message.estimator_name == "TreeBadVersion"
 #     assert message.original_sklearn_version == "something"
 #     assert message.current_sklearn_version == sklearn.__version__
-#
-#
-# class TreeNoVersion(DecisionTreeClassifier):
-#     def __getstate__(self):
-#         return self.__dict__
-#
-#
+
+
+class TreeNoVersion(DecisionTreeClassifier):
+    def __getstate__(self):
+        return self.__dict__
+
+
 # def test_pickle_version_warning_is_issued_when_no_version_info_in_pickle():
 #     iris = datasets.load_iris()
 #     # TreeNoVersion has no getstate, like pre-0.18
@@ -557,314 +557,314 @@ def test_score_sample_weight(tree, dataset):
 #     # check we got the warning about using pre-0.18 pickle
 #     with pytest.warns(UserWarning, match=message):
 #         pickle.loads(tree_pickle_noversion)
-#
-#
-# def test_pickle_version_no_warning_is_issued_with_non_sklearn_estimator():
-#     iris = datasets.load_iris()
-#     tree = TreeNoVersion().fit(iris.data, iris.target)
-#     tree_pickle_noversion = pickle.dumps(tree)
-#     try:
-#         module_backup = TreeNoVersion.__module__
-#         TreeNoVersion.__module__ = "notsklearn"
-#
-#         with warnings.catch_warnings():
-#             warnings.simplefilter("error")
-#
-#             pickle.loads(tree_pickle_noversion)
-#     finally:
-#         TreeNoVersion.__module__ = module_backup
-#
-#
-# class DontPickleAttributeMixin:
-#     def __getstate__(self):
-#         data = self.__dict__.copy()
-#         data["_attribute_not_pickled"] = None
-#         return data
-#
-#     def __setstate__(self, state):
-#         state["_restored"] = True
-#         self.__dict__.update(state)
-#
-#
-# class MultiInheritanceEstimator(DontPickleAttributeMixin, BaseEstimator):
-#     def __init__(self, attribute_pickled=5):
-#         self.attribute_pickled = attribute_pickled
-#         self._attribute_not_pickled = None
-#
-#
-# def test_pickling_when_getstate_is_overwritten_by_mixin():
-#     estimator = MultiInheritanceEstimator()
-#     estimator._attribute_not_pickled = "this attribute should not be pickled"
-#
-#     serialized = pickle.dumps(estimator)
-#     estimator_restored = pickle.loads(serialized)
-#     assert estimator_restored.attribute_pickled == 5
-#     assert estimator_restored._attribute_not_pickled is None
-#     assert estimator_restored._restored
-#
-#
-# def test_pickling_when_getstate_is_overwritten_by_mixin_outside_of_sklearn():
-#     try:
-#         estimator = MultiInheritanceEstimator()
-#         text = "this attribute should not be pickled"
-#         estimator._attribute_not_pickled = text
-#         old_mod = type(estimator).__module__
-#         type(estimator).__module__ = "notsklearn"
-#
-#         serialized = estimator.__getstate__()
-#         assert serialized == {"_attribute_not_pickled": None, "attribute_pickled": 5}
-#
-#         serialized["attribute_pickled"] = 4
-#         estimator.__setstate__(serialized)
-#         assert estimator.attribute_pickled == 4
-#         assert estimator._restored
-#     finally:
-#         type(estimator).__module__ = old_mod
-#
-#
-# class SingleInheritanceEstimator(BaseEstimator):
-#     def __init__(self, attribute_pickled=5):
-#         self.attribute_pickled = attribute_pickled
-#         self._attribute_not_pickled = None
-#
-#     def __getstate__(self):
-#         state = super().__getstate__()
-#         state["_attribute_not_pickled"] = None
-#         return state
-#
-#
-# def test_pickling_works_when_getstate_is_overwritten_in_the_child_class():
-#     estimator = SingleInheritanceEstimator()
-#     estimator._attribute_not_pickled = "this attribute should not be pickled"
-#
-#     serialized = pickle.dumps(estimator)
-#     estimator_restored = pickle.loads(serialized)
-#     assert estimator_restored.attribute_pickled == 5
-#     assert estimator_restored._attribute_not_pickled is None
-#
-#
-# def test_tag_inheritance():
-#     # test that changing tags by inheritance is not allowed
-#
-#     nan_tag_est = NaNTag()
-#     no_nan_tag_est = NoNaNTag()
-#     assert nan_tag_est.__sklearn_tags__().input_tags.allow_nan
-#     assert not no_nan_tag_est.__sklearn_tags__().input_tags.allow_nan
-#
-#     redefine_tags_est = OverrideTag()
-#     assert not redefine_tags_est.__sklearn_tags__().input_tags.allow_nan
-#
-#     diamond_tag_est = DiamondOverwriteTag()
-#     assert diamond_tag_est.__sklearn_tags__().input_tags.allow_nan
-#
-#     inherit_diamond_tag_est = InheritDiamondOverwriteTag()
-#     assert inherit_diamond_tag_est.__sklearn_tags__().input_tags.allow_nan
-#
-#
-# def test_raises_on_get_params_non_attribute():
-#     class MyEstimator(BaseEstimator):
-#         def __init__(self, param=5):
-#             pass
-#
-#         def fit(self, X, y=None):
-#             return self
-#
-#     est = MyEstimator()
-#     msg = "'MyEstimator' object has no attribute 'param'"
-#
-#     with pytest.raises(AttributeError, match=msg):
-#         est.get_params()
-#
-#
-# def test_repr_mimebundle_():
-#     # Checks the display configuration flag controls the json output
-#     tree = DecisionTreeClassifier()
-#     output = tree._repr_mimebundle_()
-#     assert "text/plain" in output
-#     assert "text/html" in output
-#
-#     with config_context(display="text"):
-#         output = tree._repr_mimebundle_()
-#         assert "text/plain" in output
-#         assert "text/html" not in output
-#
-#
-# def test_repr_html_wraps():
-#     # Checks the display configuration flag controls the html output
-#     tree = DecisionTreeClassifier()
-#
-#     output = tree._repr_html_()
-#     assert "<style>" in output
-#
-#     with config_context(display="text"):
-#         msg = "_repr_html_ is only defined when"
-#         with pytest.raises(AttributeError, match=msg):
-#             output = tree._repr_html_()
-#
-#
-# def test_n_features_in_validation():
-#     """Check that `_check_n_features` validates data when reset=False"""
-#     est = MyEstimator()
-#     X_train = [[1, 2, 3], [4, 5, 6]]
-#     _check_n_features(est, X_train, reset=True)
-#
-#     assert est.n_features_in_ == 3
-#
-#     msg = "X does not contain any features, but MyEstimator is expecting 3 features"
-#     with pytest.raises(ValueError, match=msg):
-#         _check_n_features(est, "invalid X", reset=False)
-#
-#
-# def test_n_features_in_no_validation():
-#     """Check that `_check_n_features` does not validate data when
-#     n_features_in_ is not defined."""
-#     est = MyEstimator()
-#     _check_n_features(est, "invalid X", reset=True)
-#
-#     assert not hasattr(est, "n_features_in_")
-#
-#     # does not raise
-#     _check_n_features(est, "invalid X", reset=False)
-#
-#
-# def test_feature_names_in():
-#     """Check that feature_name_in are recorded by `_validate_data`"""
-#     pd = pytest.importorskip("pandas")
-#     iris = datasets.load_iris()
-#     X_np = iris.data
-#     df = pd.DataFrame(X_np, columns=iris.feature_names)
-#
-#     class NoOpTransformer(TransformerMixin, BaseEstimator):
-#         def fit(self, X, y=None):
-#             validate_data(self, X)
-#             return self
-#
-#         def transform(self, X):
-#             validate_data(self, X, reset=False)
-#             return X
-#
-#     # fit on dataframe saves the feature names
-#     trans = NoOpTransformer().fit(df)
-#     assert_array_equal(trans.feature_names_in_, df.columns)
-#
-#     # fit again but on ndarray does not keep the previous feature names (see #21383)
-#     trans.fit(X_np)
-#     assert not hasattr(trans, "feature_names_in_")
-#
-#     trans.fit(df)
-#     msg = "The feature names should match those that were passed"
-#     df_bad = pd.DataFrame(X_np, columns=iris.feature_names[::-1])
-#     with pytest.raises(ValueError, match=msg):
-#         trans.transform(df_bad)
-#
-#     # warns when fitted on dataframe and transforming a ndarray
-#     msg = (
-#         "X does not have valid feature names, but NoOpTransformer was "
-#         "fitted with feature names"
-#     )
-#     with pytest.warns(UserWarning, match=msg):
-#         trans.transform(X_np)
-#
-#     # warns when fitted on a ndarray and transforming dataframe
-#     msg = "X has feature names, but NoOpTransformer was fitted without feature names"
-#     trans = NoOpTransformer().fit(X_np)
-#     with pytest.warns(UserWarning, match=msg):
-#         trans.transform(df)
-#
-#     # fit on dataframe with all integer feature names works without warning
-#     df_int_names = pd.DataFrame(X_np)
-#     trans = NoOpTransformer()
-#     with warnings.catch_warnings():
-#         warnings.simplefilter("error", UserWarning)
-#         trans.fit(df_int_names)
-#
-#     # fit on dataframe with no feature names or all integer feature names
-#     # -> do not warn on transform
-#     Xs = [X_np, df_int_names]
-#     for X in Xs:
-#         with warnings.catch_warnings():
-#             warnings.simplefilter("error", UserWarning)
-#             trans.transform(X)
-#
-#     # fit on dataframe with feature names that are mixed raises an error:
-#     df_mixed = pd.DataFrame(X_np, columns=["a", "b", 1, 2])
-#     trans = NoOpTransformer()
-#     msg = re.escape(
-#         "Feature names are only supported if all input features have string names, "
-#         "but your input has ['int', 'str'] as feature name / column name types. "
-#         "If you want feature names to be stored and validated, you must convert "
-#         "them all to strings, by using X.columns = X.columns.astype(str) for "
-#         "example. Otherwise you can remove feature / column names from your input "
-#         "data, or convert them all to a non-string data type."
-#     )
-#     with pytest.raises(TypeError, match=msg):
-#         trans.fit(df_mixed)
-#
-#     # transform on feature names that are mixed also raises:
-#     with pytest.raises(TypeError, match=msg):
-#         trans.transform(df_mixed)
-#
-#
-# def test_validate_data_skip_check_array():
-#     """Check skip_check_array option of _validate_data."""
-#
-#     pd = pytest.importorskip("pandas")
-#     iris = datasets.load_iris()
-#     df = pd.DataFrame(iris.data, columns=iris.feature_names)
-#     y = pd.Series(iris.target)
-#
-#     class NoOpTransformer(TransformerMixin, BaseEstimator):
-#         pass
-#
-#     no_op = NoOpTransformer()
-#     X_np_out = validate_data(no_op, df, skip_check_array=False)
-#     assert isinstance(X_np_out, np.ndarray)
-#     assert_allclose(X_np_out, df.to_numpy())
-#
-#     X_df_out = validate_data(no_op, df, skip_check_array=True)
-#     assert X_df_out is df
-#
-#     y_np_out = validate_data(no_op, y=y, skip_check_array=False)
-#     assert isinstance(y_np_out, np.ndarray)
-#     assert_allclose(y_np_out, y.to_numpy())
-#
-#     y_series_out = validate_data(no_op, y=y, skip_check_array=True)
-#     assert y_series_out is y
-#
-#     X_np_out, y_np_out = validate_data(no_op, df, y, skip_check_array=False)
-#     assert isinstance(X_np_out, np.ndarray)
-#     assert_allclose(X_np_out, df.to_numpy())
-#     assert isinstance(y_np_out, np.ndarray)
-#     assert_allclose(y_np_out, y.to_numpy())
-#
-#     X_df_out, y_series_out = validate_data(no_op, df, y, skip_check_array=True)
-#     assert X_df_out is df
-#     assert y_series_out is y
-#
-#     msg = "Validation should be done on X, y or both."
-#     with pytest.raises(ValueError, match=msg):
-#         validate_data(no_op)
-#
-#
-# def test_clone_keeps_output_config():
-#     """Check that clone keeps the set_output config."""
-#
-#     ss = StandardScaler().set_output(transform="pandas")
-#     config = _get_output_config("transform", ss)
-#
-#     ss_clone = clone(ss)
-#     config_clone = _get_output_config("transform", ss_clone)
-#     assert config == config_clone
-#
-#
-# class _Empty:
-#     pass
-#
-#
-# class EmptyEstimator(_Empty, BaseEstimator):
-#     pass
-#
-#
+
+
+def test_pickle_version_no_warning_is_issued_with_non_sklearn_estimator():
+    iris = datasets.load_iris()
+    tree = TreeNoVersion().fit(iris.data, iris.target)
+    tree_pickle_noversion = pickle.dumps(tree)
+    try:
+        module_backup = TreeNoVersion.__module__
+        TreeNoVersion.__module__ = "notsklearn"
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+
+            pickle.loads(tree_pickle_noversion)
+    finally:
+        TreeNoVersion.__module__ = module_backup
+
+
+class DontPickleAttributeMixin:
+    def __getstate__(self):
+        data = self.__dict__.copy()
+        data["_attribute_not_pickled"] = None
+        return data
+
+    def __setstate__(self, state):
+        state["_restored"] = True
+        self.__dict__.update(state)
+
+
+class MultiInheritanceEstimator(DontPickleAttributeMixin, BaseEstimator):
+    def __init__(self, attribute_pickled=5):
+        self.attribute_pickled = attribute_pickled
+        self._attribute_not_pickled = None
+
+
+def test_pickling_when_getstate_is_overwritten_by_mixin():
+    estimator = MultiInheritanceEstimator()
+    estimator._attribute_not_pickled = "this attribute should not be pickled"
+
+    serialized = pickle.dumps(estimator)
+    estimator_restored = pickle.loads(serialized)
+    assert estimator_restored.attribute_pickled == 5
+    assert estimator_restored._attribute_not_pickled is None
+    assert estimator_restored._restored
+
+
+def test_pickling_when_getstate_is_overwritten_by_mixin_outside_of_sklearn():
+    try:
+        estimator = MultiInheritanceEstimator()
+        text = "this attribute should not be pickled"
+        estimator._attribute_not_pickled = text
+        old_mod = type(estimator).__module__
+        type(estimator).__module__ = "notsklearn"
+
+        serialized = estimator.__getstate__()
+        assert serialized == {"_attribute_not_pickled": None, "attribute_pickled": 5}
+
+        serialized["attribute_pickled"] = 4
+        estimator.__setstate__(serialized)
+        assert estimator.attribute_pickled == 4
+        assert estimator._restored
+    finally:
+        type(estimator).__module__ = old_mod
+
+
+class SingleInheritanceEstimator(BaseEstimator):
+    def __init__(self, attribute_pickled=5):
+        self.attribute_pickled = attribute_pickled
+        self._attribute_not_pickled = None
+
+    def __getstate__(self):
+        state = super().__getstate__()
+        state["_attribute_not_pickled"] = None
+        return state
+
+
+def test_pickling_works_when_getstate_is_overwritten_in_the_child_class():
+    estimator = SingleInheritanceEstimator()
+    estimator._attribute_not_pickled = "this attribute should not be pickled"
+
+    serialized = pickle.dumps(estimator)
+    estimator_restored = pickle.loads(serialized)
+    assert estimator_restored.attribute_pickled == 5
+    assert estimator_restored._attribute_not_pickled is None
+
+
+def test_tag_inheritance():
+    # test that changing tags by inheritance is not allowed
+
+    nan_tag_est = NaNTag()
+    no_nan_tag_est = NoNaNTag()
+    assert nan_tag_est.__sklearn_tags__().input_tags.allow_nan
+    assert not no_nan_tag_est.__sklearn_tags__().input_tags.allow_nan
+
+    redefine_tags_est = OverrideTag()
+    assert not redefine_tags_est.__sklearn_tags__().input_tags.allow_nan
+
+    diamond_tag_est = DiamondOverwriteTag()
+    assert diamond_tag_est.__sklearn_tags__().input_tags.allow_nan
+
+    inherit_diamond_tag_est = InheritDiamondOverwriteTag()
+    assert inherit_diamond_tag_est.__sklearn_tags__().input_tags.allow_nan
+
+
+def test_raises_on_get_params_non_attribute():
+    class MyEstimator(BaseEstimator):
+        def __init__(self, param=5):
+            pass
+
+        def fit(self, X, y=None):
+            return self
+
+    est = MyEstimator()
+    msg = "'MyEstimator' object has no attribute 'param'"
+
+    with pytest.raises(AttributeError, match=msg):
+        est.get_params()
+
+
+def test_repr_mimebundle_():
+    # Checks the display configuration flag controls the json output
+    tree = DecisionTreeClassifier()
+    output = tree._repr_mimebundle_()
+    assert "text/plain" in output
+    assert "text/html" in output
+
+    with config_context(display="text"):
+        output = tree._repr_mimebundle_()
+        assert "text/plain" in output
+        assert "text/html" not in output
+
+
+def test_repr_html_wraps():
+    # Checks the display configuration flag controls the html output
+    tree = DecisionTreeClassifier()
+
+    output = tree._repr_html_()
+    assert "<style>" in output
+
+    with config_context(display="text"):
+        msg = "_repr_html_ is only defined when"
+        with pytest.raises(AttributeError, match=msg):
+            output = tree._repr_html_()
+
+
+def test_n_features_in_validation():
+    """Check that `_check_n_features` validates data when reset=False"""
+    est = MyEstimator()
+    X_train = [[1, 2, 3], [4, 5, 6]]
+    _check_n_features(est, X_train, reset=True)
+
+    assert est.n_features_in_ == 3
+
+    msg = "X does not contain any features, but MyEstimator is expecting 3 features"
+    with pytest.raises(ValueError, match=msg):
+        _check_n_features(est, "invalid X", reset=False)
+
+
+def test_n_features_in_no_validation():
+    """Check that `_check_n_features` does not validate data when
+    n_features_in_ is not defined."""
+    est = MyEstimator()
+    _check_n_features(est, "invalid X", reset=True)
+
+    assert not hasattr(est, "n_features_in_")
+
+    # does not raise
+    _check_n_features(est, "invalid X", reset=False)
+
+
+def test_feature_names_in():
+    """Check that feature_name_in are recorded by `_validate_data`"""
+    pd = pytest.importorskip("pandas")
+    iris = datasets.load_iris()
+    X_np = iris.data
+    df = pd.DataFrame(X_np, columns=iris.feature_names)
+
+    class NoOpTransformer(TransformerMixin, BaseEstimator):
+        def fit(self, X, y=None):
+            validate_data(self, X)
+            return self
+
+        def transform(self, X):
+            validate_data(self, X, reset=False)
+            return X
+
+    # fit on dataframe saves the feature names
+    trans = NoOpTransformer().fit(df)
+    assert_array_equal(trans.feature_names_in_, df.columns)
+
+    # fit again but on ndarray does not keep the previous feature names (see #21383)
+    trans.fit(X_np)
+    assert not hasattr(trans, "feature_names_in_")
+
+    trans.fit(df)
+    msg = "The feature names should match those that were passed"
+    df_bad = pd.DataFrame(X_np, columns=iris.feature_names[::-1])
+    with pytest.raises(ValueError, match=msg):
+        trans.transform(df_bad)
+
+    # warns when fitted on dataframe and transforming a ndarray
+    msg = (
+        "X does not have valid feature names, but NoOpTransformer was "
+        "fitted with feature names"
+    )
+    with pytest.warns(UserWarning, match=msg):
+        trans.transform(X_np)
+
+    # warns when fitted on a ndarray and transforming dataframe
+    msg = "X has feature names, but NoOpTransformer was fitted without feature names"
+    trans = NoOpTransformer().fit(X_np)
+    with pytest.warns(UserWarning, match=msg):
+        trans.transform(df)
+
+    # fit on dataframe with all integer feature names works without warning
+    df_int_names = pd.DataFrame(X_np)
+    trans = NoOpTransformer()
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        trans.fit(df_int_names)
+
+    # fit on dataframe with no feature names or all integer feature names
+    # -> do not warn on transform
+    Xs = [X_np, df_int_names]
+    for X in Xs:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", UserWarning)
+            trans.transform(X)
+
+    # fit on dataframe with feature names that are mixed raises an error:
+    df_mixed = pd.DataFrame(X_np, columns=["a", "b", 1, 2])
+    trans = NoOpTransformer()
+    msg = re.escape(
+        "Feature names are only supported if all input features have string names, "
+        "but your input has ['int', 'str'] as feature name / column name types. "
+        "If you want feature names to be stored and validated, you must convert "
+        "them all to strings, by using X.columns = X.columns.astype(str) for "
+        "example. Otherwise you can remove feature / column names from your input "
+        "data, or convert them all to a non-string data type."
+    )
+    with pytest.raises(TypeError, match=msg):
+        trans.fit(df_mixed)
+
+    # transform on feature names that are mixed also raises:
+    with pytest.raises(TypeError, match=msg):
+        trans.transform(df_mixed)
+
+
+def test_validate_data_skip_check_array():
+    """Check skip_check_array option of _validate_data."""
+
+    pd = pytest.importorskip("pandas")
+    iris = datasets.load_iris()
+    df = pd.DataFrame(iris.data, columns=iris.feature_names)
+    y = pd.Series(iris.target)
+
+    class NoOpTransformer(TransformerMixin, BaseEstimator):
+        pass
+
+    no_op = NoOpTransformer()
+    X_np_out = validate_data(no_op, df, skip_check_array=False)
+    assert isinstance(X_np_out, np.ndarray)
+    assert_allclose(X_np_out, df.to_numpy())
+
+    X_df_out = validate_data(no_op, df, skip_check_array=True)
+    assert X_df_out is df
+
+    y_np_out = validate_data(no_op, y=y, skip_check_array=False)
+    assert isinstance(y_np_out, np.ndarray)
+    assert_allclose(y_np_out, y.to_numpy())
+
+    y_series_out = validate_data(no_op, y=y, skip_check_array=True)
+    assert y_series_out is y
+
+    X_np_out, y_np_out = validate_data(no_op, df, y, skip_check_array=False)
+    assert isinstance(X_np_out, np.ndarray)
+    assert_allclose(X_np_out, df.to_numpy())
+    assert isinstance(y_np_out, np.ndarray)
+    assert_allclose(y_np_out, y.to_numpy())
+
+    X_df_out, y_series_out = validate_data(no_op, df, y, skip_check_array=True)
+    assert X_df_out is df
+    assert y_series_out is y
+
+    msg = "Validation should be done on X, y or both."
+    with pytest.raises(ValueError, match=msg):
+        validate_data(no_op)
+
+
+def test_clone_keeps_output_config():
+    """Check that clone keeps the set_output config."""
+
+    ss = StandardScaler().set_output(transform="pandas")
+    config = _get_output_config("transform", ss)
+
+    ss_clone = clone(ss)
+    config_clone = _get_output_config("transform", ss_clone)
+    assert config == config_clone
+
+
+class _Empty:
+    pass
+
+
+class EmptyEstimator(_Empty, BaseEstimator):
+    pass
+
+
 # @pytest.mark.parametrize("estimator", [BaseEstimator(), EmptyEstimator()])
 # def test_estimator_empty_instance_dict(estimator):
 #     """Check that ``__getstate__`` returns an empty ``dict`` with an empty
@@ -879,116 +879,116 @@ def test_score_sample_weight(tree, dataset):
 #
 #     # this should not raise
 #     pickle.loads(pickle.dumps(BaseEstimator()))
-#
-#
-# def test_estimator_getstate_using_slots_error_message():
-#     """Using a `BaseEstimator` with `__slots__` is not supported."""
-#
-#     class WithSlots:
-#         __slots__ = ("x",)
-#
-#     class Estimator(BaseEstimator, WithSlots):
-#         pass
-#
-#     msg = (
-#         "You cannot use `__slots__` in objects inheriting from "
-#         "`sklearn.base.BaseEstimator`"
-#     )
-#
-#     with pytest.raises(TypeError, match=msg):
-#         Estimator().__getstate__()
-#
-#     with pytest.raises(TypeError, match=msg):
-#         pickle.dumps(Estimator())
-#
-#
-# @pytest.mark.parametrize(
-#     "constructor_name, minversion",
-#     [
-#         ("dataframe", "1.5.0"),
-#         ("pyarrow", "12.0.0"),
-#         ("polars", "0.20.23"),
-#     ],
-# )
-# def test_dataframe_protocol(constructor_name, minversion):
-#     """Uses the dataframe exchange protocol to get feature names."""
-#     data = [[1, 4, 2], [3, 3, 6]]
-#     columns = ["col_0", "col_1", "col_2"]
-#     df = _convert_container(
-#         data, constructor_name, columns_name=columns, minversion=minversion
-#     )
-#
-#     class NoOpTransformer(TransformerMixin, BaseEstimator):
-#         def fit(self, X, y=None):
-#             validate_data(self, X)
-#             return self
-#
-#         def transform(self, X):
-#             return validate_data(self, X, reset=False)
-#
-#     no_op = NoOpTransformer()
-#     no_op.fit(df)
-#     assert_array_equal(no_op.feature_names_in_, columns)
-#     X_out = no_op.transform(df)
-#
-#     if constructor_name != "pyarrow":
-#         # pyarrow does not work with `np.asarray`
-#         # https://github.com/apache/arrow/issues/34886
-#         assert_allclose(df, X_out)
-#
-#     bad_names = ["a", "b", "c"]
-#     df_bad = _convert_container(data, constructor_name, columns_name=bad_names)
-#     with pytest.raises(ValueError, match="The feature names should match"):
-#         no_op.transform(df_bad)
-#
-#
-# @config_context(enable_metadata_routing=True)
-# def test_transformer_fit_transform_with_metadata_in_transform():
-#     """Test that having a transformer with metadata for transform raises a
-#     warning when calling fit_transform."""
-#
-#     class CustomTransformer(BaseEstimator, TransformerMixin):
-#         def fit(self, X, y=None, prop=None):
-#             return self
-#
-#         def transform(self, X, prop=None):
-#             return X
-#
-#     # passing the metadata to `fit_transform` should raise a warning since it
-#     # could potentially be consumed by `transform`
-#     with pytest.warns(UserWarning, match="`transform` method which consumes metadata"):
-#         CustomTransformer().set_transform_request(prop=True).fit_transform(
-#             [[1]], [1], prop=1
-#         )
-#
-#     # not passing a metadata which can potentially be consumed by `transform` should
-#     # not raise a warning
-#     with warnings.catch_warnings(record=True) as record:
-#         CustomTransformer().set_transform_request(prop=True).fit_transform([[1]], [1])
-#         assert len(record) == 0
-#
-#
-# @config_context(enable_metadata_routing=True)
-# def test_outlier_mixin_fit_predict_with_metadata_in_predict():
-#     """Test that having an OutlierMixin with metadata for predict raises a
-#     warning when calling fit_predict."""
-#
-#     class CustomOutlierDetector(BaseEstimator, OutlierMixin):
-#         def fit(self, X, y=None, prop=None):
-#             return self
-#
-#         def predict(self, X, prop=None):
-#             return X
-#
-#     # passing the metadata to `fit_predict` should raise a warning since it
-#     # could potentially be consumed by `predict`
-#     with pytest.warns(UserWarning, match="`predict` method which consumes metadata"):
-#         CustomOutlierDetector().set_predict_request(prop=True).fit_predict(
-#             [[1]], [1], prop=1
-#         )
-#
-#     # not passing a metadata which can potentially be consumed by `predict` should
-#     # not raise a warning
-#     with warnings.catch_warnings(record=True) as record:
-#         CustomOutlierDetector().set_predict_request(prop=True).fit_predict([[1]], [1])
-#         assert len(record) == 0
+
+
+def test_estimator_getstate_using_slots_error_message():
+    """Using a `BaseEstimator` with `__slots__` is not supported."""
+
+    class WithSlots:
+        __slots__ = ("x",)
+
+    class Estimator(BaseEstimator, WithSlots):
+        pass
+
+    msg = (
+        "You cannot use `__slots__` in objects inheriting from "
+        "`sklearn.base.BaseEstimator`"
+    )
+
+    with pytest.raises(TypeError, match=msg):
+        Estimator().__getstate__()
+
+    with pytest.raises(TypeError, match=msg):
+        pickle.dumps(Estimator())
+
+
+@pytest.mark.parametrize(
+    "constructor_name, minversion",
+    [
+        ("dataframe", "1.5.0"),
+        ("pyarrow", "12.0.0"),
+        ("polars", "0.20.23"),
+    ],
+)
+def test_dataframe_protocol(constructor_name, minversion):
+    """Uses the dataframe exchange protocol to get feature names."""
+    data = [[1, 4, 2], [3, 3, 6]]
+    columns = ["col_0", "col_1", "col_2"]
+    df = _convert_container(
+        data, constructor_name, columns_name=columns, minversion=minversion
+    )
+
+    class NoOpTransformer(TransformerMixin, BaseEstimator):
+        def fit(self, X, y=None):
+            validate_data(self, X)
+            return self
+
+        def transform(self, X):
+            return validate_data(self, X, reset=False)
+
+    no_op = NoOpTransformer()
+    no_op.fit(df)
+    assert_array_equal(no_op.feature_names_in_, columns)
+    X_out = no_op.transform(df)
+
+    if constructor_name != "pyarrow":
+        # pyarrow does not work with `np.asarray`
+        # https://github.com/apache/arrow/issues/34886
+        assert_allclose(df, X_out)
+
+    bad_names = ["a", "b", "c"]
+    df_bad = _convert_container(data, constructor_name, columns_name=bad_names)
+    with pytest.raises(ValueError, match="The feature names should match"):
+        no_op.transform(df_bad)
+
+
+@config_context(enable_metadata_routing=True)
+def test_transformer_fit_transform_with_metadata_in_transform():
+    """Test that having a transformer with metadata for transform raises a
+    warning when calling fit_transform."""
+
+    class CustomTransformer(BaseEstimator, TransformerMixin):
+        def fit(self, X, y=None, prop=None):
+            return self
+
+        def transform(self, X, prop=None):
+            return X
+
+    # passing the metadata to `fit_transform` should raise a warning since it
+    # could potentially be consumed by `transform`
+    with pytest.warns(UserWarning, match="`transform` method which consumes metadata"):
+        CustomTransformer().set_transform_request(prop=True).fit_transform(
+            [[1]], [1], prop=1
+        )
+
+    # not passing a metadata which can potentially be consumed by `transform` should
+    # not raise a warning
+    with warnings.catch_warnings(record=True) as record:
+        CustomTransformer().set_transform_request(prop=True).fit_transform([[1]], [1])
+        assert len(record) == 0
+
+
+@config_context(enable_metadata_routing=True)
+def test_outlier_mixin_fit_predict_with_metadata_in_predict():
+    """Test that having an OutlierMixin with metadata for predict raises a
+    warning when calling fit_predict."""
+
+    class CustomOutlierDetector(BaseEstimator, OutlierMixin):
+        def fit(self, X, y=None, prop=None):
+            return self
+
+        def predict(self, X, prop=None):
+            return X
+
+    # passing the metadata to `fit_predict` should raise a warning since it
+    # could potentially be consumed by `predict`
+    with pytest.warns(UserWarning, match="`predict` method which consumes metadata"):
+        CustomOutlierDetector().set_predict_request(prop=True).fit_predict(
+            [[1]], [1], prop=1
+        )
+
+    # not passing a metadata which can potentially be consumed by `predict` should
+    # not raise a warning
+    with warnings.catch_warnings(record=True) as record:
+        CustomOutlierDetector().set_predict_request(prop=True).fit_predict([[1]], [1])
+        assert len(record) == 0
