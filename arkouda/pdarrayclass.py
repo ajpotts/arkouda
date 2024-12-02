@@ -450,6 +450,11 @@ class pdarray:
             generic_msg(cmd="set_max_bits", args={"array": self, "max_bits": max_bits})
             self._max_bits = max_bits
 
+    def copy(self):
+        from arkouda.pdarraycreation import array
+        return array(self)
+
+
     def equals(self, other) -> bool_scalars:
         """
         Whether pdarrays are the same size and all entries are equal.

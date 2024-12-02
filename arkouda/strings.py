@@ -339,6 +339,10 @@ class Strings:
         """
         return "string"
 
+    def copy(self):
+        from arkouda.pdarraycreation import array
+        return array(self)
+
     def equals(self, other) -> bool_scalars:
         """
         Whether Strings are the same size and all entries are equal.
