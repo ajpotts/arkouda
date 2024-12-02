@@ -38,7 +38,154 @@ module ReductionMsg
     proc reductionReturnType(type t) type
       do return if t == bool then int else t;
 
-    proc reduceByReductionOperator(const ref x: [?d] ?t, axis: list(int), skipNan: bool, reducer): [] reductionReturnType(t) throws
+    @arkouda.registerCommand
+    proc sumAll(const ref x:[?d] ?t, skipNan: bool): reductionReturnType(t) throws
+      where t==int || t==real || t==uint(64) || t==bool
+    {
+        type opType = reductionReturnType(t);
+      
+        var sum: opType;
+        forall elm in x with (PlusReduceOp(opType) reduce sum) {
+            sum reduce= elm;
+        }
+        return sum;
+    }
+
+
+
+
+
+    class PlusReduceOp: ReduceScanOp {
+
+      /* the type of the elements to be reduced */
+      type eltType;
+
+      /* task-private accumulator/reduction state */
+      var value: eltType;
+
+      /* identity w.r.t. the reduction operation */
+      proc identity      do return 0: eltType;
+
+      /* accumulate a single element onto the accumulator */
+      proc accumulate(elm)  { value = value + elm; }
+
+      /* accumulate a single element onto the state */
+      proc accumulateOntoState(ref state, elm)  { state = state + elm; }
+
+      /* accumulate the value of the outer variable at the entry to the loop */
+      // Note: this method is optional. If it is not provided,
+      // accumulate(outerVar) is used instead.
+      proc initialAccumulate(outerVar) { value = value + outerVar: eltType; }
+
+      // Note: 'this' can be accessed by multiple calls to combine()
+      // concurrently. The Chapel implementation serializes such calls
+      // with a lock on 'this'.
+      // 'other' will not be accessed concurrently.
+      /* combine the accumulations in 'this' and 'other' */
+      proc combine(other: borrowed PlusReduceOp(?))   { value = value + other.value; }
+
+      /* Convert the accumulation into the value of the reduction
+        that is reported to the user. This is trivial in our case. */
+      proc generate()    do return value;
+
+      /* produce a new instance of this class */
+      proc clone()       do return new unmanaged PlusReduceOp(eltType=eltType);
+    }
+
+    // class MyPlusReduceOp: ReduceScanOp {
+    //     type eltType;
+
+    //     // type returnType;
+
+    //     var value: eltType;
+
+    //     proc identity      do return 0: eltType;
+
+    //     proc accumulate(elm)  { value = value + elm:eltType; }
+
+    //     proc accumulateOntoState(ref state, elm)  { state = state + elm:eltType; }
+
+    //     proc initialAccumulate(outerVar) { value = value + outerVar: eltType; }
+
+    //     proc combine(other: borrowed MyPlusReduceOp(?))   { value = value + other.value; }
+
+    //     proc generate()    do return value;
+
+    //     proc clone()       do return new unmanaged MyPlusReduceOp(eltType=eltType);
+    // }
+
+    class NanPlusReduceOp: ReduceScanOp {
+        type eltType;
+
+        type returnType = reductionReturnType(eltType);
+
+        var value: returnType;
+
+        proc identity      do return 0: returnType;
+
+        proc accumulate(elm)  { value = if isNan(elm) then value else value + elm:returnType; }
+
+        proc accumulateOntoState(ref state, elm)  { state = if isNan(elm) then state else state + elm:returnType; }
+
+        proc initialAccumulate(outerVar) { value = if isNan(outerVar) then value else value + outerVar:returnType;}
+
+        proc combine(other: borrowed NanPlusReduceOp(?))   { value = value + other.value; }
+
+        proc generate()    do return value;
+
+        proc clone()       do return new unmanaged NanPlusReduceOp(eltType=eltType);
+    }
+
+    // class NanPlusReduceOp: ReduceScanOp {
+    //     type eltType;
+
+    //     type opType;
+
+    //     var value: opType;
+
+    //     proc identity      do return 0: opType;
+
+    //     proc accumulate(elm)  { value = if isNan(elm) then value else value + elm:opType; }
+
+    //     proc accumulateOntoState(ref state, elm)  { state = if isNan(elm) then state else state + elm:opType; }
+
+    //     proc initialAccumulate(outerVar) { value = if isNan(outerVar) then value else value + outerVar:opType;}
+
+    //     proc combine(other: borrowed NanPlusReduceOp(?))   { value = value + other.value; }
+
+    //     proc generate()    do return value;
+
+    //     proc clone()       do return new unmanaged NanPlusReduceOp(eltType=eltType, opType=opType);
+    // }
+
+
+    // class MyPlusReduceOp: ReduceScanOp {
+    //     type eltType;
+
+    //     type opType;
+
+    //     var value: opType;
+
+    //     proc identity      do return 0: opType;
+
+    //     proc accumulate(elm)  { value = value + elm:opType; }
+
+    //     proc accumulateOntoState(ref state, elm)  { state = state + elm:opType; }
+
+    //     proc initialAccumulate(outerVar) { value = value + outerVar: opType; }
+
+    //     proc combine(other: borrowed MyPlusReduceOp(?))   { value = value + other.value; }
+
+    //     proc generate()    do return value;
+
+    //     proc clone()       do return new unmanaged MyPlusReduceOp(eltType=eltType, opType=opType);
+    // }
+
+
+
+
+    @arkouda.registerCommand
+    proc sum(const ref x: [?d] ?t, axis: list(int), skipNan: bool): [] reductionReturnType(t) throws
       where t==int || t==real || t==uint(64) || t==bool
     {
       use SliceReductionOps;
@@ -50,46 +197,9 @@ module ReductionMsg
         const outShape = reducedShape(x.shape, axes);
         var ret = makeDistArray((...outShape), opType);
         forall (sliceDom, sliceIdx) in axisSlices(x.domain, axes)
-          do ret[sliceIdx] = reducer.reduceSlice(x, sliceDom, skipNan);
+          do ret[sliceIdx] = sumSlice(x, sliceDom, opType, skipNan);
         return ret;
       }
-    }
-
-    // @arkouda.registerCommand
-    // proc sumAll(const ref x: [?d] ?t, skipNan: bool): reductionReturnType(t) throws
-    //   where t==int || t==real || t==uint(64) || t==bool
-    // {
-    //   use SliceReductionOps;
-    //   return + reduce x :reductionReturnType(t);//sumSlice(x, x.domain, reductionReturnType(t), skipNan);
-    // }
-
-    @arkouda.registerCommand(ignoreWhereClause=true)
-    proc sumAll(const ref x: [?d] ?t, skipNan: bool): t throws
-      where t==int || t==real || t==uint(64) 
-    {
-      return + reduce x;//sumSlice(x, x.domain, reductionReturnType(t), skipNan);
-    }
-
-    proc sumAll(const ref x: [?d] ?t, skipNan: bool): reductionReturnType(t) throws
-      where t==bool
-    {
-      use SliceReductionOps;
-      return MyPlusReduceOp reduce x;//sumSlice(x, x.domain, reductionReturnType(t), skipNan);
-    }
-
-    proc sumAll(const ref x: [?d] ?t, skipNan: bool): t throws
-      where !(t==int || t==real || t==uint(64) || t==bool)
-    {
-      throw new Error ("Message TBD") ;
-    }
-
-    @arkouda.registerCommand
-    proc sum(const ref x: [?d] ?t, axis: list(int), skipNan: bool): [] reductionReturnType(t) throws
-      where t==int || t==real || t==uint(64) || t==bool
-    {
-      use SliceReductionOps;
-      const reducer = new sumReductionOperator();
-      return reduceByReductionOperator(x, axis, skipNan, reducer);
     }
 
     @arkouda.registerCommand
@@ -106,8 +216,17 @@ module ReductionMsg
     proc prod(const ref x:[?d] ?t, axis: list(int), skipNan: bool): [] reductionReturnType(t) throws
       where t==int || t==real || t==uint(64) || t==bool {
       use SliceReductionOps;
-      const reducer = new prodReductionOperator();
-      return reduceByReductionOperator(x, axis, skipNan, reducer);
+      type opType = reductionReturnType(t);
+      const (valid, axes) = validateNegativeAxes(axis, x.rank);
+      if !valid {
+        throw new Error("Invalid axis value(s) '%?' in slicing reduction".format(axis));
+      } else {
+        const outShape = reducedShape(x.shape, axes);
+        var ret = makeDistArray((...outShape), opType);
+        forall (sliceDom, sliceIdx) in axisSlices(x.domain, axes)
+          do ret[sliceIdx] = prodSlice(x, sliceDom, opType, skipNan);
+        return ret;
+      }
     }
 
     @arkouda.registerCommand
@@ -331,73 +450,6 @@ module ReductionMsg
         return isSorted(aSlice);
       }
 
-
-          /* Implements + reduction over numeric data, converting all elements to int before summing. */
-      class PlusIntReduceOp: ReduceScanOp {
-          type eltType;
-
-          var value: int;
-
-          proc identity      do return 0: int;
-
-          proc accumulate(elm)  { value = value + elm:int; }
-
-          proc accumulateOntoState(ref state, elm)  { state = state + elm:int; }
-
-          proc initialAccumulate(outerVar) { value = value + outerVar: int; }
-
-          proc combine(other: borrowed PlusIntReduceOp(?))   { value = value + other.value; }
-
-          proc generate()    do return value;
-
-          proc clone()       do return new unmanaged PlusIntReduceOp(eltType=eltType);
-      }
-
-
-      class MyPlusReduceOp: ReduceScanOp {
-          type eltType;
-
-          type returnType = reductionReturnType(eltType);
-
-          var value: returnType;
-
-          proc identity      do return 0: returnType;
-
-          proc accumulate(elm)  { value = value + elm:returnType; }
-
-          proc accumulateOntoState(ref state, elm)  { state = state + elm:returnType; }
-
-          proc initialAccumulate(outerVar) { value = value + outerVar: returnType; }
-
-          proc combine(other: borrowed MyPlusReduceOp(?))   { value = value + other.value; }
-
-          proc generate()    do return value;
-
-          proc clone()       do return new unmanaged MyPlusReduceOp(eltType=eltType);
-      }
-
-      class NanPlusReduceOp: ReduceScanOp {
-          type eltType;
-
-          type returnType = reductionReturnType(eltType);
-
-          var value: returnType;
-
-          proc identity      do return 0: returnType;
-
-          proc accumulate(elm)  { value = if isNan(elm) then value else value + elm:returnType; }
-
-          proc accumulateOntoState(ref state, elm)  { state = if isNan(elm) then state else state + elm:returnType; }
-
-          proc initialAccumulate(outerVar) { value = if isNan(outerVar) then value else value + outerVar:returnType;}
-
-          proc combine(other: borrowed NanPlusReduceOp(?))   { value = value + other.value; }
-
-          proc generate()    do return value;
-
-          proc clone()       do return new unmanaged NanPlusReduceOp(eltType=eltType);
-      }
-
       proc sumSlice(const ref a: [?d] ?t, slice, type opType, skipNan: bool): opType {
         var sum = 0:opType;
         if skipNan{
@@ -406,71 +458,10 @@ module ReductionMsg
             sum += a[i]:opType;
           }
         }else{
-          forall i in slice with (MyPlusReduceOp reduce sum) do sum += a[i]:opType;
+          forall i in slice with (+ reduce sum) do sum += a[i]:opType;
         }
         return sum;
       }
-
-      record sumReductionOperator {
-
-        proc init() {}
-
-        proc reduceSlice(const ref a: [?d] ?t, slice, skipNan: bool): reductionReturnType(t) {
-            return sumSlice(a, slice, reductionReturnType(t), skipNan);
-          }
-
-        proc clone()       do return new unmanaged sumReductionOperator();
-      }
-
-      record prodReductionOperator {
-
-        proc init() {}
-
-        proc reduceSlice(const ref a: [?d] ?t, slice, skipNan: bool): reductionReturnType(t) {
-            return prodSlice(a, slice, reductionReturnType(t), skipNan);
-          }
-
-        proc clone()       do return new unmanaged prodReductionOperator();
-      }
-
-      record minReductionOperator {
-
-        proc init() {}
-
-        proc reduceSlice(const ref a: [?d] ?t, slice, skipNan: bool): reductionReturnType(t) {
-            return getMinSlice(a, slice, reductionReturnType(t), skipNan);
-          }
-
-        proc clone()       do return new unmanaged minReductionOperator();
-      }
-
-      record maxReductionOperator {
-
-        proc init() {}
-
-        proc reduceSlice(const ref a: [?d] ?t, slice, skipNan: bool): reductionReturnType(t) {
-            return getMaxSlice(a, slice, reductionReturnType(t), skipNan);
-          }
-
-        proc clone()       do return new unmanaged maxReductionOperator();
-      }
-
-
-      // proc sumSlice(const ref a: [?d] ?t, slice, skipNan: bool): reductionReturnType(t) throws
-      // where t==int || t==real || t==uint {
-      //   type opType = reductionReturnType(t);
-      //   var sum: opType = 0;
-      //   if skipNan{
-      //     // forall i in slice with (+ reduce sum) {
-      //     //   if isArgandType(t) { if isNan(a[i]) then continue; }
-      //     //   sum += a[i]:opType;
-      //     // }
-      //     forall i in slice with (NanPlusReduceOp reduce sum) do sum += a[i]:opType;
-      //   }else{
-      //     forall i in slice with (MyPlusReduceOp reduce sum) do sum += a[i]:opType;
-      //   }
-      //   return sum;
-      // }
 
       proc prodSlice(const ref a: [] ?t, slice, type opType, skipNan: bool): opType {
         var prod = 1.0; // always use real(64) to avoid int overflow
