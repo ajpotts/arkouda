@@ -23,7 +23,7 @@ import scipy.sparse as sp
 from .. import __version__
 from ..utils import check_array
 from ..utils._param_validation import HasMethods, Interval, StrOptions, validate_params
-from ._svmlight_format_fast import (
+from sklearn.datasets._svmlight_format_fast import (
     _dump_svmlight_file,
     _load_svmlight_file,
 )

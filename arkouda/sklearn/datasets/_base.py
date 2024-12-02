@@ -27,7 +27,7 @@ from urllib.request import urlretrieve
 
 import numpy as np
 
-from ..preprocessing import scale
+from sklearn.preprocessing import scale
 from ..utils import Bunch, check_random_state
 from ..utils._optional_dependencies import check_pandas_support
 from ..utils._param_validation import Interval, StrOptions, validate_params

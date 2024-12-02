@@ -11,7 +11,7 @@ import scipy.sparse as sp
 from numpy.testing import assert_allclose
 
 import arkouda.sklearn as sklearn
-# from arkouda.sklearn import config_context, datasets
+from arkouda.sklearn import config_context, datasets
 from arkouda.sklearn.base import (
     BaseEstimator,
     OutlierMixin,
@@ -28,7 +28,7 @@ from arkouda.sklearn.ensemble import IsolationForest
 from arkouda.sklearn.exceptions import InconsistentVersionWarning
 from arkouda.sklearn.model_selection import GridSearchCV
 from arkouda.sklearn.pipeline import Pipeline
-# from arkouda.sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler
 from arkouda.sklearn.svm import SVC, SVR
 from arkouda.sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from arkouda.sklearn.utils._mocking import MockDataFrame
@@ -180,232 +180,232 @@ def test_clone_buggy():
         clone(est)
 
 
-# def test_clone_empty_array():
-#     # Regression test for cloning estimators with empty arrays
-#     clf = MyEstimator(empty=np.array([]))
-#     clf2 = clone(clf)
-#     assert_array_equal(clf.empty, clf2.empty)
-#
-#     clf = MyEstimator(empty=sp.csr_matrix(np.array([[0]])))
-#     clf2 = clone(clf)
-#     assert_array_equal(clf.empty.data, clf2.empty.data)
-#
-#
-# def test_clone_nan():
-#     # Regression test for cloning estimators with default parameter as np.nan
-#     clf = MyEstimator(empty=np.nan)
-#     clf2 = clone(clf)
-#
-#     assert clf.empty is clf2.empty
-#
-#
-# def test_clone_dict():
-#     # test that clone creates a clone of a dict
-#     orig = {"a": MyEstimator()}
-#     cloned = clone(orig)
-#     assert orig["a"] is not cloned["a"]
-#
-#
-# def test_clone_sparse_matrices():
-#     sparse_matrix_classes = [
-#         cls
-#         for name in dir(sp)
-#         if name.endswith("_matrix") and type(cls := getattr(sp, name)) is type
-#     ]
-#
-#     for cls in sparse_matrix_classes:
-#         sparse_matrix = cls(np.eye(5))
-#         clf = MyEstimator(empty=sparse_matrix)
-#         clf_cloned = clone(clf)
-#         assert clf.empty.__class__ is clf_cloned.empty.__class__
-#         assert_array_equal(clf.empty.toarray(), clf_cloned.empty.toarray())
-#
-#
-# def test_clone_estimator_types():
-#     # Check that clone works for parameters that are types rather than
-#     # instances
-#     clf = MyEstimator(empty=MyEstimator)
-#     clf2 = clone(clf)
-#
-#     assert clf.empty is clf2.empty
-#
-#
-# def test_clone_class_rather_than_instance():
-#     # Check that clone raises expected error message when
-#     # cloning class rather than instance
-#     msg = "You should provide an instance of scikit-learn estimator"
-#     with pytest.raises(TypeError, match=msg):
-#         clone(MyEstimator)
-#
-#
-# def test_repr():
-#     # Smoke test the repr of the base estimator.
-#     my_estimator = MyEstimator()
-#     repr(my_estimator)
-#     test = T(K(), K())
-#     assert repr(test) == "T(a=K(), b=K())"
-#
-#     some_est = T(a=["long_params"] * 1000)
-#     assert len(repr(some_est)) == 485
-#
-#
-# def test_str():
-#     # Smoke test the str of the base estimator
-#     my_estimator = MyEstimator()
-#     str(my_estimator)
-#
-#
-# def test_get_params():
-#     test = T(K(), K)
-#
-#     assert "a__d" in test.get_params(deep=True)
-#     assert "a__d" not in test.get_params(deep=False)
-#
-#     test.set_params(a__d=2)
-#     assert test.a.d == 2
-#
-#     with pytest.raises(ValueError):
-#         test.set_params(a__a=2)
-#
-#
-# # TODO(1.8): Remove this test when the deprecation is removed
-# def test_is_estimator_type_class():
-#     with pytest.warns(FutureWarning, match="passing a class to.*is deprecated"):
-#         assert is_classifier(SVC)
-#
-#     with pytest.warns(FutureWarning, match="passing a class to.*is deprecated"):
-#         assert is_regressor(SVR)
-#
-#     with pytest.warns(FutureWarning, match="passing a class to.*is deprecated"):
-#         assert is_clusterer(KMeans)
-#
-#     with pytest.warns(FutureWarning, match="passing a class to.*is deprecated"):
-#         assert is_outlier_detector(IsolationForest)
-#
-#
-# @pytest.mark.parametrize(
-#     "estimator, expected_result",
-#     [
-#         (SVC(), True),
-#         (GridSearchCV(SVC(), {"C": [0.1, 1]}), True),
-#         (Pipeline([("svc", SVC())]), True),
-#         (Pipeline([("svc_cv", GridSearchCV(SVC(), {"C": [0.1, 1]}))]), True),
-#         (SVR(), False),
-#         (GridSearchCV(SVR(), {"C": [0.1, 1]}), False),
-#         (Pipeline([("svr", SVR())]), False),
-#         (Pipeline([("svr_cv", GridSearchCV(SVR(), {"C": [0.1, 1]}))]), False),
-#     ],
-# )
-# def test_is_classifier(estimator, expected_result):
-#     assert is_classifier(estimator) == expected_result
-#
-#
-# @pytest.mark.parametrize(
-#     "estimator, expected_result",
-#     [
-#         (SVR(), True),
-#         (GridSearchCV(SVR(), {"C": [0.1, 1]}), True),
-#         (Pipeline([("svr", SVR())]), True),
-#         (Pipeline([("svr_cv", GridSearchCV(SVR(), {"C": [0.1, 1]}))]), True),
-#         (SVC(), False),
-#         (GridSearchCV(SVC(), {"C": [0.1, 1]}), False),
-#         (Pipeline([("svc", SVC())]), False),
-#         (Pipeline([("svc_cv", GridSearchCV(SVC(), {"C": [0.1, 1]}))]), False),
-#     ],
-# )
-# def test_is_regressor(estimator, expected_result):
-#     assert is_regressor(estimator) == expected_result
-#
-#
-# @pytest.mark.parametrize(
-#     "estimator, expected_result",
-#     [
-#         (KMeans(), True),
-#         (GridSearchCV(KMeans(), {"n_clusters": [3, 8]}), True),
-#         (Pipeline([("km", KMeans())]), True),
-#         (Pipeline([("km_cv", GridSearchCV(KMeans(), {"n_clusters": [3, 8]}))]), True),
-#         (SVC(), False),
-#         (GridSearchCV(SVC(), {"C": [0.1, 1]}), False),
-#         (Pipeline([("svc", SVC())]), False),
-#         (Pipeline([("svc_cv", GridSearchCV(SVC(), {"C": [0.1, 1]}))]), False),
-#     ],
-# )
-# def test_is_clusterer(estimator, expected_result):
-#     assert is_clusterer(estimator) == expected_result
-#
-#
-# def test_set_params():
-#     # test nested estimator parameter setting
-#     clf = Pipeline([("svc", SVC())])
-#
-#     # non-existing parameter in svc
-#     with pytest.raises(ValueError):
-#         clf.set_params(svc__stupid_param=True)
-#
-#     # non-existing parameter of pipeline
-#     with pytest.raises(ValueError):
-#         clf.set_params(svm__stupid_param=True)
-#
-#     # we don't currently catch if the things in pipeline are estimators
-#     # bad_pipeline = Pipeline([("bad", NoEstimator())])
-#     # with pytest.raises(AttributeError):
-#     #    bad_pipeline.set_params(bad__stupid_param=True)
-#
-#
-# def test_set_params_passes_all_parameters():
-#     # Make sure all parameters are passed together to set_params
-#     # of nested estimator. Regression test for #9944
-#
-#     class TestDecisionTree(DecisionTreeClassifier):
-#         def set_params(self, **kwargs):
-#             super().set_params(**kwargs)
-#             # expected_kwargs is in test scope
-#             assert kwargs == expected_kwargs
-#             return self
-#
-#     expected_kwargs = {"max_depth": 5, "min_samples_leaf": 2}
-#     for est in [
-#         Pipeline([("estimator", TestDecisionTree())]),
-#         GridSearchCV(TestDecisionTree(), {}),
-#     ]:
-#         est.set_params(estimator__max_depth=5, estimator__min_samples_leaf=2)
-#
-#
-# def test_set_params_updates_valid_params():
-#     # Check that set_params tries to set SVC().C, not
-#     # DecisionTreeClassifier().C
-#     gscv = GridSearchCV(DecisionTreeClassifier(), {})
-#     gscv.set_params(estimator=SVC(), estimator__C=42.0)
-#     assert gscv.estimator.C == 42.0
-#
-#
-# @pytest.mark.parametrize(
-#     "tree,dataset",
-#     [
-#         (
-#             DecisionTreeClassifier(max_depth=2, random_state=0),
-#             datasets.make_classification(random_state=0),
-#         ),
-#         (
-#             DecisionTreeRegressor(max_depth=2, random_state=0),
-#             datasets.make_regression(random_state=0),
-#         ),
-#     ],
-# )
-# def test_score_sample_weight(tree, dataset):
-#     rng = np.random.RandomState(0)
-#     # check that the score with and without sample weights are different
-#     X, y = dataset
-#
-#     tree.fit(X, y)
-#     # generate random sample weights
-#     sample_weight = rng.randint(1, 10, size=len(y))
-#     score_unweighted = tree.score(X, y)
-#     score_weighted = tree.score(X, y, sample_weight=sample_weight)
-#     msg = "Unweighted and weighted scores are unexpectedly equal"
-#     assert score_unweighted != score_weighted, msg
-#
-#
+def test_clone_empty_array():
+    # Regression test for cloning estimators with empty arrays
+    clf = MyEstimator(empty=np.array([]))
+    clf2 = clone(clf)
+    assert_array_equal(clf.empty, clf2.empty)
+
+    clf = MyEstimator(empty=sp.csr_matrix(np.array([[0]])))
+    clf2 = clone(clf)
+    assert_array_equal(clf.empty.data, clf2.empty.data)
+
+
+def test_clone_nan():
+    # Regression test for cloning estimators with default parameter as np.nan
+    clf = MyEstimator(empty=np.nan)
+    clf2 = clone(clf)
+
+    assert clf.empty is clf2.empty
+
+
+def test_clone_dict():
+    # test that clone creates a clone of a dict
+    orig = {"a": MyEstimator()}
+    cloned = clone(orig)
+    assert orig["a"] is not cloned["a"]
+
+
+def test_clone_sparse_matrices():
+    sparse_matrix_classes = [
+        cls
+        for name in dir(sp)
+        if name.endswith("_matrix") and type(cls := getattr(sp, name)) is type
+    ]
+
+    for cls in sparse_matrix_classes:
+        sparse_matrix = cls(np.eye(5))
+        clf = MyEstimator(empty=sparse_matrix)
+        clf_cloned = clone(clf)
+        assert clf.empty.__class__ is clf_cloned.empty.__class__
+        assert_array_equal(clf.empty.toarray(), clf_cloned.empty.toarray())
+
+
+def test_clone_estimator_types():
+    # Check that clone works for parameters that are types rather than
+    # instances
+    clf = MyEstimator(empty=MyEstimator)
+    clf2 = clone(clf)
+
+    assert clf.empty is clf2.empty
+
+
+def test_clone_class_rather_than_instance():
+    # Check that clone raises expected error message when
+    # cloning class rather than instance
+    msg = "You should provide an instance of scikit-learn estimator"
+    with pytest.raises(TypeError, match=msg):
+        clone(MyEstimator)
+
+
+def test_repr():
+    # Smoke test the repr of the base estimator.
+    my_estimator = MyEstimator()
+    repr(my_estimator)
+    test = T(K(), K())
+    assert repr(test) == "T(a=K(), b=K())"
+
+    some_est = T(a=["long_params"] * 1000)
+    assert len(repr(some_est)) == 485
+
+
+def test_str():
+    # Smoke test the str of the base estimator
+    my_estimator = MyEstimator()
+    str(my_estimator)
+
+
+def test_get_params():
+    test = T(K(), K)
+
+    assert "a__d" in test.get_params(deep=True)
+    assert "a__d" not in test.get_params(deep=False)
+
+    test.set_params(a__d=2)
+    assert test.a.d == 2
+
+    with pytest.raises(ValueError):
+        test.set_params(a__a=2)
+
+
+# TODO(1.8): Remove this test when the deprecation is removed
+def test_is_estimator_type_class():
+    with pytest.warns(FutureWarning, match="passing a class to.*is deprecated"):
+        assert is_classifier(SVC)
+
+    with pytest.warns(FutureWarning, match="passing a class to.*is deprecated"):
+        assert is_regressor(SVR)
+
+    with pytest.warns(FutureWarning, match="passing a class to.*is deprecated"):
+        assert is_clusterer(KMeans)
+
+    with pytest.warns(FutureWarning, match="passing a class to.*is deprecated"):
+        assert is_outlier_detector(IsolationForest)
+
+
+@pytest.mark.parametrize(
+    "estimator, expected_result",
+    [
+        (SVC(), True),
+        (GridSearchCV(SVC(), {"C": [0.1, 1]}), True),
+        (Pipeline([("svc", SVC())]), True),
+        (Pipeline([("svc_cv", GridSearchCV(SVC(), {"C": [0.1, 1]}))]), True),
+        (SVR(), False),
+        (GridSearchCV(SVR(), {"C": [0.1, 1]}), False),
+        (Pipeline([("svr", SVR())]), False),
+        (Pipeline([("svr_cv", GridSearchCV(SVR(), {"C": [0.1, 1]}))]), False),
+    ],
+)
+def test_is_classifier(estimator, expected_result):
+    assert is_classifier(estimator) == expected_result
+
+
+@pytest.mark.parametrize(
+    "estimator, expected_result",
+    [
+        (SVR(), True),
+        (GridSearchCV(SVR(), {"C": [0.1, 1]}), True),
+        (Pipeline([("svr", SVR())]), True),
+        (Pipeline([("svr_cv", GridSearchCV(SVR(), {"C": [0.1, 1]}))]), True),
+        (SVC(), False),
+        (GridSearchCV(SVC(), {"C": [0.1, 1]}), False),
+        (Pipeline([("svc", SVC())]), False),
+        (Pipeline([("svc_cv", GridSearchCV(SVC(), {"C": [0.1, 1]}))]), False),
+    ],
+)
+def test_is_regressor(estimator, expected_result):
+    assert is_regressor(estimator) == expected_result
+
+
+@pytest.mark.parametrize(
+    "estimator, expected_result",
+    [
+        (KMeans(), True),
+        (GridSearchCV(KMeans(), {"n_clusters": [3, 8]}), True),
+        (Pipeline([("km", KMeans())]), True),
+        (Pipeline([("km_cv", GridSearchCV(KMeans(), {"n_clusters": [3, 8]}))]), True),
+        (SVC(), False),
+        (GridSearchCV(SVC(), {"C": [0.1, 1]}), False),
+        (Pipeline([("svc", SVC())]), False),
+        (Pipeline([("svc_cv", GridSearchCV(SVC(), {"C": [0.1, 1]}))]), False),
+    ],
+)
+def test_is_clusterer(estimator, expected_result):
+    assert is_clusterer(estimator) == expected_result
+
+
+def test_set_params():
+    # test nested estimator parameter setting
+    clf = Pipeline([("svc", SVC())])
+
+    # non-existing parameter in svc
+    with pytest.raises(ValueError):
+        clf.set_params(svc__stupid_param=True)
+
+    # non-existing parameter of pipeline
+    with pytest.raises(ValueError):
+        clf.set_params(svm__stupid_param=True)
+
+    # we don't currently catch if the things in pipeline are estimators
+    # bad_pipeline = Pipeline([("bad", NoEstimator())])
+    # with pytest.raises(AttributeError):
+    #    bad_pipeline.set_params(bad__stupid_param=True)
+
+
+def test_set_params_passes_all_parameters():
+    # Make sure all parameters are passed together to set_params
+    # of nested estimator. Regression test for #9944
+
+    class TestDecisionTree(DecisionTreeClassifier):
+        def set_params(self, **kwargs):
+            super().set_params(**kwargs)
+            # expected_kwargs is in test scope
+            assert kwargs == expected_kwargs
+            return self
+
+    expected_kwargs = {"max_depth": 5, "min_samples_leaf": 2}
+    for est in [
+        Pipeline([("estimator", TestDecisionTree())]),
+        GridSearchCV(TestDecisionTree(), {}),
+    ]:
+        est.set_params(estimator__max_depth=5, estimator__min_samples_leaf=2)
+
+
+def test_set_params_updates_valid_params():
+    # Check that set_params tries to set SVC().C, not
+    # DecisionTreeClassifier().C
+    gscv = GridSearchCV(DecisionTreeClassifier(), {})
+    gscv.set_params(estimator=SVC(), estimator__C=42.0)
+    assert gscv.estimator.C == 42.0
+
+
+@pytest.mark.parametrize(
+    "tree,dataset",
+    [
+        (
+            DecisionTreeClassifier(max_depth=2, random_state=0),
+            datasets.make_classification(random_state=0),
+        ),
+        (
+            DecisionTreeRegressor(max_depth=2, random_state=0),
+            datasets.make_regression(random_state=0),
+        ),
+    ],
+)
+def test_score_sample_weight(tree, dataset):
+    rng = np.random.RandomState(0)
+    # check that the score with and without sample weights are different
+    X, y = dataset
+
+    tree.fit(X, y)
+    # generate random sample weights
+    sample_weight = rng.randint(1, 10, size=len(y))
+    score_unweighted = tree.score(X, y)
+    score_weighted = tree.score(X, y, sample_weight=sample_weight)
+    msg = "Unweighted and weighted scores are unexpectedly equal"
+    assert score_unweighted != score_weighted, msg
+
+
 # def test_clone_pandas_dataframe():
 #     class DummyEstimator(TransformerMixin, BaseEstimator):
 #         """This is a dummy class for generating numerical features
