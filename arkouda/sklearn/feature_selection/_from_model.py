@@ -6,7 +6,7 @@ from numbers import Integral, Real
 
 import numpy as np
 
-from ..base import BaseEstimator, MetaEstimatorMixin, _fit_context, clone
+# from ..base import BaseEstimator, MetaEstimatorMixin, _fit_context, clone
 from ..exceptions import NotFittedError
 from ..utils._param_validation import HasMethods, Interval, Options
 from ..utils._tags import get_tags

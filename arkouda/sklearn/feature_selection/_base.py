@@ -10,7 +10,7 @@ from operator import attrgetter
 import numpy as np
 from scipy.sparse import csc_matrix, issparse
 
-from ..base import TransformerMixin
+from arkouda.sklearn.base import TransformerMixin
 from ..utils import _safe_indexing, check_array, safe_sqr
 from ..utils._set_output import _get_output_config
 from ..utils._tags import get_tags

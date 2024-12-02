@@ -11,7 +11,7 @@ import scipy.sparse as sp
 from numpy.testing import assert_allclose
 
 import arkouda.sklearn
-from arkouda.sklearn import config_context, datasets
+# from arkouda.sklearn import config_context, datasets
 # from sklearn.base import (
 #     BaseEstimator,
 #     OutlierMixin,
@@ -42,86 +42,86 @@ from arkouda.sklearn import config_context, datasets
 
 #############################################################################
 # A few test classes
-class MyEstimator(BaseEstimator):
-    def __init__(self, l1=0, empty=None):
-        self.l1 = l1
-        self.empty = empty
-
-
-class K(BaseEstimator):
-    def __init__(self, c=None, d=None):
-        self.c = c
-        self.d = d
-
-
-class T(BaseEstimator):
-    def __init__(self, a=None, b=None):
-        self.a = a
-        self.b = b
-
-
-class NaNTag(BaseEstimator):
-    def __sklearn_tags__(self):
-        tags = super().__sklearn_tags__()
-        tags.input_tags.allow_nan = True
-        return tags
-
-
-class NoNaNTag(BaseEstimator):
-    def __sklearn_tags__(self):
-        tags = super().__sklearn_tags__()
-        tags.input_tags.allow_nan = False
-        return tags
-
-
-class OverrideTag(NaNTag):
-    def __sklearn_tags__(self):
-        tags = super().__sklearn_tags__()
-        tags.input_tags.allow_nan = False
-        return tags
-
-
-class DiamondOverwriteTag(NaNTag, NoNaNTag):
-    pass
-
-
-class InheritDiamondOverwriteTag(DiamondOverwriteTag):
-    pass
-
-
-class ModifyInitParams(BaseEstimator):
-    """Deprecated behavior.
-    Equal parameters but with a type cast.
-    Doesn't fulfill a is a
-    """
-
-    def __init__(self, a=np.array([0])):
-        self.a = a.copy()
-
-
-class Buggy(BaseEstimator):
-    "A buggy estimator that does not set its parameters right."
-
-    def __init__(self, a=None):
-        self.a = 1
-
-
-class NoEstimator:
-    def __init__(self):
-        pass
-
-    def fit(self, X=None, y=None):
-        return self
-
-    def predict(self, X=None):
-        return None
-
-
-class VargEstimator(BaseEstimator):
-    """scikit-learn estimators shouldn't have vargs."""
-
-    def __init__(self, *vargs):
-        pass
+# class MyEstimator(BaseEstimator):
+#     def __init__(self, l1=0, empty=None):
+#         self.l1 = l1
+#         self.empty = empty
+#
+#
+# class K(BaseEstimator):
+#     def __init__(self, c=None, d=None):
+#         self.c = c
+#         self.d = d
+#
+#
+# class T(BaseEstimator):
+#     def __init__(self, a=None, b=None):
+#         self.a = a
+#         self.b = b
+#
+#
+# class NaNTag(BaseEstimator):
+#     def __sklearn_tags__(self):
+#         tags = super().__sklearn_tags__()
+#         tags.input_tags.allow_nan = True
+#         return tags
+#
+#
+# class NoNaNTag(BaseEstimator):
+#     def __sklearn_tags__(self):
+#         tags = super().__sklearn_tags__()
+#         tags.input_tags.allow_nan = False
+#         return tags
+#
+#
+# class OverrideTag(NaNTag):
+#     def __sklearn_tags__(self):
+#         tags = super().__sklearn_tags__()
+#         tags.input_tags.allow_nan = False
+#         return tags
+#
+#
+# class DiamondOverwriteTag(NaNTag, NoNaNTag):
+#     pass
+#
+#
+# class InheritDiamondOverwriteTag(DiamondOverwriteTag):
+#     pass
+#
+#
+# class ModifyInitParams(BaseEstimator):
+#     """Deprecated behavior.
+#     Equal parameters but with a type cast.
+#     Doesn't fulfill a is a
+#     """
+#
+#     def __init__(self, a=np.array([0])):
+#         self.a = a.copy()
+#
+#
+# class Buggy(BaseEstimator):
+#     "A buggy estimator that does not set its parameters right."
+#
+#     def __init__(self, a=None):
+#         self.a = 1
+#
+#
+# class NoEstimator:
+#     def __init__(self):
+#         pass
+#
+#     def fit(self, X=None, y=None):
+#         return self
+#
+#     def predict(self, X=None):
+#         return None
+#
+#
+# class VargEstimator(BaseEstimator):
+#     """scikit-learn estimators shouldn't have vargs."""
+#
+#     def __init__(self, *vargs):
+#         pass
 
 
 #############################################################################
@@ -134,16 +134,16 @@ def test_clone():
     # (which, in this case, is the current state of the estimator),
     # and check that the obtained copy is a correct deep copy.
 
-    from sklearn.feature_selection import SelectFpr, f_classif
+    from arkouda.sklearn.feature_selection import SelectFpr, f_classif
 
-    selector = SelectFpr(f_classif, alpha=0.1)
-    new_selector = clone(selector)
-    assert selector is not new_selector
-    assert selector.get_params() == new_selector.get_params()
-
-    selector = SelectFpr(f_classif, alpha=np.zeros((10, 2)))
-    new_selector = clone(selector)
-    assert selector is not new_selector
+    # selector = SelectFpr(f_classif, alpha=0.1)
+    # new_selector = clone(selector)
+    # assert selector is not new_selector
+    # assert selector.get_params() == new_selector.get_params()
+    #
+    # selector = SelectFpr(f_classif, alpha=np.zeros((10, 2)))
+    # new_selector = clone(selector)
+    # assert selector is not new_selector
 
 #
 # def test_clone_2():

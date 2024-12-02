@@ -39,7 +39,7 @@ from .class_weight import compute_class_weight, compute_sample_weight
 from .deprecation import deprecated
 from .discovery import all_estimators
 from .extmath import safe_sqr
-from .murmurhash import murmurhash3_32
+# from .murmurhash import murmurhash3_32
 from .validation import (
     as_float_array,
     assert_all_finite,
