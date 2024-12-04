@@ -708,6 +708,8 @@ class Generator:
         self._state += 1
         return create_pdarray(rep_msg)
 
+
+
     def uniform(self, low=0.0, high=1.0, size=None):
         """
         Draw samples from a uniform distribution.
