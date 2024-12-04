@@ -596,3 +596,16 @@ class TestRandom:
         ak.random.standard_normal(np.uint8(100))
         ak.random.standard_normal(np.uint16(100))
         ak.random.standard_normal(np.uint32(100))
+
+    def test_rand(self):
+        from arkouda import all as ak_all
+
+        x = ak.random.rand(10)
+
+        assert ak_all(x >= 0)
+        assert ak_all(x < 1)
+        assert x.size == 10
+
+        #   Check new seed each call:
+        y = ak.random.rand(10)
+        assert not ak_all(x == y)

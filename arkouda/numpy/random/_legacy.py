@@ -8,7 +8,7 @@ from arkouda.numpy.dtypes import dtype as akdtype
 from arkouda.numpy.dtypes import int64 as akint64
 from arkouda.numpy.dtypes import int_scalars, numeric_scalars
 from arkouda.pdarrayclass import create_pdarray, pdarray
-
+from arkouda.numpy.random._generator import default_rng as ak_default_rng
 
 @typechecked
 def randint(
@@ -219,3 +219,27 @@ def uniform(
     array([0.30013431967121934, 0.47383036230759112, 1.0441791878997098])
     """
     return randint(low=low, high=high, size=size, dtype="float64", seed=seed)
+
+from sys import modules
+module = modules[__name__]
+
+# legacy_rng = ak_default_rng()
+
+setattr(
+    module,
+    "legacy_rng",
+    ak_default_rng()
+)
+
+from arkouda.client import connected
+if connected:
+    def seed(SEED):
+        global legacy_rng
+        legacy_rng = ak_default_rng(SEED)
+
+def rand(*arg):
+    """
+    Random values in a given shape.
+    """
+    # rng = ak_default_rng()
+    return legacy_rng.uniform(size=arg)
