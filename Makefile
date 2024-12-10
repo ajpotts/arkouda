@@ -111,7 +111,7 @@ install-deps: install-zmq install-hdf5 install-arrow install-iconv install-idn2
 
 DEP_DIR := dep
 DEP_INSTALL_DIR := $(ARKOUDA_PROJECT_DIR)/$(DEP_DIR)
-DEP_BUILD_DIR := $(ARKOUDA_PROJECT_DIR)/$(DEP_DIR)/build
+DEP_BUILD_DIR := $(ARKOUDA_PROJECT_DIR)$(DEP_DIR)/build
 
 ZMQ_VER := 4.3.5
 ZMQ_NAME_VER := zeromq-$(ZMQ_VER)
@@ -150,20 +150,37 @@ install-hdf5:
 	rm -rf $(HDF5_BUILD_DIR)
 	echo '$$(eval $$(call add-path,$(HDF5_INSTALL_DIR)))' >> Makefile.paths
 
-ARROW_VER := 11.0.0
-ARROW_NAME_VER := apache-arrow-$(ARROW_VER)
-ARROW_FULL_NAME_VER := arrow-apache-arrow-$(ARROW_VER)
-ARROW_BUILD_DIR := $(DEP_BUILD_DIR)/$(ARROW_FULL_NAME_VER)
-ARROW_INSTALL_DIR := $(DEP_INSTALL_DIR)/arrow-install
-ARROW_LINK := https://github.com/apache/arrow/archive/refs/tags/$(ARROW_NAME_VER).tar.gz
+
+#   get the OS, ubuntu, etc...
+OS := $(shell lsb_release --id --short | tr 'A-Z' 'a-z')
+
+#   If pop, replace with ubuntu
+OS_FINAL := $(shell echo ${OS} | awk '{gsub(/pop/,"ubuntu")}1')
+
+#   System release, such as "jammy" for "ubuntu jammy"
+OS_RELEASE := $(shell lsb_release --codename --short)
+ARROW_LINK := "https://apache.jfrog.io/artifactory/arrow/${OS_FINAL}/apache-arrow-apt-source-latest-${OS_RELEASE}.deb"
+
 install-arrow:
 	@echo "Installing Apache Arrow/Parquet"
-	rm -rf $(ARROW_BUILD_DIR) $(ARROW_INSTALL_DIR)
-	mkdir -p $(DEP_INSTALL_DIR) $(DEP_BUILD_DIR)
-	cd $(DEP_BUILD_DIR) && curl -sL $(ARROW_LINK) | tar xz
-	cd $(ARROW_BUILD_DIR)/cpp && cmake -DARROW_DEPENDENCY_SOURCE=AUTO -DCMAKE_INSTALL_PREFIX=$(ARROW_INSTALL_DIR) -DCMAKE_BUILD_TYPE=Release -DARROW_PARQUET=ON -DARROW_WITH_SNAPPY=ON -DARROW_WITH_BROTLI=ON -DARROW_WITH_BZ2=ON -DARROW_WITH_LZ4=ON -DARROW_WITH_ZLIB=ON -DARROW_WITH_ZSTD=ON $(ARROW_OPTIONS) . && make && make install
-	rm -rf $(ARROW_BUILD_DIR)
-	echo '$$(eval $$(call add-path,$(ARROW_INSTALL_DIR)))' >> Makefile.paths
+	@echo "from build directory: ${DEP_BUILD_DIR}"
+	mkdir -p ${DEP_BUILD_DIR}
+
+#   If the BUILD_DIR does not contain the arrow .deb file, use wget to fetch it
+ifeq (,$(wildcard ${DEP_BUILD_DIR}/apache-arrow-apt-source-latest-${OS_RELEASE}.deb))
+	cd $(DEP_BUILD_DIR) && wget $(ARROW_LINK)
+endif
+
+#   If not root, use sudo
+ifneq ($(shell id -u), 0)
+	cd $(DEP_BUILD_DIR) && sudo apt-get install -y -V ./apache-arrow-apt-source*.deb
+else
+	cd $(DEP_BUILD_DIR) && apt-get install -y -V ./apache-arrow-apt-source*.deb
+endif
+
+arrow-clean:
+	rm -rf $(DEP_BUILD_DIR)/apache-arrow-apt-source*
+	
 
 ICONV_VER := 1.17
 ICONV_NAME_VER := libiconv-$(ICONV_VER)
