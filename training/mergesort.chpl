@@ -1,11 +1,146 @@
-
 use Math;
 use Random;
+use CommDiagnostics;
+public use BlockDist;
+    import ChplConfig;
+
+
+
+    /*
+        Available domain maps.
+    */
+    enum Dmap {defaultRectangular, blockDist};
+
+    private param defaultDmap = if ChplConfig.CHPL_COMM == "none" then Dmap.defaultRectangular
+                                                                    else Dmap.blockDist;
+    config param MyDmap:Dmap = defaultDmap;
+
+
+
+    /*
+        Makes a domain distributed according to :param:`MyDmap`.
+
+        :arg shape: size of domain in each dimension
+        :type shape: int
+    */
+    proc makeDistDom(shape: int ...?N) {
+      var rngs: N*range;
+      for i in 0..#N do rngs[i] = 0..#shape[i];
+      const dom = {(...rngs)};
+
+      return makeDistDom(dom);
+    }
+
+    proc makeDistDom(dom: domain(?)) {
+      select MyDmap {
+        when Dmap.defaultRectangular {
+          return dom;
+        }
+        when Dmap.blockDist {
+          if dom.size > 0 {
+              return blockDist.createDomain(dom);
+          }
+          // fix the annoyance about boundingBox being empty
+          else {
+            return dom dmapped new blockDist(boundingBox=dom.expand(1));
+          }
+        }
+      }
+    }
+
+    /*
+        Makes an array of specified type over a distributed domain
+
+        :arg shape: size of the domain in each dimension
+        :type shape: int
+
+        :arg etype: desired type of array
+        :type etype: type
+
+        :returns: [] ?etype
+    */
+    proc makeDistArray(shape: int ...?N, type etype) throws
+      where N == 1
+    {
+      var dom = makeDistDom((...shape));
+      return dom.tryCreateArray(etype);
+    }
+
+    proc makeDistArray(shape: int ...?N, type etype) throws
+      where N > 1
+    {
+      var a: [makeDistDom((...shape))] etype;
+      return a;
+    }
+
+    proc makeDistArray(in a: [?D] ?etype) throws
+      where MyDmap != Dmap.defaultRectangular && a.isDefaultRectangular()
+    {
+        var res = makeDistArray((...D.shape), etype);
+        res = a;
+        return res;
+    }
+
+    proc makeDistArray(in a: [?D] ?etype) throws
+      where D.rank == 1 && (MyDmap == Dmap.defaultRectangular || !a.isDefaultRectangular())
+    {
+      var res = D.tryCreateArray(etype);
+      res = a;
+      return res;
+    }
+
+    proc makeDistArray(in a: [?D] ?etype) throws
+      where D.rank > 1 && (MyDmap == Dmap.defaultRectangular || !a.isDefaultRectangular())
+    {
+      return a;
+    }
+
+    proc makeDistArray(D: domain(?), type etype) throws
+      where D.rank == 1
+    {
+      var res = D.tryCreateArray(etype);
+      return res;
+    }
+
+    proc makeDistArray(D: domain(?), type etype) throws
+      where D.rank > 1
+    {
+      var res: [D] etype;
+      return res;
+    }
+
+    proc makeDistArray(D: domain(?), initExpr: ?t) throws
+      where D.rank == 1
+    {
+      return D.tryCreateArray(t, initExpr);
+    }
+
+    proc makeDistArray(D: domain(?), initExpr: ?t) throws
+      where D.rank > 1
+    {
+      var res: [D] t = initExpr;
+      return res;
+    }
+
+    /*
+        Returns the type of the distributed domain
+
+        :arg size: size of domain
+        :type size: int
+
+        :returns: type
+    */
+    proc makeDistDomType(size: int) type {
+        return makeDistDom(size).type;
+    }
+
+
+//#######################################################################################################################################
 
 
 writeln("START");
 
-const N = 100;
+const N = 1000;
 const K = 4;
 const size = 2**K;
 
@@ -15,49 +150,23 @@ var rands: [0..(N/size)] bool;
 randStream.fill(rands);
 
 
-var x: [0..N] int;
+var x = makeDistArray(for i in 0..N do i);
 
-for i in 0..N {
-    x[i] = i;
-}
 
 
 proc shuffleRange(ref x: [] int, lower: int, upper: int){
-
         for j in lower..upper{
             const idx = randStreamInt.choose(j..upper);
             x[j] <=> x[idx];
-        
         }
 }
 
-
 proc shuffle(ref x: [] int){
     writeln("SHUFFLING");
-    for i in 0..(N/size){
-        writeln("Iteration ", i);
-        const start = i * size;
-        const end = min( (i + 1) * size - 1, N - 1);
-        writeln("start ", start);
-        writeln("end ", end);
-        shuffleRange(x, start, end);
-                
-    }
-            
-    
-}
-
-
-proc shuffle2(ref x: [] int){
-    writeln("SHUFFLING");
     coforall loc in Locales do on loc {
-        writeln("Locale: ", loc);
-        const start = x.localSubdomain().low;
-        const end = x.localSubdomain().high;
-        writeln("start ", start);
-        writeln("end ", end);
-        shuffleRange(x, start, end);
-                
+        shuffleRange(x, x.localSubdomain().low, x.localSubdomain().high);      
+        //writeln("here.id: ", here.id);
+        //writeln("x.localSubdomain().low: ", x.localSubdomain().low);   
     }
 }
 
@@ -67,22 +176,22 @@ proc log(i: int, j: int, n: int){
     writeln("n: ", n);
 }
 
+
+
 proc merge(ref x: [] int, s: int, n1: int, n2: int){
     var i: int = s;
     var j: int = s + n1;
     var n: int = s + n1 + n2;
-    log(i,j,n);
+    //log(i,j,n);
     
     
     var randStream = new randomStream(bool);
-    for count in 1..100{
+    while(true){
         if randStream.next() {
-            //writeln("True");
             if (i==j){
                 break;
             }
         } else {
-            //writeln("False");
             if (j==n) {
                 break;
             }
@@ -96,19 +205,62 @@ proc merge(ref x: [] int, s: int, n1: int, n2: int){
 
 }
 
+proc getDomainLows(ref x: [] int){
+    var domainLows: [0..#numLocales] int;
+    for loc in Locales do on loc {
+        domainLows[here.id] = x.localSubdomain(loc=here).low;
+        writeln("here.id: ", here.id);
+        writeln("x.localSubdomain().low: ", x.localSubdomain().low);   
+        writeln("x.localSubdomain(): ", x.localSubdomain());
+    }
+    writeln("Domain Lows:");
+    writeln(domainLows);
+    return domainLows;
+}
 
-proc mergeSort(ref x: [] int){
+
+
+proc mergeShuffle(ref x: [] int){
+
+    getDomainLows(x);
+    
+
     for i in 0..(N/size){
         const start = i * size;
         const size1 = min( size , N - start);
         const size2 = min( 2 * size, N - start - size1);
-        writeln("start: ", start);
-        writeln("size1: ", size1);
-        writeln("size2: ", size2);
+        //writeln("start: ", start);
+        //writeln("size1: ", size1);
+        //writeln("size2: ", size2);
         merge(x, start, size1, size2);
-        
     }
 }
+
+
+
+proc mergeShuffle2(ref x: [] int){
+    const N = log2(numLocales) + 1;
+    
+    for m in 1..N{
+        const numLocsToWorryAbout = 2**m;
+        
+    
+    }
+    
+
+    for i in 0..(N/size){
+        const start = i * size;
+        const size1 = min( size , N - start);
+        const size2 = min( 2 * size, N - start - size1);
+        //writeln("start: ", start);
+        //writeln("size1: ", size1);
+        //writeln("size2: ", size2);
+        merge(x, start, size1, size2);
+    }
+}
+
+
+
 
 
 writeln("N: ", N);
@@ -117,7 +269,10 @@ writeln("size: ", size);
 writeln("rands: ", rands);
 writeln("x: ", x);
 
-shuffle2(x);
-mergeSort(x);
+startCommDiagnostics();
+shuffle(x);
+mergeShuffle(x);
+printCommDiagnosticsTable();
+stopCommDiagnostics();
 writeln("x: ", x);
 
