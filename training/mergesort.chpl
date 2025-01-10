@@ -3,8 +3,6 @@ use Math;
 use Random;
 
 
-
-
 writeln("START");
 
 const N = 100;
@@ -23,15 +21,13 @@ for i in 0..N {
     x[i] = i;
 }
 
+
 proc shuffleRange(ref x: [] int, lower: int, upper: int){
-        var tmp : [lower..upper] int;
-        for i in lower..upper{
-            tmp[i] = x[i];
-        }
+
+        for j in lower..upper{
+            const idx = randStreamInt.choose(j..upper);
+            x[j] <=> x[idx];
         
-        randStreamInt.shuffle(tmp);
-        for i in lower..upper{
-            x[i] = tmp[i];
         }
 }
 
@@ -47,7 +43,22 @@ proc shuffle(ref x: [] int){
         shuffleRange(x, start, end);
                 
     }
+            
     
+}
+
+
+proc shuffle2(ref x: [] int){
+    writeln("SHUFFLING");
+    coforall loc in Locales do on loc {
+        writeln("Locale: ", loc);
+        const start = x.localSubdomain().low;
+        const end = x.localSubdomain().high;
+        writeln("start ", start);
+        writeln("end ", end);
+        shuffleRange(x, start, end);
+                
+    }
 }
 
 proc log(i: int, j: int, n: int){
@@ -106,7 +117,7 @@ writeln("size: ", size);
 writeln("rands: ", rands);
 writeln("x: ", x);
 
-shuffle(x);
+shuffle2(x);
 mergeSort(x);
 writeln("x: ", x);
 
