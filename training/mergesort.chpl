@@ -149,10 +149,7 @@ var randStream = new randomStream(bool);
 var rands: [0..(N/size)] bool;
 randStream.fill(rands);
 
-
 var x = makeDistArray(for i in 0..N do i);
-
-
 
 proc shuffleRange(ref x: [] int, lower: int, upper: int){
         for j in lower..upper{
@@ -164,9 +161,7 @@ proc shuffleRange(ref x: [] int, lower: int, upper: int){
 proc shuffle(ref x: [] int){
     writeln("SHUFFLING");
     coforall loc in Locales do on loc {
-        shuffleRange(x, x.localSubdomain().low, x.localSubdomain().high);      
-        //writeln("here.id: ", here.id);
-        //writeln("x.localSubdomain().low: ", x.localSubdomain().low);   
+        shuffleRange(x, x.localSubdomain().low, x.localSubdomain().high);       
     }
 }
 
@@ -175,8 +170,6 @@ proc log(i: int, j: int, n: int){
     writeln("j: ", j);
     writeln("n: ", n);
 }
-
-
 
 proc merge(ref x: [] int, s: int, n1: int, n2: int){
     var i: int = s;
@@ -209,21 +202,29 @@ proc getDomainLows(ref x: [] int){
     var domainLows: [0..#numLocales] int;
     for loc in Locales do on loc {
         domainLows[here.id] = x.localSubdomain(loc=here).low;
-        writeln("here.id: ", here.id);
-        writeln("x.localSubdomain().low: ", x.localSubdomain().low);   
-        writeln("x.localSubdomain(): ", x.localSubdomain());
     }
-    writeln("Domain Lows:");
-    writeln(domainLows);
     return domainLows;
 }
 
 
+proc getDomainHighs(ref x: [] int){
+    var domainHighs: [0..#numLocales] int;
+    for loc in Locales do on loc {
+        domainHighs[here.id] = x.localSubdomain(loc=here).high;
+    }
+    return domainHighs;
+}
+
+proc getDomainSizes(ref x: [] int){
+    var domainSizes: [0..#numLocales] int;
+    for loc in Locales do on loc {
+        domainSizes[here.id] = x.localSubdomain(loc=here).size;
+    }
+    return domainSizes;
+}
+
 
 proc mergeShuffle(ref x: [] int){
-
-    getDomainLows(x);
-    
 
     for i in 0..(N/size){
         const start = i * size;
@@ -234,20 +235,37 @@ proc mergeShuffle(ref x: [] int){
         //writeln("size2: ", size2);
         merge(x, start, size1, size2);
     }
+    
 }
-
-
 
 proc mergeShuffle2(ref x: [] int){
     const N = log2(numLocales) + 1;
     
-    for m in 1..N{
-        const numLocsToWorryAbout = 2**m;
-        
+    const domainLows = getDomainLows(x);
+    const domainHighs = getDomainHighs(x);
+    const domainSizes = getDomainSizes(x);
     
+    for m in 0..N {
+        const maxLocalesPerChunk = 2**m;
+        writeln("\nm: ", m);
+        writeln("maxLocalesPerChunk: ", maxLocalesPerChunk);
+        const numChunks = (numLocales - 1) / maxLocalesPerChunk + 1;
+        writeln("numChunks: ", numChunks);        
+        for chunk in 0..#(maxLocalesPerChunk - 1) {
+           writeln("chunk: ", chunk);
+           const start_locale = 0;
+           const end_locale = 0;
+           const start_locale2 = 1;
+           const end_locale2 = 1;
+           
+           const start = domainLows[start_locale];
+           const end = domainHighs[end_locale];
+           const size1 = domainHighs[start_locale] - domainLows[start_locale];
+           const size2 = domainHighs[start_locale2] - domainLows[start_locale2];
+           merge(x, start, size1, size2);
+        }
     }
     
-
     for i in 0..(N/size){
         const start = i * size;
         const size1 = min( size , N - start);
@@ -271,7 +289,7 @@ writeln("x: ", x);
 
 startCommDiagnostics();
 shuffle(x);
-mergeShuffle(x);
+mergeShuffle2(x);
 printCommDiagnosticsTable();
 stopCommDiagnostics();
 writeln("x: ", x);
