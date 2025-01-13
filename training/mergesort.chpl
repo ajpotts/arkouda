@@ -140,7 +140,7 @@ public use BlockDist;
 
 writeln("START");
 
-const N = 1000;
+const N = 100;
 const K = 4;
 const size = 2**K;
 
@@ -193,9 +193,7 @@ proc merge(ref x: [] int, s: int, n1: int, n2: int){
         }
         i += 1;
     }
-
     shuffleRange(x, i, n);
-
 }
 
 proc getDomainLows(ref x: [] int){
@@ -225,7 +223,6 @@ proc getDomainSizes(ref x: [] int){
 
 
 proc mergeShuffle(ref x: [] int){
-
     for i in 0..(N/size){
         const start = i * size;
         const size1 = min( size , N - start);
@@ -235,7 +232,6 @@ proc mergeShuffle(ref x: [] int){
         //writeln("size2: ", size2);
         merge(x, start, size1, size2);
     }
-    
 }
 
 proc mergeShuffle2(ref x: [] int){
@@ -245,18 +241,23 @@ proc mergeShuffle2(ref x: [] int){
     const domainHighs = getDomainHighs(x);
     const domainSizes = getDomainSizes(x);
     
-    for m in 0..N {
+    for m in 0..#N {
         const maxLocalesPerChunk = 2**m;
         writeln("\nm: ", m);
         writeln("maxLocalesPerChunk: ", maxLocalesPerChunk);
         const numChunks = (numLocales - 1) / maxLocalesPerChunk + 1;
         writeln("numChunks: ", numChunks);        
-        for chunk in 0..#(maxLocalesPerChunk - 1) {
-           writeln("chunk: ", chunk);
+        for chunk in 0..#numChunks {
+           writeln("\nchunk: ", chunk);
            const start_locale = 0;
-           const end_locale = 0;
-           const start_locale2 = 1;
-           const end_locale2 = 1;
+           const end_locale = min(start_locale + maxLocalesPerChunk, numLocales - 1 );
+           const start_locale2 = min(end_locale + 1, numLocales - 1 );
+           const end_locale2 = min(start_locale2 + maxLocalesPerChunk, numLocales - 1 );
+  
+           writeln("start_locale: ", start_locale);
+           writeln("end_locale: ", end_locale);
+           writeln("start_locale2: ", start_locale2);
+           writeln("end_locale2: ", end_locale2);           
            
            const start = domainLows[start_locale];
            const end = domainHighs[end_locale];
