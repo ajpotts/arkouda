@@ -799,6 +799,19 @@ module RandMsg
         return generatorSeed + 1;
     }
 
+    proc reverseFisherYatesOnLocale(ref x: [] ?t, localLower: int, localUpper: int, lower: int, generatorSeed: int): int {
+
+        var randStreamInt = new randomStream(int, seed=generatorSeed);
+        for i in localLower..localUpper { // with(var randStreamInt = new randomStream(int, seed=generatorSeed)) {
+            const idx = randStreamInt.choose(lower..i);
+            if (i != idx ){
+                x[i] <=> x[idx];
+            }
+        }
+        return generatorSeed + 1;
+    }
+
+
     /*  
         Shuffles each locale of the array independently.
         There should be no communication between locales for this step.
@@ -884,6 +897,7 @@ module RandMsg
         }
 
         shuffleRange(x, i, n, seed);     //  Fix indexing
+        reverseFisherYatesOnLocale(x, i, n, s, seed);
     }
 
 
@@ -955,20 +969,20 @@ module RandMsg
         return domainSizes;
     }
 
-    proc mergeShuffle(ref x: [] ?t, generatorSeed: int): int{
+    proc mergeShuffle(ref x: [] ?t, generatorSeed: int): int {
         const numRounds = log2(numLocales) + 1;
         const domainLows = getDomainLows(x);
         const domainHighs = getDomainHighs(x);
 
         var seed = shuffleLocales(x, generatorSeed);
 
-        for m in 0..#(numRounds) {
+        for m in 0..#numRounds {
             const maxLocalesPerPrevChunk = 2**m;
             const numNewChunks = (numLocales - 1) / (2 * maxLocalesPerPrevChunk) + 1;
 
-            for chunk in 0..#numNewChunks {
-                writeln("\nChunk: ", chunk);
-                const startLocale = 2 * chunk * maxLocalesPerPrevChunk;
+            for i in 0..#numNewChunks {
+                writeln("\nChunk: ", i);
+                const startLocale = 2 * i * maxLocalesPerPrevChunk;
                 const endLocale = min(startLocale + maxLocalesPerPrevChunk - 1, numLocales - 1 );
                 const startLocale2 = min(endLocale + 1, numLocales - 1 );
                 const endLocale2 = min(startLocale2 + maxLocalesPerPrevChunk - 1, numLocales - 1 );
@@ -977,7 +991,7 @@ module RandMsg
                         const size1 = domainHighs[endLocale] - domainLows[startLocale] + 1;
                         const size2 = domainHighs[endLocale2] - domainLows[startLocale2] + 1;
 
-                        const taskSeed = seed + chunk * 2 * numLocales;         //  TODO: better approximation, combine with other stuff
+                        const taskSeed = seed + i * 2 * numLocales;         //  TODO: better approximation, combine with other stuff
                         merge(x, start, size1, size2, taskSeed);
                 }
             }
