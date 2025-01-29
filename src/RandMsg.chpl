@@ -857,7 +857,7 @@ module RandMsg
         return generatorSeed + 1;
     }
 
-    proc mergeOnLocale(ref x: [] ?t, s: int, n1: int, n2: int, generatorSeed: int): int {
+    proc mergeOnLocale(ref x: [] ?t, s: int, n1: int, n2: int, generatorSeed: int){
         var i: int = s;
         var j: int = s + n1;
         var n: int = s + n1 + n2 - 1;
@@ -883,9 +883,7 @@ module RandMsg
             i += 1;
         }
 
-        seed = shuffleRange(x, i, n, seed);     //  Fix indexing
-
-        return seed;
+        shuffleRange(x, i, n, seed);     //  Fix indexing
     }
 
 
@@ -926,6 +924,11 @@ module RandMsg
         seed = shuffleRange(x, i, n, seed);         //      Check this indexing 
 
         return seed;
+    }
+
+    proc newSeed(seed: int): int{
+        var randStream = new randomStream(int, seed=seed);
+        return randStream.next();
     }
 
     proc getDomainLows(ref x: [] ?t): [] int {
