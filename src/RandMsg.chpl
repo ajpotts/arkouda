@@ -805,7 +805,8 @@ module RandMsg
     */
     proc shuffleLocales(ref x: [] ?t, generatorSeed: int): int {
         for loc in Locales do on loc {
-            var seed = generatorSeed + here.id;
+            var randStreamInt = new randomStream(int, seed=(generatorSeed + here.id));
+            var seed = randStreamInt.next();
 
             const localLower = x.localSubdomain(loc=here).low;
             const localUpper = x.localSubdomain(loc=here).high;
@@ -816,11 +817,13 @@ module RandMsg
             const numChunks = (size - 1)/smallestChunkSize + 1;
 
             forall i in 0..#numChunks {
-                const seed = generatorSeed + i;
+                const taskSeed = seed + i;
                 const low = localLower + i * smallestChunkSize;
                 const high = min(localUpper, low + smallestChunkSize - 1);
-                fisherYatesOnLocale(x, low , high, high, seed);
+                fisherYatesOnLocale(x, low , high, high, taskSeed);
             }
+
+            seed += numChunks;
 
             const numRounds = log2(numChunks) + 1;
 
@@ -844,14 +847,14 @@ module RandMsg
                     writeln("size1: ", size1);
                     writeln("size2: ", size2);
 
-                    const taskSeed = seed + i * 2 ;         //  TODO: better approximation
+                    const taskSeed = seed + i;
                     mergeOnLocale(x, start, size1, size2, taskSeed);
 
                 }
-                seed += numNewChunks * 2 * numLocales;
+                seed += numNewChunks;
             }
         }
-        return generatorSeed + numLocales;
+        return generatorSeed + 1;
     }
 
     proc mergeOnLocale(ref x: [] ?t, s: int, n1: int, n2: int, generatorSeed: int): int {
