@@ -766,58 +766,43 @@ module RandMsg
         return MsgTuple.success();
     }
 
-    /*
-    Shuffle the slice of array over index lower..upper.
-    */
-    proc shuffleRange(ref x: [] ?t, lower: int, upper: int, generatorSeed: int): int {
-        for loc in Locales do on loc {
+    proc mergeShuffle(ref x: [] ?t, generatorSeed: int): int {
+        const numRounds = log2(numLocales) + 1;
+        const domainLows = getDomainLows(x);
+        const domainHighs = getDomainHighs(x);
 
-            const seed = generatorSeed + here.id;
-            var randStreamInt = new randomStream(int, seed=seed);
+        var seed = 1;
+        shuffleLocales(x, generatorSeed);
 
-            const localLower = max(x.localSubdomain(loc=here).low, lower);
-            const localUpper = min(x.localSubdomain(loc=here).high, upper);
+        // for m in 0..#numRounds {
+        //     const maxLocalesPerPrevChunk = 2**m;
+        //     const numNewChunks = (numLocales - 1) / (2 * maxLocalesPerPrevChunk) + 1;
 
-            fisherYatesOnLocale(x, localLower, localUpper, upper, generatorSeed);
-        }
-        return generatorSeed + numLocales;
-    }
+        //     for i in 0..#numNewChunks {
+        //         const startLocale = 2 * i * maxLocalesPerPrevChunk;
+        //         const endLocale = min(startLocale + maxLocalesPerPrevChunk - 1, numLocales - 1 );
+        //         const startLocale2 = min(endLocale + 1, numLocales - 1 );
+        //         const endLocale2 = min(startLocale2 + maxLocalesPerPrevChunk - 1, numLocales - 1 );
+        //         if( endLocale < startLocale2 ){
+        //                 const start = domainLows[startLocale];
+        //                 const size1 = domainHighs[endLocale] - domainLows[startLocale] + 1;
+        //                 const size2 = domainHighs[endLocale2] - domainLows[startLocale2] + 1;
 
-    /*
-        Conduct partial Fisher Yates shuffle on the slice of the array over index localLower..localUpper.
-        Note that elements in this interval can be swapped with elements in range localLower..upper.
-    */
-    proc fisherYatesOnLocale(ref x: [] ?t, localLower: int, localUpper: int, upper: int, generatorSeed: int): int {
-
-        var randStreamInt = new randomStream(int, seed=generatorSeed);
-        for i in localLower..localUpper { // with(var randStreamInt = new randomStream(int, seed=generatorSeed)) {
-            const idx = randStreamInt.choose(i..upper);
-            if (i != idx ){
-                x[i] <=> x[idx];
-            }
-        }
-        return generatorSeed + 1;
-    }
-
-    proc reverseFisherYatesOnLocale(ref x: [] ?t, localLower: int, localUpper: int, lower: int, generatorSeed: int): int {
-
-        var randStreamInt = new randomStream(int, seed=generatorSeed);
-        for i in localLower..localUpper { // with(var randStreamInt = new randomStream(int, seed=generatorSeed)) {
-            const idx = randStreamInt.choose(lower..i);
-            if (i != idx ){
-                x[i] <=> x[idx];
-            }
-        }
-        return generatorSeed + 1;
-    }
-
+        //                 const taskSeed = seed + i * 2 * numLocales;         //  TODO: better approximation, combine with other stuff
+        //                 // merge(x, start, size1, size2, taskSeed);
+        //         }
+        //     }
+        //     seed += numNewChunks * 2 * numLocales;
+        // }
+        return seed;
+    }   
 
     /*  
         Shuffles each locale of the array independently.
         There should be no communication between locales for this step.
     */
     proc shuffleLocales(ref x: [] ?t, generatorSeed: int): int {
-        for loc in Locales do on loc {
+        coforall loc in Locales do on loc {
             var randStreamInt = new randomStream(int, seed=(generatorSeed + here.id));
             var seed = randStreamInt.next();
 
@@ -833,42 +818,72 @@ module RandMsg
                 const taskSeed = seed + i;
                 const low = localLower + i * smallestChunkSize;
                 const high = min(localUpper, low + smallestChunkSize - 1);
-                fisherYatesOnLocale(x, low , high, high, taskSeed);
+                fisherYatesOnLocale(x, low , high, high, true, taskSeed);
             }
 
-            seed += numChunks;
+            // seed += numChunks;
 
-            const numRounds = log2(numChunks) + 1;
+            // const numRounds = log2(numChunks) + 1;
 
-            for m in 0..#(numRounds) {
-                const prevChunkSize = smallestChunkSize * 2**m;
-                const newChunkSize = 2 * prevChunkSize;
-                const numNewChunks = (size - 1)/newChunkSize + 1;
-                writeln("\n\nm: ", m);
-                writeln("prevChunkSize: ", prevChunkSize);
-                writeln("smallestChunkSize: ", smallestChunkSize);
-                writeln("size: ", size);
-                writeln("numNewChunks: ", numNewChunks);
+            // for m in 0..#(numRounds) {
+            //     const prevChunkSize = smallestChunkSize * 2**m;
+            //     const newChunkSize = 2 * prevChunkSize;
+            //     const numNewChunks = (size - 1)/newChunkSize + 1;
 
-                for i in 0..#(numNewChunks) {
-                    writeln("\nChunk: ", i);
+            //     forall i in 0..#(numNewChunks) {
 
-                    const start = localLower + i * newChunkSize;
-                    const size1 = min(localUpper - start + 1, prevChunkSize);
-                    const size2 = min(localUpper - start - size1 + 1, newChunkSize);
-                    writeln("start: ", start);
-                    writeln("size1: ", size1);
-                    writeln("size2: ", size2);
+            //         const start = localLower + i * newChunkSize;
+            //         const size1 = min(localUpper - start + 1, prevChunkSize);
+            //         const size2 = min(localUpper - start - size1 + 1, newChunkSize);
 
-                    const taskSeed = seed + i;
-                    mergeOnLocale(x, start, size1, size2, taskSeed);
+            //         const taskSeed = seed + i;
+            //         mergeOnLocale(x, start, size1, size2, taskSeed);
 
-                }
-                seed += numNewChunks;
+            //     }
+            //     seed += numNewChunks;
+            // }
+        }
+        return generatorSeed + 1;
+    } 
+
+    /*
+    Shuffle the slice of array over index lower..upper.
+    */
+    proc shuffleRange(ref x: [] ?t, lower: int, upper: int, generatorSeed: int): int {
+        return shuffleRange(x, lower, upper, upper, true, generatorSeed);
+    }
+
+    proc shuffleRange(ref x: [] ?t, lower: int, upper: int, bound: int, isUpperBound: bool, generatorSeed: int): int {
+        for loc in Locales do on loc {
+
+            const seed = generatorSeed + here.id;
+            var randStreamInt = new randomStream(int, seed=seed);
+
+            const localLower = max(x.localSubdomain(loc=here).low, lower);
+            const localUpper = min(x.localSubdomain(loc=here).high, upper);
+
+            fisherYatesOnLocale(x, localLower, localUpper, bound, isUpperBound, generatorSeed);
+        }
+        return generatorSeed + numLocales;
+    }
+
+    /*
+        Conduct partial Fisher Yates shuffle on the slice of the array over index localLower..localUpper.
+        Note that elements in this interval can be swapped with elements in range localLower..upper.
+    */
+    proc fisherYatesOnLocale(ref x: [] ?t, localLower: int, localUpper: int, bound: int, isUpperBound: bool, generatorSeed: int): int {
+
+        var randStreamInt = new randomStream(int, seed=generatorSeed);
+        for i in localLower..localUpper { // with(var randStreamInt = new randomStream(int, seed=generatorSeed)) {
+            const idx = if isUpperBound then randStreamInt.choose(i..bound) else randStreamInt.choose(bound..i);
+            if (i != idx ){
+                x[i] <=> x[idx];
             }
         }
         return generatorSeed + 1;
     }
+
+
 
     proc mergeOnLocale(ref x: [] ?t, s: int, n1: int, n2: int, generatorSeed: int){
         var i: int = s;
@@ -888,20 +903,16 @@ module RandMsg
                 if (j==n) {
                     break;
                 }
-                writeln("i: ", i);
-                writeln("j: ", j);
                 x[i] <=> x[j];
                 j += 1;
             }
             i += 1;
         }
 
-        shuffleRange(x, i, n, seed);     //  Fix indexing
-        reverseFisherYatesOnLocale(x, i, n, s, seed);
+        fisherYatesOnLocale(x, i, n, s, false, seed);
     }
 
-
-    proc merge(ref x: [] ?t, s: int, n1: int, n2: int, generatorSeed: int): int{
+    proc merge(ref x: [] ?t, s: int, n1: int, n2: int, generatorSeed: int): int {
         var i: int = s;
         var j: int = s + n1;
         var n: int = s + n1 + n2 - 1;
@@ -911,36 +922,36 @@ module RandMsg
             const low = x.localSubdomain(loc=here).low;
             const high = x.localSubdomain(loc=here).high;
 
-            const seed = generatorSeed + here.id;
-            var randStream = new randomStream(real, seed=seed);
+            // const seed = generatorSeed + here.id;
+            // var randStream = new randomStream(real, seed=seed);
 
-            while(true){
-                if (i < low) | (i > high){
-                    break;
-                }
+            // while(true){
+            //     if (i < low) | (i > high){
+            //         break;
+            //     }
 
-                if randStream.next() < threshold {
-                    if (i==j){
-                        break;
-                    }
-                } else {
-                    if (j==n) {
-                        break;
-                    }
-                    x[i] <=> x[j];
-                    j += 1;
-                }
-                i += 1;
-            }
+            //     if randStream.next() < threshold {
+            //         if (i==j){
+            //             break;
+            //         }
+            //     } else {
+            //         if (j==n) {
+            //             break;
+            //         }
+            //         x[i] <=> x[j];
+            //         j += 1;
+            //     }
+            //     i += 1;
+            // }
         }
 
         var seed = generatorSeed + numLocales;
-        seed = shuffleRange(x, i, n, seed);         //      Check this indexing 
+        // seed = shuffleRange(x, i, n, s, false, seed);
 
         return seed;
     }
 
-    proc newSeed(seed: int): int{
+    proc newSeed(seed: int): int {
         var randStream = new randomStream(int, seed=seed);
         return randStream.next();
     }
@@ -967,37 +978,6 @@ module RandMsg
             domainSizes[here.id] = x.localSubdomain(loc=here).size;
         }
         return domainSizes;
-    }
-
-    proc mergeShuffle(ref x: [] ?t, generatorSeed: int): int {
-        const numRounds = log2(numLocales) + 1;
-        const domainLows = getDomainLows(x);
-        const domainHighs = getDomainHighs(x);
-
-        var seed = shuffleLocales(x, generatorSeed);
-
-        for m in 0..#numRounds {
-            const maxLocalesPerPrevChunk = 2**m;
-            const numNewChunks = (numLocales - 1) / (2 * maxLocalesPerPrevChunk) + 1;
-
-            for i in 0..#numNewChunks {
-                writeln("\nChunk: ", i);
-                const startLocale = 2 * i * maxLocalesPerPrevChunk;
-                const endLocale = min(startLocale + maxLocalesPerPrevChunk - 1, numLocales - 1 );
-                const startLocale2 = min(endLocale + 1, numLocales - 1 );
-                const endLocale2 = min(startLocale2 + maxLocalesPerPrevChunk - 1, numLocales - 1 );
-                if( endLocale < startLocale2 ){
-                        const start = domainLows[startLocale];
-                        const size1 = domainHighs[endLocale] - domainLows[startLocale] + 1;
-                        const size2 = domainHighs[endLocale2] - domainLows[startLocale2] + 1;
-
-                        const taskSeed = seed + i * 2 * numLocales;         //  TODO: better approximation, combine with other stuff
-                        merge(x, start, size1, size2, taskSeed);
-                }
-            }
-            seed += numNewChunks * 2 * numLocales;
-        }
-        return seed;
     }
 
     use CommandMap;
