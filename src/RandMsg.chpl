@@ -780,7 +780,7 @@ module RandMsg
             const maxLocalesPerPrevChunk = 2**m;
             const numNewChunks = (numLocales - 1) / (2 * maxLocalesPerPrevChunk) + 1;
 
-            for i in 0..#numNewChunks {
+            forall i in 0..#numNewChunks {
                 const startLocale = 2 * i * maxLocalesPerPrevChunk;
                 const endLocale = min(startLocale + maxLocalesPerPrevChunk - 1, numLocales - 1 );
                 const startLocale2 = min(endLocale + 1, numLocales - 1 );
@@ -915,6 +915,9 @@ module RandMsg
         fisherYatesOnLocale(x, i, n, s, false, seed);
     }
 
+    /*  
+        This version does the swaps using chapel <=> from locale 0
+    */
     proc merge(ref x: [] ?t, s: int, n1: int, n2: int, generatorSeed: int): int {
         var i: int = s;
         var j: int = s + n1;
@@ -990,7 +993,9 @@ module RandMsg
         return seed;
     }
 
-
+    /*  
+        This version does the swaps using chapel <=> from on the local where the first element lives
+    */
     proc merge3(ref x: [] ?t, s: int, n1: int, n2: int, generatorSeed: int): int {
         var i: int = s;
         var j: int = s + n1;
@@ -1028,6 +1033,51 @@ module RandMsg
 
         return seed;
     }
+
+    /*  
+        This version does the swaps using swap function from on the local where the first element lives
+    */
+    proc merge4(ref x: [] ?t, s: int, n1: int, n2: int, generatorSeed: int): int {
+        var i: int = s;
+        var j: int = s + n1;
+        var n: int = s + n1 + n2 - 1;
+        const threshold = (n1: real)/((n1 + n2): real);
+
+        for loc in Locales do on loc {
+            const low = x.localSubdomain(loc=here).low;
+            const high = x.localSubdomain(loc=here).high;
+
+            const seed = generatorSeed + here.id;
+            var randStream = new randomStream(real, seed=seed);
+
+            while(true){
+                if (i < low) | (i > high){
+                    break;
+                }
+
+                if randStream.next() < threshold {
+                    if (i==j){
+                        break;
+                    }
+                } else {
+                    if (j==n) {
+                        break;
+                    }
+                    x[i] <=> x[j];
+                    j += 1;
+                }
+                i += 1;
+            }
+        }
+        var seed = generatorSeed + numLocales;
+        seed = shuffleRange(x, i, n, s, false, seed);
+
+        return seed;
+    }
+
+
+
+
 
     proc newSeed(seed: int): int {
         var randStream = new randomStream(int, seed=seed);
