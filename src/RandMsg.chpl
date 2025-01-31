@@ -997,32 +997,32 @@ module RandMsg
         var n: int = s + n1 + n2 - 1;
         const threshold = (n1: real)/((n1 + n2): real);
 
-        // for loc in Locales do on loc {
-        //     const low = x.localSubdomain(loc=here).low;
-        //     const high = x.localSubdomain(loc=here).high;
+        for loc in Locales do on loc {
+            const low = x.localSubdomain(loc=here).low;
+            const high = x.localSubdomain(loc=here).high;
 
-        //     const seed = generatorSeed + here.id;
-        //     var randStream = new randomStream(real, seed=seed);
+            const seed = generatorSeed + here.id;
+            var randStream = new randomStream(real, seed=seed);
 
-        //     while(true){
-        //         if (i < low) | (i > high){
-        //             break;
-        //         }
+            while(true){
+                if (i < low) | (i > high){
+                    break;
+                }
 
-        //         if randStream.next() < threshold {
-        //             if (i==j){
-        //                 break;
-        //             }
-        //         } else {
-        //             if (j==n) {
-        //                 break;
-        //             }
-        //             x[i] <=> x[j];
-        //             j += 1;
-        //         }
-        //         i += 1;
-        //     }
-        // }
+                if randStream.next() < threshold {
+                    if (i==j){
+                        break;
+                    }
+                } else {
+                    if (j==n) {
+                        break;
+                    }
+                    x[i] <=> x[j];
+                    j += 1;
+                }
+                i += 1;
+            }
+        }
         var seed = generatorSeed + numLocales;
         seed = shuffleRange(x, i, n, s, false, seed);
 
