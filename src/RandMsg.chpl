@@ -807,7 +807,7 @@ module RandMsg
         There should be no communication between locales for this step.
     */
     proc shuffleLocales(ref x: [] ?t, generatorSeed: int): int {
-        for loc in Locales do on loc {
+        coforall loc in Locales do on loc {
             var randStreamInt = new randomStream(int, seed=(generatorSeed + here.id));
             var seed = randStreamInt.next();
 
@@ -867,10 +867,6 @@ module RandMsg
             const localLower = max(x.localSubdomain(loc=here).low, lower);
             const localUpper = min(x.localSubdomain(loc=here).high, upper);
 
-            writeln("\nlocale: ", here.id);
-            writeln("localLower: ", localLower);
-            writeln("localUpper: ", localUpper);
-
             fisherYatesOnLocale(x, localLower, localUpper, bound, isUpperBound, generatorSeed);
         }
         return generatorSeed + numLocales;
@@ -901,20 +897,20 @@ module RandMsg
         var seed = generatorSeed + here.id;
         var randStream = new randomStream(real, seed=seed);
 
-        // while(true){
-        //     if randStream.next() < threshold {
-        //         if (i==j){
-        //             break;
-        //         }
-        //     } else {
-        //         if (j==n) {
-        //             break;
-        //         }
-        //         x[i] <=> x[j];
-        //         j += 1;
-        //     }
-        //     i += 1;
-        // }
+        while(true){
+            if randStream.next() < threshold {
+                if (i==j){
+                    break;
+                }
+            } else {
+                if (j==n) {
+                    break;
+                }
+                x[i] <=> x[j];
+                j += 1;
+            }
+            i += 1;
+        }
 
         fisherYatesOnLocale(x, i, n, s, false, seed);
     }
@@ -1028,7 +1024,7 @@ module RandMsg
         //     }
         // }
         var seed = generatorSeed + numLocales;
-        // seed = shuffleRange(x, i, n, s, false, seed);
+        seed = shuffleRange(x, i, n, s, false, seed);
 
         return seed;
     }
