@@ -766,7 +766,7 @@ module RandMsg
         return MsgTuple.success();
     }
 
-    proc mergeShuffle(ref x: [] ?t, generatorSeed: int): int {
+    proc mergeShuffle(ref x: [] ?t, generatorSeed: int): int throws {
         const numRounds = log2(numLocales) + 1;
         const domainLows = getDomainLows(x);
         const domainHighs = getDomainHighs(x);
@@ -774,26 +774,31 @@ module RandMsg
         var seed = 1;
         shuffleLocales(x, generatorSeed);
 
-        // for m in 0..#numRounds {
-        //     const maxLocalesPerPrevChunk = 2**m;
-        //     const numNewChunks = (numLocales - 1) / (2 * maxLocalesPerPrevChunk) + 1;
+        // var rands = makeDistArray(x.domain, real);
 
-        //     for i in 0..#numNewChunks {
-        //         const startLocale = 2 * i * maxLocalesPerPrevChunk;
-        //         const endLocale = min(startLocale + maxLocalesPerPrevChunk - 1, numLocales - 1 );
-        //         const startLocale2 = min(endLocale + 1, numLocales - 1 );
-        //         const endLocale2 = min(startLocale2 + maxLocalesPerPrevChunk - 1, numLocales - 1 );
-        //         if( endLocale < startLocale2 ){
-        //                 const start = domainLows[startLocale];
-        //                 const size1 = domainHighs[endLocale] - domainLows[startLocale] + 1;
-        //                 const size2 = domainHighs[endLocale2] - domainLows[startLocale2] + 1;
+        for m in 0..#numRounds {
+            const maxLocalesPerPrevChunk = 2**m;
+            const numNewChunks = (numLocales - 1) / (2 * maxLocalesPerPrevChunk) + 1;
 
-        //                 const taskSeed = seed + i * 2 * numLocales;         //  TODO: better approximation, combine with other stuff
-        //                 // merge(x, start, size1, size2, taskSeed);
-        //         }
-        //     }
-        //     seed += numNewChunks * 2 * numLocales;
-        // }
+            for i in 0..#numNewChunks {
+                const startLocale = 2 * i * maxLocalesPerPrevChunk;
+                const endLocale = min(startLocale + maxLocalesPerPrevChunk - 1, numLocales - 1 );
+                const startLocale2 = min(endLocale + 1, numLocales - 1 );
+                const endLocale2 = min(startLocale2 + maxLocalesPerPrevChunk - 1, numLocales - 1 );
+                if( endLocale < startLocale2 ){
+                        const start = domainLows[startLocale];
+                        const size1 = domainHighs[endLocale] - domainLows[startLocale] + 1;
+                        const size2 = domainHighs[endLocale2] - domainLows[startLocale2] + 1;
+
+                        const taskSeed = seed + i * 2 * numLocales;         //  TODO: better approximation, combine with other stuff
+                        // fillRandom(rands);
+                        // merge2(x, rands, start, size1, size2, taskSeed);
+                        // merge(x, start, size1, size2, taskSeed);
+                        merge3(x, start, size1, size2, taskSeed);
+                }
+            }
+            seed += numNewChunks * 2 * numLocales;
+        }
         return seed;
     }   
 
@@ -802,7 +807,7 @@ module RandMsg
         There should be no communication between locales for this step.
     */
     proc shuffleLocales(ref x: [] ?t, generatorSeed: int): int {
-        coforall loc in Locales do on loc {
+        for loc in Locales do on loc {
             var randStreamInt = new randomStream(int, seed=(generatorSeed + here.id));
             var seed = randStreamInt.next();
 
@@ -821,27 +826,27 @@ module RandMsg
                 fisherYatesOnLocale(x, low , high, high, true, taskSeed);
             }
 
-            // seed += numChunks;
+            seed += numChunks;
 
-            // const numRounds = log2(numChunks) + 1;
+            const numRounds = log2(numChunks) + 1;
 
-            // for m in 0..#(numRounds) {
-            //     const prevChunkSize = smallestChunkSize * 2**m;
-            //     const newChunkSize = 2 * prevChunkSize;
-            //     const numNewChunks = (size - 1)/newChunkSize + 1;
+            for m in 0..#(numRounds) {
+                const prevChunkSize = smallestChunkSize * 2**m;
+                const newChunkSize = 2 * prevChunkSize;
+                const numNewChunks = (size - 1)/newChunkSize + 1;
 
-            //     forall i in 0..#(numNewChunks) {
+                forall i in 0..#(numNewChunks) {
 
-            //         const start = localLower + i * newChunkSize;
-            //         const size1 = min(localUpper - start + 1, prevChunkSize);
-            //         const size2 = min(localUpper - start - size1 + 1, newChunkSize);
+                    const start = localLower + i * newChunkSize;
+                    const size1 = min(localUpper - start + 1, prevChunkSize);
+                    const size2 = min(localUpper - start - size1 + 1, prevChunkSize);   
 
-            //         const taskSeed = seed + i;
-            //         mergeOnLocale(x, start, size1, size2, taskSeed);
+                    const taskSeed = seed + i;
+                    mergeOnLocale(x, start, size1, size2, taskSeed);
 
-            //     }
-            //     seed += numNewChunks;
-            // }
+                }
+                seed += numNewChunks;
+            }
         }
         return generatorSeed + 1;
     } 
@@ -861,6 +866,10 @@ module RandMsg
 
             const localLower = max(x.localSubdomain(loc=here).low, lower);
             const localUpper = min(x.localSubdomain(loc=here).high, upper);
+
+            writeln("\nlocale: ", here.id);
+            writeln("localLower: ", localLower);
+            writeln("localUpper: ", localUpper);
 
             fisherYatesOnLocale(x, localLower, localUpper, bound, isUpperBound, generatorSeed);
         }
@@ -883,8 +892,6 @@ module RandMsg
         return generatorSeed + 1;
     }
 
-
-
     proc mergeOnLocale(ref x: [] ?t, s: int, n1: int, n2: int, generatorSeed: int){
         var i: int = s;
         var j: int = s + n1;
@@ -893,6 +900,32 @@ module RandMsg
 
         var seed = generatorSeed + here.id;
         var randStream = new randomStream(real, seed=seed);
+
+        // while(true){
+        //     if randStream.next() < threshold {
+        //         if (i==j){
+        //             break;
+        //         }
+        //     } else {
+        //         if (j==n) {
+        //             break;
+        //         }
+        //         x[i] <=> x[j];
+        //         j += 1;
+        //     }
+        //     i += 1;
+        // }
+
+        fisherYatesOnLocale(x, i, n, s, false, seed);
+    }
+
+    proc merge(ref x: [] ?t, s: int, n1: int, n2: int, generatorSeed: int): int {
+        var i: int = s;
+        var j: int = s + n1;
+        var n: int = s + n1 + n2 - 1;
+        const threshold = (n1: real)/((n1 + n2): real);
+
+        var randStream = new randomStream(real, seed=generatorSeed);
 
         while(true){
             if randStream.next() < threshold {
@@ -909,10 +942,14 @@ module RandMsg
             i += 1;
         }
 
-        fisherYatesOnLocale(x, i, n, s, false, seed);
+        var seed = generatorSeed + 1;
+        seed = shuffleRange(x, i, n, s, false, seed);
+
+        return seed;
     }
 
-    proc merge(ref x: [] ?t, s: int, n1: int, n2: int, generatorSeed: int): int {
+
+    proc merge2(ref x: [] ?t, ref rands: [] real, s: int, n1: int, n2: int, generatorSeed: int): int {
         var i: int = s;
         var j: int = s + n1;
         var n: int = s + n1 + n2 - 1;
@@ -925,26 +962,71 @@ module RandMsg
             // const seed = generatorSeed + here.id;
             // var randStream = new randomStream(real, seed=seed);
 
-            // while(true){
-            //     if (i < low) | (i > high){
-            //         break;
-            //     }
+            proc swap(i,j){
+                const tmp = x[i];
+                x[i] = x[j];
+                x[j] = x[i];
+            }
 
-            //     if randStream.next() < threshold {
-            //         if (i==j){
-            //             break;
-            //         }
-            //     } else {
-            //         if (j==n) {
-            //             break;
-            //         }
-            //         x[i] <=> x[j];
-            //         j += 1;
-            //     }
-            //     i += 1;
-            // }
+            const num = + reduce (for i in low..high do (rands[i]> threshold: int) );
+
+            var indices : [0..#num] int;      
+            var tmp : [0..#num] t;    
+
+            var idx = 0;
+            forall l in 0..#n1 with (var agg = new SrcAggregator(t)) {
+                if (idx <= n2) && (rands[l] > threshold) {
+                    agg.copy(tmp[idx], x[j+idx]);
+                    idx += 1;
+                }
+            }
+
+            forall i in low..high with (var agg = new SrcAggregator(t)) {
+                if rands[i] > threshold {
+                    agg.copy(x[i], x[j]);
+                }
+            }
         }
 
+        var seed = generatorSeed + numLocales;
+        // seed = shuffleRange(x, i, n, s, false, seed);
+
+        return seed;
+    }
+
+
+    proc merge3(ref x: [] ?t, s: int, n1: int, n2: int, generatorSeed: int): int {
+        var i: int = s;
+        var j: int = s + n1;
+        var n: int = s + n1 + n2 - 1;
+        const threshold = (n1: real)/((n1 + n2): real);
+
+        // for loc in Locales do on loc {
+        //     const low = x.localSubdomain(loc=here).low;
+        //     const high = x.localSubdomain(loc=here).high;
+
+        //     const seed = generatorSeed + here.id;
+        //     var randStream = new randomStream(real, seed=seed);
+
+        //     while(true){
+        //         if (i < low) | (i > high){
+        //             break;
+        //         }
+
+        //         if randStream.next() < threshold {
+        //             if (i==j){
+        //                 break;
+        //             }
+        //         } else {
+        //             if (j==n) {
+        //                 break;
+        //             }
+        //             x[i] <=> x[j];
+        //             j += 1;
+        //         }
+        //         i += 1;
+        //     }
+        // }
         var seed = generatorSeed + numLocales;
         // seed = shuffleRange(x, i, n, s, false, seed);
 
