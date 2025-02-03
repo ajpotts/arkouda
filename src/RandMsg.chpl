@@ -780,7 +780,7 @@ module RandMsg
             const maxLocalesPerPrevChunk = 2**m;
             const numNewChunks = (numLocales - 1) / (2 * maxLocalesPerPrevChunk) + 1;
 
-            forall i in 0..#numNewChunks {
+            forall i in 0..#numNewChunks with (ref x, ref generatorSeed){
                 const startLocale = 2 * i * maxLocalesPerPrevChunk;
                 const endLocale = min(startLocale + maxLocalesPerPrevChunk - 1, numLocales - 1 );
                 const startLocale2 = min(endLocale + 1, numLocales - 1 );
@@ -793,8 +793,8 @@ module RandMsg
                         const taskSeed = seed + i * 2 * numLocales;         //  TODO: better approximation, combine with other stuff
                         // fillRandom(rands);
                         // merge2(x, rands, start, size1, size2, taskSeed);
-                        // merge(x, start, size1, size2, taskSeed);
-                        merge3(x, start, size1, size2, taskSeed);
+                        merge(x, start, size1, size2, taskSeed);
+                        //merge3(x, start, size1, size2, taskSeed);
                 }
             }
             seed += numNewChunks * 2 * numLocales;
@@ -806,8 +806,8 @@ module RandMsg
         Shuffles each locale of the array independently.
         There should be no communication between locales for this step.
     */
-    proc shuffleLocales(ref x: [] ?t, generatorSeed: int): int {
-        coforall loc in Locales do on loc {
+    proc shuffleLocales(ref x: [] ?t, const generatorSeed: int): int {
+        coforall loc in Locales with (ref x, const generatorSeed) do on loc{
             var randStreamInt = new randomStream(int, seed=(generatorSeed + here.id));
             var seed = randStreamInt.next();
 
@@ -819,7 +819,7 @@ module RandMsg
             const smallestChunkSize = max(size/(2**maxFisherYatesPower), min(10, size));     //  Hardcoded minimum size
             const numChunks = (size - 1)/smallestChunkSize + 1;
 
-            forall i in 0..#numChunks {
+            forall i in 0..#numChunks with (ref x, const seed){
                 const taskSeed = seed + i;
                 const low = localLower + i * smallestChunkSize;
                 const high = min(localUpper, low + smallestChunkSize - 1);
@@ -835,7 +835,7 @@ module RandMsg
                 const newChunkSize = 2 * prevChunkSize;
                 const numNewChunks = (size - 1)/newChunkSize + 1;
 
-                forall i in 0..#(numNewChunks) {
+                forall i in 0..#(numNewChunks) with (ref x, const localLower, const localUpper, const newChunkSize, const prevChunkSize, const seed){
 
                     const start = localLower + i * newChunkSize;
                     const size1 = min(localUpper - start + 1, prevChunkSize);
@@ -858,11 +858,11 @@ module RandMsg
         return shuffleRange(x, lower, upper, upper, true, generatorSeed);
     }
 
-    proc shuffleRange(ref x: [] ?t, lower: int, upper: int, bound: int, isUpperBound: bool, generatorSeed: int): int {
+    proc shuffleRange(ref x: [] ?t, const lower: int, const upper: int, const bound: int, const isUpperBound: bool, const generatorSeed: int): int {
         for loc in Locales do on loc {
 
-            const seed = generatorSeed + here.id;
-            var randStreamInt = new randomStream(int, seed=seed);
+            // const seed = generatorSeed + here.id;
+            // var randStreamInt = new randomStream(int, seed=seed);
 
             const localLower = max(x.localSubdomain(loc=here).low, lower);
             const localUpper = min(x.localSubdomain(loc=here).high, upper);
@@ -876,10 +876,10 @@ module RandMsg
         Conduct partial Fisher Yates shuffle on the slice of the array over index localLower..localUpper.
         Note that elements in this interval can be swapped with elements in range localLower..upper.
     */
-    proc fisherYatesOnLocale(ref x: [] ?t, localLower: int, localUpper: int, bound: int, isUpperBound: bool, generatorSeed: int): int {
+    proc fisherYatesOnLocale(ref x: [] ?t, const localLower: int, const localUpper: int, const bound: int, const isUpperBound: bool, const generatorSeed: int): int {
 
         var randStreamInt = new randomStream(int, seed=generatorSeed);
-        for i in localLower..localUpper { // with(var randStreamInt = new randomStream(int, seed=generatorSeed)) {
+        for i in localLower..localUpper {// with(var randStreamInt = new randomStream(int, seed=generatorSeed)) {
             const idx = if isUpperBound then randStreamInt.choose(i..bound) else randStreamInt.choose(bound..i);
             if (i != idx ){
                 x[i] <=> x[idx];
@@ -915,39 +915,6 @@ module RandMsg
         fisherYatesOnLocale(x, i, n, s, false, seed);
     }
 
-    /*  
-        This version does the swaps using chapel <=> from locale 0
-    */
-    proc merge(ref x: [] ?t, s: int, n1: int, n2: int, generatorSeed: int): int {
-        var i: int = s;
-        var j: int = s + n1;
-        var n: int = s + n1 + n2 - 1;
-        const threshold = (n1: real)/((n1 + n2): real);
-
-        var randStream = new randomStream(real, seed=generatorSeed);
-
-        while(true){
-            if randStream.next() < threshold {
-                if (i==j){
-                    break;
-                }
-            } else {
-                if (j==n) {
-                    break;
-                }
-                x[i] <=> x[j];
-                j += 1;
-            }
-            i += 1;
-        }
-
-        var seed = generatorSeed + 1;
-        seed = shuffleRange(x, i, n, s, false, seed);
-
-        return seed;
-    }
-
-
     proc merge2(ref x: [] ?t, ref rands: [] real, s: int, n1: int, n2: int, generatorSeed: int): int {
         var i: int = s;
         var j: int = s + n1;
@@ -973,14 +940,14 @@ module RandMsg
             var tmp : [0..#num] t;    
 
             var idx = 0;
-            forall l in 0..#n1 with (var agg = new SrcAggregator(t)) {
+            forall l in 0..#n1 with (var agg = new SrcAggregator(t), ref rands, ref x) {
                 if (idx <= n2) && (rands[l] > threshold) {
                     agg.copy(tmp[idx], x[j+idx]);
                     idx += 1;
                 }
             }
 
-            forall i in low..high with (var agg = new SrcAggregator(t)) {
+            forall i in low..high with (var agg = new SrcAggregator(t), ref rands, ref x) {
                 if rands[i] > threshold {
                     agg.copy(x[i], x[j]);
                 }
@@ -1034,51 +1001,6 @@ module RandMsg
         return seed;
     }
 
-    /*  
-        This version does the swaps using swap function from on the local where the first element lives
-    */
-    proc merge4(ref x: [] ?t, s: int, n1: int, n2: int, generatorSeed: int): int {
-        var i: int = s;
-        var j: int = s + n1;
-        var n: int = s + n1 + n2 - 1;
-        const threshold = (n1: real)/((n1 + n2): real);
-
-        for loc in Locales do on loc {
-            const low = x.localSubdomain(loc=here).low;
-            const high = x.localSubdomain(loc=here).high;
-
-            const seed = generatorSeed + here.id;
-            var randStream = new randomStream(real, seed=seed);
-
-            while(true){
-                if (i < low) | (i > high){
-                    break;
-                }
-
-                if randStream.next() < threshold {
-                    if (i==j){
-                        break;
-                    }
-                } else {
-                    if (j==n) {
-                        break;
-                    }
-                    x[i] <=> x[j];
-                    j += 1;
-                }
-                i += 1;
-            }
-        }
-        var seed = generatorSeed + numLocales;
-        seed = shuffleRange(x, i, n, s, false, seed);
-
-        return seed;
-    }
-
-
-
-
-
     proc newSeed(seed: int): int {
         var randStream = new randomStream(int, seed=seed);
         return randStream.next();
@@ -1086,7 +1008,7 @@ module RandMsg
 
     proc getDomainLows(ref x: [] ?t): [] int {
         var domainLows: [0..#numLocales] int;
-        coforall loc in Locales do on loc {
+        coforall loc in Locales with (ref x) do on loc {
             domainLows[here.id] = x.localSubdomain(loc=here).low;
         }
         return domainLows;
@@ -1094,7 +1016,7 @@ module RandMsg
 
     proc getDomainHighs(ref x: [] ?t): [] int {
         var domainHighs: [0..#numLocales] int;
-        coforall loc in Locales do on loc {
+        coforall loc in Locales with (ref x) do on loc {
             domainHighs[here.id] = x.localSubdomain(loc=here).high;
         } 
         return domainHighs;
@@ -1102,7 +1024,7 @@ module RandMsg
 
     proc getDomainSizes(ref x: [] ?t): [] int {
         var domainSizes: [0..#numLocales] int;
-        coforall loc in Locales do on loc {
+        coforall loc in Locales with (ref x) do on loc {
             domainSizes[here.id] = x.localSubdomain(loc=here).size;
         }
         return domainSizes;
