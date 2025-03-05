@@ -1,3 +1,3 @@
-from numpy.exceptions import RankWarning, TooHardError
+from numpy import RankWarning, TooHardError
 
 __all__ = ["RankWarning", "TooHardError"]
