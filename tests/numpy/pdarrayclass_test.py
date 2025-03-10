@@ -241,6 +241,7 @@ class TestPdarrayClass:
         nda2 = np.random.randint(0, 2, size).astype(dtype2)
         pda1 = ak.array(nda1)
         pda2 = ak.array(nda2)
+
         assert ak.dot(pda1, pda2) == np.dot(nda1, nda2)  # results are scalar
 
         #   one 1D vector and one scalar

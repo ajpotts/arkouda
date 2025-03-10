@@ -2199,7 +2199,7 @@ def histogramdd(
             "num_samples": sample[0].size,
         },
     )
-    return create_pdarray(type_cast(str, repMsg)).reshape(bins), bin_boundaries
+    return create_pdarray(type_cast(str, repMsg)).reshape(tuple(bins)), bin_boundaries
 
 
 @typechecked
