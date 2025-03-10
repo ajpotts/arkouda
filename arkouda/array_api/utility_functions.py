@@ -70,7 +70,9 @@ def clip(a: Array, a_min, a_max, /) -> Array:
         The maximum value
     """
     if a.dtype == ak.bigint or a.dtype == ak.bool_:
-        raise RuntimeError(f"Error executing command: clip does not support dtype {a.dtype}")
+        raise RuntimeError(
+            f"Error executing command: clip does not support dtype {a.dtype}"
+        )
 
     return Array._new(
         create_pdarray(
@@ -144,7 +146,9 @@ def diff(a: Array, /, n: int = 1, axis: int = -1, prepend=None, append=None) -> 
 
     """
     if a.dtype == ak.bigint:
-        raise RuntimeError(f"Error executing command: diff does not support dtype {a.dtype}")
+        raise RuntimeError(
+            f"Error executing command: diff does not support dtype {a.dtype}"
+        )
 
     if prepend is not None and append is not None:
         a_ = concat((prepend, a, append), axis=axis)
@@ -170,7 +174,9 @@ def diff(a: Array, /, n: int = 1, axis: int = -1, prepend=None, append=None) -> 
     )
 
 
-def trapz(y: Array, x: Optional[Array] = None, dx: Optional[float] = 1.0, axis: int = -1) -> Array:
+def trapz(
+    y: Array, x: Optional[Array] = None, dx: Optional[float] = 1.0, axis: int = -1
+) -> Array:
     r"""
     Integrate along the given axis using the composite trapezoidal rule.
 
@@ -277,7 +283,9 @@ def trapz(y: Array, x: Optional[Array] = None, dx: Optional[float] = 1.0, axis: 
     # https://github.com/numpy/numpy/blob/d35cd07ea997f033b2d89d349734c61f5de54b0d/numpy/lib/function_base.py#L4857-L4984
 
     if y.dtype == ak.bigint:
-        raise RuntimeError(f"Error executing command: trapz does not support dtype {y.dtype}")
+        raise RuntimeError(
+            f"Error executing command: trapz does not support dtype {y.dtype}"
+        )
 
     nd = y.ndim
     if axis < 0:
@@ -294,7 +302,9 @@ def trapz(y: Array, x: Optional[Array] = None, dx: Optional[float] = 1.0, axis: 
         ret = sum(dx * (y[tuple(slice1)] + y[tuple(slice2)]) / 2.0, axis=axis)
     else:
         if x.dtype == ak.bigint:
-            raise RuntimeError(f"Error executing command: trapz does not support dtype {x.dtype}")
+            raise RuntimeError(
+                f"Error executing command: trapz does not support dtype {x.dtype}"
+            )
         d = diff(x, axis=axis)
         if x.ndim == 1:
             shape = [1] * y.ndim
@@ -306,7 +316,9 @@ def trapz(y: Array, x: Optional[Array] = None, dx: Optional[float] = 1.0, axis: 
     return ret
 
 
-def trapezoid(y: Array, x: Optional[Array] = None, dx: Optional[float] = 1.0, axis: int = -1) -> Array:
+def trapezoid(
+    y: Array, x: Optional[Array] = None, dx: Optional[float] = 1.0, axis: int = -1
+) -> Array:
     return trapz(y, x, dx, axis)
 
 

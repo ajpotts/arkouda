@@ -2053,6 +2053,9 @@ class pdarray:
         ----------
         shape : int, tuple of ints, or pdarray
             The new shape should be compatible with the original shape.
+            If an integer, then the result will be a 1-D array of that length.
+            One shape dimension can be -1. In this case,
+            the value is inferred from the length of the array and remaining dimensions.
 
         Returns
         -------
@@ -2078,20 +2081,54 @@ class pdarray:
         # For example, a.reshape(10, 11) is equivalent to a.reshape((10, 11))
         # the lenshape variable addresses an error that occurred when a single integer was
         # passed
+        from arkouda.numpy.numeric import sum as ak_sum
+
+        import math
+
         if len(shape) == 1:
             shape = shape[0]
-            lenshape = 1
-        if (not isinstance(shape, int)) and (not isinstance(shape, pdarray)):
-            shape = [i for i in shape]
-            lenshape = len(shape)
+
+        #   compute the product of the shape values
+        prod_func = prod if isinstance(shape, pdarray) else math.prod
+        shape_prod = builtins.abs(prod_func(shape))
+
+        if self.size % shape_prod != 0 or shape_prod > self.size:
+            raise ValueError(f"shape incompatible with size {self.size}")
+
+        if (isinstance(shape, tuple) and shape.count(-1) > 1) or (
+            isinstance(shape, pdarray) and ak_sum(shape == -1) > 1
+        ):
+            raise ValueError(f"Cannot infer more than one value from shape {shape}")
+
+        #   -1 is treated as a missing value that must be inferred.
+        if shape == -1:
+            shape = self.size
+        elif isinstance(shape, tuple) and builtins.min(shape) == -1:
+
+            replace_idx = shape.index(-1)
+            tmp_list = list(shape)
+            tmp_list[replace_idx] = self.size // shape_prod
+            shape = tuple(tmp_list)
+
+        elif isinstance(shape, pdarray) and min(shape) == -1:
+
+            shape[shape == -1] = self.size // shape_prod
+
+        from arkouda.numpy.pdarraycreation import zeros
+
+        y = zeros(shape, dtype=self.dtype, max_bits=self.max_bits)
+
         return create_pdarray(
-            generic_msg(
-                cmd=f"reshape<{self.dtype},{self.ndim},{lenshape}>",
-                args={
-                    "name": self.name,
-                    "shape": shape,
-                },
-            ),
+            cast(
+                str,
+                generic_msg(
+                    cmd=f"reshape<{self.dtype},{self.ndim},{y.ndim}>",
+                    args={
+                        "x": self.name,
+                        "y": y.name,
+                    },
+                ),
+            )
         )
 
     def flatten(self):

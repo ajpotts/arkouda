@@ -10,6 +10,7 @@ module ManipulationMsg {
   use CommAggregation;
   use AryUtil;
   use BigInteger;
+  use List;
 
   use Reflection;
 
@@ -648,48 +649,83 @@ module ManipulationMsg {
     return (true, ret);
   }
 
-  // https://data-apis.org/array-api/latest/API_specification/generated/array_api.reshape.html#array_api.reshape
-  @arkouda.instantiateAndRegister(prefix='reshape')
-  proc reshapeMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab,
-    type array_dtype,
-    param array_nd_in: int,
-    param array_nd_out: int
-  ): MsgTuple throws {
-    param pn = Reflection.getRoutineName();
-    const name = msgArgs["name"],
-          rawShape = msgArgs["shape"].toScalarTuple(int, array_nd_out);
+  // // https://data-apis.org/array-api/latest/API_specification/generated/array_api.reshape.html#array_api.reshape
+  // @arkouda.registerCommand
+  // proc reshape(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab,
+  //   type array_dtype,
+  //   param array_nd_in: int,
+  //   param array_nd_out: int
+  // ): MsgTuple throws {
+  //   param pn = Reflection.getRoutineName();
+  //   const name = msgArgs["name"],
+  //         rawShape = msgArgs["shape"].toScalarTuple(int, array_nd_out);
 
-    var eIn = st[name]: borrowed SymEntry(array_dtype, array_nd_in),
-        (valid, outShape) = validateShape(rawShape, eIn.a.size);
+  //   var eIn = st[name]: borrowed SymEntry(array_dtype, array_nd_in),
+  //       (valid, outShape) = validateShape(rawShape, eIn.a.size);
 
+  //   if !valid {
+  //     const errMsg = "Cannot reshape array of shape %? into shape %?. The total number of elements must match".format(eIn.tupShape, rawShape);
+  //     mLogger.error(getModuleName(),pn,getLineNumber(),errMsg);
+  //     return MsgTuple.error(errMsg);
+  //   } else {
+  //     if array_nd_in == 1 && array_nd_out == 1 {
+  //       return st.insert(createSymEntry(eIn.a));
+  //     } else if array_nd_in == 1 {
+  //       // special case: unflatten a 1D array into a higher-dimensional array
+  //       return st.insert(createSymEntry(unflatten(eIn.a, outShape)));
+  //     } else if array_nd_out == 1 {
+  //       // special case: flatten an array into a 1D array
+  //       return st.insert(createSymEntry(flatten(eIn.a)));
+  //     } else {
+  //       // general case
+  //       var eOut = createSymEntry((...outShape), array_dtype);
+
+  //       // copy the data from the input array to the output array while reshaping
+  //       forall idx in eIn.a.domain with (
+  //         var agg = newDstAggregator(array_dtype),
+  //         const output = eOut.a.domain,
+  //         const input = new orderer(eIn.tupShape)
+  //       ) {
+  //         const outIdx = output.orderToIndex(input.indexToOrder(if array_nd_in == 1 then (idx,) else idx));
+  //         agg.copy(eOut.a[outIdx], eIn.a[idx]);
+  //       }
+
+  //       return st.insert(eOut);
+  //     }
+  //   }
+  // }
+
+   // https://data-apis.org/array-api/latest/API_specification/generated/array_api.reshape.html#array_api.reshape
+  @arkouda.registerCommand
+  proc reshape(x: [?d] ?t, y:[?d2] t): [d2] t throws {
+
+    var (valid, outShape) = validateShape(y.shape, x.size);
+    
     if !valid {
-      const errMsg = "Cannot reshape array of shape %? into shape %?. The total number of elements must match".format(eIn.tupShape, rawShape);
-      mLogger.error(getModuleName(),pn,getLineNumber(),errMsg);
-      return MsgTuple.error(errMsg);
+      throw new Error("Cannot reshape array of shape %? into shape %?. The total number of elements must match".format(x.shape, y.shape));
     } else {
-      if array_nd_in == 1 && array_nd_out == 1 {
-        return st.insert(createSymEntry(eIn.a));
-      } else if array_nd_in == 1 {
+      if d.rank == 1 && d2.rank == 1 {
+        return x;
+      } else if d.rank == 1 {
         // special case: unflatten a 1D array into a higher-dimensional array
-        return st.insert(createSymEntry(unflatten(eIn.a, outShape)));
-      } else if array_nd_out == 1 {
+        return unflatten(x, y.shape);
+      } else if d2.rank == 1 {
         // special case: flatten an array into a 1D array
-        return st.insert(createSymEntry(flatten(eIn.a)));
+        return flatten(x);
       } else {
         // general case
-        var eOut = createSymEntry((...outShape), array_dtype);
 
         // copy the data from the input array to the output array while reshaping
-        forall idx in eIn.a.domain with (
-          var agg = newDstAggregator(array_dtype),
-          const output = eOut.a.domain,
-          const input = new orderer(eIn.tupShape)
+        forall idx in x.domain with (
+          var agg = newDstAggregator(t),
+          const output = y.domain,
+          const input = new orderer(x.shape)
         ) {
-          const outIdx = output.orderToIndex(input.indexToOrder(if array_nd_in == 1 then (idx,) else idx));
-          agg.copy(eOut.a[outIdx], eIn.a[idx]);
+          const outIdx = output.orderToIndex(input.indexToOrder(if d.rank == 1 then (idx,) else idx));
+          agg.copy(y[outIdx], x[idx]);
         }
 
-        return st.insert(eOut);
+        return y;
       }
     }
   }
@@ -698,6 +734,39 @@ module ManipulationMsg {
   //  * has the same total size as the target size
   //  * has one negative dimension (in this case, that dimension's size
   //    is computed to make the total size match the target size)
+  private proc validateShape(shape: list(int), targetSize: int): (bool, list(int)) {
+    var ret = new list(int),
+        neg = -1,
+        size = 1;
+
+    for i in 0..<shape.size {
+      if shape[i] < 0 {
+        if neg >=0 {
+          // more than one negative dimension
+          return (false, ret);
+        } else {
+          neg = i;
+        }
+      } else {
+        size *= shape[i];
+        ret.pushBack(shape[i]);
+      }
+    }
+
+    if neg >= 0 {
+      if size > targetSize || targetSize % size != 0 {
+        // cannot compute a valid size for the negative dimension
+        return (false, ret);
+      } else {
+        // ret[neg] = targetSize / size;
+        ret.replace(neg, targetSize / size);
+        return (true, ret);
+      }
+    } else {
+      return (size == targetSize, ret);
+    }
+  }
+
   private proc validateShape(shape: ?N*int, targetSize: int): (bool, N*int) {
     var ret: N*int,
         neg = -1,

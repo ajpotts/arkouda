@@ -300,7 +300,10 @@ def array(
                 else:
                     low, a = a % 2**64, a // 2**64
                 uint_arrays.append(array(np.array(low, dtype=np.uint), dtype=akuint64))
-            return bigint_from_uint_arrays(uint_arrays[::-1], max_bits=max_bits)
+            if not uint_arrays:
+                return zeros(size=a.shape, dtype=bigint, max_bits=max_bits)
+            else:
+                return bigint_from_uint_arrays(uint_arrays[::-1], max_bits=max_bits)
         except TypeError:
             raise RuntimeError(f"Unhandled dtype {a.dtype}")
     else:
