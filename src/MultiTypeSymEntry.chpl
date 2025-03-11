@@ -389,6 +389,11 @@ module MultiTypeSymEntry
       return new shared SymEntry(a);
     }
 
+    inline proc createSymEntry(shape: int ..., type etype, max_bits=-1) throws {
+      var a = makeDistArray((...shape), etype);
+      return new shared SymEntry(a, max_bits=max_bits);
+    }
+
     inline proc createSymEntry(in a: [?D] ?etype, max_bits=-1) throws {
       var A = makeDistArray(a);
       return new shared SymEntry(A, max_bits=max_bits);

@@ -42,7 +42,15 @@ module MsgProcessing
         mpLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),
                        "creating new array (dtype=%s, shape=%?)".format(type2str(array_dtype),shape));
 
-        return st.insert(createSymEntry((...shape), array_dtype));
+        // return st.insert(createSymEntry((...shape), array_dtype));
+        select array_dtype {
+            when DType.BigInt {
+                return st.insert(createSymEntry((...shape), array_dtype));
+            }
+            otherwise {
+                return st.insert(createSymEntry((...shape), array_dtype));
+            }
+        }
     }
 
     @arkouda.instantiateAndRegister
