@@ -12,9 +12,7 @@ from arkouda.client import get_max_array_rank, get_array_ranks
 SEED = 314159
 
 
-REDUCTION_OPS = list(
-    set(ak.pdarrayclass.SUPPORTED_REDUCTION_OPS) - set(["isSorted", "isSortedLocally"])
-)
+REDUCTION_OPS = list(set(ak.pdarrayclass.SUPPORTED_REDUCTION_OPS) - set(["isSorted", "isSortedLocally"]))
 INDEX_REDUCTION_OPS = ak.pdarrayclass.SUPPORTED_INDEX_REDUCTION_OPS
 
 DTYPES = ["int64", "float64", "bool", "uint64"]
@@ -238,9 +236,7 @@ class TestPdarrayClass:
     @pytest.mark.parametrize("op", REDUCTION_OPS)
     @pytest.mark.parametrize("axis", [None, 0, 1, (0, 2), (0, 1, 2)])
     def test_reductions_match_numpy_3D_TF(self, op, axis):
-        pda = ak.array([True, True, False, True, True, True, True, True]).reshape(
-            (2, 2, 2)
-        )
+        pda = ak.array([True, True, False, True, True, True, True, True]).reshape((2, 2, 2))
         self.assert_reduction_ops_match(op, pda, axis=axis)
 
     @pytest.mark.parametrize("size", pytest.prob_size)
@@ -263,9 +259,5 @@ class TestPdarrayClass:
                     pda1 = ak.array(nda1)
                     pda2 = ak.array(nda2)
                     assert ak.dot(pda1, pda2) == np.sum(nda1 * nda2)
-                    assert (
-                        ak.dot(pda1, factor).to_ndarray() == np.dot(nda1, factor)
-                    ).all()
-                    assert (
-                        ak.dot(factor, pda2).to_ndarray() == np.dot(factor, nda2)
-                    ).all()
+                    assert (ak.dot(pda1, factor).to_ndarray() == np.dot(nda1, factor)).all()
+                    assert (ak.dot(factor, pda2).to_ndarray() == np.dot(factor, nda2)).all()

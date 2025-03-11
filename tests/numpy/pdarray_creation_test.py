@@ -48,9 +48,7 @@ class TestPdarrayCreation:
             ak.array(deque(range(fixed_size)), dtype),
             ak.array([f"{i}" for i in range(fixed_size)], dtype=dtype),
         ]:
-            assert isinstance(
-                pda, ak.pdarray if ak.dtype(dtype) != "str_" else ak.Strings
-            )
+            assert isinstance(pda, ak.pdarray if ak.dtype(dtype) != "str_" else ak.Strings)
             assert len(pda) == fixed_size
             assert dtype == pda.dtype
 
@@ -61,7 +59,7 @@ class TestPdarrayCreation:
     @pytest.mark.skip_if_max_rank_less_than(2)
     @pytest.mark.parametrize("size", pytest.prob_size)
     @pytest.mark.parametrize(
-        "dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_]
+        "dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_, ak.uint8]
     )
     def test_array_creation_multi_dim(self, size, dtype):
         # the tests based on "range" are not repeated here, as those are 1D objects
@@ -77,15 +75,13 @@ class TestPdarrayCreation:
                 assert dtype == pda.dtype
 
     @pytest.mark.parametrize(
-        "dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_]
+        "dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_, ak.uint8]
     )
     def test_array_creation_error(self, dtype):
 
         rank = ak.client.get_max_array_rank() + 1
         shape, local_size = _generate_test_shape(rank, 2**rank)
-        with pytest.raises(
-            ValueError
-        ):  # try to make a too-large array ; it should raise this error
+        with pytest.raises(ValueError):  # try to make a too-large array ; it should raise this error
             ak.array(np.ones(shape), dtype)
 
     @pytest.mark.parametrize("size", pytest.prob_size)
@@ -132,9 +128,7 @@ class TestPdarrayCreation:
                 ak.full_like(ak.zeros(shape), 9),
                 ak.randint(0, local_size, shape),
             ]:
-                assert isinstance(
-                    pda, ak.pdarray
-                )  # if pda.dtype != str else ak.Strings)
+                assert isinstance(pda, ak.pdarray)  # if pda.dtype != str else ak.Strings)
                 assert len(pda) == local_size
 
     def test_array_creation_misc(self):
@@ -155,9 +149,7 @@ class TestPdarrayCreation:
         cols = 5
         nda = np.random.randint(1, 10, (rows, cols))
 
-        assert_arkouda_array_equal(
-            ak.transpose(ak.array(nda)), ak.array(np.transpose(nda))
-        )
+        assert_arkouda_array_equal(ak.transpose(ak.array(nda)), ak.array(np.transpose(nda)))
 
     def test_infer_shape_from_size(self):
         from arkouda.numpy.util import _infer_shape_from_size
@@ -191,9 +183,7 @@ class TestPdarrayCreation:
 
         pda_from_str = ak.array([f"{i}" for i in range(bi, bi + 10)], dtype=ak.bigint)
         pda_from_int = ak.array([i for i in range(bi, bi + 10)])
-        cast_from_segstr = ak.cast(
-            ak.array([f"{i}" for i in range(bi, bi + 10)]), ak.bigint
-        )
+        cast_from_segstr = ak.cast(ak.array([f"{i}" for i in range(bi, bi + 10)]), ak.bigint)
         for pda in [pda_from_str, pda_from_int, cast_from_segstr]:
             assert isinstance(pda, ak.pdarray)
             assert 10 == len(pda)
@@ -202,8 +192,7 @@ class TestPdarrayCreation:
 
         # test array and arange infer dtype
         assert (
-            ak.array([bi, bi + 1, bi + 2, bi + 3, bi + 4]).to_list()
-            == ak.arange(bi, bi + 5).to_list()
+            ak.array([bi, bi + 1, bi + 2, bi + 3, bi + 4]).to_list() == ak.arange(bi, bi + 5).to_list()
         )
 
         # test that max_bits being set results in a mod
@@ -247,9 +236,9 @@ class TestPdarrayCreation:
             size = 2**rank
             shape, local_size = _generate_test_shape(rank, size)
 
-            pda_from_str = ak.array(
-                [f"{i}" for i in range(bi, bi + size)], dtype=ak.bigint
-            ).reshape(shape)
+            pda_from_str = ak.array([f"{i}" for i in range(bi, bi + size)], dtype=ak.bigint).reshape(
+                shape
+            )
             pda_from_int = ak.array([i for i in range(bi, bi + size)]).reshape(shape)
             for pda in [pda_from_str, pda_from_int]:
                 assert isinstance(pda, ak.pdarray)
@@ -274,22 +263,16 @@ class TestPdarrayCreation:
         assert dtype == start_stop.dtype
 
         start_stop_stride = ak.arange(100, 105, 2, dtype=dtype)
-        assert (
-            np.arange(100, 105, 2, dtype=dtype).tolist() == start_stop_stride.to_list()
-        )
+        assert np.arange(100, 105, 2, dtype=dtype).tolist() == start_stop_stride.to_list()
         assert dtype == start_stop_stride.dtype
 
         # also test for start/stop/stride that cause empty ranges
         start_stop_stride = ak.arange(100, 10, 2, dtype=dtype)
-        assert (
-            np.arange(100, 10, 2, dtype=dtype).tolist() == start_stop_stride.to_list()
-        )
+        assert np.arange(100, 10, 2, dtype=dtype).tolist() == start_stop_stride.to_list()
         assert dtype == start_stop_stride.dtype
 
         start_stop_stride = ak.arange(10, 15, -2, dtype=dtype)
-        assert (
-            np.arange(10, 15, -2, dtype=dtype).tolist() == start_stop_stride.to_list()
-        )
+        assert np.arange(10, 15, -2, dtype=dtype).tolist() == start_stop_stride.to_list()
         assert dtype == start_stop_stride.dtype
 
         start_stop_stride = ak.arange(10, 10, -2, dtype=dtype)
@@ -329,7 +312,7 @@ class TestPdarrayCreation:
         assert (uint_array == int_array).all()
 
     @pytest.mark.parametrize("size", pytest.prob_size)
-    @pytest.mark.parametrize("dtype", [ak.float64, ak.uint64, ak.float64])
+    @pytest.mark.parametrize("dtype", [ak.float64, ak.uint64, ak.float64, ak.uint8])
     @pytest.mark.parametrize("start", [0, 2, 5])
     @pytest.mark.parametrize("stride", [1, 3])
     def test_compare_arange(self, size, dtype, start, stride):
@@ -368,9 +351,7 @@ class TestPdarrayCreation:
 
     @pytest.mark.parametrize("dtype", NUMERIC_SCALARS)
     def test_randint_num_dtype(self, dtype):
-        for test_array in ak.randint(dtype(0), 100, 1000), ak.randint(
-            0, dtype(100), 1000
-        ):
+        for test_array in ak.randint(dtype(0), 100, 1000), ak.randint(0, dtype(100), 1000):
             assert isinstance(test_array, ak.pdarray)
             assert 1000 == len(test_array)
             assert ak.int64 == test_array.dtype
@@ -384,9 +365,7 @@ class TestPdarrayCreation:
 
         for rank in multi_dim_ranks():
             shape, local_size = _generate_test_shape(rank, size)
-            for test_array in ak.randint(dtype(0), 100, shape), ak.randint(
-                0, dtype(100), shape
-            ):
+            for test_array in ak.randint(dtype(0), 100, shape), ak.randint(0, dtype(100), shape):
                 assert isinstance(test_array, ak.pdarray)
                 assert local_size == len(test_array)
                 assert ak.int64 == test_array.dtype
@@ -456,9 +435,7 @@ class TestPdarrayCreation:
         assert values.to_list() == bools
 
         # Test that int_scalars covers uint8, uint16, uint32
-        uint_arr = ak.randint(
-            np.uint8(1), np.uint32(5), np.uint16(10), seed=np.uint8(2)
-        )
+        uint_arr = ak.randint(np.uint8(1), np.uint32(5), np.uint16(10), seed=np.uint8(2))
         int_arr = ak.randint(1, 5, 10, seed=2)
         assert (uint_arr == int_arr).all()
 
@@ -476,9 +453,7 @@ class TestPdarrayCreation:
             1.0441791878997098,
         ] == u_array.to_list()
 
-        u_array = ak.uniform(
-            size=np.int64(3), low=np.int64(0), high=np.int64(5), seed=np.int64(0)
-        )
+        u_array = ak.uniform(size=np.int64(3), low=np.int64(0), high=np.int64(5), seed=np.int64(0))
         assert [
             0.30013431967121934,
             0.47383036230759112,
@@ -495,16 +470,12 @@ class TestPdarrayCreation:
             ak.uniform(low=0, high=5, size="100")
 
         # Test that int_scalars covers uint8, uint16, uint32
-        uint_arr = ak.uniform(
-            low=np.uint8(0), high=np.uint16(5), size=np.uint32(100), seed=np.uint8(1)
-        )
+        uint_arr = ak.uniform(low=np.uint8(0), high=np.uint16(5), size=np.uint32(100), seed=np.uint8(1))
         int_arr = ak.uniform(low=0, high=5, size=100, seed=1)
         assert (uint_arr == int_arr).all()
 
     @pytest.mark.parametrize("size", pytest.prob_size)
-    @pytest.mark.parametrize(
-        "dtype", [ak.int64, float, ak.float64, bool, ak.bool_, ak.bigint]
-    )
+    @pytest.mark.parametrize("dtype", [ak.int64, float, ak.float64, bool, ak.bool_, ak.bigint])
     def test_zeros_dtype(self, size, dtype):
         zeros = ak.zeros(size, dtype)
         assert isinstance(zeros, ak.pdarray)
@@ -513,9 +484,7 @@ class TestPdarrayCreation:
 
     @pytest.mark.skip_if_max_rank_less_than(2)
     @pytest.mark.parametrize("size", pytest.prob_size)
-    @pytest.mark.parametrize(
-        "dtype", [ak.int64, float, ak.float64, bool, ak.bool_, ak.bigint]
-    )
+    @pytest.mark.parametrize("dtype", [ak.int64, float, ak.float64, bool, ak.bool_, ak.bigint])
     def test_zeros_dtype_multi_dim(self, size, dtype):
 
         for rank in multi_dim_ranks():
@@ -528,19 +497,15 @@ class TestPdarrayCreation:
 
     @pytest.mark.skip_if_max_rank_less_than(2)
     @pytest.mark.parametrize("size", pytest.prob_size)
-    @pytest.mark.parametrize(
-        "dtype", [int, ak.int64, float, ak.float64, bool, ak.bool_]
-    )
+    @pytest.mark.parametrize("dtype", [int, ak.int64, float, ak.float64, bool, ak.bool_, ak.uint8])
     def test_zeros_match_numpy(self, size, dtype):
 
         for rank in multi_dim_ranks():
             shape, local_size = _generate_test_shape(rank, size)
-            assert_equivalent(
-                ak.zeros(shape, dtype=dtype), np.zeros(shape, dtype=dtype)
-            )
+            assert_equivalent(ak.zeros(shape, dtype=dtype), np.zeros(shape, dtype=dtype))
 
     @pytest.mark.parametrize(
-        "dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_]
+        "dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_, ak.uint8]
     )
     def test_zeros_error(self, dtype):
 
@@ -553,9 +518,6 @@ class TestPdarrayCreation:
         zeros = ak.ones("5")
         assert 5 == len(zeros)
 
-        # with pytest.raises(TypeError):
-        #     ak.zeros(5, dtype=ak.uint8)
-
         with pytest.raises(TypeError):
             ak.zeros(5, dtype=str)
 
@@ -565,9 +527,7 @@ class TestPdarrayCreation:
             assert (int_arr == ak.zeros(arg, dtype=ak.int64)).all()
 
     @pytest.mark.parametrize("size", pytest.prob_size)
-    @pytest.mark.parametrize(
-        "dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_]
-    )
+    @pytest.mark.parametrize("dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_])
     def test_zeros_like(self, size, dtype):
         ran_arr = ak.array(ak.arange(size, dtype=dtype))
         zeros_like_arr = ak.zeros_like(ran_arr)
@@ -578,9 +538,7 @@ class TestPdarrayCreation:
 
     @pytest.mark.skip_if_max_rank_less_than(2)
     @pytest.mark.parametrize("size", pytest.prob_size)
-    @pytest.mark.parametrize(
-        "dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_]
-    )
+    @pytest.mark.parametrize("dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_])
     def test_zeros_like_multi_dim(self, size, dtype):
 
         for rank in multi_dim_ranks():
@@ -592,9 +550,7 @@ class TestPdarrayCreation:
             assert (zeros_like_arr == 0).all()
             assert zeros_like_arr.size == ran_arr.size
 
-    @pytest.mark.parametrize(
-        "dtype", [int, ak.int64, float, ak.float64, bool, ak.bool_, ak.bigint]
-    )
+    @pytest.mark.parametrize("dtype", [int, ak.int64, float, ak.float64, bool, ak.bool_, ak.bigint])
     @pytest.mark.parametrize("size", pytest.prob_size)
     def test_ones_dtype(self, size, dtype):
         ones = ak.ones(size, dtype)
@@ -604,9 +560,7 @@ class TestPdarrayCreation:
 
     @pytest.mark.skip_if_max_rank_less_than(2)
     @pytest.mark.parametrize("size", pytest.prob_size)
-    @pytest.mark.parametrize(
-        "dtype", [ak.int64, float, ak.float64, bool, ak.bool_, ak.bigint]
-    )
+    @pytest.mark.parametrize("dtype", [ak.int64, float, ak.float64, bool, ak.bool_, ak.bigint])
     def test_ones_dtype_multi_dim(self, size, dtype):
 
         for rank in multi_dim_ranks():
@@ -619,9 +573,7 @@ class TestPdarrayCreation:
 
     @pytest.mark.skip_if_max_rank_less_than(2)
     @pytest.mark.parametrize("size", pytest.prob_size)
-    @pytest.mark.parametrize(
-        "dtype", [int, ak.int64, float, ak.float64, bool, ak.bool_]
-    )
+    @pytest.mark.parametrize("dtype", [int, ak.int64, float, ak.float64, bool, ak.bool_, ak.uint8])
     def test_ones_match_numpy(self, size, dtype):
 
         for rank in multi_dim_ranks():
@@ -629,7 +581,7 @@ class TestPdarrayCreation:
             assert_equivalent(ak.ones(shape, dtype=dtype), np.ones(shape, dtype=dtype))
 
     @pytest.mark.parametrize(
-        "dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_]
+        "dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_, ak.uint8]
     )
     def test_ones_error(self, dtype):
 
@@ -641,9 +593,6 @@ class TestPdarrayCreation:
     def test_ones_misc(self):
         ones = ak.ones("5")
         assert 5 == len(ones)
-
-        # with pytest.raises(TypeError):
-        #     ak.ones(5, dtype=ak.uint8)
 
         with pytest.raises(TypeError):
             ak.ones(5, dtype=str)
@@ -665,9 +614,7 @@ class TestPdarrayCreation:
 
     @pytest.mark.skip_if_max_rank_less_than(2)
     @pytest.mark.parametrize("size", pytest.prob_size)
-    @pytest.mark.parametrize(
-        "dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_]
-    )
+    @pytest.mark.parametrize("dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_])
     def test_ones_like_multi_dim(self, size, dtype):
 
         for rank in multi_dim_ranks():
@@ -680,9 +627,7 @@ class TestPdarrayCreation:
             assert ones_like_arr.size == ran_arr.size
 
     @pytest.mark.parametrize("size", pytest.prob_size)
-    @pytest.mark.parametrize(
-        "dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_]
-    )
+    @pytest.mark.parametrize("dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_])
     def test_full_dtype(self, size, dtype):
         type_full = ak.full(size, 1, dtype)
         assert isinstance(type_full, ak.pdarray)
@@ -691,9 +636,7 @@ class TestPdarrayCreation:
 
     @pytest.mark.skip_if_max_rank_less_than(2)
     @pytest.mark.parametrize("size", pytest.prob_size)
-    @pytest.mark.parametrize(
-        "dtype", [ak.int64, float, ak.float64, bool, ak.bool_, ak.bigint]
-    )
+    @pytest.mark.parametrize("dtype", [ak.int64, float, ak.float64, bool, ak.bool_, ak.bigint])
     def test_full_dtype_multi_dim(self, size, dtype):
 
         for rank in multi_dim_ranks():
@@ -706,9 +649,7 @@ class TestPdarrayCreation:
 
     @pytest.mark.skip_if_max_rank_less_than(2)
     @pytest.mark.parametrize("size", pytest.prob_size)
-    @pytest.mark.parametrize(
-        "dtype", [int, ak.int64, float, ak.float64, bool, ak.bool_]
-    )
+    @pytest.mark.parametrize("dtype", [int, ak.int64, float, ak.float64, bool, ak.bool_, ak.uint8])
     def test_full_match_numpy(self, size, dtype):
 
         for rank in ak.client.get_array_ranks():
@@ -721,7 +662,7 @@ class TestPdarrayCreation:
             )
 
     @pytest.mark.parametrize(
-        "dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_]
+        "dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_, ak.uint8]
     )
     def test_full_error(self, dtype):
 
@@ -757,9 +698,7 @@ class TestPdarrayCreation:
             assert (int_arr == ak.full(*args, dtype=int)).all()
 
     @pytest.mark.parametrize("size", pytest.prob_size)
-    @pytest.mark.parametrize(
-        "dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_]
-    )
+    @pytest.mark.parametrize("dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_])
     def test_full_like(self, size, dtype):
         ran_arr = ak.full(size, 5, dtype)
         full_like_arr = ak.full_like(ran_arr, 1)
@@ -770,9 +709,7 @@ class TestPdarrayCreation:
 
     @pytest.mark.skip_if_max_rank_less_than(2)
     @pytest.mark.parametrize("size", pytest.prob_size)
-    @pytest.mark.parametrize(
-        "dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_]
-    )
+    @pytest.mark.parametrize("dtype", [int, ak.int64, ak.uint64, float, ak.float64, bool, ak.bool_])
     def test_full_like_multi_dim(self, size, dtype):
 
         for rank in multi_dim_ranks():
@@ -804,9 +741,7 @@ class TestPdarrayCreation:
         pda = ak.linspace(start=float(5.0), stop=float(0.0), length=np.int64(6))
         assert 5.0000 == pda[0]
         assert 0.0000 == pda[5]
-        assert (
-            pda.to_ndarray() == np.linspace(float(5.0), float(0.0), np.int64(6))
-        ).all()
+        assert (pda.to_ndarray() == np.linspace(float(5.0), float(0.0), np.int64(6))).all()
 
         with pytest.raises(TypeError):
             ak.linspace(0, "100", 1000)
@@ -879,9 +814,7 @@ class TestPdarrayCreation:
 
     @pytest.mark.parametrize("dtype", INT_SCALARS)
     def test_random_strings_uniform(self, dtype):
-        pda = ak.random_strings_uniform(
-            minlen=dtype(1), maxlen=dtype(5), size=dtype(100)
-        )
+        pda = ak.random_strings_uniform(minlen=dtype(1), maxlen=dtype(5), size=dtype(100))
         assert isinstance(pda, ak.Strings)
         assert 100 == len(pda)
         assert str == pda.dtype
@@ -942,9 +875,7 @@ class TestPdarrayCreation:
             "DSN",
         ] == pda.to_list()
 
-        pda = ak.random_strings_uniform(
-            minlen=1, maxlen=5, seed=1, size=10, characters="printable"
-        )
+        pda = ak.random_strings_uniform(minlen=1, maxlen=5, seed=1, size=10, characters="printable")
         assert [
             "eL",
             "6<OD",
@@ -1001,9 +932,7 @@ class TestPdarrayCreation:
         pda = ak.random_strings_lognormal(2, 0.25, 10, seed=1)
         assert randoms == pda.to_list()
 
-        pda = ak.random_strings_lognormal(
-            float(2), np.float64(0.25), np.int64(10), seed=1
-        )
+        pda = ak.random_strings_lognormal(float(2), np.float64(0.25), np.int64(10), seed=1)
         assert randoms == pda.to_list()
 
         printable_randoms = [
@@ -1061,11 +990,7 @@ class TestPdarrayCreation:
         assert np.int64 == p_array.dtype
 
         p_array = ak.from_series(
-            pd.Series(
-                pd.to_datetime(
-                    ["1/1/2018", np.datetime64("2018-01-01"), dt.datetime(2018, 1, 1)]
-                )
-            )
+            pd.Series(pd.to_datetime(["1/1/2018", np.datetime64("2018-01-01"), dt.datetime(2018, 1, 1)]))
         )
 
         assert isinstance(p_array, ak.pdarray)
@@ -1216,9 +1141,7 @@ class TestPdarrayCreation:
             # Checking for start of new run
             for i in range(len(l_int)):
                 # no. of runs
-                if (l_int[i] >= l_median > l_int[i - 1]) or (
-                    l_int[i] < l_median <= l_int[i - 1]
-                ):
+                if (l_int[i] >= l_median > l_int[i - 1]) or (l_int[i] < l_median <= l_int[i - 1]):
                     runs += 1
 
                 # no. of positive values
@@ -1230,8 +1153,7 @@ class TestPdarrayCreation:
 
             runs_exp = ((2 * n1 * n2) / (n1 + n2)) + 1
             stan_dev = math.sqrt(
-                (2 * n1 * n2 * (2 * n1 * n2 - n1 - n2))
-                / (((n1 + n2) ** 2) * (n1 + n2 - 1))
+                (2 * n1 * n2 * (2 * n1 * n2 - n1 - n2)) / (((n1 + n2) ** 2) * (n1 + n2 - 1))
             )
 
             if abs((runs - runs_exp) / stan_dev) < 1.9:
