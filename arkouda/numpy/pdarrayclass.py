@@ -41,6 +41,7 @@ from arkouda.numpy.dtypes import (
 from arkouda.numpy.dtypes import str_ as akstr_
 from arkouda.numpy.dtypes import uint64 as akuint64
 
+
 module = modules[__name__]
 
 if TYPE_CHECKING:
@@ -2056,46 +2057,52 @@ class pdarray:
         # For example, a.reshape(10, 11) is equivalent to a.reshape((10, 11))
         # the lenshape variable addresses an error that occurred when a single integer was
         # passed
+        from arkouda.numpy._numeric import sum as ak_sum
+
+        import math
+
         if len(shape) == 1:
             shape = shape[0]
+
+        #   compute the product of the shape values
+        prod_func = prod if isinstance(shape, pdarray) else math.prod
+        shape_prod = builtins.abs(prod_func(shape))
+
+        if self.size % shape_prod != 0 or shape_prod > self.size:
+            raise ValueError(f"shape incompatible with size {self.size}")
+
+        if (isinstance(shape, tuple) and shape.count(-1) > 1) or (
+            isinstance(shape, pdarray) and ak_sum(shape == -1) > 1
+        ):
+            raise ValueError(f"Cannot infer more than one value from shape {shape}")
+
+        #   -1 is treated as a missing value that must be inferred.
         if shape == -1:
             shape = self.size
         elif isinstance(shape, tuple) and builtins.min(shape) == -1:
-            import math
-
-            if shape.count(-1) > 1:
-                raise ValueError(f"Cannot infer more than one value from shape {shape}")
 
             replace_idx = shape.index(-1)
             tmp_list = list(shape)
-            prod = math.prod(shape) * -1
-            if self.size % prod != 0:
-                raise ValueError(f"shape incompatible with size {self.size}")
-            tmp_list[replace_idx] = self.size // prod
+            tmp_list[replace_idx] = self.size // shape_prod
             shape = tuple(tmp_list)
 
         elif isinstance(shape, pdarray) and min(shape) == -1:
-            shape = int(self.size / shape.prod() * -1)
-        print("SHAPE")
-        print(shape)
 
-        # lenshape = 1
-        # if (not isinstance(shape, int)) and (not isinstance(shape, pdarray)):
-        #     shape = [i for i in shape]
-        #     lenshape = len(shape)
+            shape[shape == -1] = self.size // shape_prod
 
         from arkouda.numpy.pdarraycreation import zeros
 
-        y = zeros(shape, dtype=self.dtype)
-        return create_pdarray(
-            generic_msg(
-                cmd=f"reshape<{self.dtype},{self.ndim},{y.ndim}>",
-                args={
-                    "x": self.name,
-                    "y": y.name,
-                },
-            ),
-        )
+        y = zeros(shape, dtype=self.dtype, max_bits=self.max_bits)
+
+        generic_msg(
+            cmd=f"reshape<{self.dtype},{self.ndim},{y.ndim}>",
+            args={
+                "x": self.name,
+                "y": y.name,
+            },
+        ),
+
+        return y
 
     def flatten(self):
         """
@@ -4067,7 +4074,7 @@ def clz(pda: pdarray) -> pdarray:
         if pda.max_bits == -1:
             raise ValueError("max_bits must be set to count leading zeros")
         from arkouda.numpy import where
-        from arkouda.pdarraycreation import zeros
+        from arkouda.numpy.pdarraycreation import zeros
 
         uint_arrs = pda.bigint_to_uint_arrays()
 
@@ -4152,7 +4159,7 @@ def ctz(pda: pdarray) -> pdarray:
         # which is only relevant when ctz(0) which is defined to be 0
 
         from arkouda.numpy import where
-        from arkouda.pdarraycreation import zeros
+        from arkouda.numpy.pdarraycreation import zeros
 
         # reverse the list, so we visit low bits first
 
@@ -4512,27 +4519,40 @@ def fmod(dividend: Union[pdarray, numeric_scalars], divisor: Union[pdarray, nume
     #   The code below creates a command string for fmod2vv, fmod2vs or fmod2sv.
 
     if isinstance(dividend, pdarray) and isinstance(divisor, pdarray):
+        if not (dividend.dtype.name == "float64" or divisor.dtype.name == "float64"):
+            raise TypeError(
+                "At least one arg to fmod must be float. "
+                + f"Got f{dividend.dtype.name} and {divisor.dtype.name}"
+            )
         cmdstring = f"fmod2vv<{dividend.dtype},{dividend.ndim},{divisor.dtype}>"
 
     elif isinstance(dividend, pdarray) and not (isinstance(divisor, pdarray)):
-        if resolve_scalar_dtype(divisor) in ["float64", "int64", "uint64", "bool"]:
-            acmd = "fmod2vs_" + resolve_scalar_dtype(divisor)
+        scalar_dtype = resolve_scalar_dtype(divisor)
+        if scalar_dtype in ["float64", "int64", "uint64", "bool"]:
+            acmd = "fmod2vs_" + scalar_dtype
         else:  # this condition *should* be impossible because of the isSupportedNumber check
-            raise TypeError(f"Scalar divisor type {resolve_scalar_dtype(divisor)} not allowed in fmod")
+            raise TypeError(f"Scalar divisor type {scalar_dtype} not allowed in fmod")
+        if not (dividend.dtype.name == "float64" or scalar_dtype == "float64"):
+            raise TypeError(
+                "At least one arg to fmod must be float. "
+                + f"Got {dividend.dtype.name} and {scalar_dtype}"
+            )
         cmdstring = f"{acmd}<{dividend.dtype},{dividend.ndim}>"
 
-    elif not (isinstance(dividend, pdarray) and isinstance(divisor, pdarray)):
-        if resolve_scalar_dtype(dividend) in ["float64", "int64", "uint64", "bool"]:
-            acmd = "fmod2sv_" + resolve_scalar_dtype(dividend)
+    else:  # then the only case left is where dividend is scalar and divisor is pdarray
+        scalar_dtype = resolve_scalar_dtype(dividend)
+        if scalar_dtype in ["float64", "int64", "uint64", "bool"]:
+            acmd = "fmod2sv_" + scalar_dtype
         else:  # this condition *should* be impossible because of the isSupportedNumber check
-            raise TypeError(f"Scalar dividend type {resolve_scalar_dtype(dividend)} not allowed in fmod")
+            raise TypeError(f"Scalar dividend type {scalar_dtype} not allowed in fmod")
+        if not (
+            divisor.dtype.name == "float64" or scalar_dtype == "float64"  # type: ignore[union-attr]
+        ):  # type: ignore[union-attr]
+            raise TypeError(
+                "At least one arg to fmod must be float. "
+                + f"Got {scalar_dtype} and {divisor.dtype.name}"  # type: ignore[union-attr]
+            )
         cmdstring = f"{acmd}<{divisor.dtype},{divisor.ndim}>"  # type: ignore[union-attr]
-
-    else:
-        m = mod(dividend, divisor)
-        return _create_scalar_array(m)
-
-    #   We reach here if this was any case other than scalar & scalar
 
     return create_pdarray(
         cast(

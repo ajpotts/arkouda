@@ -508,7 +508,10 @@ def zeros(
 
     repMsg = generic_msg(cmd=f"create<{dtype_name},{ndim}>", args={"shape": shape})
 
-    return create_pdarray(repMsg, max_bits=max_bits)
+    ret = create_pdarray(repMsg)
+    ret.max_bits = max_bits
+
+    return ret
 
 
 @typechecked
