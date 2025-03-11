@@ -53,9 +53,7 @@ def broadcast_to(x: Array, /, shape: Tuple[int, ...]) -> Array:
         raise ValueError(f"Failed to broadcast array: {e}")
 
 
-def concat(
-    arrays: Union[Tuple[Array, ...], List[Array]], /, *, axis: Optional[int] = 0
-) -> Array:
+def concat(arrays: Union[Tuple[Array, ...], List[Array]], /, *, axis: Optional[int] = 0) -> Array:
     """
     Concatenate arrays along an axis.
 
@@ -71,9 +69,7 @@ def concat(
     ndim = arrays[0].ndim
     for a in arrays:
         if a.ndim != ndim:
-            raise ValueError(
-                "all input arrays must have the same number of dimensions to concatenate"
-            )
+            raise ValueError("all input arrays must have the same number of dimensions to concatenate")
 
     (common_dt, _arrays) = promote_to_common_dtype([a._array for a in arrays])
 
@@ -193,15 +189,11 @@ def moveaxis(
             for s, d in zip(source, destination):
                 perm[s] = d
         else:
-            raise ValueError(
-                "source and destination must both be tuples if source is a tuple"
-            )
+            raise ValueError("source and destination must both be tuples if source is a tuple")
     elif isinstance(destination, int):
         perm[source] = destination
     else:
-        raise ValueError(
-            "source and destination must both be integers if source is a tuple"
-        )
+        raise ValueError("source and destination must both be integers if source is a tuple")
 
     return permute_dims(x, axes=tuple(perm))
 
@@ -236,9 +228,7 @@ def permute_dims(x: Array, /, axes: Tuple[int, ...]) -> Array:
         raise IndexError(f"Failed to permute array dimensions: {e}")
 
 
-def repeat(
-    x: Array, repeats: Union[int, Array], /, *, axis: Optional[int] = None
-) -> Array:
+def repeat(x: Array, repeats: Union[int, Array], /, *, axis: Optional[int] = None) -> Array:
     """
     Repeat elements of an array.
 
@@ -278,9 +268,7 @@ def repeat(
         raise NotImplementedError("repeat with 'axis' argument is not yet implemented")
 
 
-def reshape(
-    x: Array, /, shape: Tuple[int, ...], *, copy: Optional[bool] = None
-) -> Array:
+def reshape(x: Array, /, shape: Tuple[int, ...], *, copy: Optional[bool] = None) -> Array:
     """
     Reshape an array to a new shape.
 
@@ -297,21 +285,7 @@ def reshape(
 
     # TODO: figure out copying semantics (currently always creates a copy)
     try:
-        return Array._new(
-            x._array.reshape(shape)
-            # create_pdarray(
-            #     cast(
-            #         str,
-            #         generic_msg(
-            #             cmd=f"reshape<{x.dtype},{x.ndim},{len(shape)}>",
-            #             args={
-            #                 "name": x._array,
-            #                 "shape": shape,
-            #             },
-            #         ),
-            #     )
-            # )
-        )
+        return Array._new(x._array.reshape(shape))
     except RuntimeError as e:
         raise ValueError(f"Failed to reshape array: {e}")
 
@@ -357,9 +331,7 @@ def roll(
                         args={
                             "name": x._array,
                             "nShifts": len(shift) if isinstance(shift, tuple) else 1,
-                            "shift": (
-                                list(shift) if isinstance(shift, tuple) else [shift]
-                            ),
+                            "shift": (list(shift) if isinstance(shift, tuple) else [shift]),
                             "nAxes": len(axisList),
                             "axis": axisList,
                         },
@@ -406,9 +378,7 @@ def stack(arrays: Union[Tuple[Array, ...], List[Array]], /, *, axis: int = 0) ->
     ndim = arrays[0].ndim
     for a in arrays:
         if a.ndim != ndim:
-            raise ValueError(
-                "all input arrays must have the same number of dimensions to stack"
-            )
+            raise ValueError("all input arrays must have the same number of dimensions to stack")
 
     (common_dt, _arrays) = promote_to_common_dtype([a._array for a in arrays])
 

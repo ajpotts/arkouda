@@ -261,15 +261,11 @@ class TestPdarrayCreation:
 
         # also test for start/stop/stride that cause empty ranges
         start_stop_stride = ak.arange(100, 10, 2, dtype=dtype)
-        assert (
-            np.arange(100, 10, 2, dtype=dtype).tolist() == start_stop_stride.to_list()
-        )
+        assert np.arange(100, 10, 2, dtype=dtype).tolist() == start_stop_stride.to_list()
         assert dtype == start_stop_stride.dtype
 
         start_stop_stride = ak.arange(10, 15, -2, dtype=dtype)
-        assert (
-            np.arange(10, 15, -2, dtype=dtype).tolist() == start_stop_stride.to_list()
-        )
+        assert np.arange(10, 15, -2, dtype=dtype).tolist() == start_stop_stride.to_list()
         assert dtype == start_stop_stride.dtype
 
         start_stop_stride = ak.arange(10, 10, -2, dtype=dtype)
@@ -507,8 +503,8 @@ class TestPdarrayCreation:
         zeros = ak.ones("5")
         assert 5 == len(zeros)
 
-        # with pytest.raises(TypeError):
-        #     ak.zeros(5, dtype=ak.uint8)
+        with pytest.raises(TypeError):
+            ak.zeros(5, dtype=ak.uint8)
 
         with pytest.raises(TypeError):
             ak.zeros(5, dtype=str)
@@ -580,8 +576,8 @@ class TestPdarrayCreation:
         ones = ak.ones("5")
         assert 5 == len(ones)
 
-        # with pytest.raises(TypeError):
-        #     ak.ones(5, dtype=ak.uint8)
+        with pytest.raises(TypeError):
+            ak.ones(5, dtype=ak.uint8)
 
         with pytest.raises(TypeError):
             ak.ones(5, dtype=str)
@@ -667,6 +663,9 @@ class TestPdarrayCreation:
         assert isinstance(strings_full, ak.Strings)
         assert 5 == len(strings_full)
         assert strings_full.to_list() == ["test"] * 5
+
+        with pytest.raises(TypeError):
+            ak.full(5, 1, dtype=ak.uint8)
 
         with pytest.raises(TypeError):
             ak.full(5, 8, dtype=str)
