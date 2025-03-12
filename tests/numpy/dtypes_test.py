@@ -178,9 +178,7 @@ class TestDTypes:
         ) == ak.ARKOUDA_SUPPORTED_DTYPES
 
     def test_NumericDTypes(self):
-        num_types = frozenset(
-            ["bool", "bool_", "float", "float64", "int", "int64", "uint64", "bigint", "uint8"]
-        )
+        num_types = frozenset(["bool", "bool_", "float", "float64", "int", "int64", "uint64", "bigint"])
         assert num_types == dtypes.NumericDTypes
 
     def test_SeriesDTypes(self):

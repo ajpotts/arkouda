@@ -285,7 +285,20 @@ def reshape(x: Array, /, shape: Tuple[int, ...], *, copy: Optional[bool] = None)
 
     # TODO: figure out copying semantics (currently always creates a copy)
     try:
-        return Array._new(x._array.reshape(shape))
+        return Array._new(
+            create_pdarray(
+                cast(
+                    str,
+                    generic_msg(
+                        cmd=f"reshape<{x.dtype},{x.ndim},{len(shape)}>",
+                        args={
+                            "name": x._array,
+                            "shape": shape,
+                        },
+                    ),
+                )
+            )
+        )
     except RuntimeError as e:
         raise ValueError(f"Failed to reshape array: {e}")
 

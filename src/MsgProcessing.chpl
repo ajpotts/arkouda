@@ -34,6 +34,7 @@ module MsgProcessing
     @arkouda.instantiateAndRegister
     proc create(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
         const shape = msgArgs["shape"].toScalarTuple(int, array_nd);
+        writeln("\n\n\ncreate\n\n\n");
 
         var size = 1;
         for s in shape do size *= s;
@@ -43,13 +44,14 @@ module MsgProcessing
                        "creating new array (dtype=%s, shape=%?)".format(type2str(array_dtype),shape));
 
         // return st.insert(createSymEntry((...shape), array_dtype));
-        select array_dtype {
-            when DType.BigInt {
-                return st.insert(createSymEntry((...shape), array_dtype));
-            }
-            otherwise {
-                return st.insert(createSymEntry((...shape), array_dtype));
-            }
+        if array_dtype == bigint{
+            writeln("\n\nbigint case\n\n");
+            const maxBits = msgArgs["max_bits"].toScalar(int);
+            writeln("maxBits: ",maxBits);
+            return st.insert(createSymEntry((...shape), array_dtype, max_bits=maxBits));
+        }
+        else{
+            return st.insert(createSymEntry((...shape), array_dtype));
         }
     }
 

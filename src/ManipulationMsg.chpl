@@ -483,7 +483,7 @@ module ManipulationMsg {
 
    // https://data-apis.org/array-api/latest/API_specification/generated/array_api.reshape.html#array_api.reshape
   @arkouda.registerCommand
-  proc reshape(x: [?d] ?t, y:[?d2] t): [d2] t throws {
+  proc reshape(ref x: [?d] ?t, ref y:[?d2] t): [d2] t throws {
 
     var (valid, outShape) = validateShape(y.shape, x.size);
     

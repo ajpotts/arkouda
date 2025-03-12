@@ -25,6 +25,8 @@ module BigIntMsg {
         var arrayNames = msgArgs.get("arrays").getList(num_arrays);
         var max_bits = msgArgs.get("max_bits").getIntValue();
 
+        writeln("\n\n\nbigIntCreationMsg\n\n\n");
+
         var bigIntArray = makeDistArray(len, bigint);
         for (name, i) in zip(arrayNames, 0..<num_arrays by -1) {
             ref uintA = toSymEntry(getGenericTypedArrayEntry(name, st), uint).a;
@@ -96,12 +98,21 @@ module BigIntMsg {
         param pn = Reflection.getRoutineName();
         const name = msgArgs.getValueOf("array");
         var gEnt: borrowed GenSymEntry = getGenericTypedArrayEntry(name, st);
-
+        writeln("\n\n\ngetMaxBitsMsg\n\n\n");
         select gEnt.dtype {
             when DType.BigInt {
-                var repMsg = formatJson(toSymEntry(gEnt, bigint).max_bits);
-                biLogger.debug(getModuleName(), getRoutineName(), getLineNumber(), repMsg);
-                return new MsgTuple(repMsg, MsgType.NORMAL);
+                try {
+                    writeln("toSymEntry(gEnt, bigint)");
+                    writeln(toSymEntry(gEnt, bigint));
+                    writeln(toSymEntry(gEnt, bigint).max_bits);
+                    var repMsg = formatJson(toSymEntry(gEnt, bigint).max_bits);
+                    biLogger.debug(getModuleName(), getRoutineName(), getLineNumber(), repMsg);
+                    return new MsgTuple(repMsg, MsgType.NORMAL);
+                } catch e {
+                    const errorMsg = "Error: could not get max_bits";
+                    biLogger.error(getModuleName(),getRoutineName(),getLineNumber(),errorMsg);
+                    return MsgTuple.error(errorMsg);
+                }
             }
             otherwise {
                 var errorMsg = notImplementedError(pn, "("+dtype2str(gEnt.dtype)+")");

@@ -124,6 +124,9 @@ module MultiTypeSymEntry
         :type etype: type
        */
     inline proc toSymEntry(gse: borrowed GenSymEntry, type etype, param dimensions=1) {
+        writeln("\n\n\ntoSymEntry 1\n\n\n");
+        writeln("gse.dtype ", gse.dtype);
+        writeln("etype ", type2str(etype));
         return gse.toSymEntry(etype, dimensions);
     }
 
@@ -174,7 +177,14 @@ module MultiTypeSymEntry
            :type etype: type
          */
         inline proc toSymEntry(type etype, param dimensions=1) {
-            return try! this :borrowed SymEntry(etype, dimensions);
+            writeln("\n\n\ntoSymEntry 2\n\n\n");
+            writeln("etype ", type2str(etype));
+            try {
+                return this :borrowed SymEntry(etype, dimensions);
+            } catch e {
+                    const errorMsg = "Could not cast this `GenSymEntry` to `borrowed SymEntry(%s)".format(type2str(etype));
+                    genLogger.error(getModuleName(),getRoutineName(),getLineNumber(),errorMsg);
+            }
         }
 
         /* 
@@ -390,7 +400,11 @@ module MultiTypeSymEntry
     }
 
     inline proc createSymEntry(shape: int ..., type etype, max_bits=-1) throws {
+      writeln("\n\n\ncreateSymEntry(shape: int ..., type etype, max_bits=-1)\n\n\n");
+      writeln("max_bits: ", max_bits);
       var a = makeDistArray((...shape), etype);
+      writeln("a");
+      writeln(a);
       return new shared SymEntry(a, max_bits=max_bits);
     }
 

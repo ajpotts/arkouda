@@ -317,9 +317,7 @@ ARKOUDA_SUPPORTED_DTYPES = (
 
 DTypes = frozenset([member.value for _, member in DType.__members__.items()])
 DTypeObjects = frozenset([bool_, float, float64, int, int64, str, str_, uint8, uint64])
-NumericDTypes = frozenset(
-    ["bool_", "bool", "float", "float64", "int", "int64", "uint64", "bigint", "uint8"]
-)
+NumericDTypes = frozenset(["bool_", "bool", "float", "float64", "int", "int64", "uint64", "bigint"])
 SeriesDTypes = {
     "string": np.str_,
     "<class 'str'>": np.str_,
