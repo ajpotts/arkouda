@@ -56,7 +56,9 @@ extensions = [
 ]
 
 
-mathjax_path = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+mathjax_path = (
+    "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+)
 
 
 # Include __init__.pyi files
@@ -90,11 +92,24 @@ autoapi_ignore = [
     "*arkouda/groupbyclass.py",
     "*arkouda/series.py",
     "*arkouda/numpy/_manipulation_functions.py",
-    "*arkouda/numpy/_numeric.py",
+    # "*arkouda/numpy/numeric.py",
     "*arkouda/numpy/_utils.py",
     "*arkouda/scipy/*py",
     "*arkouda/scipy/stats/*py",
     "*arkouda/scipy/special/*py",
+    #   Do not include the old module locations to avoid cross-reference WARNINGS
+    "*arkouda/dtypes/*",
+    "*arkouda/numeric/*",
+    "*arkouda/pdarrayclass/*",
+    "*arkouda/pdarraycreation/*",
+    "*arkouda/pdarraymanipulation/*",
+    "*arkouda/pdarraysetops/*",
+    "*arkouda/random/*",
+    "*arkouda/segarray/*",
+    "*arkouda/sorting/*",
+    "*arkouda/strings/*",
+    "*arkouda/timeclass/*",
+    "*arkouda/util/*",
 ]
 
 # Add any paths that contain templates here, relative to this directory.

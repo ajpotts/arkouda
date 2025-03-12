@@ -11,8 +11,8 @@ import arkouda as ak
 from arkouda.numpy.util import _generate_test_shape
 from arkouda.testing import assert_arkouda_array_equal, assert_equivalent
 
-INT_SCALARS = list(ak.dtypes.int_scalars.__args__)
-NUMERIC_SCALARS = list(ak.dtypes.numeric_scalars.__args__)
+INT_SCALARS = list(ak.numpy.dtypes.int_scalars.__args__)
+NUMERIC_SCALARS = list(ak.numpy.dtypes.numeric_scalars.__args__)
 
 DTYPES = [
     bool,
@@ -281,11 +281,15 @@ class TestPdarrayCreation:
 
         # also test for start/stop/stride that cause empty ranges
         start_stop_stride = ak.arange(100, 10, 2, dtype=dtype)
-        assert np.arange(100, 10, 2, dtype=dtype).tolist() == start_stop_stride.to_list()
+        assert (
+            np.arange(100, 10, 2, dtype=dtype).tolist() == start_stop_stride.to_list()
+        )
         assert dtype == start_stop_stride.dtype
 
         start_stop_stride = ak.arange(10, 15, -2, dtype=dtype)
-        assert np.arange(10, 15, -2, dtype=dtype).tolist() == start_stop_stride.to_list()
+        assert (
+            np.arange(10, 15, -2, dtype=dtype).tolist() == start_stop_stride.to_list()
+        )
         assert dtype == start_stop_stride.dtype
 
         start_stop_stride = ak.arange(10, 10, -2, dtype=dtype)

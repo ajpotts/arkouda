@@ -71,9 +71,13 @@ def write_stub(module, filename, all_only=False, allow_arkouda=False):
             #   Skip non-imported objects.
             if all_only is True and name not in module.__all__:
                 continue
-            if (allow_arkouda is False) and (hasattr(obj, "__module__") and "arkouda" in obj.__module__):
+            if (allow_arkouda is False) and (
+                hasattr(obj, "__module__") and "arkouda" in obj.__module__
+            ):
                 continue
-            elif name.startswith("__") or inspect.ismodule(obj) or inspect.isbuiltin(obj):
+            elif (
+                name.startswith("__") or inspect.ismodule(obj) or inspect.isbuiltin(obj)
+            ):
                 continue
 
             f.write("\n\n")
@@ -87,7 +91,9 @@ def write_stub(module, filename, all_only=False, allow_arkouda=False):
             elif inspect.isfunction(obj):
                 if not name.startswith("__"):
                     try:
-                        signature_string = reformat_signature(str(inspect.signature(obj)))
+                        signature_string = reformat_signature(
+                            str(inspect.signature(obj))
+                        )
                         f.write(f"def {name}{signature_string}:\n")
                     except:
                         f.write(f"def {name}(self, *args, **kwargs):\n")
@@ -114,7 +120,9 @@ def write_stub(module, filename, all_only=False, allow_arkouda=False):
 
                 for func_name, func in inspect.getmembers(obj):
                     # Don't document functions that are inherited from the parent class.
-                    if inspect.isclass(obj) and func_name in set(dir(inspect.getmro(obj)[1])):
+                    if inspect.isclass(obj) and func_name in set(
+                        dir(inspect.getmro(obj)[1])
+                    ):
                         continue
                     if not inspect.isclass(obj) and func_name in set(
                         dir(inspect.getmro(obj.__class__)[1])
@@ -132,12 +140,16 @@ def write_stub(module, filename, all_only=False, allow_arkouda=False):
                             f.write(f"    def {func_name}{signature}:\n")
                         else:
                             try:
-                                signature = reformat_signature(str(inspect.signature(func)))
+                                signature = reformat_signature(
+                                    str(inspect.signature(func))
+                                )
                                 if "self" not in signature:
                                     signature = signature.replace("(", "(self, ")
                                 f.write(f"    def {func_name}{signature}:\n")
                             except:
-                                f.write(f"    def {func_name}(self, *args, **kwargs):\n")
+                                f.write(
+                                    f"    def {func_name}(self, *args, **kwargs):\n"
+                                )
 
                         write_formatted_docstring(f, func.__doc__, "        ")
 
@@ -152,7 +164,6 @@ def main():
     import arkouda.scipy.special as akscipySpecial
     import arkouda.scipy.stats as akscipyStats
     import arkouda.series as akSeries
-    import arkouda as ak
 
     write_stub(
         aknp._manipulation_functions,
@@ -166,16 +177,34 @@ def main():
     write_stub(
         aknp._utils, "arkouda/numpy/_utils.pyi", all_only=False, allow_arkouda=True
     )
-    # write_stub(aknp, "arkouda/numpy.pyi", all_only=False, allow_arkouda=True)
-    write_stub(aknp.dtypes, "arkouda/numpy/dtypes.pyi", all_only=False, allow_arkouda=True)
-    write_stub(aknp.random, "arkouda/numpy/random.pyi", all_only=False, allow_arkouda=True)
+    write_stub(
+        arkouda.numpy.dtypes,
+        "arkouda/numpy/dtypes.pyi",
+        all_only=False,
+        allow_arkouda=True,
+    )
+    write_stub(
+        aknp.random, "arkouda/numpy/random.pyi", all_only=False, allow_arkouda=True
+    )
     write_stub(akscipy, "arkouda/scipy.pyi", all_only=True, allow_arkouda=True)
-    write_stub(akscipyStats, "arkouda/scipy/stats.pyi", all_only=True, allow_arkouda=True)
-    write_stub(akscipySpecial, "arkouda/scipy/special.pyi", all_only=True, allow_arkouda=True)
+    write_stub(
+        akscipyStats, "arkouda/scipy/stats.pyi", all_only=True, allow_arkouda=True
+    )
+    write_stub(
+        akscipySpecial, "arkouda/scipy/special.pyi", all_only=True, allow_arkouda=True
+    )
     write_stub(akDataframe, "arkouda/dataframe.pyi", all_only=True, allow_arkouda=True)
-    write_stub(akGroupbyclass, "arkouda/groupbyclass.pyi", all_only=True, allow_arkouda=True)
+    write_stub(
+        akGroupbyclass, "arkouda/groupbyclass.pyi", all_only=True, allow_arkouda=True
+    )
     write_stub(akSeries, "arkouda/series.pyi", all_only=True, allow_arkouda=True)
-    write_stub(aknp.pdarrayclass, "arkouda/numpy/pdarrayclass.pyi", all_only=True, allow_arkouda=True)
+    write_stub(
+        aknp.pdarrayclass,
+        "arkouda/numpy/pdarrayclass.pyi",
+        all_only=True,
+        allow_arkouda=True,
+    )
+
 
 if __name__ == "__main__":
     main()

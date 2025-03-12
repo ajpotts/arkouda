@@ -68,12 +68,12 @@ class TestDTypes:
     @pytest.mark.parametrize(
         "dtype",
         [
-            ak.dtypes.uint8,
-            ak.dtypes.uint64,
-            ak.dtypes.int64,
-            ak.dtypes.float64,
-            ak.dtypes.bool_,
-            ak.dtypes.bigint,
+            ak.numpy.dtypes.uint8,
+            ak.numpy.dtypes.uint64,
+            ak.numpy.dtypes.int64,
+            ak.numpy.dtypes.float64,
+            ak.numpy.dtypes.bool_,
+            ak.numpy.dtypes.bigint,
         ],
     )
     def test_nbytes(self, size, dtype):
@@ -178,7 +178,9 @@ class TestDTypes:
         ) == ak.ARKOUDA_SUPPORTED_DTYPES
 
     def test_NumericDTypes(self):
-        num_types = frozenset(["bool", "bool_", "float", "float64", "int", "int64", "uint64", "bigint"])
+        num_types = frozenset(
+            ["bool", "bool_", "float", "float64", "int", "int64", "uint64", "bigint"]
+        )
         assert num_types == dtypes.NumericDTypes
 
     def test_SeriesDTypes(self):
@@ -196,7 +198,9 @@ class TestDTypes:
 
     def test_scalars(self):
         assert "typing.Union[bool, numpy.bool_]" == str(ak.bool_scalars)
-        assert "typing.Union[float, numpy.float64, numpy.float32]" == str(ak.float_scalars)
+        assert "typing.Union[float, numpy.float64, numpy.float32]" == str(
+            ak.float_scalars
+        )
         assert (
             "typing.Union[int, numpy.int8, numpy.int16, numpy.int32, numpy.int64, "
             + "numpy.uint8, numpy.uint16, numpy.uint32, numpy.uint64]"
