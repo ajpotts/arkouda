@@ -83,7 +83,7 @@ jobs:
           pip install isort==5.13.2
       # Update output format to enable automatic inline annotations.
       - name: Run isort
-        run: isort --check-only --diff .
+        run: make isort
 
   ruff-format:
     runs-on: ubuntu-latest
