@@ -127,7 +127,10 @@ jobs:
     - name: Arkouda flake8
       run: |
         flake8
+<<<<<<< HEAD
 
+=======
+>>>>>>> db9fa5496 (debug2)
   arkouda_python_portability:
     runs-on: ubuntu-24.04
     strategy:
@@ -300,6 +303,7 @@ jobs:
     env:
       CHPL_HOME: /opt/chapel-2.4.0
     container:
+<<<<<<< HEAD
       image: ajpotts/ubuntu-with-arkouda-deps:1.0.0
     steps:
     - name: Checkout Repository
@@ -312,6 +316,15 @@ jobs:
         update-alternatives --install /usr/bin/chpl chpl /opt/chapel-2.4.0/bin/linux64-x86_64/chpl 1
         update-alternatives --install /usr/bin/chpl chpl /opt/chapel-2.4.0/bin/linux64-x86_64/chpl 1
         update-alternatives --install /usr/bin/chpldoc chpldoc /opt/chapel-2.4.0/bin/linux64-x86_64/chpldoc 1
+=======
+      image: ajpotts/almalinux-with-arkouda-deps:1.0.0
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+    - name: Set python3 to Python 3.12
+      run: |
+        update-alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.12 1      
+>>>>>>> db9fa5496 (debug2)
     - name: Check python version
       run: |
         python3 --version
