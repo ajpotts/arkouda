@@ -14,7 +14,7 @@ from numpy import ndarray
 from numpy._typing import _8Bit, _16Bit, _32Bit, _64Bit
 from typeguard import typechecked
 
-from arkouda import sort as aksort
+from arkouda.numpy.sorting import sort as aksort
 from arkouda.categorical import Categorical
 from arkouda.client import generic_msg, maxTransferBytes
 from arkouda.client_dtypes import BitVector, Fields, IPv4
