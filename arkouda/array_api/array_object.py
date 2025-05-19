@@ -1,4 +1,9 @@
 """
+__all__ = [
+    'Array',
+    'implements_numpy',
+]
+
 Wrapper class around the pdarray object for the array API standard.
 
 The information below can be found online here:
