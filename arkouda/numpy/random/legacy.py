@@ -9,11 +9,7 @@ from arkouda.numpy.dtypes import int64 as akint64
 from arkouda.numpy.dtypes import int_scalars, numeric_scalars
 from arkouda.numpy.pdarrayclass import create_pdarray, pdarray
 
-__all__ = [
-    "randint",
-    "standard_normal",
-    "uniform",
-]
+__all__ = ["randint", "standard_normal", "uniform"]
 
 
 @typechecked
@@ -84,7 +80,7 @@ def randint(
     >>> ak.randint(1, 5, 10, dtype=ak.bool, seed=2)
     array([False, True, True, True, True, False, True, True, True, True])
     """
-    shape: Union[int_scalars, Tuple[int_scalars, ...]] = 1
+    shape: Union[int_scalars, Tuple[int_scalars, ...]]
     if isinstance(size, tuple):
         shape = cast(Tuple, size)
         full_size = 1

@@ -1,8 +1,5 @@
 """
-__all__ = [
-    'Array',
-    'implements_numpy',
-]
+
 
 Wrapper class around the pdarray object for the array API standard.
 
@@ -24,6 +21,7 @@ of ndarray.
 
 from __future__ import annotations
 
+import json
 import types
 from enum import IntEnum
 from typing import (
@@ -42,6 +40,7 @@ import numpy as np
 
 import arkouda as ak
 from arkouda import array_api
+from arkouda.client import generic_msg
 from arkouda.numpy.pdarraycreation import scalar_array
 
 from ._dtypes import (  # _all_dtypes,; _integer_or_boolean_dtypes,; _numeric_dtypes,
@@ -53,6 +52,12 @@ from ._dtypes import (  # _all_dtypes,; _integer_or_boolean_dtypes,; _numeric_dt
     _result_type,
 )
 from .creation_functions import asarray
+
+__all__ = [
+    "Array",
+    "implements_numpy",
+]
+
 
 if TYPE_CHECKING:
     from ._typing import Device, Dtype
@@ -203,7 +208,6 @@ class Array:
         start at indices 0 and 50 in the first dimension, and 0 and 20 in the
         second dimension.
         """
-        import json
 
         def extract_chunk(msg_str: str):
             return "".join(msg_str.split()[1:])
@@ -212,7 +216,7 @@ class Array:
             extract_chunk(
                 cast(
                     str,
-                    ak.generic_msg(
+                    generic_msg(
                         cmd=f"chunkInfoAsString<{self.dtype},{self.ndim}>",
                         args={"array": self._array},
                     ),

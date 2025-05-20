@@ -42,7 +42,7 @@ def astype(x: Array, dtype: Dtype, /, *, copy: bool = True) -> Array:
     """
     if not copy and dtype == x.dtype:
         return x
-    return Array._new(ak.akcast(x._array, dtype))
+    return Array._new(ak.cast(x._array, dtype))
 
 
 def can_cast(from_: Union[Dtype, Array], to: Dtype, /) -> bool:

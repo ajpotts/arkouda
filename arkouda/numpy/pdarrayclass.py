@@ -105,6 +105,7 @@ __all__ = [
     "cov",
     "corr",
     "divmod",
+    "skew",
     "sqrt",
     "power",
     "mod",

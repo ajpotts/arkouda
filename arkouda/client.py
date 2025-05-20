@@ -4,7 +4,8 @@ import warnings
 from enum import Enum
 from typing import Dict, List, Mapping, Optional, Tuple, Union, cast
 
-from arkouda import __version__, io_util, security
+from arkouda import __version__
+from arkouda.io_util import delimited_file_to_dict, dict_to_delimited_file
 from arkouda.logger import LogLevel, getArkoudaLogger
 from arkouda.message import (
     MessageFormat,
@@ -13,11 +14,13 @@ from arkouda.message import (
     ReplyMessage,
     RequestMessage,
 )
+from arkouda.security import get_arkouda_client_directory, get_username
 
 __all__ = [
     "connect",
     "disconnect",
     "shutdown",
+    "generic_msg",
     "get_config",
     "get_max_array_rank",
     "get_mem_used",
@@ -29,7 +32,7 @@ __all__ = [
     "ruok",
 ]
 
-username = security.get_username()
+username = get_username()
 connected = False
 serverConfig = None
 registrationConfig = None
@@ -332,11 +335,11 @@ class Channel:
             the user's tokens.txt file or retrieving the user's tokens
 
         """
-        path = f"{security.get_arkouda_client_directory()}/tokens.txt"
+        path = f"{get_arkouda_client_directory()}/tokens.txt"
         url = f"{server}:{port}"
 
         try:
-            tokens = io_util.delimited_file_to_dict(path)
+            tokens = delimited_file_to_dict(path)
         except Exception as e:
             raise IOError(e)
 
@@ -345,13 +348,13 @@ class Channel:
             if saved_token is None or saved_token != token:
                 tokens[url] = cast(str, token)
                 try:
-                    io_util.dict_to_delimited_file(values=tokens, path=path, delimiter=",")
+                    dict_to_delimited_file(values=tokens, path=path, delimiter=",")
                 except Exception as e:
                     raise IOError(e)
             self.token = token
         else:
             try:
-                tokens = io_util.delimited_file_to_dict(path)
+                tokens = delimited_file_to_dict(path)
             except Exception as e:
                 raise IOError(e)
             self.token = tokens.get(url)
