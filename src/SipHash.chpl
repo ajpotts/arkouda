@@ -126,7 +126,7 @@ module SipHash {
     const k1 = 0x0f0e0d0c0b0a0908: uint(64);
     var m: uint(64);
     var i: int;
-    param stride: int = if (eltBytes == 1) then 8 else 1;
+    param stride: int = if eltBytes == 1 then 8 else 1;
     const lastPos = D.low + D.size - (D.size % stride);
     // const uint8_t *end = in + inlen - (inlen % sizeof(uint64_t));
     const left: int = D.size & (stride - 1);
@@ -138,7 +138,7 @@ module SipHash {
     v1 ^= k1;
     v0 ^= k0;
     
-    if (outlen == 16) {
+    if outlen == 16 {
       v1 ^= 0xee;
     }
     
@@ -176,13 +176,13 @@ module SipHash {
 
     for pos in D.low..lastPos-1 by stride {
       // select (stride, isSubtype(msg.type, c_ptr))
-        if (stride == 8) {
+        if stride == 8 {
           if isSubtype(msg.type, c_ptr) {
             m = U8TO64_LE(msg + pos);
           } else {
             m = U8TO64_LE(msg, pos..#stride);
           }
-        } else if (stride == 1) {
+        } else if stride == 1 {
           if isSubtype(msg.type, c_ptr) {
             m = XTO64_LE(msg + pos);
           } else {
@@ -200,52 +200,52 @@ module SipHash {
 
         v3 ^= m;
         TRACE();
-        for i in 0..#cROUNDS {
+        for 0..#cROUNDS {
           SIPROUND();
         }
 
         v0 ^= m;
     }
 
-    if (left == 7) {
+    if left == 7 {
         b |= (msg[lastPos+6]: uint(64)) << 48;
     }
-    if (left >= 6) {
+    if left >= 6 {
         b |= (msg[lastPos+5]: uint(64)) << 40;
     }
-    if (left >= 5) {
+    if left >= 5 {
         b |= (msg[lastPos+4]: uint(64)) << 32;
     }
-    if (left >= 4) {
+    if left >= 4 {
         b |= (msg[lastPos+3]: uint(64)) << 24;
     }
-    if (left >= 3) {
+    if left >= 3 {
         b |= (msg[lastPos+2]: uint(64)) << 16;
     }
-    if (left >= 2) {
+    if left >= 2 {
         b |= (msg[lastPos+1]: uint(64)) << 8;
     }
-    if (left >= 1) {
+    if left >= 1 {
         b |= (msg[lastPos]: uint(64));
     }
 
     v3 ^= b;
 
     TRACE();
-    for i in 0..#cROUNDS {
+    for 0..#cROUNDS {
       SIPROUND();
     }
 
     v0 ^= b;
 
-    if (outlen == 16) {
+    if outlen == 16 {
       v2 ^= 0xee;
     } else {
       v2 ^= 0xff;
     }
 
     TRACE();
-    for i in 0..#dROUNDS {
+    for 0..#dROUNDS {
       SIPROUND();
     }
 
@@ -256,14 +256,14 @@ module SipHash {
                           "b = %016xu".format(b));
     }
     
-    if (outlen == 8) {
+    if outlen == 8 {
         return (res0, 0:uint(64));
     }
 
     v1 ^= 0xdd;
 
     TRACE();
-    for i in 0..#dROUNDS {
+    for 0..#dROUNDS {
       SIPROUND();
     }
     

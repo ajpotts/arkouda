@@ -17,7 +17,7 @@ module RandArray {
   const raLogger = new Logger(logLevel, logChannel);
 
   proc fillInt(ref a:[] ?t, const aMin: t, const aMax: t, const seedStr:string="None") throws where isIntType(t) {
-      if (seedStr.toLower() == "none") {
+      if seedStr.toLower() == "none" {
         //Subtracting 1 from aMax to make the value exclusive to follow numpy standard.
         fillRandom(a, aMin, aMax-1);
       } else {
@@ -28,7 +28,7 @@ module RandArray {
   }
 
   proc fillUInt(ref a:[] ?t, const aMin: t, const aMax: t, const seedStr:string="None") throws where isUintType(t) {
-      if (seedStr.toLower() == "none") {
+      if seedStr.toLower() == "none" {
         //Subtracting 1 from aMax to make the value exclusive to follow numpy standard.
         fillRandom(a, aMin, aMax-1);
       } else {
@@ -45,7 +45,7 @@ module RandArray {
     // 2 uniformly distributed random numbers
     var u1 = makeDistArray(D, real);
     var u2 = makeDistArray(D, real);
-    if (seedStr.toLower() == "none") {
+    if seedStr.toLower() == "none" {
       fillRandom(u1);
       fillRandom(u2);
     } else {

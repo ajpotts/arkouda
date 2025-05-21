@@ -76,6 +76,7 @@ module RandMsg
     }
 
     @arkouda.instantiateAndRegister
+    @chplcheck.ignore("UnusedFormal")
     proc randomNormal(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, param array_nd: int): MsgTuple throws {
         const shape = msgArgs["shape"].toScalarTuple(int, array_nd),
               seed = msgArgs["seed"].toScalar(string);
@@ -90,6 +91,7 @@ module RandMsg
      * retrieve the generator from the SymTab.
      */
     @arkouda.instantiateAndRegister
+    @chplcheck.ignore("UnusedFormal")
     proc createGenerator(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype): MsgTuple throws
         where array_dtype != BigInteger.bigint
     {
@@ -112,6 +114,7 @@ module RandMsg
     }
 
     @arkouda.instantiateAndRegister
+    @chplcheck.ignore("UnusedFormal")
     proc uniformGenerator(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws
         where array_dtype != BigInteger.bigint
     {
@@ -176,10 +179,10 @@ module RandMsg
             // ziggurat only works on monotonically decreasing, which normal isn't but since stardard normal 
             // is symmetric about x=0, we can do it on one half and then choose positive or negative
             var sign = ri & 0x1;
-            if (sign & 0x1) {
+            if sign & 0x1 {
                 x = -x;
             }
-            if (rabs < ki_double[idx]) {
+            if rabs < ki_double[idx] {
                 // the point fell in the core of one of our rectangular slices, so we're guaranteed
                 // it falls under the pdf curve. We can return it as a sample from our distribution.
                 // We will return here 99.3% of the time on the 1st try
@@ -192,7 +195,7 @@ module RandMsg
 
             // candidate point did not fall in the core of any rectangular slices. Either it lies in the
             // first slice (which doesn't have a core), in the tail of the distribution, or in the tip of one of slices.
-            if (idx == 0) {
+            if idx == 0 {
                 // first rectangular slice
 
                 // this was written as an infinite inner loop in numpy, but we want to avoid that possibility
@@ -201,13 +204,13 @@ module RandMsg
                 while innerCount <= 10**6 {
                     const xx = -ziggurat_nor_inv_r * log1p(-realRng.next());
                     const yy = -log1p(-realRng.next());
-                    if (yy + yy > xx * xx) {
-                        return if ((rabs >> 8) & 0x1) then -(ziggurat_nor_r + xx) else ziggurat_nor_r + xx;
+                    if yy + yy > xx * xx {
+                        return if (rabs >> 8) & 0x1 then -(ziggurat_nor_r + xx) else ziggurat_nor_r + xx;
                     }
                     innerCount += 1;
                 }
             } else {
-                if (((fi_double[idx - 1] - fi_double[idx]) * realRng.next() + fi_double[idx]) < exp(-0.5 * x * x)) {
+                if ((fi_double[idx - 1] - fi_double[idx]) * realRng.next() + fi_double[idx]) < exp(-0.5 * x * x) {
                     // tip calculation
                     return x;
                 }
@@ -236,6 +239,7 @@ module RandMsg
     proc standardNormalGenerator(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, param array_nd): MsgTuple throws
         do return standardNormalGeneratorHelp(cmd, msgArgs, st, array_nd);
 
+    @chplcheck.ignore("UnusedFormal")
     proc standardNormalGeneratorHelp(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, param array_nd): MsgTuple throws
         where array_nd == 1
     {
@@ -272,6 +276,7 @@ module RandMsg
     }
 
 
+    @chplcheck.ignore("UnusedFormal")
     proc standardNormalGeneratorHelp(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, param array_nd): MsgTuple throws
         where array_nd > 1
     {
@@ -374,6 +379,7 @@ module RandMsg
     proc standardExponential(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, param array_nd): MsgTuple throws
         do return standardExponentialHelp(cmd, msgArgs, st, array_nd);
 
+    @chplcheck.ignore("UnusedFormal")
     proc standardExponentialHelp(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, param array_nd): MsgTuple throws
         where array_nd == 1
     {
@@ -409,6 +415,7 @@ module RandMsg
         }
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc standardExponentialHelp(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, param array_nd): MsgTuple throws
         where array_nd > 1
     {
@@ -447,7 +454,7 @@ module RandMsg
         }
         else if kArg < 1.0 {
             var count = 0;
-            while count < 10000 do {
+            while count < 10000 {
                 var U = rs.next(0, 1);
                 var V = standardExponentialInvCDF(1, rs)[0];
                 if U <= (1.0 - kArg) {
@@ -474,7 +481,7 @@ module RandMsg
             while count < 10000 do{
                 var V = -1.0;
                 var X = 0.0;
-                while V <= 0 do {
+                while V <= 0 {
                     X = standardNormBoxMuller(1, rs)[0];
                     V = 1.0 + c * X;
                 }
@@ -492,6 +499,7 @@ module RandMsg
     }
 
     @arkouda.instantiateAndRegister
+    @chplcheck.ignore("UnusedFormal")
     proc standardGamma(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, param array_nd): MsgTuple throws {
         const name = msgArgs["name"],
               shape = msgArgs["size"].toScalarTuple(int, array_nd),
@@ -513,6 +521,7 @@ module RandMsg
         return st.insert(createSymEntry(gammaArr));
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc segmentedSampleMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const genName = msgArgs["genName"],                                 // generator name
               permName = msgArgs["perm"],                                   // values array name
@@ -563,6 +572,7 @@ module RandMsg
     }
 
     @arkouda.instantiateAndRegister
+    @chplcheck.ignore("UnusedFormal")
     proc choice(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype): MsgTuple throws
         where array_dtype != BigInteger.bigint
     {
@@ -640,6 +650,7 @@ module RandMsg
         return mu + scale * log(U / (1.0 - U));
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc logisticGeneratorMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const name = msgArgs["name"],
               isSingleMu = msgArgs["is_single_mu"].toScalar(bool),
@@ -663,6 +674,7 @@ module RandMsg
     }
 
     @arkouda.instantiateAndRegister
+    @chplcheck.ignore("UnusedFormal")
     proc permutation(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
         const name = msgArgs["name"],
               xName = msgArgs["x"],
@@ -726,6 +738,7 @@ module RandMsg
         return k - 1;
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc poissonGeneratorMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const name = msgArgs["name"],                                       // generator name
               isSingleLam = msgArgs["is_single_lambda"].toScalar(bool),     // boolean indicating if lambda is a single value or array
@@ -753,6 +766,7 @@ module RandMsg
     proc shuffle(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws
         do return shuffleHelp(cmd, msgArgs, st, array_dtype, array_nd);
 
+    @chplcheck.ignore("UnusedFormal")
     proc shuffleHelp(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws 
         where array_nd == 1
     {
@@ -775,6 +789,7 @@ module RandMsg
         return MsgTuple.success();
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc shuffleHelp(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws 
         where array_nd != 1
     {

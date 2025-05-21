@@ -146,6 +146,7 @@ module RandUtil {
                 }
             }  // coforall over locales
     }
+    @chplcheck.ignore("UnusedFormal")
     proc uniformStreamPerElem(ref randArr: [?D] ?t, ref rng, param function: GenerationFunction, hasSeed: bool,
                                                                 const lam: scalarOrArray(?) = new scalarOrArray(),
                                                                 const mu: scalarOrArray(?) = new scalarOrArray(),

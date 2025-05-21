@@ -271,6 +271,7 @@ module RegistrationMsg {
         return new MsgTuple("Registered BitVector", MsgType.NORMAL);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc registerMsg(cmd: string, msgArgs: borrowed MessageArgs,
                         st: borrowed SymTab): MsgTuple throws {
         var objtype = msgArgs.getValueOf("objType").toUpper(): ObjType;
@@ -314,6 +315,7 @@ module RegistrationMsg {
         }
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc unregisterMsg(cmd: string, msgArgs: borrowed MessageArgs,
                         st: borrowed SymTab): MsgTuple throws {
         var name = msgArgs.getValueOf("name");
@@ -368,6 +370,7 @@ module RegistrationMsg {
         return new MsgTuple("Unregistered %s %s".format(gre.objType: string, name), MsgType.NORMAL);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc attachMsg(cmd: string, msgArgs: borrowed MessageArgs,
                         st: borrowed SymTab): MsgTuple throws {
         var name = msgArgs.getValueOf("name");
@@ -439,6 +442,7 @@ module RegistrationMsg {
         return new MsgTuple(formatJson(rtnMap), MsgType.NORMAL);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc listRegistryMsg(cmd: string, msgArgs: borrowed MessageArgs,
                             st: borrowed SymTab): MsgTuple throws {
         return new MsgTuple(st.registry.list_registry(), MsgType.NORMAL);

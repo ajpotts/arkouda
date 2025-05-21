@@ -32,6 +32,7 @@ module GenSymIO {
      * retrieve the pdarray from the SymTab.
     */
     @arkouda.instantiateAndRegister
+    @chplcheck.ignore("UnusedFormal")
     proc array(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws
         where array_dtype != bigint
     {
@@ -61,6 +62,7 @@ module GenSymIO {
     }
 
     @arkouda.instantiateAndRegister()
+    @chplcheck.ignore("UnusedFormal")
     proc arraySegString(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype): MsgTuple throws {
         const size = msgArgs["size"].toScalar(int),
               rname = st.nextName();
@@ -113,6 +115,7 @@ module GenSymIO {
      * Chapel Bytes object
      */
     @arkouda.instantiateAndRegister
+    @chplcheck.ignore("UnusedFormal")
     proc tondarray(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws
         where array_dtype != bigint
     {
@@ -125,7 +128,7 @@ module GenSymIO {
         if array_nd == 1 {
             localA = array.a;
         } else {
-            forall (i, a) in zip(localA.domain, localA) with (var agg = newSrcAggregator(array_dtype)) do
+            forall (i, _) in zip(localA.domain, localA) with (var agg = newSrcAggregator(array_dtype)) do
                 agg.copy(localA[i], array.a[array.a.domain.orderToIndex(i)]);
         }
         const size = array.size*c_sizeof(array_dtype):int;

@@ -22,7 +22,7 @@ module NumPyDType
     BigInt,
     Strings,
     UNDEF
-  };
+  }
 
     /*
     Take a chapel type and return the matching DType

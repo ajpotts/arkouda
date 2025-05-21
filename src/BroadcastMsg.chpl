@@ -19,6 +19,7 @@ module BroadcastMsg {
    * full size of the array, optionally applying a permutation
    * to return the result in the order of the original array.
    */
+  @chplcheck.ignore("UnusedFormal")
   proc broadcastMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
     const size = msgArgs.get("size").getIntValue();
     // Segments must be an int64 array

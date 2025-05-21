@@ -169,7 +169,7 @@ module SegStringSort {
     var rem = totalsize % numTasks;
     var rlow: int;
     var rhigh: int;
-    if (task < rem) {
+    if task < rem {
       rlow = task * (div+1) + low;
       rhigh = rlow + div;
     }
@@ -191,11 +191,11 @@ module SegStringSort {
     type state = (uint(8), uint(8), int, int, int);
     inline proc copyDigit(ref k: state, const off: int, const len: int, const rank: int, const right: int, ref agg) {
       ref (k0,k1,k2,k3,k4) = k;
-      if (right > 0) {
-        if (len >= right) {
+      if right > 0 {
+        if len >= right {
           agg.copy(k0, values[off+right-2]);
           agg.copy(k1, values[off+right-1]);
-        } else if (len == right - 1) {
+        } else if len == right - 1 {
           agg.copy(k0, values[off+right-2]);
           k1 = 0: uint(8);
         } else {
@@ -211,11 +211,11 @@ module SegStringSort {
     inline proc copyDigit(ref k0: state, const right: int, ref agg) {
       const (_,_,off,len,_) = k0;
       ref (ka,kb,_,_,_) = k0;
-      if (right > 0) {
-        if (len >= right) {
+      if right > 0 {
+        if len >= right {
           agg.copy(ka, values[off+right-2]);
           agg.copy(kb, values[off+right-1]);
-        } else if (len == right - 1) {
+        } else if len == right - 1 {
           agg.copy(ka, values[off+right-2]);
           kb = 0;
         } else {
@@ -236,10 +236,10 @@ module SegStringSort {
     var globalStarts = makeDistArray(numLocales * numTasks * numBuckets, int);
 
     // loop over digits
-    for rshift in {2..#pivot by 2} {
+    for rshift in 2..#pivot by 2 {
       ssLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),"rshift = %?".format(rshift));
       // count digits
-      coforall loc in Locales with (ref globalCounts) {
+      coforall loc in Locales {
         on loc {
           coforall task in 0..#numTasks with (ref globalCounts) {
             // bucket domain
@@ -274,6 +274,7 @@ module SegStringSort {
       globalStarts = globalStarts - globalCounts;
 
       // calc new positions and permute
+      @chplcheck.ignore("UnusedTaskIntent")
       coforall loc in Locales with (ref kr0, ref kr1) {
         on loc {
           coforall task in 0..#numTasks with (ref kr0, ref kr1) {
@@ -321,11 +322,11 @@ module SegStringSort {
       // copy back to k0 and r0 for next iteration
       // Only do this if there are more digits left
       // If this is the last digit, the negative-swapping code will copy the ranks
-      if (rshift < pivot) {
+      if rshift < pivot {
         kr0 = kr1;
       }
     } // for rshift
-    const ranks: [aD] int = [(a, b, c, d, i) in kr1] i;
+    const ranks: [aD] int = [(_, _, _, _, i) in kr1] i;
     return ranks;
   }
 }

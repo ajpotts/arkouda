@@ -13,6 +13,7 @@ module LogMsg
     private config const logChannel = ServerConfig.logChannel;
     const clLogger = new Logger(logLevel, logChannel);
 
+    @chplcheck.ignore("UnusedFormal")
     proc clientLogMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         param pn = Reflection.getRoutineName();
 

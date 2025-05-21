@@ -25,7 +25,7 @@ module ParquetMsg {
     BROTLI=3,
     ZSTD=4,
     LZ4=5
-  };
+  }
 
 
   // Use reflection for error information
@@ -62,12 +62,12 @@ module ParquetMsg {
   extern record MyByteArray {
     var len: uint(32);
     var ptr: c_ptr(uint(8));
-  };
+  }
 
   enum ArrowTypes { int64, int32, uint64, uint32,
                     stringArr, timestamp, boolean,
                     double, float, list, decimal,
-                    notimplemented };
+                    notimplemented }
 
   record parquetErrorMsg {
     var errMsg: c_ptr(uint(8));
@@ -155,6 +155,7 @@ module ParquetMsg {
      whereNull will be populated by the CPP interface, where `true` would mean a
    0 (null) having been read.
    */
+  @chplcheck.ignore("UnusedFormal")
   proc readFilesByName(ref A: [] ?t, ref whereNull: [] bool,
                        filenames: [] string, sizes: [] int, dsetname: string,
                        ty, byteLength=-1, hasNonFloatNulls=false,
@@ -232,7 +233,7 @@ module ParquetMsg {
       var locOffsets = fileOffsets; // value count offset
       var locSegOffsets = segmentOffsets; // indicates which segment index is first for the file
 
-      forall (s, off, filedom, filename) in zip(locSegOffsets, locOffsets, locFiledoms, locFiles) {
+      forall (_, _, filedom, filename) in zip(locSegOffsets, locOffsets, locFiledoms, locFiles) {
         for locdom in A.localSubdomains() {
           const intersection = domain_intersection(locdom, filedom);
           
@@ -320,6 +321,7 @@ module ParquetMsg {
     return byteSizes;
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc getNullIndices(A: [] ?t, filenames: [] string, sizes: [] int, dsetname: string, ty) throws {
     extern proc c_getStringColumnNullIndices(filename, colname, nulls_chpl, errMsg): int;
     var (subdoms, length) = getSubdomains(sizes);
@@ -596,7 +598,7 @@ module ParquetMsg {
         var dims: [0..#1] int;
         dims[0] = locDom.size: int;
 
-        if (locDom.isEmpty() || locDom.size <= 0) {
+        if locDom.isEmpty() || locDom.size <= 0 {
           if mode == APPEND && filesExist then
             throw getErrorWithContext(
                  msg="Parquet columns must each have the same length: " + myFilename,
@@ -609,7 +611,7 @@ module ParquetMsg {
           var localOffsets = A[locDom];
           var startValIdx = localOffsets[locDom.low];
 
-          var endValIdx = if (lastOffset == localOffsets[locDom.high]) then lastValIdx else A[locDom.high + 1] - 1;
+          var endValIdx = if lastOffset == localOffsets[locDom.high] then lastValIdx else A[locDom.high + 1] - 1;
                 
           var valIdxRange = startValIdx..endValIdx;
           var localVals: [valIdxRange] uint(8);
@@ -761,7 +763,7 @@ module ParquetMsg {
       var locOffsets = fileOffsets;
       
       try {
-        forall (off, filedom, filename, tag) in zip(locOffsets, locFiledoms, locFiles, 0..) {
+        forall (_, filedom, _, tag) in zip(locOffsets, locFiledoms, locFiles, 0..) {
           for locdom in A.localSubdomains() {
             const intersection = domain_intersection(locdom, filedom);
 
@@ -796,6 +798,7 @@ module ParquetMsg {
     return maxRowGroups;
   }
   
+  @chplcheck.ignore("UnusedFormal")
   proc fillSegmentsAndPersistData(ref distFiles, ref entrySeg, ref externalData, ref containsNulls, ref valsRead, dsetname, sizes, len, numRowGroups, ref bytesPerRG, ref startIdxs) throws {
     var (subdoms, length) = getSubdomains(sizes);
     coforall loc in distFiles.targetLocales() with (ref externalData, ref valsRead, ref bytesPerRG) do on loc {
@@ -844,6 +847,7 @@ module ParquetMsg {
     }
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc copyValuesFromC(ref entryVal, ref distFiles, ref externalData, ref valsRead, ref numRowGroups, ref rgSubdomains, maxRowGroups, sizes, ref segArr, ref startIdxs) {
     var (subdoms, length) = getSubdomains(sizes);
     coforall loc in distFiles.targetLocales() with (ref externalData) do on loc {
@@ -1011,7 +1015,7 @@ module ParquetMsg {
         } else if ty == ArrowTypes.uint64 || ty == ArrowTypes.uint32 {
           var entryVal = createSymEntry(len, uint);
           readFilesByName(entryVal.a, whereNull, filenames, sizes, dsetname, ty, hasNonFloatNulls=hasNonFloatNulls);
-          if (ty == ArrowTypes.uint32){ // correction for high bit 
+          if ty == ArrowTypes.uint32 { // correction for high bit 
             ref ea = entryVal.a;
             // Access the high bit (64th bit) and shift it into the high bit for uint32 (32nd bit)
             // Apply 32 bit mask to drop top 32 bits and properly store uint32
@@ -1158,7 +1162,7 @@ module ParquetMsg {
     var dtypestr = msgArgs.getValueOf("dtype");
     var compression = msgArgs.getValueOf("compression").toUpper(): CompressionType;
 
-    if (!entry.isAssignableTo(SymbolEntryType.TypedArraySymEntry)) {
+    if !entry.isAssignableTo(SymbolEntryType.TypedArraySymEntry) {
       var errorMsg = "ObjType (PDARRAY) does not match SymEntry Type: %s".format(entry.entryType);
       throw getErrorWithContext(
                    msg=errorMsg,
@@ -1210,7 +1214,7 @@ module ParquetMsg {
     var dataType = msgArgs.getValueOf("dtype");
     var compression = msgArgs.getValueOf("compression").toUpper(): CompressionType;
 
-    if (!entry.isAssignableTo(SymbolEntryType.SegStringSymEntry)) {
+    if !entry.isAssignableTo(SymbolEntryType.SegStringSymEntry) {
       var errorMsg = "ObjType (STRINGS) does not match SymEntry Type: %s".format(entry.entryType);
       throw getErrorWithContext(
                    msg=errorMsg,
@@ -1235,6 +1239,7 @@ module ParquetMsg {
     }
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc writeSegArrayComponent(filename: string, dsetname: string, const ref distVals: [] ?t, valIdxRange, segments, locDom, 
                               extraOffset, lastOffset, lastValId, c_dtype, compression) throws {
     extern proc c_writeListColumnToParquet(filename, arr_chpl, offsets_chpl,
@@ -1291,14 +1296,14 @@ module ParquetMsg {
       var dims: [0..#1] int;
       dims[0] = locDom.size: int;
 
-      if (locDom.isEmpty() || locDom.size <= 0) {
+      if locDom.isEmpty() || locDom.size <= 0 {
         // we know append is not supported so creating new empty file
         createEmptyListParquetFile(myFilename, dsetName, c_dtype, compression);
       } else {
         var localSegments = segments[locDom];
         var startValIdx = localSegments[locDom.low];
 
-        var endValIdx = if (lastOffset == localSegments[locDom.high]) then lastValIdx else segments[locDom.high + 1] - 1;
+        var endValIdx = if lastOffset == localSegments[locDom.high] then lastValIdx else segments[locDom.high + 1] - 1;
               
         var valIdxRange = startValIdx..endValIdx;
         writeSegArrayComponent(myFilename, dsetName, olda, valIdxRange, segments, locDom, extraOffset, lastOffset, lastValIdx, c_dtype, compression);
@@ -1342,7 +1347,7 @@ module ParquetMsg {
 
       const locDom = segments.localSubdomain();
 
-      if (locDom.isEmpty() || locDom.size <= 0) {
+      if locDom.isEmpty() || locDom.size <= 0 {
         // we know append is not supported so creating new empty file
         var c_dtype = ARROWSTRING;
         createEmptyListParquetFile(myFilename, dsetName, c_dtype, compression);
@@ -1357,7 +1362,7 @@ module ParquetMsg {
           locSegments[locSegments.domain.high] = segments[locDom.high+1];
 
         var startOffsetIdx = localSegments[locDom.low];
-        var endOffsetIdx = if (lastOffset == localSegments[locDom.high]) then lastOffsetIdx else segments[locDom.high + 1] - 1;
+        var endOffsetIdx = if lastOffset == localSegments[locDom.high] then lastOffsetIdx else segments[locDom.high + 1] - 1;
         var offIdxRange = startOffsetIdx..endOffsetIdx;
 
         var pqErr = new parquetErrorMsg();
@@ -1369,7 +1374,7 @@ module ParquetMsg {
         if offIdxRange.size > 0 {
           var localOffsets: [offIdxRange] int = oldOff[offIdxRange];
           var startValIdx = oldOff[offIdxRange.low];
-          var endValIdx = if (lastOffsetIdx == offIdxRange.high) then lastValIdx else oldOff[offIdxRange.high + 1] - 1;
+          var endValIdx = if lastOffsetIdx == offIdxRange.high then lastValIdx else oldOff[offIdxRange.high + 1] - 1;
           var valIdxRange = startValIdx..endValIdx;
           var localVals: [valIdxRange] uint(8) = oldVal[valIdxRange];
 
@@ -1464,6 +1469,7 @@ module ParquetMsg {
     return warnFlag;
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc toparquetMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
     var objType: ObjType = msgArgs.getValueOf("objType").toUpper(): ObjType; // pdarray, Strings, SegArray
     
@@ -1593,7 +1599,7 @@ module ParquetMsg {
             const lastOffset = if sa.size == 0 then 0 else sa[high];
             const lastOffsetIdx = segStr.offsets.a.domain.high;
             var startOffsetIdx = sa[locDom.low];
-            var endOffsetIdx = if (lastOffset == sa[locDom.high]) then lastOffsetIdx else sa[locDom.high + 1] - 1;
+            var endOffsetIdx = if lastOffset == sa[locDom.high] then lastOffsetIdx else sa[locDom.high + 1] - 1;
             var offIdxRange = startOffsetIdx..endOffsetIdx;
             var str_bytes: int;
             for d in offIdxRange do str_bytes += lens[d];
@@ -1676,7 +1682,7 @@ module ParquetMsg {
             if locDom.size > 0 {
               var localOffsets = A[locDom];
               var startValIdx = localOffsets[locDom.low];
-              var endValIdx = if (lastOffset == localOffsets[locDom.high]) then lastValIdx else A[locDom.high + 1] - 1;
+              var endValIdx = if lastOffset == localOffsets[locDom.high] then lastValIdx else A[locDom.high + 1] - 1;
               var valIdxRange = startValIdx..endValIdx;
               ref olda = ss.values.a;
               str_vals[si..#valIdxRange.size] = olda[valIdxRange];
@@ -1713,7 +1719,7 @@ module ParquetMsg {
 
                   datatypes[i] = ARROWINT64;
 
-                  const endValIdx = if (lastSegment == localSegments[locDom.high]) then lastValIdx else S[locDom.high + 1] - 1;
+                  const endValIdx = if lastSegment == localSegments[locDom.high] then lastValIdx else S[locDom.high + 1] - 1;
                   var valIdxRange = startValIdx..endValIdx;
                   ref olda = values.a;
                   if !int_vals.domain.isEmpty() {
@@ -1728,7 +1734,7 @@ module ParquetMsg {
 
                   datatypes[i] = ARROWUINT64;
 
-                  var endValIdx = if (lastSegment == localSegments[locDom.high]) then lastValIdx else S[locDom.high + 1] - 1;
+                  var endValIdx = if lastSegment == localSegments[locDom.high] then lastValIdx else S[locDom.high + 1] - 1;
                   var valIdxRange = startValIdx..endValIdx;
                   ref olda = values.a;
                   if !uint_vals.domain.isEmpty() {
@@ -1743,7 +1749,7 @@ module ParquetMsg {
 
                   datatypes[i] = ARROWDOUBLE;
 
-                  var endValIdx = if (lastSegment == localSegments[locDom.high]) then lastValIdx else S[locDom.high + 1] - 1;
+                  var endValIdx = if lastSegment == localSegments[locDom.high] then lastValIdx else S[locDom.high + 1] - 1;
                   var valIdxRange = startValIdx..endValIdx;
                   ref olda = values.a;
                   if !real_vals.domain.isEmpty() {
@@ -1758,7 +1764,7 @@ module ParquetMsg {
 
                   datatypes[i] = ARROWBOOLEAN;
 
-                  var endValIdx = if (lastSegment == localSegments[locDom.high]) then lastValIdx else S[locDom.high + 1] - 1;
+                  var endValIdx = if lastSegment == localSegments[locDom.high] then lastValIdx else S[locDom.high + 1] - 1;
                   var valIdxRange = startValIdx..endValIdx;
                   ref olda = values.a;
                   if !bool_vals.domain.isEmpty() {
@@ -1781,14 +1787,14 @@ module ParquetMsg {
                   datatypes[i] = ARROWSTRING;
                   
                   var startOffsetIdx = localSegments[locDom.low];
-                  var endOffsetIdx = if (lastSegment == localSegments[locDom.high]) then lastOffsetIdx else S[locDom.high + 1] - 1;
+                  var endOffsetIdx = if lastSegment == localSegments[locDom.high] then lastOffsetIdx else S[locDom.high + 1] - 1;
                   var offIdxRange = startOffsetIdx..endOffsetIdx;
                   if offIdxRange.size > 0 {
 
                     var localOffsets: [offIdxRange] int = oldOff[offIdxRange];
                     var startValIdx = localOffsets[offIdxRange.low];
                     
-                    var endValIdx = if (lastOffsetIdx == offIdxRange.high) then lastValIdx else oldOff[offIdxRange.high + 1] - 1;
+                    var endValIdx = if lastOffsetIdx == offIdxRange.high then lastValIdx else oldOff[offIdxRange.high + 1] - 1;
                     var valIdxRange = startValIdx..endValIdx;
                     if !str_vals.domain.isEmpty() {
                       str_vals[si..#valIdxRange.size] = oldVal[valIdxRange];
@@ -1989,6 +1995,7 @@ module ParquetMsg {
     return targetLocales;
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc toParquetMultiColMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
     const filename: string = msgArgs.getValueOf("filename");
     const ncols: int = msgArgs.get("num_cols").getIntValue();
@@ -2035,6 +2042,7 @@ module ParquetMsg {
     }
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc lspqMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
     // reqMsg: "lshdf [<json_filename>]"
     var repMsg: string;
@@ -2161,7 +2169,7 @@ module ParquetMsg {
 
     var rnames: list((string, ObjType, string)); // tuple (dsetName, item type, id)
     
-    for (dsetidx, dsetname) in zip(dsetdom, dsetnames) do {
+    for (dsetidx, dsetname) in zip(dsetdom, dsetnames) {
         for (i, fname) in zip(filedom, filenames) {
             var hadError = false;
             try {

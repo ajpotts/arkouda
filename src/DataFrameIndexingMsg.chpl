@@ -1,3 +1,4 @@
+    @chplcheck.ignore("IncorrectIndentation")
     module DataFrameIndexingMsg
     {
     use ServerConfig;
@@ -68,10 +69,10 @@
         const high = orig_segs.domain.high;
         const mid = high/2;
         forall(i, os, l) in zip(orig_segs.domain, orig_segs, lens){
-            if (i == high){
+            if i == high{
                 l = values.size - os;
             }
-            else if (i == mid) {
+            else if i == mid {
                 l = 0;
             } else {
                 l = orig_segs[i+1] - os;
@@ -81,7 +82,7 @@
         var rvals = makeDistArray(+ reduce lens, t);
         var rsegs = (+ scan lens) - lens;
 
-        forall(i, rs, os, l) in zip(orig_segs.domain, rsegs, orig_segs, lens){
+        forall(_, rs, os, l) in zip(orig_segs.domain, rsegs, orig_segs, lens){
             var v = new lowLevelLocalizingSlice(values.a, os..#l);
             for j in 0..#l{
                 rvals[rs+j] = v.ptr[j];
@@ -96,6 +97,7 @@
         return "SegArray+%s+created %s+created %s".format(col, st.attrib(s_name), st.attrib(v_name));
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc dataframeBatchIndexingMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         param pn = Reflection.getRoutineName();
         var repMsg: string; // response message

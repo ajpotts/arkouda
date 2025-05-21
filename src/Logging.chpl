@@ -11,20 +11,21 @@ module Logging {
      * The LogLevel enum is used to provide a strongly-typed means of
      * configuring the logging level of a Logger object
      */
-    enum LogLevel {DEBUG,INFO,WARN,ERROR,CRITICAL};
+    enum LogLevel {DEBUG,INFO,WARN,ERROR,CRITICAL}
     
     /*
      * The LogChannel enum is used to provide a strongly-typed means of
      * configuring the channel such as stdout or file where log messages
      * are written.
      */
-    enum LogChannel {CONSOLE,FILE};
+    enum LogChannel {CONSOLE,FILE}
 
     /*
      * The OutputHandler class defines the interface for all derived 
      * classes that write log messages to various channels.
      */
     class OutputHandler {
+        @chplcheck.ignore("UnusedFormal")
         proc write(message: string) throws {}
     }
     

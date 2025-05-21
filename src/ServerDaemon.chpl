@@ -119,6 +119,7 @@ module ServerDaemon {
          * to (1) exit the daemon loop within the run function and (2) execute 
          * the shutdown function.
          */
+        @chplcheck.ignore("UnusedFormal")
         proc requestShutdown(user: string) throws {
             this.shutdownDaemon = true;
         }
@@ -249,7 +250,7 @@ module ServerDaemon {
             writeln(verMessage);
             writeln(chplVerMessage);
 
-            if (memTrack) {
+            if memTrack {
                 writeln(memLimMessage);
                 writeln(memUsedMessage);
             }
@@ -592,9 +593,9 @@ module ServerDaemon {
                     authenticateUser(token);
                 }
 
-                if (trace) {
+                if trace {
                     try {
-                        if (cmd != "array") {
+                        if cmd != "array" {
                             sdLogger.info(getModuleName(), getRoutineName(), getLineNumber(),
                                                     ">>> %? %?".format(cmd, args));
                         } else {
@@ -608,7 +609,7 @@ module ServerDaemon {
 
                 inline proc sendShutdownRequest(user: string) throws {
                     requestShutdown(user=user);
-                    if (trace) {
+                    if trace {
                         sdLogger.info(getModuleName(),getRoutineName(),getLineNumber(),
                                         "<<< shutdown initiated by %s took %.17r sec".format(user, 
                                                 timeSinceEpoch().totalSeconds() - s0));
@@ -702,7 +703,7 @@ module ServerDaemon {
                     }
                 }
 
-                if (trace && memTrack) {
+                if trace && memTrack {
                     var memUsed = getMemUsed():uint * numLocales:uint;
                     var memLimit = (getMemLimit():real * numLocales:uint):int;
                     var pctMemUsed = ((memUsed:real/memLimit)*100):int;
@@ -964,7 +965,7 @@ module ServerDaemon {
     proc getServerDaemons() throws {
         var daemons = new list(shared ArkoudaServerDaemon);
 
-        for (daemonType,i) in zip(serverDaemonTypes,0..serverDaemonTypes.size-1) {
+        for (daemonType,_) in zip(serverDaemonTypes,0..serverDaemonTypes.size-1) {
             daemons.pushBack(getServerDaemon(daemonType));
         }
         return daemons;

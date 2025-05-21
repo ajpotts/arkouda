@@ -80,7 +80,7 @@ module MultiTypeSymbolTable
                 if t == bool {overMemLimit(len);} else {overMemLimit(len*numBytes(t));}
             }
             var entry = new shared SymEntry((...shape), t);
-            if (tab.contains(name)) {
+            if tab.contains(name) {
                 mtLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),
                                                         "redefined symbol: %s ".format(name));
             } else {
@@ -119,7 +119,7 @@ module MultiTypeSymbolTable
             // }
             
 
-            if (tab.contains(name)) {
+            if tab.contains(name) {
                 mtLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),
                                                         "redefined symbol: %s ".format(name));
             } else {
@@ -306,7 +306,7 @@ module MultiTypeSymbolTable
             var reader = mem.reader(locking=false);
 
             var num_elements = 0;
-            for i in names.split(',') {
+            for names.split(',') {
                 num_elements += 1;
             }
 
@@ -466,7 +466,7 @@ module MultiTypeSymbolTable
                     mtLogger.error(getModuleName(),getRoutineName(),getLineNumber(),s);
                     return s;
                 }
-                var frmt:string = if (u.dtype == DType.Float64) then "%.17r" else "%?";
+                var frmt:string = if u.dtype == DType.Float64 then "%.17r" else "%?";
                 return u.entry__str__(thresh=thresh, prefix="array([", suffix="])", baseFormat=frmt);
             } else {
                 return "Unhandled type %s".format(entry.entryType);

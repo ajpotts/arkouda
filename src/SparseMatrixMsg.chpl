@@ -21,6 +21,7 @@ module SparseMatrixMsg {
     const sparseLogger = new Logger(logLevel, logChannel);
 
     @arkouda.instantiateAndRegister("random_sparse_matrix")
+    @chplcheck.ignore("UnusedFormal")
     proc randomSparseMatrix(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab,
                             type SparseSymEntry_etype, param SparseSymEntry_matLayout: Layout
     ): MsgTuple throws {
@@ -32,6 +33,7 @@ module SparseMatrixMsg {
     }
 
     @arkouda.instantiateAndRegister("sparse_matrix_matrix_mult")
+    @chplcheck.ignore("UnusedFormal")
     proc sparseMatrixMatrixMultMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab,
                                    type SparseSymEntry_etype
     ): MsgTuple throws {
@@ -43,6 +45,7 @@ module SparseMatrixMsg {
     }
 
     @arkouda.instantiateAndRegister("sparse_to_pdarrays")
+    @chplcheck.ignore("UnusedFormal")
     proc sparseMatrixtoPdarray(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab,
                                type SparseSymEntry_etype, param SparseSymEntry_matLayout: Layout
     ): MsgTuple throws {
@@ -68,15 +71,18 @@ module SparseMatrixMsg {
         where t == matrix.etype && d.rank == 1
             do fillSparseMatrix(matrix.a, vals, matrix.matLayout);
 
+    @chplcheck.ignore("UnusedFormal")
     proc fillSparseMatrixMsg(matrix: borrowed SparseSymEntry(?), vals: [?d] ?t) throws
         where t != matrix.etype
             do throw new Error("fillSparseMatrixMsg: type mismatch between matrix and vals");
 
+    @chplcheck.ignore("UnusedFormal")
     proc fillSparseMatrixMsg(matrix: borrowed SparseSymEntry(?), vals: [?d] ?t) throws
         where d.rank != 1 && t == matrix.etype
             do throw new Error("fillSparseMatrixMsg: vals must be rank 1");
 
     @arkouda.instantiateAndRegister("sparse_matrix_from_pdarrays")
+    @chplcheck.ignore("UnusedFormal")
     proc sparseMatrixFromPdarrays(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab,
                                   type SparseSymEntry_etype, param SparseSymEntry_matLayout: Layout
     ): MsgTuple throws {

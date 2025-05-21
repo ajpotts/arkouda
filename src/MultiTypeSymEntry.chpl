@@ -108,6 +108,7 @@ module MultiTypeSymEntry
          *
          * :returns: s (string) containing the array data
          */
+        @chplcheck.ignore("UnusedFormal")
         proc entry__str__(thresh:int=1, prefix:string="", suffix:string="", baseFormat:string=""): string throws {
             genLogger.debug(getModuleName(),getRoutineName(),getLineNumber(), "__str__ invoked");
             var s = "AbstractSymEntry:subClasses should override this __str__ proc";
@@ -201,6 +202,7 @@ module MultiTypeSymEntry
 
             :returns: s (string) containing the array data
         */
+        @chplcheck.ignore("UnusedFormal")
         override proc entry__str__(thresh:int=1, prefix:string="", suffix:string="", baseFormat:string=""): string throws {
             genLogger.debug(getModuleName(),getRoutineName(),getLineNumber(), "__str__ invoked");
             var s = "DType: %s, itemsize: %?, size: %?".format(this.dtype, this.itemsize, this.size);
@@ -213,6 +215,7 @@ module MultiTypeSymEntry
     }
 
     /* Symbol table entry */
+    @chplcheck.ignore("MethodsAfterFields")
     class SymEntry : GenSymEntry
     {
         /*
@@ -502,6 +505,7 @@ module MultiTypeSymEntry
          *
          * :returns: s (string) containing the array data
          */
+        @chplcheck.ignore("UnusedFormal")
         override proc entry__str__(thresh:int=1, prefix:string="", suffix:string="", baseFormat:string=""): string throws {
             genLogger.debug(getModuleName(),getRoutineName(),getLineNumber(), "__str__ invoked");
             var s = "DType: %s, itemsize: %?, size: %?".format(this.dtype, this.itemsize, this.size);
@@ -567,6 +571,7 @@ module MultiTypeSymEntry
 
             :returns: s (string) containing the array data
         */
+        @chplcheck.ignore("UnusedFormal")
         override proc entry__str__(thresh:int=1, prefix:string="", suffix:string="", baseFormat:string=""): string throws {
             genLogger.debug(getModuleName(),getRoutineName(),getLineNumber(), "__str__ invoked");
             var s = "DType: %s, itemsize: %?, size: %?, nnz: %?, layout: %s".format(this.dtype, this.itemsize, this.size, this.nnz, this.layoutStr);
@@ -668,6 +673,7 @@ module MultiTypeSymEntry
 
             :returns: s (string) containing the array data
         */
+        @chplcheck.ignore("UnusedFormal")
         override proc entry__str__(thresh:int=6, prefix:string = "noprefix", suffix:string = "nosuffix", baseFormat:string = "%?"): string throws {
             var s:string;
             const ref sparseDom = this.a.domain,
@@ -813,6 +819,6 @@ module MultiTypeSymEntry
     }
 
     proc tupShapeString(val: int, ndim: int): string {
-        return tupShapeString([i in 1..ndim] val);
+        return tupShapeString([1..ndim] val);
     }
 }

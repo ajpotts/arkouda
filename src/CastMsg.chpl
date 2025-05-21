@@ -16,6 +16,7 @@ module CastMsg {
   const castLogger = new Logger(logLevel, logChannel);
 
   @arkouda.instantiateAndRegister(prefix="cast")
+  @chplcheck.ignore("UnusedFormal")
   proc castArray(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab,
     type array_dtype_from,
     type array_dtype_to,
@@ -37,6 +38,7 @@ module CastMsg {
   }
 
   @arkouda.instantiateAndRegister(prefix="castToStrings")
+  @chplcheck.ignore("UnusedFormal")
   proc castArrayToStrings(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype): MsgTuple throws {
     const name = msgArgs["name"].toScalar(string);
     var gse: borrowed GenSymEntry = getGenericTypedArrayEntry(name, st);
@@ -44,6 +46,7 @@ module CastMsg {
   }
 
   @arkouda.instantiateAndRegister(prefix="castStringsTo")
+  @chplcheck.ignore("UnusedFormal")
   proc castStringsToArray(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype): MsgTuple throws {
     const name = msgArgs["name"].toScalar(string),
           errors = msgArgs["opt"].toScalar(string).toLower() : ErrorMode;
@@ -57,6 +60,7 @@ module CastMsg {
     }
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc transmuteFloatMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
     param pn = Reflection.getRoutineName();
     var name = msgArgs.getValueOf("name");

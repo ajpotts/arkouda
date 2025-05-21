@@ -21,6 +21,7 @@ module EncodingMsg {
     private config const logChannel = ServerConfig.logChannel;
     const emLogger = new Logger(logLevel, logChannel);
 
+    @chplcheck.ignore("UnusedFormal")
     proc encodeDecodeMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
       var repMsg: string;
 
@@ -55,9 +56,10 @@ module EncodingMsg {
       return (encodeOffsets, encodedValues);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getBufLengths(segments: [?D] int, ref values: [?vD] ?t, toEncoding: string, fromEncoding: string) throws {
       var res = makeDistArray(D, int);
-      if (D.size == 0) {
+      if D.size == 0 {
         return res;
       }
 
@@ -96,9 +98,10 @@ module EncodingMsg {
       return res;
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc encodeSegments(segments: [?D] int, ref values: [?vD] uint(8), encodeOffsets: [D] int, encodeLengths: [D] int, toEncoding: string, fromEncoding: string) throws {
       var res = makeDistArray(+ reduce encodeLengths, uint(8));
-      if (D.size == 0) {
+      if D.size == 0 {
         return res;
       }
 
@@ -128,7 +131,7 @@ module EncodingMsg {
             agg.copy(myESegs[i], encodeOffsets[i]);
           }
           try {
-            forall (start, len, i, eStart, eLen) in zip(mySegs, myLens, mySegInds, myESegs, myELens) {
+            forall (start, len, _, eStart, eLen) in zip(mySegs, myLens, mySegInds, myESegs, myELens) {
               var slice = new lowLevelLocalizingSlice(values, start..#len);
               var encodedStr = encodeStr(slice.ptr: c_ptr(uint(8)), len, eLen, locTo, locFrom);
               var agg = newDstAggregator(uint(8));

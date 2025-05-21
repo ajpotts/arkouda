@@ -303,7 +303,7 @@ module CommAggregation {
     proc ref cachedAlloc(): c_ptr(elemType) {
       if data == nil {
         const rvf_size = size;
-        on Locales[loc] do {
+        on Locales[loc] {
           data = allocate(elemType, rvf_size);
         }
       }

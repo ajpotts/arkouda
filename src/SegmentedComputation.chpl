@@ -13,7 +13,7 @@ module SegmentedComputation {
     // Index of first segment each locale owns bytes for
     var startSegInds = makeDistArray(LocaleSpace, int);
     // Mark true where owning locale changes
-    const change = [(i, sl) in zip(D, startLocales)] if (i == D.low) then true else (sl != startLocales[i-1]);
+    const change = [(i, sl) in zip(D, startLocales)] if i == D.low then true else (sl != startLocales[i-1]);
     // Wherever the owning locale increments, record that as first segment for the locale
     forall (c, sl, i) in zip(change, startLocales, D) {
       if c {
@@ -25,14 +25,14 @@ module SegmentedComputation {
     var numSegs = makeDistArray(LocaleSpace, int);
     // small number of iterations, no comms
     for l in Locales {
-      if (l.id == numLocales - 1) {
+      if l.id == numLocales - 1 {
         numSegs[l.id] = D.size - startSegInds[l.id];
       } else {
         numSegs[l.id] = startSegInds[l.id + 1] - startSegInds[l.id];
       }
     }
 
-    const lengths = [(s, i) in zip(segments, D)] if (i == D.high) then (vD.size - s) else (segments[i+1] - s);
+    const lengths = [(s, i) in zip(segments, D)] if i == D.high then (vD.size - s) else (segments[i+1] - s);
 
     return (startSegInds, numSegs, lengths);
   }
@@ -59,7 +59,7 @@ module SegmentedComputation {
   proc computeOnSegments(segments: [?D] int, ref values: [?vD] ?t, param function: SegFunction, type retType, const strArg: string = "") throws {
     // type retType = if (function == SegFunction.StringToNumericReturnValidity) then (outType, bool) else outType;
     var res = makeDistArray(D, retType);
-    if (D.size == 0) {
+    if D.size == 0 {
       return res;
     }
 

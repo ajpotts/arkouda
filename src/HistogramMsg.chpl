@@ -44,13 +44,13 @@ module HistogramMsg
           hgmLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),
                                                            "binWidth %r".format(binWidth));
 
-          if (bins <= sBound) {
+          if bins <= sBound {
               hgmLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),
                                                            "%? <= %?".format(bins,sBound));
               var hist = histogramReduceIntent(e.a, aMin, aMax, bins, binWidth);
               st.addEntry(rname, createSymEntry(hist));
           }
-          else if (bins <= mBound) {
+          else if bins <= mBound {
               hgmLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),
                                                            "%? <= %?".format(bins,mBound));
               var hist = histogramLocalAtomic(e.a, aMin, aMax, bins, binWidth);
@@ -112,13 +112,13 @@ module HistogramMsg
                                                             "xBinWidth %r yBinWidth %r".format(xBinWidth, yBinWidth));
 
             var totBins = xBins * yBins;
-            if (totBins <= sBound) {
+            if totBins <= sBound {
                 hgmLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),
                                                             "%? <= %?".format(totBins,sBound));
                 var hist = histogramReduceIntent(x.a, y.a, xMin, xMax, yMin, yMax, xBins, yBins, xBinWidth, yBinWidth);
                 st.addEntry(rname, createSymEntry(hist));
             }
-            else if (totBins <= mBound) {
+            else if totBins <= mBound {
                 hgmLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),
                                                             "%? <= %?".format(totBins,mBound));
                 var hist = histogramLocalAtomic(x.a, y.a, xMin, xMax, yMin, yMax, xBins, yBins, xBinWidth, yBinWidth);
@@ -206,7 +206,7 @@ module HistogramMsg
             // 3 different implementations depending on size of histogram
             // this is due to the time memory tradeoff between creating one/few atomic arrays
             // or many non-atomic arrays and reducing them
-            if (totNumBins <= sBound) {
+            if totNumBins <= sBound {
                 // "histogramReduceIntent"
                 // small number of buckets (so histogram is relatively small):
                 // each task gets it's own copy of the histogram and they're reduced
@@ -222,7 +222,7 @@ module HistogramMsg
 
                 hist = gHist;
             }
-            else if (totNumBins <= mBound) {
+            else if totNumBins <= mBound {
                 // "histogramLocalAtomic"
                 // medium number of buckets:
                 // each locale gets it's own atomic copy of the histogram and these are reduced together

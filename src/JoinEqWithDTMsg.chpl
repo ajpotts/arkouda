@@ -69,12 +69,12 @@ module JoinEqWithDTMsg
         var segNum = binarySearch(ukeys, v);
 
         // if v was greater than all ukeys segNum is greater than all segments
-        if (segNum <= seg.domain.high) {
+        if segNum <= seg.domain.high {
             // found!
-            if (v == ukeys[segNum]) {
+            if v == ukeys[segNum] {
                 found = true;
                 // last segment?
-                if (segNum == seg.domain.high) {
+                if segNum == seg.domain.high {
                     segRange = (seg[segNum])..(perm.domain.high);
                 }
                 // otherwise
@@ -109,14 +109,14 @@ module JoinEqWithDTMsg
             on loc {
                 forall i in a1.localSubdomain() {
                     // more space in result list???
-                    if (resCounters[here.id].read() < resLimitPerLocale) {
+                    if resCounters[here.id].read() < resLimitPerLocale {
                         // find matching value(unique key in g2) and
                         // return found flag and a range for the segment of that value(unique key)
                         var (found, j_seg) = findMatch(a1[i], seg, ukeys, perm);
                         try! jeLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),
                                           "a1: %? found: %? j_seq: %?".format(a1[i], found, j_seg));
                         // if there is a matching value in ukeys
-                        if (found) {
+                        if found {
                             var t1_i = t1[i];
                             // all j's come from the original a2 array
                             // so all the values from perm over the segment for the value
@@ -127,7 +127,7 @@ module JoinEqWithDTMsg
                                 select pred {
                                         // absolute difference predicate
                                         when ABS_DT {
-                                            if (t1_i <= t2_j) {
+                                            if t1_i <= t2_j {
                                                 addResFlag = ((t2_j - t1_i) <= dt);
                                             } else {
                                                 addResFlag = ((t1_i - t2_j) <= dt);
@@ -135,7 +135,7 @@ module JoinEqWithDTMsg
                                         }
                                         // positive difference predicate
                                         when POS_DT {
-                                            if (t1_i <= t2_j) {
+                                            if t1_i <= t2_j {
                                                 addResFlag = ((t2_j - t1_i) <= dt);
                                             }
                                             else {
@@ -155,7 +155,7 @@ module JoinEqWithDTMsg
                                 if addResFlag {
                                     var pos = resCounters[here.id].fetchAdd(1);
                                     // add result if there is still room in the result list
-                                    if (pos < resLimitPerLocale) {
+                                    if pos < resLimitPerLocale {
                                         locResI[here.id][pos] = i;
                                         locResJ[here.id][pos] = j;
                                     }
@@ -163,13 +163,13 @@ module JoinEqWithDTMsg
                                     else { break; }
                                 }
                                 // if there is no room left in list then break out of for loop
-                                if (resCounters[here.id].read() >= resLimitPerLocale) { break; }
+                                if resCounters[here.id].read() >= resLimitPerLocale { break; }
                             } // for j
                         } // if (found)
                     } // if more space in result list
                 } // forall i
                 // set locNumResults to correct value
-                if (resCounters[here.id].read() > resLimitPerLocale) {
+                if resCounters[here.id].read() > resLimitPerLocale {
                     locNumResults[here.id] = resLimitPerLocale;
                 }
                 else {
@@ -255,7 +255,7 @@ module JoinEqWithDTMsg
         // !!!!! check for DType.Int64 on all of these !!!!!
         // !!!!! check matching length on some arguments !!!!!
         var a1Ent: borrowed GenSymEntry = getGenericTypedArrayEntry(a1_name, st);
-        if (a1Ent.dtype != DType.Int64) {
+        if a1Ent.dtype != DType.Int64 {
             throw getErrorWithContext(
                         msg=incompatibleArgumentsError(pn, dtype2str(a1Ent.dtype)),
                         lineNumber = getLineNumber(),
@@ -266,7 +266,7 @@ module JoinEqWithDTMsg
         var a1 = toSymEntry(a1Ent, int);
         
         var g2SegEnt: borrowed GenSymEntry = getGenericTypedArrayEntry(g2Seg_name, st);
-        if (g2SegEnt.dtype != DType.Int64) {
+        if g2SegEnt.dtype != DType.Int64 {
             throw getErrorWithContext(
                         msg=incompatibleArgumentsError(pn, dtype2str(g2SegEnt.dtype)),
                         lineNumber=getLineNumber(),
@@ -277,7 +277,7 @@ module JoinEqWithDTMsg
         var g2Seg = toSymEntry(g2SegEnt, int);
         
         var g2UkeysEnt: borrowed GenSymEntry = getGenericTypedArrayEntry(g2Ukeys_name, st);
-        if (g2UkeysEnt.dtype != DType.Int64) {
+        if g2UkeysEnt.dtype != DType.Int64 {
             throw getErrorWithContext(
                         msg=incompatibleArgumentsError(pn, dtype2str(g2UkeysEnt.dtype)),
                         lineNumber=getLineNumber(),
@@ -285,7 +285,7 @@ module JoinEqWithDTMsg
                         moduleName=getModuleName(),
                         errorClass="ErrorWithContext");
         }
-        else if (g2UkeysEnt.size != g2SegEnt.size) {
+        else if g2UkeysEnt.size != g2SegEnt.size {
             throw getErrorWithContext(
                         msg=incompatibleArgumentsError(pn, "ukeys and seg must be same size"),
                         lineNumber=getLineNumber(),
@@ -297,7 +297,7 @@ module JoinEqWithDTMsg
         var g2Ukeys = toSymEntry(g2UkeysEnt, int);
         
         var g2PermEnt: borrowed GenSymEntry = getGenericTypedArrayEntry(g2Perm_name, st);
-        if (g2PermEnt.dtype != DType.Int64) {
+        if g2PermEnt.dtype != DType.Int64 {
             throw getErrorWithContext(
                         msg=incompatibleArgumentsError(pn, dtype2str(g2PermEnt.dtype)),
                         lineNumber=getLineNumber(),
@@ -309,7 +309,7 @@ module JoinEqWithDTMsg
         var g2Perm = toSymEntry(g2PermEnt, int);
         
         var t1Ent: borrowed GenSymEntry = getGenericTypedArrayEntry(t1_name, st);
-        if (t1Ent.dtype != DType.Int64) {
+        if t1Ent.dtype != DType.Int64 {
             throw getErrorWithContext(
                         msg=incompatibleArgumentsError(pn, dtype2str(t1Ent.dtype)),
                         lineNumber=getLineNumber(),
@@ -318,7 +318,7 @@ module JoinEqWithDTMsg
                         errorClass="ErrorWithContext"
                         );
         }
-        else if (t1Ent.size != a1Ent.size) {
+        else if t1Ent.size != a1Ent.size {
             throw getErrorWithContext(
                         msg=incompatibleArgumentsError(pn, "a1 and t1 must be same size"),
                         lineNumber=getLineNumber(),
@@ -330,7 +330,7 @@ module JoinEqWithDTMsg
         var t1 = toSymEntry(t1Ent, int);
         
         var t2Ent: borrowed GenSymEntry = getGenericTypedArrayEntry(t2_name, st);
-        if (t2Ent.dtype != DType.Int64) {
+        if t2Ent.dtype != DType.Int64 {
             throw getErrorWithContext(
                         msg=incompatibleArgumentsError(pn, dtype2str(t2Ent.dtype)),
                         lineNumber=getLineNumber(),
@@ -339,7 +339,7 @@ module JoinEqWithDTMsg
                         errorClass="ErrorWithContext"
                         );
         }
-        else if (t2Ent.size != g2PermEnt.size) {
+        else if t2Ent.size != g2PermEnt.size {
             throw getErrorWithContext(
                         msg=incompatibleArgumentsError(pn, "a2 and t2 must be same size"),
                         lineNumber=getLineNumber(),

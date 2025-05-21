@@ -14,6 +14,7 @@ module CommandMap {
    * construct the FCF type, but there is no way to generate a
    * FCF that throws using `func()` today.
    */
+  @chplcheck.ignore("UnusedFormal")
   proc akMsgSign(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
     return MsgTuple.success("");
   }
@@ -41,6 +42,7 @@ module CommandMap {
   }
 
   /* Support for asynchronous checkpointing. */
+  @chplcheck.ignore("UnusedFormal")
   proc emptyStartAsyncCheckpointDaemon(sd: borrowed ServerDaemon.DefaultServerDaemon) {
     return false;
   }

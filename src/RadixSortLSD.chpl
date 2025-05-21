@@ -43,7 +43,7 @@ module RadixSortLSD
         var rem = totalsize % numTasks;
         var rlow: int;
         var rhigh: int;
-        if (task < rem) {
+        if task < rem {
             rlow = task * (div+1) + low;
             rhigh = rlow + div;
         }
@@ -74,12 +74,12 @@ module RadixSortLSD
         var globalCounts = makeDistArray((numLocales*numTasks*numBuckets), int);
 
         // loop over digits
-        for rshift in {0..#nBits by bitsPerDigit} {
+        for rshift in 0..#nBits by bitsPerDigit {
             const last = (rshift + bitsPerDigit) >= nBits;
             try! rsLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),
                                                         "rshift = %?".format(rshift));
             // count digits
-            coforall loc in Locales with (ref globalCounts) {
+            coforall loc in Locales {
                 on loc {
                     // allocate counts
                     var tasksBucketCounts: [Tasks] [0..#numBuckets] int;
@@ -119,7 +119,7 @@ module RadixSortLSD
             if vv {printAry("globalStarts =",globalStarts);try! stdout.flush();}
             
             // calc new positions and permute
-            coforall loc in Locales with (ref a) {
+            coforall loc in Locales {
                 on loc {
                     // allocate counts
                     var tasksBucketPos: [Tasks] [0..#numBuckets] int;
@@ -169,7 +169,7 @@ module RadixSortLSD
     proc radixSortLSD(a:[?aD] ?t, checkSorted: bool = true): [aD] (t, int) throws {
         var kr: [aD] (t,int) = makeDistArray(aD, (t, int));
         kr = [(key,rank) in zip(a,aD)] (key,rank);
-        if (checkSorted && isSorted(a)) {
+        if checkSorted && isSorted(a) {
             return kr;
         }
         var (nBits, negs) = getBitWidth(a);
@@ -181,7 +181,7 @@ module RadixSortLSD
        radix sort a block distributed array
        returning a permutation vector as a block distributed array */
     proc radixSortLSD_ranks(a:[?aD] ?t, checkSorted: bool = true): [aD] int throws {
-        if (checkSorted && isSorted(a)) {
+        if checkSorted && isSorted(a) {
             var ranks: [aD] int = [i in aD] i;
             return ranks;
         }
@@ -200,7 +200,7 @@ module RadixSortLSD
        returning sorted keys as a block distributed array */
     proc radixSortLSD_keys(a: [?aD] ?t, checkSorted: bool = true): [aD] t throws {
         var copy = a;
-        if (checkSorted && isSorted(a)) {
+        if checkSorted && isSorted(a) {
             return copy;
         }
         var (nBits, negs) = getBitWidth(a);

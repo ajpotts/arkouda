@@ -38,31 +38,31 @@ module ExternalIntegration {
     /*
      * Enum specifies the type of external system Arkouda will integrate with.
      */
-    enum SystemType{KUBERNETES,REDIS,CONSUL,NONE};
+    enum SystemType{KUBERNETES,REDIS,CONSUL,NONE}
 
     /*
      * Enum describing the type of channel used to write to an
      * external system.
      */
-    enum ChannelType{STDOUT,FILE,HTTP};
+    enum ChannelType{STDOUT,FILE,HTTP}
        
     /*
      * Enum specifies if the service endpoint is the Arkouda client or metrics
      * socket 
      */
-    enum ServiceEndpoint{ARKOUDA_CLIENT,METRICS};
+    enum ServiceEndpoint{ARKOUDA_CLIENT,METRICS}
     
     /*
      * Enum specifies the request type used to write to an external system 
      * via HTTP.
      */
-    enum HttpRequestType{POST,PUT,PATCH,DELETE};
+    enum HttpRequestType{POST,PUT,PATCH,DELETE}
 
     /*
      * Enum specifies the request format used to write to an external system 
      * via HTTP.
      */
-    enum HttpRequestFormat{TEXT,JSON,MULTIPART};    
+    enum HttpRequestFormat{TEXT,JSON,MULTIPART}    
 
     /*
      * Retrieves the host ip address of the locale 0 arkouda_server process, which is
@@ -90,6 +90,7 @@ module ExternalIntegration {
      * write method that writes a payload to an external system.
      */
     class Channel {
+        @chplcheck.ignore("UnusedFormal")
         proc write(payload : string) throws {
             throw new owned Error("All derived classes must implement write");
         }

@@ -167,6 +167,7 @@ module IndexingMsg
         (1, 3), (2, 4), (3, 5), (4, 6), and the 2nd dimension is indexed by all of 0..<6.
     */
     @arkouda.instantiateAndRegister(prefix="[pdarray]")
+    @chplcheck.ignore("UnusedFormal")
     proc multiPDArrayIndex(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype_a, type array_dtype_idx, param array_nd: int): MsgTuple throws
         where array_dtype_idx == int || array_dtype_idx == uint
     {
@@ -352,7 +353,7 @@ module IndexingMsg
             ref trutha = truth.a;
             ref aa = a.a;
             forall (i, eai) in zip(ead, ea) with (var agg = newDstAggregator(XType)) {
-              if (trutha[i] == true) {
+              if trutha[i] == true {
                 agg.copy(aa[iv[i]-1], eai);
               }
             }
@@ -516,7 +517,7 @@ module IndexingMsg
         proc ivBoolHelper(type Xtype, type dtype): MsgTuple throws {
             var e = toSymEntry(gX,Xtype);
             var truth = toSymEntry(gIV,bool);
-            if (e.size != truth.size) {
+            if e.size != truth.size {
                 var errorMsg = "Error: %s: bool iv must be same size %i != %i".format(pn,e.size,
                                                                                     truth.size);
                 imLogger.error(getModuleName(),getRoutineName(),getLineNumber(),errorMsg);
@@ -531,7 +532,7 @@ module IndexingMsg
             ref ea = e.a;
             ref trutha = truth.a;
             forall i in ead with (var agg = newDstAggregator(dtype), var locVal = val) {
-              if (trutha[i]) {
+              if trutha[i] {
                 agg.copy(ea[i],locVal);
               }
             }
@@ -620,7 +621,7 @@ module IndexingMsg
         // scatter indexing by an integer index vector
         proc ivInt64Helper(type t): MsgTuple throws {
             // add check to make sure IV and Y are same size
-            if (gIV.size != gY.size) {
+            if gIV.size != gY.size {
                 var errorMsg = "Error: %s: size mismatch %i %i".format(pn,gIV.size,gY.size);
                 imLogger.error(getModuleName(),getRoutineName(),getLineNumber(),errorMsg);
                 return new MsgTuple(errorMsg,MsgType.ERROR);
@@ -665,7 +666,7 @@ module IndexingMsg
         // scatter indexing by unsigned integer index vector
         proc ivUInt64Helper(type t): MsgTuple throws {
             // add check to make sure IV and Y are same size
-            if (gIV.size != gY.size) {
+            if gIV.size != gY.size {
                 var errorMsg = "Error: %s: size mismatch %i %i".format(pn,gIV.size,gY.size);
                 imLogger.error(getModuleName(),getRoutineName(),getLineNumber(),errorMsg);
                 return new MsgTuple(errorMsg,MsgType.ERROR);
@@ -710,7 +711,7 @@ module IndexingMsg
         // expansion indexing by a bool index vector
         proc ivBoolHelper(type t): MsgTuple throws {
             // add check to make sure IV and Y are same size
-            if (gIV.size != gX.size) {
+            if gIV.size != gX.size {
                 var errorMsg = "Error: %s: size mismatch %i %i".format(pn,gIV.size,gX.size);
                 imLogger.error(getModuleName(),getRoutineName(),getLineNumber(),errorMsg);
                 return new MsgTuple(errorMsg,MsgType.ERROR);
@@ -723,7 +724,7 @@ module IndexingMsg
             imLogger.debug(getModuleName(),getRoutineName(),getLineNumber(), 
                                         "pop = %? last-scan = %?".format(pop,iv[iv.size-1]));
             var y = toSymEntry(gY,t);
-            if (y.size != pop) {
+            if y.size != pop {
                 var errorMsg = "Error: %s: pop size mismatch %i %i".format(pn,pop,y.size);
                 imLogger.error(getModuleName(),getRoutineName(),getLineNumber(),errorMsg);
                 return new MsgTuple(errorMsg,MsgType.ERROR);
@@ -852,6 +853,7 @@ module IndexingMsg
     }
 
     @arkouda.instantiateAndRegister(prefix="[slice]=pdarray")
+    @chplcheck.ignore("UnusedFormal")
     proc setSliceIndexToPdarray(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab,
         type array_dtype_a,
         type array_dtype_b,
@@ -885,6 +887,7 @@ module IndexingMsg
         return MsgTuple.success();
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc setSliceIndexToPdarray(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab,
         type array_dtype_a,
         type array_dtype_b,
@@ -895,6 +898,7 @@ module IndexingMsg
         return MsgTuple.error("Cannot assign bigint pdarray to slice of non-bigint pdarray");
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc setSliceIndexToPdarray(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab,
         type array_dtype_a,
         type array_dtype_b,
@@ -906,6 +910,7 @@ module IndexingMsg
     }
 
     @arkouda.instantiateAndRegister
+    @chplcheck.ignore("UnusedFormal")
     proc takeAlongAxis(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab,
         type array_dtype_x,
         type array_dtype_idx,

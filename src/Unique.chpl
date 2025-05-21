@@ -44,10 +44,10 @@ module Unique
     :returns: ([] int, [] int)
     */
     proc uniqueSort(a: [?aD] ?eltType, param needCounts = true) throws {
-        if (aD.size == 0) {
+        if aD.size == 0 {
             try! uLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),"zero size");
             var u = makeDistArray(0, eltType);
-            if (needCounts) {
+            if needCounts {
                 var c = makeDistArray(0, int);
                 return (u,c);
             } else {
@@ -60,7 +60,7 @@ module Unique
     }
 
     proc uniqueSortWithInverse(a: [?aD] ?eltType, param needIndices=false) throws {
-        if (aD.size == 0) {
+        if aD.size == 0 {
             try! uLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),"zero size");
             var u = makeDistArray(aD.size, eltType);
             var c = makeDistArray(aD.size, int);
@@ -109,12 +109,12 @@ module Unique
         truth[0] = true;
         [(t, s, i) in zip(truth, sorted, aD)] if i > aD.low { t = (sorted[i-1] != s); }
         var allUnique: int = + reduce truth;
-        if (allUnique == aD.size) {
+        if allUnique == aD.size {
            try!  uLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),
                                     "early out already unique");
             var u = makeDistArray(aD.size, eltType);
             u = sorted; // array is already unique
-            if (needCounts) {
+            if needCounts {
                 var c = makeDistArray(aD.size, int);
                 c = 1;
                 return (u,c);
@@ -136,19 +136,19 @@ module Unique
         // segment position... 1-based needs to be converted to 0-based because of inclusive-scan
         // where ever a segment break (true value) is... that index is a segment start index
         forall i in truth.domain with (var agg = newDstAggregator(int)) {
-          if (truth[i] == true) {
+          if truth[i] == true {
             var idx = i; 
             agg.copy(segs[iv[i]-1], idx);
           }
         }
         // pull out the first key in each segment as a unique key
         // unique keys guaranteed to be sorted because keys are sorted
-        forall (i, uk, seg) in zip(segs.domain, ukeys, segs) with (var agg = newSrcAggregator(eltType)) {
+        forall (_, uk, seg) in zip(segs.domain, ukeys, segs) with (var agg = newSrcAggregator(eltType)) {
           agg.copy(uk, sorted[seg]);
         }
         // [i in segs.domain] ukeys[i] = sorted[segs[i]];
 
-        if (needCounts) {
+        if needCounts {
             var counts = makeDistArray(pop, int);
             // calc counts of each unique key using segs
             forall i in segs.domain {
@@ -167,7 +167,7 @@ module Unique
     }
 
     proc uniqueGroup(str: SegString, returnInverse = false) throws {
-        if (str.size == 0) {
+        if str.size == 0 {
             uLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),"zero size");
             var uo = makeDistArray(0, int);
             var uv = makeDistArray(0, uint(8));
@@ -201,16 +201,16 @@ module Unique
           truth[0] = true;
           // truth[{1..aD.high}] = sorted[0..aD.high-1] != sorted[1..aD.high];
           forall (t, o, idx) in zip(truth, soff, aD) {
-            if (idx > aD.low) {
+            if idx > aD.low {
               const llen = o - soff[idx-1] - 1;
-              const rlen = if (idx < aD.high) then (soff[idx+1] - 1 - o) else (sval.domain.high - o);
-              if (llen != rlen) {
+              const rlen = if idx < aD.high then (soff[idx+1] - 1 - o) else (sval.domain.high - o);
+              if llen != rlen {
                 // If lengths differ, this is a step
                 t = true;
               } else {
                 var allEqual = true;
                 for pos in 0..#llen {
-                  if (sval[soff[idx-1]+pos] != sval[o+pos]) {
+                  if sval[soff[idx-1]+pos] != sval[o+pos] {
                     allEqual = false;
                     break;
                   }
@@ -245,7 +245,7 @@ module Unique
 
     proc uniqueFromTruth(str: SegString, perm: [?aD] int, truth: [aD] bool) throws {
         var allUnique: int = + reduce truth;
-        if (allUnique == aD.size) {
+        if allUnique == aD.size {
             uLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),"early out already unique");
             var uo = makeDistArray(aD.size, int);
             var uv = makeDistArray(str.nBytes, uint(8));
@@ -270,7 +270,7 @@ module Unique
         // segment position... 1-based needs to be converted to 0-based because of inclusive-scan
         // where ever a segment break (true value) is... that index is a segment start index
         forall i in aD with (var agg = newDstAggregator(int)) {
-          if (truth[i] == true) {
+          if truth[i] == true {
             var idx = i;
             agg.copy(segs[iv[i]-1], idx);
           }

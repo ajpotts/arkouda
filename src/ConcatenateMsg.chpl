@@ -33,6 +33,7 @@ module ConcatenateMsg
        to form one array
     */
     @arkouda.instantiateAndRegister(prefix='concatenate')
+    @chplcheck.ignore("UnusedFormal")
     proc concatenateMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
         param pn = Reflection.getRoutineName();
 
@@ -107,6 +108,7 @@ module ConcatenateMsg
     /* Concatenate a list of arrays together
        to form one array
      */
+    @chplcheck.ignore("UnusedFormal")
     proc concatenateStrMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab) : MsgTuple throws {
         param pn = Reflection.getRoutineName();
         var repMsg: string;
@@ -160,10 +162,10 @@ module ConcatenateMsg
             var abstractEntry = st[name];
             var (entryDtype, entrySize, entryItemSize) = getArraySpecFromEntry(abstractEntry);
             
-            if (i == 1) {
+            if i == 1 {
               dtype = entryDtype;
             } else { // Check that all dtype's are the same across the list of arrays to concat
-                if (dtype != entryDtype) {
+                if dtype != entryDtype {
                     var errorMsg = incompatibleArgumentsError(pn, 
                              "Expected %s dtype but got %s dtype".format(dtype2str(dtype), 
                                     dtype2str(entryDtype)));
@@ -195,7 +197,7 @@ module ConcatenateMsg
                      * locale, and we must instead use the total size of the values
                      * array.
                      */
-                    if (e.a.domain.localSubdomain().high >= e.a.domain.high) {
+                    if e.a.domain.localSubdomain().high >= e.a.domain.high {
                       mybytes = valSize - firstSeg;
                     } else {
                       mybytes = e.a[e.a.domain.localSubdomain().high + 1] - firstSeg;
@@ -236,7 +238,7 @@ module ConcatenateMsg
 
                 // Let's allocate a new SegString for the return object
                 var retString = assembleSegStringFromParts(esegs, evals, st);
-                for (rawName, i) in zip(names, 1..) {
+                for (rawName, _) in zip(names, 1..) {
                     var (strName, legacy_placerholder) = rawName.splitMsgToTuple('+', 2);
                     var segString = getSegString(strName, st);
                     var thisSegs = segString.offsets;
@@ -260,7 +262,7 @@ module ConcatenateMsg
                             var mybytes: int;
                             // If locale contains last string, must use overall number of bytes
                             // to compute size, instead of start of next string
-                            if (thisSegs.a.domain.localSubdomain().high >= thisSegs.a.domain.high) {
+                            if thisSegs.a.domain.localSubdomain().high >= thisSegs.a.domain.high {
                               mybytes = thisVals.size - firstSeg;
                             } else {
                               mybytes = thisSegs.a[thisSegs.a.domain.localSubdomain().high + 1] - firstSeg;
@@ -297,7 +299,7 @@ module ConcatenateMsg
                         var e = st.addEntry(rname, size, int);
                         var start: int;
                         start = 0;
-                        for (name, i) in zip(names, 1..) {
+                        for (name, _) in zip(names, 1..) {
                             // lookup and cast operand to copy from
                             const o = toSymEntry(getGenericTypedArrayEntry(name, st), int);
                             if mode == "interleave" {
@@ -326,7 +328,7 @@ module ConcatenateMsg
                         var e = st.addEntry(rname, size, real);
                         var start: int;
                         start = 0;
-                        for (name, i) in zip(names, 1..) {
+                        for (name, _) in zip(names, 1..) {
                             // lookup and cast operand to copy from
                             const o = toSymEntry(getGenericTypedArrayEntry(name, st), real);
                             if mode == "interleave" {
@@ -355,7 +357,7 @@ module ConcatenateMsg
                         var e = st.addEntry(rname, size, bool);
                         var start: int;
                         start = 0;
-                        for (name, i) in zip(names, 1..) {
+                        for (name, _) in zip(names, 1..) {
                             // lookup and cast operand to copy from
                             const o = toSymEntry(getGenericTypedArrayEntry(name, st), bool);
                             if mode == "interleave" {
@@ -384,7 +386,7 @@ module ConcatenateMsg
                         var e = st.addEntry(rname, size, uint);
                         var start: int;
                         start = 0;
-                        for (name, i) in zip(names, 1..) {
+                        for (name, _) in zip(names, 1..) {
                             // lookup and cast operand to copy from
                             const o = toSymEntry(getGenericTypedArrayEntry(name, st), uint);
                             if mode == "interleave" {
@@ -413,7 +415,7 @@ module ConcatenateMsg
                         var tmp = makeDistArray(size, bigint);
                         var start: int = 0;
                         var max_bits = -1;
-                        for (name, i) in zip(names, 1..) {
+                        for (name, _) in zip(names, 1..) {
                             // lookup and cast operand to copy from
                             const o = toSymEntry(getGenericTypedArrayEntry(name, st), bigint);
                             max_bits = max(max_bits, o.max_bits);
@@ -467,6 +469,7 @@ module ConcatenateMsg
     }
     registerFunction("concatenateStr", concatenateStrMsg, getModuleName());
 
+    @chplcheck.ignore("UnusedFormal")
     proc concatenateUniqueStrMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         param pn = Reflection.getRoutineName();
 

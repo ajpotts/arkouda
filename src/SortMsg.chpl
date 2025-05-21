@@ -37,6 +37,7 @@ module SortMsg
       where ((t == real) || (t == int) || (t == uint(64)))
         do return sortHelp(array, alg, axis);
 
+    @chplcheck.ignore("UnusedFormal")
     proc sortHelp(array: [?d] ?t, alg: string, axis: int): [d] t throws
       where d.rank == 1
     {

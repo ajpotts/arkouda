@@ -36,7 +36,7 @@ module ServerConfig
       SERIES=11,
       INDEX=12,
       MULTIINDEX=13,
-    };
+    }
 
     /*
       maximum array dimensionality supported by the server
@@ -323,11 +323,11 @@ module ServerConfig
             }        
         }
         
-        if (memTrack) {
+        if memTrack {
             // this is a per locale total
             var total = getMemUsed() + (additionalAmount:uint / numLocales:uint);
-            if (trace) {
-                if (total > memHighWater) {
+            if trace {
+                if total > memHighWater {
                     memHighWater = total;
                     scLogger.info(getModuleName(),getRoutineName(),getLineNumber(),
                     "memory high watermark = %i memory limit = %i projected pct memory used of %i%%".format(
@@ -388,7 +388,7 @@ module ServerConfig
         count += 1;
       }
       // if split() had fewer items than the tuple, fill in the rest
-      if (count < numChunks) {
+      if count < numChunks {
         for i in count..numChunks-1 {
           tup(i) = "";
         }
@@ -406,7 +406,7 @@ module ServerConfig
         count += 1;
       }
       // if split() had fewer items than the tuple, fill in the rest
-      if (count < numChunks) {
+      if count < numChunks {
         for i in count..numChunks-1 {
           tup(i) = "";
         }
@@ -424,7 +424,7 @@ module ServerConfig
         count += 1;
       }
       // if split() had fewer items than the tuple, fill in the rest
-      if (count < numChunks) {
+      if count < numChunks {
         for i in count..numChunks-1 {
           tup(i) = b"";
         }
@@ -442,7 +442,7 @@ module ServerConfig
         count += 1;
       }
       // if split() had fewer items than the tuple, fill in the rest
-      if (count < numChunks) {
+      if count < numChunks {
         for i in count..numChunks-1 {
           tup(i) = b"";
         }

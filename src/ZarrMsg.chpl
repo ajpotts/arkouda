@@ -26,6 +26,7 @@ module ZarrMsg {
   use Math;
 
   @arkouda.instantiateAndRegister()
+  @chplcheck.ignore("UnusedFormal")
   proc readAllZarr(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
     const storePath = msgArgs["store_path"].toScalar(string);
 
@@ -37,6 +38,7 @@ module ZarrMsg {
   }
 
   @arkouda.instantiateAndRegister()
+  @chplcheck.ignore("UnusedFormal")
   proc writeAllZarr(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
     const storePath = msgArgs.getValueOf("store_path"),
           chunkShape = msgArgs["chunk_shape"].toScalarTuple(int, array_nd);

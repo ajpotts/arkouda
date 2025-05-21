@@ -277,11 +277,11 @@ module LinalgMsg {
     // This function is used in dotProd and matMult.
 
     proc np_ret_type(type ta, type tb) type {
-        if ( (ta==real || tb==real) || (ta==int && tb==uint) || (ta==uint && tb==int) ) {
+        if  (ta==real || tb==real) || (ta==int && tb==uint) || (ta==uint && tb==int)  {
             return real ;
-        } else if (ta==int || tb==int) {
+        } else if ta==int || tb==int {
             return int ;
-        } else if (ta==uint || tb==uint) {
+        } else if ta==uint || tb==uint {
             return uint ;
         } else {
             return bool ;

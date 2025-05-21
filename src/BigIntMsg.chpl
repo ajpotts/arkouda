@@ -17,6 +17,7 @@ module BigIntMsg {
     const biLogger = new Logger(logLevel, logChannel);
 
     @arkouda.instantiateAndRegister("big_int_creation")
+    @chplcheck.ignore("UnusedFormal")
     proc bigIntCreationMsg(cmd: string, msgArgs: borrowed MessageArgs,
                            st: borrowed SymTab, type array_dtype,
                            param array_nd: int): MsgTuple throws
@@ -60,6 +61,7 @@ module BigIntMsg {
     }
 
     @arkouda.instantiateAndRegister("bigint_to_uint_list")
+    @chplcheck.ignore("UnusedFormal")
     proc bigintToUintArraysMsg(cmd: string, msgArgs: borrowed MessageArgs,
                                st: borrowed SymTab, type array_dtype,
                                param array_nd: int): MsgTuple throws
@@ -97,6 +99,7 @@ module BigIntMsg {
     }
 
     @arkouda.instantiateAndRegister("get_max_bits")
+    @chplcheck.ignore("UnusedFormal")
     proc getMaxBitsMsg(cmd: string, msgArgs: borrowed MessageArgs,
                        st: borrowed SymTab, type array_dtype,
                        param array_nd: int): MsgTuple throws
@@ -112,6 +115,7 @@ module BigIntMsg {
     }
 
     @arkouda.instantiateAndRegister("set_max_bits")
+    @chplcheck.ignore("UnusedFormal")
     proc setMaxBitsMsg(cmd: string, msgArgs: borrowed MessageArgs,
                        st: borrowed SymTab, type array_dtype,
                        param array_nd: int): MsgTuple throws

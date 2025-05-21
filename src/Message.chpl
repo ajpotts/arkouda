@@ -54,6 +54,7 @@ module Message {
         this.payload = b"";
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc MsgTuple.init(msg: string, msgType: MsgType, msgFormat: MsgFormat, user = "", in payload = b"") {
         this.msg = msg;
         this.msgType = msgType;

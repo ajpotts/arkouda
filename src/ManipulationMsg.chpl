@@ -59,6 +59,7 @@ module ManipulationMsg {
     https://data-apis.org/array-api/latest/API_specification/generated/array_api.broadcast_to.html#array_api.broadcast_to
   */
   @arkouda.instantiateAndRegister(prefix='broadcast')
+  @chplcheck.ignore("UnusedFormal")
   proc broadcastToMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab,
     type array_dtype,
     param array_nd_in: int,
@@ -125,6 +126,7 @@ module ManipulationMsg {
     return st.insert(eOut);
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc broadcastToMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab,
     type array_dtype,
     param array_nd_in: int,
@@ -156,6 +158,7 @@ module ManipulationMsg {
 
   // https://data-apis.org/array-api/latest/API_specification/generated/array_api.concat.html#array_api.concat
   @arkouda.instantiateAndRegister(prefix='concat')
+  @chplcheck.ignore("UnusedFormal")
   proc concatMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
     param pn = Reflection.getRoutineName();
     const nArrays = msgArgs["n"].toScalar(int),
@@ -212,6 +215,7 @@ module ManipulationMsg {
 
   // alternative to 'concatMsg' to be used when the axis argument is 'None'
   @arkouda.instantiateAndRegister(prefix='concatFlat')
+  @chplcheck.ignore("UnusedFormal")
   proc concatFlatMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
     param pn = Reflection.getRoutineName();
     const nArrays = msgArgs["n"].toScalar(int),
@@ -275,7 +279,7 @@ module ManipulationMsg {
       }
 
     } else {
-      if (delBool.size != del.size) { 
+      if delBool.size != del.size { 
         var errorMsg = incompatibleArgumentsError(pn, 
                           "Boolean array argument obj to delete must be one dimensional and match the axis length of %i".format(delBool.size)); 
         mLogger.error(getModuleName(),getRoutineName(),getLineNumber(),errorMsg);                               
@@ -357,7 +361,7 @@ module ManipulationMsg {
       }
 
     } else {
-      if (eIn.shape[axis] != del.size) { 
+      if eIn.shape[axis] != del.size { 
         var errorMsg = incompatibleArgumentsError(pn, 
                           "Boolean array argument obj to delete must be one dimensional and match the axis length of %i".format(eIn.shape[axis])); 
         mLogger.error(getModuleName(),getRoutineName(),getLineNumber(),errorMsg);                               
@@ -449,6 +453,7 @@ module ManipulationMsg {
   // https://data-apis.org/array-api/latest/API_specification/generated/array_api.expand_dims.html#array_api.expand_dims
   // insert a new singleton dimension at the given axis
   @arkouda.instantiateAndRegister(prefix='expandDims')
+  @chplcheck.ignore("UnusedFormal")
   proc expandDimsMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
     param pn = Reflection.getRoutineName();
 
@@ -501,6 +506,7 @@ module ManipulationMsg {
 
   // https://data-apis.org/array-api/latest/API_specification/generated/array_api.flip.html#array_api.flip
   @arkouda.instantiateAndRegister(prefix='flip')
+  @chplcheck.ignore("UnusedFormal")
   proc flipMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
     param pn = Reflection.getRoutineName();
     const name = msgArgs["name"],
@@ -569,6 +575,7 @@ module ManipulationMsg {
 
   // alternative to 'flipMsg' to be used when the axis argument is 'None'
   @arkouda.instantiateAndRegister(prefix='flipAll')
+  @chplcheck.ignore("UnusedFormal")
   proc flipAllMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
     param pn = Reflection.getRoutineName();
     const name = msgArgs["name"];
@@ -600,6 +607,7 @@ module ManipulationMsg {
 
   // https://data-apis.org/array-api/latest/API_specification/generated/array_api.permute_dims.html#array_api.permute_dims
   @arkouda.instantiateAndRegister(prefix='permuteDims')
+  @chplcheck.ignore("UnusedFormal")
   proc permuteDims(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
     param pn = Reflection.getRoutineName();
     const name = msgArgs["name"],
@@ -650,6 +658,7 @@ module ManipulationMsg {
 
   // https://data-apis.org/array-api/latest/API_specification/generated/array_api.reshape.html#array_api.reshape
   @arkouda.instantiateAndRegister(prefix='reshape')
+  @chplcheck.ignore("UnusedFormal")
   proc reshapeMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab,
     type array_dtype,
     param array_nd_in: int,
@@ -732,6 +741,7 @@ module ManipulationMsg {
 
   // https://data-apis.org/array-api/latest/API_specification/generated/array_api.roll.html#array_api.roll
   @arkouda.instantiateAndRegister(prefix='roll')
+  @chplcheck.ignore("UnusedFormal")
   proc rollMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
     param pn = Reflection.getRoutineName();
     const name = msgArgs["name"],
@@ -748,7 +758,7 @@ module ManipulationMsg {
 
     var shifts: [0..<nAxes] int;
     if nShifts == 1
-      then shifts = [i in 0..<nAxes] shiftsRaw[0];
+      then shifts = [0..<nAxes] shiftsRaw[0];
       else shifts = shiftsRaw;
     var eIn = st[name]: borrowed SymEntry(array_dtype, array_nd),
         (valid, axes) = validateAxes(axesRaw, array_nd);
@@ -797,6 +807,7 @@ module ManipulationMsg {
 
   // alternative to 'rollMsg' to be used when the axis argument is 'None'
   @arkouda.instantiateAndRegister(prefix='rollFlattened')
+  @chplcheck.ignore("UnusedFormal")
   proc rollFlattenedMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
     param pn = Reflection.getRoutineName();
     const name = msgArgs["name"],
@@ -818,6 +829,7 @@ module ManipulationMsg {
 
   // https://data-apis.org/array-api/latest/API_specification/generated/array_api.squeeze.html#array_api.squeeze
   @arkouda.instantiateAndRegister(prefix='squeeze')
+  @chplcheck.ignore("UnusedFormal")
   proc squeezeMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab,
     type array_dtype,
     param array_nd_in: int,
@@ -899,6 +911,7 @@ module ManipulationMsg {
 
   // https://data-apis.org/array-api/latest/API_specification/generated/array_api.stack.html#array_api.stack
   @arkouda.instantiateAndRegister(prefix='stack')
+  @chplcheck.ignore("UnusedFormal")
   proc stackMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
     param pn = Reflection.getRoutineName();
 
@@ -990,6 +1003,7 @@ module ManipulationMsg {
   //  * reshaping the array to add singleton dimensions (if reps is longer than the array's shape)
   //  * prepending 1's to reps (if reps is shorter than the array's shape)
   @arkouda.instantiateAndRegister(prefix='tile')
+  @chplcheck.ignore("UnusedFormal")
   proc tileMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
     param pn = Reflection.getRoutineName();
     const name = msgArgs["name"],
@@ -1112,6 +1126,7 @@ module ManipulationMsg {
   // https://data-apis.org/array-api/latest/API_specification/generated/array_api.unstack.html
   // unstack an array into multiple arrays along a specified axis
   @arkouda.instantiateAndRegister(prefix='unstack')
+  @chplcheck.ignore("UnusedFormal")
   proc unstackMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
     param pn = Reflection.getRoutineName();
 
@@ -1134,7 +1149,7 @@ module ManipulationMsg {
       return new MsgTuple(errMsg,MsgType.ERROR);
     }
 
-    var eOuts = for i in 0..#numReturnArrays do createSymEntry((...shapeOut), array_dtype);
+    var eOuts = for 0..#numReturnArrays do createSymEntry((...shapeOut), array_dtype);
 
     // copy the data from the input array to the output arrays while unstacking
     for arrIdx in 0..<numReturnArrays {
@@ -1196,6 +1211,7 @@ module ManipulationMsg {
   // flattens the input array and repeats each element 'repeats' times
   // if 'repeats' is an array, it must have the same number of elements as the input array
   @arkouda.instantiateAndRegister(prefix='repeatFlat')
+  @chplcheck.ignore("UnusedFormal")
   proc repeatFlatMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
     param pn = Reflection.getRoutineName();
     const name = msgArgs["name"],
@@ -1226,7 +1242,7 @@ module ManipulationMsg {
       // compute the number of repeated elements in the output array owned by each task
       const nTasksPerLoc = here.maxTaskPar;
       var nRepsPerTask: [0..<numLocales] [0..<nTasksPerLoc] int;
-      coforall loc in Locales with (ref nRepsPerTask) do on loc {
+      coforall loc in Locales do on loc {
         const lsd = aFlat.localSubdomain(),
               indicesPerTask = lsd.size / nTasksPerLoc;
         coforall tid in 0..<nTasksPerLoc with (ref nRepsPerTask) {
@@ -1282,7 +1298,7 @@ module ManipulationMsg {
     var found = false;
 
     const nTasks=here.maxTaskPar;
-    coforall loc in Locales with (|| reduce found) do on loc {
+    coforall loc in Locales do on loc {
       const locDom = a.localSubdomain(),
             nPerTask = locDom.size / nTasks;
 

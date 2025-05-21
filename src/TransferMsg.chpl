@@ -42,6 +42,7 @@ module TransferMsg
       return (numColumns, objNames);
     }
     
+    @chplcheck.ignore("UnusedFormal")
     proc sendDataFrameMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
       param pn = Reflection.getRoutineName();
       
@@ -237,7 +238,7 @@ module TransferMsg
         st.addEntry(rname, entry);
       }
       
-      for (i, obj) in zip(0..#objNames.size, objNames) {
+      for (_, obj) in zip(0..#objNames.size, objNames) {
         var colName = receiveColumnName(hostname, port);
         var objParts = obj.split("+");
         ref currObjType = objParts[0];
@@ -372,6 +373,7 @@ module TransferMsg
       return new MsgTuple(repMsg, MsgType.NORMAL);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc sendArrMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
       var objType: ObjType = msgArgs.getValueOf("objType").toUpper(): ObjType;
 
@@ -551,6 +553,7 @@ module TransferMsg
       }
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc receiveArrMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
       var hostname = msgArgs.getValueOf("hostname");
       var port = msgArgs.getValueOf("port");
@@ -693,6 +696,7 @@ module TransferMsg
       return new MsgTuple(repMsg, MsgType.NORMAL);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc sendData(e, hostname:string, intersections, ports) throws {
       coforall loc in Locales do on loc {
         var locdom = e.a.localSubdomain();
@@ -759,6 +763,7 @@ module TransferMsg
       return (intersections, ports, names);
     }
     
+    @chplcheck.ignore("UnusedFormal")
     proc sendSetupInfo(port:string, A: [] ?t, names, objType: string, localeCount) throws {
       var context: Context;
       var socket = context.socket(ZMQ.PUSH);

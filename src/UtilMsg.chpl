@@ -112,6 +112,7 @@ module UtilMsg {
     Implements the 'constant' mode of numpy.pad: https://numpy.org/doc/stable/reference/generated/numpy.pad.html
   */
   @arkouda.instantiateAndRegister
+  @chplcheck.ignore("UnusedFormal")
   proc pad(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws 
     where (array_dtype == int) || (array_dtype == uint(8)) || (array_dtype == uint(64)) || (array_dtype == real) || (array_dtype == bool) {
 

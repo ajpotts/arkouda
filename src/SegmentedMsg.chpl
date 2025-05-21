@@ -57,7 +57,7 @@ module SegmentedMsg {
       const comp = msgArgs.getValueOf("comp");
       if comp == "offsets" {
           return MsgTuple.payload(tondarrayMsg(entry.offsets));
-      } else if (comp == "values") {
+      } else if comp == "values" {
           return MsgTuple.payload(tondarrayMsg(entry.values));
       } else {
           const msg = "Unrecognized component: %s".format(comp);
@@ -100,6 +100,7 @@ module SegmentedMsg {
        return arrayBytes;
     }
 
+  @chplcheck.ignore("UnusedFormal")
   proc randomStringsMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
       var pn = Reflection.getRoutineName();
       const dist = msgArgs.getValueOf("dist");
@@ -170,6 +171,7 @@ module SegmentedMsg {
     return new MsgTuple(repMsg, MsgType.NORMAL);
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc getSegStringPropertyMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
     var pn = Reflection.getRoutineName();
     const property = msgArgs.getValueOf("property");
@@ -543,6 +545,7 @@ module SegmentedMsg {
     return new MsgTuple(repMsg, MsgType.NORMAL);
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc segmentedStripMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
     var pn = Reflection.getRoutineName();
     var repMsg: string;
@@ -671,6 +674,7 @@ module SegmentedMsg {
     return new MsgTuple(repMsg, MsgType.NORMAL);
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc segmentedHashMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
     var pn = Reflection.getRoutineName();
     var repMsg: string;
@@ -726,6 +730,7 @@ module SegmentedMsg {
    * 2. sliceIndex : segSliceIndex
    * 3. pdarrayIndex : segPdarrayIndex
   */ 
+  @chplcheck.ignore("UnusedFormal")
   proc segmentedIndexMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
     var pn = Reflection.getRoutineName();
     var repMsg: string;
@@ -769,6 +774,7 @@ module SegmentedMsg {
   /*
   Returns the object corresponding to the index
   */ 
+  @chplcheck.ignore("UnusedFormal")
   proc segIntIndex(objtype: ObjType, objName: string, key: string, dtype: DType,
                                          st: borrowed SymTab): MsgTuple throws {
       var pn = Reflection.getRoutineName();
@@ -802,7 +808,7 @@ module SegmentedMsg {
   /* Allow Python-style negative indices. */
   proc convertPythonIndexToChapel(pyidx: int, high: int): int {
     var chplIdx: int;
-    if (pyidx < 0) {
+    if pyidx < 0 {
       chplIdx = high + 1 + pyidx;
     } else {
       chplIdx = pyidx;
@@ -810,6 +816,7 @@ module SegmentedMsg {
     return chplIdx;
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc segSliceIndex(objtype: ObjType, objName: string, key: [] string, dtype: DType,
                                          st: borrowed SymTab): MsgTuple throws {
     var pn = Reflection.getRoutineName();
@@ -845,7 +852,7 @@ module SegmentedMsg {
   }
 
   proc convertPythonSliceToChapel(start:int, stop:int): range() {
-    if (start <= stop) {
+    if start <= stop {
       return start..(stop-1);
     } else {
       return 1..0;
@@ -864,6 +871,7 @@ module SegmentedMsg {
     return slice;
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc segPdarrayIndex(objtype: ObjType, objName: string, iname: string, dtype: DType,
                        st: borrowed SymTab): MsgTuple throws {
     var pn = Reflection.getRoutineName();
@@ -932,6 +940,7 @@ module SegmentedMsg {
     return new MsgTuple(repMsg, MsgType.NORMAL);
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc segBinopvvMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
     var pn = Reflection.getRoutineName();
     var repMsg: string;
@@ -995,6 +1004,7 @@ module SegmentedMsg {
     return new MsgTuple(repMsg, MsgType.NORMAL);
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc segBinopvsMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
       var pn = Reflection.getRoutineName();
       var repMsg: string;
@@ -1040,6 +1050,7 @@ module SegmentedMsg {
       return new MsgTuple(repMsg, MsgType.NORMAL);
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc segIn1dMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
       var pn = Reflection.getRoutineName();
       var repMsg: string;
@@ -1074,6 +1085,7 @@ module SegmentedMsg {
       return new MsgTuple(repMsg, MsgType.NORMAL);
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc segGroupMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
       var pn = Reflection.getRoutineName();
       const objtype = msgArgs.getValueOf("objType").toUpper(): ObjType;
@@ -1101,6 +1113,7 @@ module SegmentedMsg {
       return new MsgTuple(repMsg, MsgType.NORMAL);
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc stringsToJSONMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
     var strings = getSegString(msgArgs.getValueOf("name"), st);
     var size = strings.size;
@@ -1114,6 +1127,7 @@ module SegmentedMsg {
     return new MsgTuple(repMsg, MsgType.NORMAL);
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc segmentedSubstringMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
     var pn = Reflection.getRoutineName();
     var repMsg: string;
@@ -1148,6 +1162,7 @@ module SegmentedMsg {
     }
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc segmentedWhereMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
     var repMsg: string;
     const segStrName = msgArgs.getValueOf("seg_str");
@@ -1175,6 +1190,7 @@ module SegmentedMsg {
     return new MsgTuple(repMsg, MsgType.NORMAL);
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc segmentedFullMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
     var repMsg: string;
     const segStrSize = msgArgs.getValueOf("size"): int;
@@ -1187,6 +1203,7 @@ module SegmentedMsg {
     return new MsgTuple(repMsg, MsgType.NORMAL);
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc flipStringMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
     const name = msgArgs.getValueOf("obj");
 

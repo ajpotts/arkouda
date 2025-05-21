@@ -32,6 +32,7 @@ module MsgProcessing
     :returns: (MsgTuple) response message
     */
     @arkouda.instantiateAndRegister
+    @chplcheck.ignore("UnusedFormal")
     proc create(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
         const shape = msgArgs["shape"].toScalarTuple(int, array_nd);
 
@@ -46,6 +47,7 @@ module MsgProcessing
     }
 
     @arkouda.instantiateAndRegister
+    @chplcheck.ignore("UnusedFormal")
     proc createScalarArray(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype): MsgTuple throws {
         const value = msgArgs["value"].toScalar(array_dtype);
 
@@ -104,6 +106,7 @@ module MsgProcessing
 
     :returns: MsgTuple
      */
+    @chplcheck.ignore("UnusedFormal")
     proc clearMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         var repMsg: string; // response message
         mpLogger.debug(getModuleName(),getRoutineName(),getLineNumber(), "cmd: %s".format(cmd));
@@ -126,6 +129,7 @@ module MsgProcessing
 
     :returns: MsgTuple
      */
+    @chplcheck.ignore("UnusedFormal")
     proc infoMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         var repMsg: string; // response message
         const name = msgArgs.getValueOf("names");
@@ -147,6 +151,7 @@ module MsgProcessing
 
     :returns: MsgTuple
      */
+    @chplcheck.ignore("UnusedFormal")
     proc getconfigMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         var repMsg: string; // response message
         mpLogger.debug(getModuleName(),getRoutineName(),getLineNumber(),"cmd: %s".format(cmd));
@@ -224,6 +229,7 @@ module MsgProcessing
      *
      * :returns: MsgTuple containing JSON formatted string of cmd -> function mapping
      */
+    @chplcheck.ignore("UnusedFormal")
     proc getCommandMapMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab) throws {
         // We can ignore the args, we just need it to match the CommandMap call signature
         import CommandMap;
@@ -273,6 +279,7 @@ module MsgProcessing
 
        :returns: MsgTuple
       */ 
+    @chplcheck.ignore("UnusedFormal")
     proc reprMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         var repMsg: string; // response message
         const name = msgArgs.getValueOf("array");
@@ -296,6 +303,7 @@ module MsgProcessing
     :throws: `UndefinedSymbolError(name)`
     */
     @arkouda.instantiateAndRegister(prefix="set")
+    @chplcheck.ignore("UnusedFormal")
     proc setMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
         var e = st[msgArgs["array"]]: SymEntry(array_dtype, array_nd);
         e.a = msgArgs["val"].toScalar(array_dtype);
@@ -311,6 +319,7 @@ module MsgProcessing
         and 0 and 20 in the second dimension.
     */
     @arkouda.registerCommand
+    @chplcheck.ignore("UnusedFormal")
     proc chunkInfoAsString(array: [?d] ?t): string throws
     where (t == bool) || (t == int(64)) || (t == uint(64)) || (t == uint(8)) ||(t == real) {
 
@@ -340,6 +349,7 @@ module MsgProcessing
     }
 
     @arkouda.registerCommand
+    @chplcheck.ignore("UnusedFormal")
     proc chunkInfoAsArray(array: [?d] ?t):[] int throws
     where (t == bool) || (t == int(64)) || (t == uint(64)) || (t == uint(8)) ||(t == real) {
         var outShape = (d.rank, numLocales);

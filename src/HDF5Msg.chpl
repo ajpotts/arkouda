@@ -98,7 +98,7 @@ module HDF5Msg {
         If mode is not 1 (Append) or 0 (Truncate) error
     */
     proc validateWriteMode(mode: int) throws {
-        if (mode != APPEND && mode != TRUNCATE) {
+        if mode != APPEND && mode != TRUNCATE {
             throw getErrorWithContext(
                            msg="Unknown write mode %i found.".format(mode),
                            lineNumber=getLineNumber(),
@@ -123,8 +123,8 @@ module HDF5Msg {
         var matchingFilenames = glob("%s*%s".format(prefix, extension));
         
         var fileExists: bool = matchingFilenames.size > 0;
-        if (mode == TRUNCATE || (mode == APPEND && !fileExists)) {
-            if (mode == TRUNCATE && fileExists){
+        if mode == TRUNCATE || (mode == APPEND && !fileExists) {
+            if mode == TRUNCATE && fileExists{
                 remove(f);
             }
 
@@ -181,7 +181,7 @@ module HDF5Msg {
         var matchingFilenames = glob("%s_LOCALE*%s".format(prefix, extension));
         var filesExist: bool = matchingFilenames.size > 0;
 
-        if (mode == TRUNCATE || (mode == APPEND && !filesExist)) {
+        if mode == TRUNCATE || (mode == APPEND && !filesExist) {
             coforall loc in A.targetLocales() do on loc {
                 var file_id: C_HDF5.hid_t;
                 var fn = filenames[loc.id].localize();
@@ -297,7 +297,7 @@ module HDF5Msg {
     proc validateDataset(file_id: C_HDF5.hid_t, filename: string, dset_name: string, overwrite: bool) throws {
         // validate that the dataset does not already exist
         var dset_exists: int = C_HDF5.H5Lexists(file_id, dset_name.localize().c_str(), C_HDF5.H5P_DEFAULT);
-        if (dset_exists > 0 && overwrite) {
+        if dset_exists > 0 && overwrite {
             var del_status: int = C_HDF5.H5Ldelete(file_id, dset_name.localize().c_str(), C_HDF5.H5P_DEFAULT);
             if del_status < 0 {
                 throw getErrorWithContext(
@@ -332,7 +332,7 @@ module HDF5Msg {
     */
     proc validateGroup(file_id: C_HDF5.hid_t, filename: string, group: string, overwrite: bool) throws {
         var group_exists: int = C_HDF5.H5Lexists(file_id, group.localize().c_str(), C_HDF5.H5P_DEFAULT);
-        if (group_exists > 0 && overwrite) {
+        if group_exists > 0 && overwrite {
             var del_status: int = C_HDF5.H5Ldelete(file_id, group.localize().c_str(), C_HDF5.H5P_DEFAULT);
             if del_status < 0 {
                 throw getErrorWithContext(
@@ -671,6 +671,7 @@ module HDF5Msg {
     /*
         write 1d array to dataset in files distributed over locales
     */
+    @chplcheck.ignore("UnusedFormal")
     proc writeDistDset(filenames: [] string, dset_name: string, objType: string, overwrite: bool, A, st: borrowed SymTab, shape_name: string = "") throws {
         coforall (loc, idx) in zip(A.targetLocales(), filenames.domain) do on loc {
             const localeFilename = filenames[idx];
@@ -963,7 +964,7 @@ module HDF5Msg {
         C_HDF5.H5Sclose(attrSpaceId);
         C_HDF5.H5Dclose(dset_id);
 
-        if (writeOffsets) {
+        if writeOffsets {
             // create empty segments dataset
             C_HDF5.H5LTmake_dataset_WAR(fileId, "/%s/%s".format(group, SEGMENTED_OFFSET_NAME).c_str(), 1,
                 c_ptrTo(zero), getHDF5Type(int), nil);
@@ -1125,6 +1126,7 @@ module HDF5Msg {
         writeArkoudaMetaData(file_id, "%s/%s".format(group, SEGMENTED_OFFSET_NAME), "pdarray", getDataType(int));
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc writeSegmentedDistDset(filenames: [] string, group: string, objType: string, overwrite: bool, values, segments, st: borrowed SymTab, type t, max_bits: int = -1) throws {
         const lastSegIdx = segments.domain.high;
         const lastValIdx = values.domain.high;
@@ -1146,7 +1148,7 @@ module HDF5Msg {
             var dims: [0..#1] C_HDF5.hsize_t;
             dims[0] = locDom.size: C_HDF5.hsize_t;
 
-            if (locDom.isEmpty() || locDom.size <= 0) {
+            if locDom.isEmpty() || locDom.size <= 0 {
                 h5Logger.debug(getModuleName(),getRoutineName(),getLineNumber(),
                     "write1DDistStringsAggregators: locale.id %i has empty locDom.size %i, will get empty dataset."
                     .format(loc.id, locDom.size));
@@ -1155,7 +1157,7 @@ module HDF5Msg {
                 // write the segments
                 var localSegs = segments[locDom];
                 var startValIdx = localSegs[locDom.low];
-                var endValIdx = if (lastSegIdx == locDom.high) then lastValIdx else segments[locDom.high + 1] - 1;
+                var endValIdx = if lastSegIdx == locDom.high then lastValIdx else segments[locDom.high + 1] - 1;
                 var valIdxRange = startValIdx..endValIdx;
 
                 var localVals: [valIdxRange] t;
@@ -1196,6 +1198,7 @@ module HDF5Msg {
     * String offsets are localized to SegArray offsets. The String values are then localized to ensure entire
     * value of the string can be read.
     */
+    @chplcheck.ignore("UnusedFormal")
     proc writeNestedSegmentedDistDset(filenames: [] string, group: string, objType: string, overwrite: bool, values, segments, st: borrowed SymTab, type t) throws {
         ref strSegs = values.offsetsEntry.a;
         ref strVals = values.bytesEntry.a;
@@ -1220,7 +1223,7 @@ module HDF5Msg {
             var dims: [0..#1] C_HDF5.hsize_t;
             dims[0] = locDom.size: C_HDF5.hsize_t;
 
-            if (locDom.isEmpty() || locDom.size <= 0) {
+            if locDom.isEmpty() || locDom.size <= 0 {
                 h5Logger.debug(getModuleName(),getRoutineName(),getLineNumber(),
                     "write1DDistStringsAggregators: locale.id %i has empty locDom.size %i, will get empty dataset."
                     .format(loc.id, locDom.size));
@@ -1233,7 +1236,7 @@ module HDF5Msg {
                 localSegs = localSegs - startOffIdx;
                 writeSegmentedComponentToHdf(file_id, group, SEGMENTED_OFFSET_NAME, localSegs);
 
-                var endOffIdx = if (lastSegIdx == locDom.high) then lastOffIdx else segments[locDom.high + 1] - 1;
+                var endOffIdx = if lastSegIdx == locDom.high then lastOffIdx else segments[locDom.high + 1] - 1;
                 var offIdxRange = startOffIdx..endOffIdx;
                 if offIdxRange.size > 0 {
                     var localOffsets: [offIdxRange] int;
@@ -1244,7 +1247,7 @@ module HDF5Msg {
 
                     // Copy the String Values local based on the offsets pulled local.
                     var startValIdx = localOffsets[offIdxRange.low];
-                    var endValIdx = if (lastOffIdx == offIdxRange.high) then lastValIdx else strSegs[offIdxRange.high + 1] - 1;
+                    var endValIdx = if lastOffIdx == offIdxRange.high then lastValIdx else strSegs[offIdxRange.high + 1] - 1;
                     var valsIdxRange = startValIdx..endValIdx;
 
                     var localVals: [valsIdxRange] t;
@@ -2630,6 +2633,7 @@ module HDF5Msg {
         Parse and exectue tohdf message.
         Determines the type of the object to be written and calls the corresponding write functionality.
     */
+    @chplcheck.ignore("UnusedFormal")
     proc tohdfMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         var objType: ObjType = msgArgs.getValueOf("objType").toUpper(): ObjType;
 
@@ -2711,11 +2715,12 @@ module HDF5Msg {
          * This is an H5Literate call-back function, c_helper funcs are used to process data in void*
          * this proc counts the number of of HDF5 groups/datasets under the root, non-recursive
          */
+        @chplcheck.ignore("UnusedFormal")
         proc get_item_count(loc_id:C_HDF5.hid_t, name:c_ptr(void), info:c_ptr(void), data:c_ptr(void)) {
             var obj_name = name:c_ptrConst(c_char);
             var obj_type:C_HDF5.H5O_type_t;
             var status:C_HDF5.H5O_type_t = c_get_HDF5_obj_type(loc_id, obj_name, c_ptrTo(obj_type));
-            if (obj_type == C_HDF5.H5O_TYPE_GROUP || obj_type == C_HDF5.H5O_TYPE_DATASET) {
+            if obj_type == C_HDF5.H5O_TYPE_GROUP || obj_type == C_HDF5.H5O_TYPE_DATASET {
                 c_incrementCounter(data);
             }
             return 0; // to continue iteration
@@ -2725,11 +2730,12 @@ module HDF5Msg {
          * This is an H5Literate call-back function, c_helper funcs are used to process data in void*
          * this proc builds string of HDF5 group/dataset objects names under the root, non-recursive
          */
+        @chplcheck.ignore("UnusedFormal")
         proc simulate_h5ls_help(loc_id:C_HDF5.hid_t, name:c_ptr(void), info:c_ptr(void), data:c_ptr(void)) {
             var obj_name = name:c_ptrConst(c_char);
             var obj_type:C_HDF5.H5O_type_t;
             var status:C_HDF5.H5O_type_t = c_get_HDF5_obj_type(loc_id, obj_name, c_ptrTo(obj_type));
-            if (obj_type == C_HDF5.H5O_TYPE_GROUP || obj_type == C_HDF5.H5O_TYPE_DATASET) {
+            if obj_type == C_HDF5.H5O_TYPE_GROUP || obj_type == C_HDF5.H5O_TYPE_DATASET {
                 // items.pushBack(obj_name:string); This doesn't work unless items is global
                 c_append_HDF5_fieldname(data, obj_name);
             }
@@ -2752,6 +2758,7 @@ module HDF5Msg {
         return items;
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc lshdfMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         var repMsg: string;
 
@@ -2890,7 +2897,7 @@ module HDF5Msg {
                 var file_id: C_HDF5.hid_t;
                 var dataset: C_HDF5.hid_t;
 
-                if (skips.contains(filename)) {
+                if skips.contains(filename) {
                     h5Logger.debug(getModuleName(),getRoutineName(),getLineNumber(),
                             "File %s does not contain data for this dataset, skipping".format(filename));
                 } else {
@@ -3029,14 +3036,14 @@ module HDF5Msg {
     }
 
     proc fixupSegBoundaries(a: [?D] int, segSubdoms: [?fD] domain(1), valSubdoms: [fD] domain(1)) throws {
-        if(1 == a.size) { // short circuit case where we only have one string/segment
+        if 1 == a.size { // short circuit case where we only have one string/segment
             return;
         }
         var diffs: [fD] int; // Amount each region must be raised over previous region
         forall (i, sd, vd, d) in zip(fD, segSubdoms, valSubdoms, diffs) {
             // if we encounter a malformed subdomain i.e. {1..0} that means we encountered a file
             // that has no data for this SegString object, we can safely skip processing this file.
-            if (isValidRange(sd)) {
+            if isValidRange(sd) {
                 d = vd.size;
             } else {
                 h5Logger.debug(getModuleName(),getRoutineName(),getLineNumber(),
@@ -3057,6 +3064,7 @@ module HDF5Msg {
         }
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc readBigIntPdarrayFromFile(filenames: [?fD] string, dset: string, dataclass, bytesize: int, isSigned: bool, validFiles: [] bool, st: borrowed SymTab): string throws {
         // read the number of limbs and max bits attributes
         var file_id = C_HDF5.H5Fopen(filenames[0].c_str(), C_HDF5.H5F_ACC_RDONLY, C_HDF5.H5P_DEFAULT);
@@ -3149,7 +3157,7 @@ module HDF5Msg {
         (subdoms, len, skips) = get_subdoms(filenames, dset, validFiles);
         select dataclass {
             when C_HDF5.H5T_INTEGER {
-                if (!isSigned && 8 == bytesize) {
+                if !isSigned && 8 == bytesize {
                     var entryUInt = createSymEntry(len, uint);
                     h5Logger.debug(getModuleName(),getRoutineName(),getLineNumber(), "Initialized uint entry for dataset %s".format(dset));
                     read_files_into_distributed_array(entryUInt.a, subdoms, filenames, dset, skips);
@@ -3219,7 +3227,7 @@ module HDF5Msg {
         var skips = new set(string);
         var len: int;
         var nSeg: int;
-        if (!calcStringOffsets) {
+        if !calcStringOffsets {
             (segSubdoms, nSeg, skips) = get_subdoms(filenames, dset + "/" + SEGMENTED_OFFSET_NAME, validFiles);
         }
         (subdoms, len, skips) = get_subdoms(filenames, dset + "/" + SEGMENTED_VALUE_NAME, validFiles);
@@ -3252,7 +3260,7 @@ module HDF5Msg {
             return offsetsEntry;
         }
 
-        var entrySeg = if (calcStringOffsets || nSeg < 1 || !skips.isEmpty()) then buildEntryCalcOffsets() else buildEntryLoadOffsets();
+        var entrySeg = if calcStringOffsets || nSeg < 1 || !skips.isEmpty() then buildEntryCalcOffsets() else buildEntryLoadOffsets();
 
         return assembleSegStringFromParts(entrySeg, entryVal, st);
     }
@@ -3648,7 +3656,7 @@ module HDF5Msg {
     proc get_dataset_info(file_id, dsetName) throws {
         var dset = C_HDF5.H5Dopen(file_id, dsetName.c_str(),
                                                    C_HDF5.H5P_DEFAULT);
-        if (dset < 0) {
+        if dset < 0 {
             throw getErrorWithContext( 
                 msg="dataset %s does not exist".format(dsetName), 
                 lineNumber=getLineNumber(),
@@ -3725,11 +3733,11 @@ module HDF5Msg {
         try {
             objType = getObjType(file_id, dsetName);
             if objType == ObjType.STRINGS || objType == ObjType.SEGARRAY {
-                if ( !calcStringOffsets ) {
+                if  !calcStringOffsets  {
                     var offsetDset = dsetName + "/" + SEGMENTED_OFFSET_NAME;
                     var (offsetClass, offsetByteSize, offsetSign) = 
                                             try get_dataset_info(file_id, offsetDset);
-                    if (offsetClass != C_HDF5.H5T_INTEGER) {
+                    if offsetClass != C_HDF5.H5T_INTEGER {
                         throw getErrorWithContext(
                             msg="dataset %s has incorrect one or more sub-datasets" +
                             " %s %s".format(dsetName,SEGMENTED_OFFSET_NAME,SEGMENTED_VALUE_NAME), 
@@ -3761,11 +3769,11 @@ module HDF5Msg {
                     (dataclass, bytesize, isSigned) = get_dataset_info(file_id, "%s/IDX_0".format(dsetName));
                 }
                 else if idx_objType == ObjType.STRINGS {
-                    if ( !calcStringOffsets ) {
+                    if  !calcStringOffsets  {
                         var offsetDset = "%s/IDX_0/%s".format(dsetName, SEGMENTED_OFFSET_NAME);
                         var (offsetClass, offsetByteSize, offsetSign) = 
                                                 try get_dataset_info(file_id, offsetDset);
-                        if (offsetClass != C_HDF5.H5T_INTEGER) {
+                        if offsetClass != C_HDF5.H5T_INTEGER {
                             throw getErrorWithContext(
                                 msg="dataset %s has incorrect one or more sub-datasets" +
                                 " %s %s".format(dsetName,SEGMENTED_OFFSET_NAME,SEGMENTED_VALUE_NAME), 
@@ -3804,11 +3812,11 @@ module HDF5Msg {
                     (dataclass, bytesize, isSigned) = get_dataset_info(file_id, "%s/%s".format(dsetName, INDEX_NAME));
                 }
                 else if idx_objType == ObjType.STRINGS {
-                    if ( !calcStringOffsets ) {
+                    if  !calcStringOffsets  {
                         var offsetDset = "%s/%s/%s".format(dsetName, INDEX_NAME, SEGMENTED_OFFSET_NAME);
                         var (offsetClass, offsetByteSize, offsetSign) = 
                                                 try get_dataset_info(file_id, offsetDset);
-                        if (offsetClass != C_HDF5.H5T_INTEGER) {
+                        if offsetClass != C_HDF5.H5T_INTEGER {
                             throw getErrorWithContext(
                                 msg="dataset %s has incorrect one or more sub-datasets" +
                                 " %s %s".format(dsetName,SEGMENTED_OFFSET_NAME,SEGMENTED_VALUE_NAME), 
@@ -3857,6 +3865,7 @@ module HDF5Msg {
         return (objType, dataclass, bytesize, isSigned);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc assign_tags(A, filedomains: [?FD] domain(1), filenames: [FD] string, dsetName: string, skips: set(string)) throws {
         h5Logger.debug(getModuleName(),getRoutineName(),getLineNumber(),
                 "entry.a.targetLocales() = %?".format(A.targetLocales()));
@@ -3876,7 +3885,7 @@ module HDF5Msg {
                 var file_id: C_HDF5.hid_t;
                 var dataset: C_HDF5.hid_t;
 
-                if (skips.contains(filename)) {
+                if skips.contains(filename) {
                     h5Logger.debug(getModuleName(),getRoutineName(),getLineNumber(),
                             "File %s does not contain data for this dataset, skipping".format(filename));
                 } else {
@@ -4008,7 +4017,7 @@ module HDF5Msg {
         var fileErrorCount:int = 0;
         var fileErrorMsg:string = "";
         const AK_META_GROUP = ARKOUDA_HDF5_FILE_METADATA_GROUP(1..ARKOUDA_HDF5_FILE_METADATA_GROUP.size-1); // strip leading slash
-        for dsetName in dsetlist do {
+        for dsetName in dsetlist {
             if dsetName == AK_META_GROUP { // Legacy code to ignore meta group. Meta data no longer in group
                 continue;
             }
@@ -4066,16 +4075,16 @@ module HDF5Msg {
             const isSigned = signFlags[idx];
             for (isValid, name, ot, dc, bs, sf) in zip(validFiles, filenames, objTypeList, dclasses, bytesizes, signFlags) {
                 if isValid {
-                    if (ot != objType) {
+                    if ot != objType {
                         var errorMsg = "Inconsistent objecttype in dataset %s of file %s. Expected: %s, Found: %s".format(dsetName, name, objType:string, ot:string);
                         h5Logger.error(getModuleName(),getRoutineName(),getLineNumber(),errorMsg);
                         return new MsgTuple(errorMsg, MsgType.ERROR);
                     }
-                    else if (dc != dataclass) {
+                    else if dc != dataclass {
                         var errorMsg = "Inconsistent dtype in dataset %s of file %s".format(dsetName, name);
                         h5Logger.error(getModuleName(),getRoutineName(),getLineNumber(),errorMsg);
                         return new MsgTuple(errorMsg, MsgType.ERROR);
-                    } else if (strictTypes && ((bs != bytesize) || (sf != isSigned))) {
+                    } else if strictTypes && ((bs != bytesize) || (sf != isSigned)) {
                         var errorMsg = "Inconsistent precision or sign in dataset %s of file %s\nWith strictTypes, mixing of precision and signedness not allowed (set strictTypes=False to suppress)".format(dsetName, name);
                         h5Logger.error(getModuleName(),getRoutineName(),getLineNumber(),errorMsg);
                         return new MsgTuple(errorMsg, MsgType.ERROR);
@@ -4129,6 +4138,7 @@ module HDF5Msg {
         return new MsgTuple(repMsg,MsgType.NORMAL);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc hdfFileFormatMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         var repMsg: string;
 

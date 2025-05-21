@@ -1061,6 +1061,7 @@ module OperatorMsg
       :throws: `UndefinedSymbolError(name)`
     */
     @arkouda.instantiateAndRegister
+    @chplcheck.ignore("UnusedFormal")
     proc opeqvs(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab,
       type binop_dtype_a,
       type binop_dtype_b,

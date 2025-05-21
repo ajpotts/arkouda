@@ -277,10 +277,10 @@ module EfuncMsg
             var intValue: int(64);
             var realValueRef = x1[outIdx];
             memcpy(c_ptrTo(intValue), c_ptrTo(realValueRef), c_sizeof(real(64)));
-            if ((x1[outIdx] > 0 && x1[outIdx] < x2[outIdx]) || (x1[outIdx] < 0 && x1[outIdx] > x2[outIdx])) {
+            if (x1[outIdx] > 0 && x1[outIdx] < x2[outIdx]) || (x1[outIdx] < 0 && x1[outIdx] > x2[outIdx]) {
                 intValue += 1;
             }
-            if ((x1[outIdx] > 0 && x1[outIdx] > x2[outIdx]) || (x1[outIdx] < 0 && x1[outIdx] < x2[outIdx])) {
+            if (x1[outIdx] > 0 && x1[outIdx] > x2[outIdx]) || (x1[outIdx] < 0 && x1[outIdx] < x2[outIdx]) {
                 intValue -= 1;
             }
             var nextRealValue: real(64);
@@ -348,6 +348,7 @@ module EfuncMsg
     // have been pulled out into their own functions.
 
     @arkouda.instantiateAndRegister
+    @chplcheck.ignore("UnusedFormal")
     proc hash64 (cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int) : MsgTuple throws 
         where ((array_dtype==real || array_dtype==int || array_dtype==uint) && array_nd==1)
     {
@@ -365,6 +366,7 @@ module EfuncMsg
     }
 
     @arkouda.instantiateAndRegister
+    @chplcheck.ignore("UnusedFormal")
     proc hash128 (cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int) : MsgTuple throws 
         where ((array_dtype==real || array_dtype==int || array_dtype==uint) && array_nd==1)
     {
@@ -495,13 +497,13 @@ module EfuncMsg
     // the return type.  The (int,uint) -> real may look odd, but it is done to match numpy.
 
     proc whereReturnType(type ta, type tb) type throws {
-        if ( (ta==real || tb==real) || (ta==int && tb==uint) || (ta==uint && tb==int) ) {
+        if  (ta==real || tb==real) || (ta==int && tb==uint) || (ta==uint && tb==int)  {
             return real ;
-        } else if (ta==int || tb==int) {
+        } else if ta==int || tb==int {
             return int ;
-        } else if (ta==uint || tb==uint) {
+        } else if ta==uint || tb==uint {
             return uint ;
-        } else if (ta==bool || tb==bool) {
+        } else if ta==bool || tb==bool {
             return bool ;
         } else {
           throw new Error ("where does not support types %s %s".format(type2str(ta),type2str(tb))) ; 

@@ -74,19 +74,19 @@ to increase the efficiency of the merge step.
     // top element down
     proc ref heapifyDown() {
       var i = 0;
-      while(i < size) {
+      while i < size {
         const initial = i;
         const l = 2*i+1; // left child
         const r = 2*i+2; // right child
         const cmpLeft = l<size && if isMinReduction then
           data[l](0) > data[i](0) else data[l](0) < data[i](0);
-        if (cmpLeft) then i = l;
+        if cmpLeft then i = l;
         // if right child is more extreme than largest so far
         const cmpRight = r<size && if isMinReduction then
           data[r](0) > data[i](0) else data[r](0) < data[i](0);
-        if (cmpRight) then i = r;
+        if cmpRight then i = r;
         // if the extreme value isn't the initial 
-        if (initial != i) {
+        if initial != i {
           data[i] <=> data[initial];
         } else break;
       }
@@ -122,8 +122,8 @@ to increase the efficiency of the merge step.
       0 else first.domain.high;
     const increment = if v1.isMinReduction then 1 else -1;
     
-    while(if isMin then i <= ret.domain.high else i >= 0) {
-      if(if isMin then first[a] < second[b] else first[a] > second[b]) {
+    while if isMin then i <= ret.domain.high else i >= 0 {
+      if if isMin then first[a] < second[b] else first[a] > second[b] {
         ret[i] = first[a];
         a += increment;
       } else {

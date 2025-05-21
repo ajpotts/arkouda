@@ -1,7 +1,7 @@
 module Registry {
     use MultiTypeRegEntry;
     use ServerConfig;
-    use ServerErrorStrings;;
+    use ServerErrorStrings;
     use Map;
     use List;
     use GenSymIO;
@@ -308,7 +308,7 @@ module Registry {
          * checks to see if a symbol is defined if it is not it throws an exception 
         */
         proc checkTable(name: string, calling_func="check") throws { 
-            if (!tab.contains(name)) { 
+            if !tab.contains(name) { 
                 regLogger.error(getModuleName(),getRoutineName(),getLineNumber(),
                                                 "undefined registry entry: %s".format(name));
                 throw getErrorWithContext(

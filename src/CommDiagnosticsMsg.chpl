@@ -2,37 +2,44 @@ module CommDiagnosticsMsg
 {
     use CommDiagnostics, Message, CommandMap, MultiTypeSymbolTable, Reflection, MultiTypeSymEntry;
 
+    @chplcheck.ignore("UnusedFormal")
     proc ak_startCommDiagnostics(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         startCommDiagnostics();
         return new MsgTuple("commDiagnostics started.", MsgType.NORMAL);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc ak_stopCommDiagnostics(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         stopCommDiagnostics();
         return new MsgTuple("commDiagnostics stopped.", MsgType.NORMAL);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc ak_printCommDiagnosticsTable(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const printEmptyCols = msgArgs['printEmptyCols'].toScalar(bool);
         printCommDiagnosticsTable(printEmptyColumns=printEmptyCols);
         return new MsgTuple("commDiagnostics printed.", MsgType.NORMAL);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc ak_resetCommDiagnostics(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         resetCommDiagnostics();
         return new MsgTuple("commDiagnostics reset.", MsgType.NORMAL);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc ak_startVerboseComm(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         startVerboseComm();
         return new MsgTuple("commDiagnostics set verbose.", MsgType.NORMAL);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc ak_stopVerboseComm(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         stopVerboseComm();
         return new MsgTuple("commDiagnostics unset verbose.", MsgType.NORMAL);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getCommDiagnosticsPut(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const commD = getCommDiagnostics();
         const puts = forall i in 0..#numLocales do commD[i].put;
@@ -40,6 +47,7 @@ module CommDiagnosticsMsg
         return st.insert(e);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getCommDiagnosticsGet(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const commD = getCommDiagnostics();
         const gets = forall i in 0..#numLocales do commD[i].get;
@@ -47,6 +55,7 @@ module CommDiagnosticsMsg
         return st.insert(e);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getCommDiagnosticsPutNb(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const commD = getCommDiagnostics();
         const puts = forall i in 0..#numLocales do commD[i].put_nb;
@@ -54,6 +63,7 @@ module CommDiagnosticsMsg
         return st.insert(e);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getCommDiagnosticsGetNb(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const commD = getCommDiagnostics();
         const gets = forall i in 0..#numLocales do commD[i].get_nb;
@@ -61,6 +71,7 @@ module CommDiagnosticsMsg
         return st.insert(e);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getCommDiagnosticsTestNb(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const commD = getCommDiagnostics();
         const ret = forall i in 0..#numLocales do commD[i].test_nb;
@@ -68,6 +79,7 @@ module CommDiagnosticsMsg
         return st.insert(e);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getCommDiagnosticsWaitNb(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const commD = getCommDiagnostics();
         const ret = forall i in 0..#numLocales do commD[i].wait_nb;
@@ -75,6 +87,7 @@ module CommDiagnosticsMsg
         return st.insert(e);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getCommDiagnosticsTryNb(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const commD = getCommDiagnostics();
         const ret = forall i in 0..#numLocales do commD[i].try_nb;
@@ -82,6 +95,7 @@ module CommDiagnosticsMsg
         return st.insert(e);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getCommDiagnosticsAmo(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const commD = getCommDiagnostics();
         const ret = forall i in 0..#numLocales do commD[i].amo;
@@ -89,6 +103,7 @@ module CommDiagnosticsMsg
         return st.insert(e);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getCommDiagnosticsExecuteOn(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const commD = getCommDiagnostics();
         const ret = forall i in 0..#numLocales do commD[i].execute_on;
@@ -96,6 +111,7 @@ module CommDiagnosticsMsg
         return st.insert(e);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getCommDiagnosticsExecuteOnFast(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const commD = getCommDiagnostics();
         const ret = forall i in 0..#numLocales do commD[i].execute_on_fast;
@@ -103,6 +119,7 @@ module CommDiagnosticsMsg
         return st.insert(e);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getCommDiagnosticsExecuteOnNb(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const commD = getCommDiagnostics();
         const ret = forall i in 0..#numLocales do commD[i].execute_on_nb;
@@ -110,6 +127,7 @@ module CommDiagnosticsMsg
         return st.insert(e);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getCommDiagnosticsCacheGetHits(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const commD = getCommDiagnostics();
         const ret = forall i in 0..#numLocales do commD[i].cache_get_hits;
@@ -117,6 +135,7 @@ module CommDiagnosticsMsg
         return st.insert(e);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getCommDiagnosticsCacheGetMisses(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const commD = getCommDiagnostics();
         const ret = forall i in 0..#numLocales do commD[i].cache_get_misses;
@@ -124,6 +143,7 @@ module CommDiagnosticsMsg
         return st.insert(e);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getCommDiagnosticsCachePutHits(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const commD = getCommDiagnostics();
         const ret = forall i in 0..#numLocales do commD[i].cache_put_hits;
@@ -131,6 +151,7 @@ module CommDiagnosticsMsg
         return st.insert(e);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getCommDiagnosticsCachePutMisses(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const commD = getCommDiagnostics();
         const ret = forall i in 0..#numLocales do commD[i].cache_put_misses;
@@ -138,6 +159,7 @@ module CommDiagnosticsMsg
         return st.insert(e);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getCommDiagnosticsCacheNumPrefetches(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const commD = getCommDiagnostics();
         const ret = forall i in 0..#numLocales do commD[i].cache_num_prefetches;
@@ -145,6 +167,7 @@ module CommDiagnosticsMsg
         return st.insert(e);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getCommDiagnosticsCacheNumPageReadaheads(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const commD = getCommDiagnostics();
         const ret = forall i in 0..#numLocales do commD[i].cache_num_page_readaheads;
@@ -152,6 +175,7 @@ module CommDiagnosticsMsg
         return st.insert(e);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getCommDiagnosticsCachePrefetchUnused(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const commD = getCommDiagnostics();
         const ret = forall i in 0..#numLocales do commD[i].cache_prefetch_unused;
@@ -159,6 +183,7 @@ module CommDiagnosticsMsg
         return st.insert(e);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getCommDiagnosticsCachePrefetchWaited(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const commD = getCommDiagnostics();
         const ret = forall i in 0..#numLocales do commD[i].cache_prefetch_waited;
@@ -166,6 +191,7 @@ module CommDiagnosticsMsg
         return st.insert(e);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getCommDiagnosticsCacheReadaheadUnused(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const commD = getCommDiagnostics();
         const ret = forall i in 0..#numLocales do commD[i].cache_readahead_unused;
@@ -173,6 +199,7 @@ module CommDiagnosticsMsg
         return st.insert(e);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getCommDiagnosticsCacheReadaheadWaited(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         const commD = getCommDiagnostics();
         const ret = forall i in 0..#numLocales do commD[i].cache_readahead_waited;

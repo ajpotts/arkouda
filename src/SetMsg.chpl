@@ -14,6 +14,7 @@ module SetMsg {
   use BigInteger;
 
   @arkouda.instantiateAndRegister
+  @chplcheck.ignore("UnusedFormal")
   proc uniqueValues(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws
     where (array_dtype != BigInteger.bigint) && (array_dtype != uint(8))
   {
@@ -28,6 +29,7 @@ module SetMsg {
   }
 
   @arkouda.instantiateAndRegister
+  @chplcheck.ignore("UnusedFormal")
   proc uniqueCounts(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
     const name = msgArgs.getValueOf("name"),
           eIn = st[msgArgs["name"]]: SymEntry(array_dtype, array_nd),
@@ -42,6 +44,7 @@ module SetMsg {
                                   ]);
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc uniqueCounts(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws
     where (array_dtype == BigInteger.bigint) || (array_dtype == uint(8))
   {
@@ -49,6 +52,7 @@ module SetMsg {
   }
 
   @arkouda.instantiateAndRegister
+  @chplcheck.ignore("UnusedFormal")
   proc uniqueInverse(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
     const name = msgArgs.getValueOf("name"),
           eIn = st[msgArgs["name"]]: SymEntry(array_dtype, array_nd),
@@ -62,6 +66,7 @@ module SetMsg {
                                   ]);
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc uniqueInverse(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws
     where (array_dtype == BigInteger.bigint) || (array_dtype == uint(8))
   {
@@ -69,6 +74,7 @@ module SetMsg {
   }
 
   @arkouda.instantiateAndRegister
+  @chplcheck.ignore("UnusedFormal")
   proc uniqueAll(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws {
     const name = msgArgs.getValueOf("name"),
           eIn = st[msgArgs["name"]]: SymEntry(array_dtype, array_nd),
@@ -84,6 +90,7 @@ module SetMsg {
                                   ]);
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc uniqueAll(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws
     where (array_dtype == BigInteger.bigint) || (array_dtype == uint(8))
   {

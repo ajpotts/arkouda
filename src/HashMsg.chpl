@@ -38,6 +38,7 @@ module HashMsg {
     return (hash1, hash2);
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc categoricalHashMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
     var pn = Reflection.getRoutineName();
     var repMsg: string;
@@ -64,6 +65,7 @@ module HashMsg {
     return new MsgTuple(repMsg, MsgType.NORMAL);
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc hashArraysMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
     var n = msgArgs.get("length").getIntValue();
     var s = msgArgs.get("size").getIntValue();

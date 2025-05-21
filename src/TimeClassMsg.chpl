@@ -40,6 +40,7 @@ module TimeClassMsg {
 
     const UNITS = ("nanosecond", "microsecond", "millisecond", "second", "minute", "hour", "day");
 
+    @chplcheck.ignore("UnusedFormal")
     proc dateTimeAttributesMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         var values: borrowed GenSymEntry = getGenericTypedArrayEntry(msgArgs.getValueOf("values"), st);
         var valuesEntry = toSymEntry(values, int);
@@ -95,6 +96,7 @@ module TimeClassMsg {
         return new MsgTuple(repMsg, MsgType.NORMAL);
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc timeDeltaAttributesMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         var values: borrowed GenSymEntry = getGenericTypedArrayEntry(msgArgs.getValueOf("values"), st);
         var repMsg: string = formatJson(simpleAttributesHelper(toSymEntry(values, int).a, st));

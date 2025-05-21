@@ -7,7 +7,7 @@ module SymArrayDmap {
     /*
         Available domain maps.
     */
-    enum Dmap {defaultRectangular, blockDist};
+    enum Dmap {defaultRectangular, blockDist}
 
     private param defaultDmap = if ChplConfig.CHPL_COMM == "none" then Dmap.defaultRectangular
                                                                     else Dmap.blockDist;

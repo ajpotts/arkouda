@@ -23,7 +23,7 @@ module SegmentedArray {
     proc rotl(h:2*uint(64), n:int):2*uint(64) {
       use BitOps;
       // no rotation
-      if (n == 0) { return h; }
+      if n == 0 { return h; }
       // Rotate each 64-bit word independently, then swap tails
       const (h1, h2) = h;
       // Mask for tail (right-hand portion)

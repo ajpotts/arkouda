@@ -37,6 +37,7 @@ module UniqueMsg
     private config const logChannel = ServerConfig.logChannel;
     const umLogger = new Logger(logLevel, logChannel);
 
+    @chplcheck.ignore("UnusedFormal")
     proc uniqueMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         // flag to return segments and permutation for GroupBy
         const returnGroups = msgArgs.get("returnGroupStr").getBoolValue();
@@ -84,7 +85,7 @@ module UniqueMsg
       overMemLimit(n*size*numBytes(int));
       var repMsg: string;
       // For each input array, gather unique values
-      for (name, objtype, i) in zip(names, types, 0..) {
+      for (name, objtype, _) in zip(names, types, 0..) {
         var newName = st.nextName();
         select objtype.toUpper(): ObjType {
           when ObjType.PDARRAY, ObjType.CATEGORICAL {
@@ -130,7 +131,7 @@ module UniqueMsg
     }
 
     proc uniqueAndCount(n, namesList: [] string, typesList: [] string, assumeSorted: bool, st) throws {
-      if (n > 128) {
+      if n > 128 {
         throw new owned ErrorWithContext("Cannot hash more than 128 arrays",
                                          getLineNumber(),
                                          getRoutineName(),
@@ -271,7 +272,7 @@ module UniqueMsg
       proc rotl(h:2*uint(64), n:int):2*uint(64) {
         use BitOps;
         // no rotation
-        if (n == 0) { return h; }
+        if n == 0 { return h; }
         // Rotate each 64-bit word independently, then swap tails
         const (h1, h2) = h;
         // Mask for tail (right-hand portion)

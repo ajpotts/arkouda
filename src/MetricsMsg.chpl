@@ -15,9 +15,9 @@ module MetricsMsg {
     use IOUtils;
 
     enum MetricCategory{ALL,NUM_REQUESTS,RESPONSE_TIME,AVG_RESPONSE_TIME,TOTAL_RESPONSE_TIME,
-                        TOTAL_MEMORY_USED,SYSTEM,SERVER,SERVER_INFO,NUM_ERRORS};
-    enum MetricScope{GLOBAL,LOCALE,REQUEST,USER};
-    enum MetricDataType{INT,REAL};
+                        TOTAL_MEMORY_USED,SYSTEM,SERVER,SERVER_INFO,NUM_ERRORS}
+    enum MetricScope{GLOBAL,LOCALE,REQUEST,USER}
+    enum MetricDataType{INT,REAL}
 
     private config const logLevel = ServerConfig.logLevel;
     private config const logChannel = ServerConfig.logChannel;
@@ -646,6 +646,7 @@ module MetricsMsg {
         }
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc metricsMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         var category = msgArgs.getValueOf("category"):MetricCategory;
             

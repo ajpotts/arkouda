@@ -35,6 +35,7 @@ module KExtremeMsg
     :type st: borrowed SymTab
     :returns: (MsgTuple) response message
     */
+    @chplcheck.ignore("UnusedFormal")
     proc minkMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         param pn = Reflection.getRoutineName();
         var repMsg: string; // response message
@@ -107,6 +108,7 @@ module KExtremeMsg
     :type st: borrowed SymTab
     :returns: (MsgTuple) response message
     */
+    @chplcheck.ignore("UnusedFormal")
     proc maxkMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
         param pn = Reflection.getRoutineName();
         var repMsg: string; // response message

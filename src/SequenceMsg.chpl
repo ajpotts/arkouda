@@ -25,6 +25,7 @@ module SequenceMsg {
     :returns: MsgTuple
     */
     @arkouda.instantiateAndRegister
+    @chplcheck.ignore("UnusedFormal")
     proc arange(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab, type array_dtype, param array_nd: int): MsgTuple throws 
         where ((array_dtype==int) || (array_dtype==uint(64)) || (array_dtype==bigint)) && (array_nd==1) {
         

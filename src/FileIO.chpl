@@ -18,7 +18,7 @@ module FileIO {
     private config const logChannel = ServerConfig.logChannel;
     const fioLogger = new Logger(logLevel, logChannel);
     
-    enum FileType {HDF5, ARROW, PARQUET, CSV, UNKNOWN};
+    enum FileType {HDF5, ARROW, PARQUET, CSV, UNKNOWN}
 
     proc appendFile(filePath : string, line : string) throws {
         var writer;
@@ -59,7 +59,7 @@ module FileIO {
         var returnLine : string;
         var i = 1;
 
-        for line in lines do {
+        for line in lines {
             returnLine = line;
             if i == lineIndex {
                 break;
@@ -91,7 +91,7 @@ module FileIO {
         var aFile = try! open(filePath, ioMode.rw);
         var lines = try! aFile.lines();
         var line : string;
-        for line in lines do {
+        for line in lines {
             const values = line.split(delimiter);
             fileMap.add(values[0], values[1]);
         }
@@ -162,6 +162,7 @@ module FileIO {
     /*
      * Delete files matching a prefix and following the pattern <prefix>_LOCALE*.
      */
+    @chplcheck.ignore("UnusedFormal")
     proc deleteMatchingFilenamesMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
       var prefix = msgArgs["prefix"].toScalar(string);
       var extension: string;
@@ -225,13 +226,13 @@ module FileIO {
     proc getFileTypeByMagic(header:bytes): FileType {
         var t = FileType.UNKNOWN;
         var length = header.size;
-        if (length >= 4 && MAGIC_PARQUET == header[0..3]) {
+        if length >= 4 && MAGIC_PARQUET == header[0..3] {
             t = FileType.PARQUET;
-        } else if (length >= 8 && MAGIC_HDF5 == header[0..7]) {
+        } else if length >= 8 && MAGIC_HDF5 == header[0..7] {
             t = FileType.HDF5;
-        } else if (length >= 8 && MAGIC_ARROW == header[0..7]) {
+        } else if length >= 8 && MAGIC_ARROW == header[0..7] {
             t = FileType.ARROW;
-        } else if (length >= 8 && MAGIC_CSV == header[0..7]) {
+        } else if length >= 8 && MAGIC_CSV == header[0..7] {
           t = FileType.CSV;
         }
         return t;
@@ -283,6 +284,7 @@ module FileIO {
       return getFileTypeByMagic(getFirstEightBytesFromFile(filename));
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc getFileTypeMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
       var filename = msgArgs.getValueOf("filename");
 
@@ -321,6 +323,7 @@ module FileIO {
       }
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc lsAnyMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
       // Retrieve filename from payload
       var filename: string = msgArgs.getValueOf("filename");
@@ -365,6 +368,7 @@ module FileIO {
       }
     }
 
+    @chplcheck.ignore("UnusedFormal")
     proc globExpansionMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
       var nfiles = msgArgs.get("file_count").getIntValue();
       var filelist: [0..#nfiles] string;

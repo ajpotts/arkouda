@@ -32,7 +32,7 @@ module SegmentedString {
   enum Fixes {
     prefixes,
     suffixes,
-  };  
+  }  
 
   private config param regexMaxCaptures = ServerConfig.regexMaxCaptures;
 
@@ -120,7 +120,7 @@ module SegmentedString {
      * This method should not be called directly. Instead, call one of the
      * getSegString factory methods.
      */
-    proc init(entryName:string, entry:borrowed SegStringSymEntry) {
+    proc init(in entryName:string, in entry:borrowed SegStringSymEntry) {
         name = entryName;
         composite = entry;
         offsets = composite.offsetsEntry: shared SymEntry(int, 1);
@@ -130,7 +130,7 @@ module SegmentedString {
     }
 
     proc show(n: int = 3) throws {
-      if (size >= 2*n) {
+      if size >= 2*n {
         for i in 0..#n {
             ssLogger.info(getModuleName(),getRoutineName(),getLineNumber(),this[i]);
         }
@@ -153,7 +153,7 @@ module SegmentedString {
       var start = offsets.a[idx:int];
       // Index of last (null) byte in string
       var end: int;
-      if (idx == size - 1) {
+      if idx == size - 1 {
         end = nBytes - 1;
       } else {
         end = offsets.a[idx:int+1] - 1;
@@ -180,7 +180,7 @@ module SegmentedString {
       var start = offsets.a[slice.low];
       // End of bytearray slice
       var end: int;
-      if (slice.high == offsets.a.domain.high) {
+      if slice.high == offsets.a.domain.high {
         // if slice includes the last string, go to the end of values
         end = values.a.domain.high;
       } else {
@@ -217,7 +217,7 @@ module SegmentedString {
       use ChplConfig;
       
       // Early return for zero-length result
-      if (D.size == 0) {
+      if D.size == 0 {
         return (makeDistArray(0, int), makeDistArray(0, uint(8)));
       }
       // Check all indices within bounds
@@ -239,7 +239,7 @@ module SegmentedString {
       var right = makeDistArray(D, int);
       var left = makeDistArray(D, int);
       forall (r, l, idx) in zip(right, left, iv) with (var agg = newSrcAggregator(int)) {
-        if (idx == high) {
+        if idx == high {
           agg.copy(r, values.size);
         } else {
           agg.copy(r, oa[idx:int+1]);
@@ -311,7 +311,7 @@ module SegmentedString {
     /* Logical indexing (compress) of strings. */
     proc this(iv: [?D] bool) throws {
       // Index vector must be same domain as array
-      if (D != offsets.a.domain) {
+      if D != offsets.a.domain {
           ssLogger.info(getModuleName(),getRoutineName(),getLineNumber(),
                                                            "Array out of bounds");
           throw new owned OutOfBoundsError();
@@ -328,7 +328,7 @@ module SegmentedString {
       var newSize = steps[high];
       steps -= iv;
       // Early return for zero-length result
-      if (newSize == 0) {
+      if newSize == 0 {
         return (makeDistArray(0, int), makeDistArray(0, uint(8)));
       }
       var segInds = makeDistArray(newSize, int);
@@ -388,14 +388,14 @@ module SegmentedString {
     /* Return lengths of all strings, including null terminator. */
     proc getLengths() throws {
       var lengths = makeDistArray(offsets.a.domain, int);
-      if (size == 0) {
+      if size == 0 {
         return lengths;
       }
       ref oa = offsets.a;
       const low = offsets.a.domain.low;
       const high = offsets.a.domain.high;
       forall (i, o, l) in zip(offsets.a.domain, oa, lengths) {
-        if (i == high) {
+        if i == high {
           l = values.size - o;
         } else {
           l = oa[i+1] - o;
@@ -488,7 +488,7 @@ module SegmentedString {
         var i = 0;
         var first = true;
         for char in interpretAsString(origVals, off..#len, borrow=true).items(){
-          if(first){
+          if first{
             for b in char.toUpper().bytes(){
               valAgg.copy(capitalizedVals[off+i], b:uint(8));
               i += 1;
@@ -672,7 +672,7 @@ module SegmentedString {
       var matchesIndicies = (+ scan numMatches) - numMatches;
       var matchStarts = makeDistArray(totalMatches, int);
       var matchLens = makeDistArray(totalMatches, int);
-      [i in this.values.a.domain] if (matchStartBool[i] == true) {
+      [i in this.values.a.domain] if matchStartBool[i] == true {
         matchStarts[matchTransform[i]] = sparseStarts[i];
         matchLens[matchTransform[i]] = sparseLens[i];
       }
@@ -768,6 +768,7 @@ module SegmentedString {
 
       :returns: Strings – Substrings with pattern matches substituted and (optional) int64 pdarray – For each original string, the number of susbstitutions
     */
+    @chplcheck.ignore("UnusedFormal")
     proc sub(pattern: string, replStr: string, initCount: int, returnNumSubs: bool) throws {
       checkCompile(pattern);
       ref origOffsets = this.offsets.a;
@@ -1067,7 +1068,7 @@ module SegmentedString {
         if oa[i] > D.high {
           // When the last string(s) is/are shorter than the substr
           hasEnough = false;
-        } else if ((i == high) || (oa[i+1] > D.high)) {
+        } else if (i == high) || (oa[i+1] > D.high) {
           hasEnough = ((+ reduce truth) - numHits[oa[i]]) >= times;
         } else {
           hasEnough = (numHits[oa[i+1]] - numHits[oa[i]]) >= times;
@@ -1172,7 +1173,7 @@ module SegmentedString {
     }
 
     proc stick(other: SegString, delim: string, param right: bool) throws {
-        if (offsets.a.domain != other.offsets.a.domain) {
+        if offsets.a.domain != other.offsets.a.domain {
             throw getErrorWithContext(
                            msg="The SegString offsets to not match",
                            lineNumber = getLineNumber(),
@@ -1233,17 +1234,17 @@ module SegmentedString {
 
     proc ediff():[offsets.a.domain] int throws {
       var diff = makeDistArray(offsets.a.domain, int);
-      if (size < 2) {
+      if size < 2 {
         return diff;
       }
       ref oa = offsets.a;
       ref va = values.a;
       const high = offsets.a.domain.high;
       forall (i, a) in zip(offsets.a.domain, diff) {
-        if (i < high) {
+        if i < high {
           var asc: bool;
           const left = oa[i]..oa[i+1]-1;
-          if (i < high - 1) {
+          if i < high - 1 {
             const right = oa[i+1]..oa[i+2]-1;
             a = -memcmp(va, left, va, right);
           } else { // i == high - 1
@@ -1258,7 +1259,7 @@ module SegmentedString {
     }
 
     proc isSorted():bool throws {
-      if (size < 2) {
+      if size < 2 {
         return true;
       }
       return (&& reduce (ediff() >= 0));
@@ -1331,11 +1332,11 @@ module SegmentedString {
     var ret: int = 0;
     for (i, j) in zip(xinds.low..#l, yinds.low..#l) {
       ret = x[i]:int - y[j]:int;
-      if (ret != 0) {
+      if ret != 0 {
         break;
       }
     }
-    if (ret == 0) {
+    if ret == 0 {
       ret = xinds.size - yinds.size;
     }
     return ret;
@@ -1360,7 +1361,7 @@ module SegmentedString {
      or inequality (polarity=false, result is true where elements differ). */
   private proc compare(lss:SegString, rss:SegString, param polarity: bool) throws {
     // String arrays must be same size
-    if (lss.size != rss.size) {
+    if lss.size != rss.size {
         throw getErrorWithContext(
                            msg="The String arrays must be the same size",
                            lineNumber = getLineNumber(),
@@ -1378,7 +1379,7 @@ module SegmentedString {
     // This translates to an initial value of false for == and true for !=
     var truth = makeDistArray(oD, !polarity);
     // Early exit for zero-length result
-    if (lss.size == 0) {
+    if lss.size == 0 {
       return truth;
     }
     ref lvalues = lss.values.a;
@@ -1391,7 +1392,7 @@ module SegmentedString {
       with (var agg = newDstAggregator(bool)) {
       var llen: int;
       var rlen: int;
-      if (idx == oD.high) {
+      if idx == oD.high {
         llen = lvalues.size - lo - 1;
         rlen = rvalues.size - ro - 1;
       } else {
@@ -1399,11 +1400,11 @@ module SegmentedString {
         rlen = roffsets[idx+1] - ro - 1;
       }
       // Only compare bytes if lengths are equal
-      if (llen == rlen) {
+      if llen == rlen {
         var allEqual = true;
         // TO DO: consider an on clause here to ensure at least one access is local
         for pos in 0..#llen {
-          if (lvalues[lo+pos] != rvalues[ro+pos]) {
+          if lvalues[lo+pos] != rvalues[ro+pos] {
             allEqual = false;
             break;
           }
@@ -1592,7 +1593,7 @@ module SegmentedString {
   proc in1d(mainStr: SegString, testStr: SegString, invert=false) throws where useHash {
     use In1d;
     // Early exit for zero-length result
-    if (mainStr.size == 0) {
+    if mainStr.size == 0 {
       var truth = makeDistArray(mainStr.offsets.a.domain, bool);
       return truth;
     }
@@ -1619,10 +1620,10 @@ module SegmentedString {
   proc in1d(mainStr: SegString, testStr: SegString, invert=false) throws where !useHash {
     var truth = makeDistArray(mainStr.offsets.a.domain, bool);
     // Early exit for zero-length result
-    if (mainStr.size == 0) {
+    if mainStr.size == 0 {
       return truth;
     }
-    if (testStr.size <= in1dSortThreshold) {
+    if testStr.size <= in1dSortThreshold {
       for i in 0..#testStr.size {
         truth |= (mainStr == testStr[i]);
       }
@@ -1658,7 +1659,7 @@ module SegmentedString {
         if (i < high) && (l == lengths[i+1]) {
           const left = o..saro[i+1]-1;
           var eq: bool;
-          if (i < high - 1) {
+          if i < high - 1 {
             const right = saro[i+1]..saro[i+2]-1;
             eq = (memcmp(sarv, left, sarv, right) == 0);
           } else {

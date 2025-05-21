@@ -13,6 +13,7 @@ module FlattenMsg {
   private config const logChannel = ServerConfig.logChannel;
   const fmLogger = new Logger(logLevel, logChannel);
 
+  @chplcheck.ignore("UnusedFormal")
   proc segFlattenMsg(cmd: string, msgArgs: borrowed MessageArgs, st: borrowed SymTab): MsgTuple throws {
     const objtype = msgArgs.getValueOf("objtype").toUpper(): ObjType;
     const returnSegs: bool = msgArgs.get("return_segs").getBoolValue();

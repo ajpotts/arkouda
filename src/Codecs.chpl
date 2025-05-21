@@ -15,7 +15,7 @@ module Codecs {
       }
       var cRes: c_ptrConst(c_char);
       var rc = idn2_to_ascii_lz(obj:c_ptrConst(c_char), cRes, 0);
-      if (rc != IDNA_SUCCESS) {
+      if rc != IDNA_SUCCESS {
         throw new Error("Encode failed");
       }
       var tmp = cRes: c_ptr(uint(8));
@@ -32,7 +32,7 @@ module Codecs {
       }
       var cRes: c_ptrConst(c_char);
       var rc = idn2_to_unicode_8z8z(obj:c_ptrConst(c_char), cRes, 0);
-      if (rc != IDNA_SUCCESS) {
+      if rc != IDNA_SUCCESS {
         throw new Error("Decode failed");
       }
       var tmp = cRes: c_ptr(uint(8));
@@ -65,7 +65,7 @@ module Codecs {
       if toEncoding == "IDNA" {
         var cRes: c_ptrConst(c_char);
         var rc = idn2_to_ascii_lz(obj:c_ptrConst(c_char), cRes, 0);
-        if (rc != IDNA_SUCCESS) {
+        if rc != IDNA_SUCCESS {
           // Error condition, we just want this to be empty string
           idn2_free(cRes: c_ptr(void));
           return 1;
@@ -81,7 +81,7 @@ module Codecs {
         }
         var cRes: c_ptrConst(c_char);
         var rc = idn2_to_unicode_8z8z(obj:c_ptrConst(c_char), cRes, 0);
-        if (rc != IDNA_SUCCESS) {
+        if rc != IDNA_SUCCESS {
           // Error condition, we just want this to be empty string
           idn2_free(cRes: c_ptr(void));
           return 1;

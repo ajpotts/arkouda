@@ -79,6 +79,7 @@ module SparseMatrix {
     return spsMat.domain.localSubdomain();
   }
 
+  @chplcheck.ignore("UnusedFormal")
   proc getLSA(const ref spsMat, rowBlockIdx: int, colBlockIdx: int) const ref
     where spsMat.chpl_isNonDistributedArray()
   {
@@ -95,6 +96,7 @@ module SparseMatrix {
     Fill the rows, cols, and vals arrays with the non-zero indices and values
     from the sparse matrix in row-major order.
   */
+  @chplcheck.ignore("UnusedFormal")
   proc sparseMatToPdarray(const ref spsMat, ref rows, ref cols, ref vals, param layout: Layout)
     where layout == Layout.CSR
   {
@@ -158,6 +160,7 @@ module SparseMatrix {
   //   Fill the rows, cols, and vals arrays with the non-zero indices and values
   //   from the sparse matrix in col-major order.
   // */
+  @chplcheck.ignore("UnusedFormal")
   proc sparseMatToPdarray(const ref spsMat, ref rows, ref cols, ref vals, param layout: Layout)
     where layout == Layout.CSC
   {
@@ -380,6 +383,7 @@ module SparseMatrix {
   // of nonzeroes to be passed in and updated rather than assuming that
   // the multiplication is the first/only step.
   //
+  @chplcheck.ignore("UnusedFormal")
   proc sparseMatMatMult(A, B, ref spsData) {
     forall ac_br in A.cols() with (merge reduce spsData) do
       for (ar, a) in A.rowsAndVals(ac_br) do
@@ -565,7 +569,7 @@ module SparseMatrix {
     enum Layout {
       CSR,
       CSC
-    };
+    }
 
     config const seed = 0;
 
@@ -673,6 +677,7 @@ module SparseMatrix {
         }
       }
 
+      @chplcheck.ignore("UnusedFormal")
       proc accumulateOntoState(ref state, x) {
         halt("Error, shouldn't call merge.accumulateOntoState()");
       }

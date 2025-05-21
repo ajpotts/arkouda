@@ -119,7 +119,7 @@ module BinOp
       // type is bool and `l` and `r` are not both boolean, so this does
       // not need to be specialized for each case.
       else {
-        if ((l.etype == real && r.etype == bool) || (l.etype == bool && r.etype == real)) {
+        if (l.etype == real && r.etype == bool) || (l.etype == bool && r.etype == real) {
           select op {
             when "<" {
               e = l.a:real < r.a:real;
@@ -200,13 +200,13 @@ module BinOp
             ref ea = e;
             ref la = l.a;
             ref ra = r.a;
-            [(ei,li,ri) in zip(ea,la,ra)] if (0 <= ri && ri < 64) then ei = li << ri;
+            [(ei,li,ri) in zip(ea,la,ra)] if 0 <= ri && ri < 64 then ei = li << ri;
           }                    
           when ">>" {
             ref ea = e;
             ref la = l.a;
             ref ra = r.a;
-            [(ei,li,ri) in zip(ea,la,ra)] if (0 <= ri && ri < 64) then ei = li >> ri;
+            [(ei,li,ri) in zip(ea,la,ra)] if 0 <= ri && ri < 64 then ei = li >> ri;
           }
           when "<<<" {
             e = rotl(l.a, r.a);
@@ -249,13 +249,13 @@ module BinOp
           ref ea = e;
           ref la = l.a;
           ref ra = r.a;
-          [(ei,li,ri) in zip(ea,la,ra)] if (0 <= ri && ri < 64) then ei = li >> ri;
+          [(ei,li,ri) in zip(ea,la,ra)] if 0 <= ri && ri < 64 then ei = li >> ri;
         }
         when "<<" {
           ref ea = e;
           ref la = l.a;
           ref ra = r.a;
-          [(ei,li,ri) in zip(ea,la,ra)] if (0 <= ri && ri < 64) then ei = li << ri;
+          [(ei,li,ri) in zip(ea,la,ra)] if 0 <= ri && ri < 64 then ei = li << ri;
         }
         when ">>>" {
           e = rotr(l.a, r.a);
@@ -329,7 +329,7 @@ module BinOp
           otherwise do return MsgTuple.error(nie);
         }
       return st.insert(new shared SymEntry(e));
-    } else if ((l.etype == uint && r.etype == real) || (l.etype == real && r.etype == uint)) {
+    } else if (l.etype == uint && r.etype == real) || (l.etype == real && r.etype == uint) {
       select op {
           when "+" {
             e = l.a:real + r.a:real;
@@ -361,7 +361,7 @@ module BinOp
           otherwise do return MsgTuple.error(nie);
         }
       return st.insert(new shared SymEntry(e));
-    } else if ((l.etype == int && r.etype == bool) || (l.etype == bool && r.etype == int)) {
+    } else if (l.etype == int && r.etype == bool) || (l.etype == bool && r.etype == int) {
       select op {
           when "+" {
             // Since we don't know which of `l` or `r` is the int and which is the `bool`,
@@ -379,18 +379,18 @@ module BinOp
             ref ea = e;
             ref la = l.a;
             ref ra = r.a;
-            [(ei,li,ri) in zip(ea,la,ra)] if (0 <= ri && ri < 64) then ei = li:int >> ri:int;
+            [(ei,li,ri) in zip(ea,la,ra)] if 0 <= ri && ri < 64 then ei = li:int >> ri:int;
           }
           when "<<" {
             ref ea = e;
             ref la = l.a;
             ref ra = r.a;
-            [(ei,li,ri) in zip(ea,la,ra)] if (0 <= ri && ri < 64) then ei = li:int << ri:int;
+            [(ei,li,ri) in zip(ea,la,ra)] if 0 <= ri && ri < 64 then ei = li:int << ri:int;
           }
           otherwise do return MsgTuple.error(nie);
         }
       return st.insert(new shared SymEntry(e));
-    } else if ((l.etype == uint && r.etype == bool) || (l.etype == bool && r.etype == uint)) {
+    } else if (l.etype == uint && r.etype == bool) || (l.etype == bool && r.etype == uint) {
       select op {
           when "+" {
             e = l.a:uint + r.a:uint;
@@ -404,7 +404,7 @@ module BinOp
           otherwise do return MsgTuple.error(nie);
         }
       return st.insert(new shared SymEntry(e));
-    } else if ((l.etype == real && r.etype == bool) || (l.etype == bool && r.etype == real)) {
+    } else if (l.etype == real && r.etype == bool) || (l.etype == bool && r.etype == real) {
       select op {
           when "+" {
             e = l.a:real + r.a:real;
@@ -418,7 +418,7 @@ module BinOp
           otherwise do return MsgTuple.error(nie);
         }
       return st.insert(new shared SymEntry(e));
-    } else if (l.etype == bool && r.etype == bool)  {
+    } else if l.etype == bool && r.etype == bool  {
       select op {
           when "<<" {
             e = l.a:int << r.a:int;
@@ -482,7 +482,7 @@ module BinOp
       // type is bool and `l` and `r` are not both boolean, so this does
       // not need to be specialized for each case.
       else {
-        if ((l.etype == real && val.type == bool) || (l.etype == bool && val.type == real)) {
+        if (l.etype == real && val.type == bool) || (l.etype == bool && val.type == real) {
           select op {
             when "<" {
               e = l.a:real < val:real;
@@ -628,17 +628,17 @@ module BinOp
       }
       return st.insert(new shared SymEntry(e));
     }
-    else if (l.etype == bool && val.type == bool) {
+    else if l.etype == bool && val.type == bool {
       select op {
         when ">>" {
-          if(val){
+          if val{
             e = l.a:int >> val:int;
           }else{
             e = l.a:int;
           }
         }
         when "<<" {
-          if(val){
+          if val{
             e = l.a:int << val:int;
           }else{
             e = l.a:int;
@@ -702,7 +702,7 @@ module BinOp
         }
       return st.insert(new shared SymEntry(e));
     }
-    else if ((l.etype == uint && val.type == real) || (l.etype == real && val.type == uint)) {
+    else if (l.etype == uint && val.type == real) || (l.etype == real && val.type == uint) {
       select op {
           when "+" {
             e = l.a: real + val: real;
@@ -732,7 +732,7 @@ module BinOp
           otherwise do return MsgTuple.error(nie);
         }
       return st.insert(new shared SymEntry(e));
-    } else if ((l.etype == int && val.type == bool) || (l.etype == bool && val.type == int)) {
+    } else if (l.etype == int && val.type == bool) || (l.etype == bool && val.type == int) {
       select op {
           when "+" {
             // Since we don't know which of `l` or `r` is the int and which is the `bool`,
@@ -759,7 +759,7 @@ module BinOp
           otherwise do return MsgTuple.error(nie);
         }
       return st.insert(new shared SymEntry(e));
-    } else if ((l.etype == real && val.type == bool) || (l.etype == bool && val.type == real)) {
+    } else if (l.etype == real && val.type == bool) || (l.etype == bool && val.type == real) {
       select op {
           when "+" {
             e = l.a:real + val:real;
@@ -827,7 +827,7 @@ module BinOp
       // type is bool and `l` and `r` are not both boolean, so this does
       // not need to be specialized for each case.
       else {
-        if ((r.etype == real && val.type == bool) || (r.etype == bool && val.type == real)) {
+        if (r.etype == real && val.type == bool) || (r.etype == bool && val.type == real) {
           select op {
             when "<" {
               e = val:real < r.a:real;
@@ -905,12 +905,12 @@ module BinOp
           when "<<" {
             ref ea = e;
             ref ra = r.a;
-            [(ei,ri) in zip(ea,ra)] if (0 <= ri && ri < 64) then ei = val << ri;
+            [(ei,ri) in zip(ea,ra)] if 0 <= ri && ri < 64 then ei = val << ri;
           }                    
           when ">>" {
             ref ea = e;
             ref ra = r.a;
-            [(ei,ri) in zip(ea,ra)] if (0 <= ri && ri < 64) then ei = val >> ri;
+            [(ei,ri) in zip(ea,ra)] if 0 <= ri && ri < 64 then ei = val >> ri;
           }
           when "<<<" {
             e = rotl(val, r.a);
@@ -1032,7 +1032,7 @@ module BinOp
         }
       return st.insert(new shared SymEntry(e));
     }
-    else if ((r.etype == uint && val.type == real) || (r.etype == real && val.type == uint)) {
+    else if (r.etype == uint && val.type == real) || (r.etype == real && val.type == uint) {
       select op {
           when "+" {
             e = val:real + r.a:real;
@@ -1062,7 +1062,7 @@ module BinOp
           otherwise do return MsgTuple.error(nie);
         }
       return st.insert(new shared SymEntry(e));
-    } else if ((r.etype == int && val.type == bool) || (r.etype == bool && val.type == int)) {
+    } else if (r.etype == int && val.type == bool) || (r.etype == bool && val.type == int) {
       select op {
           when "+" {
             // Since we don't know which of `l` or `r` is the int and which is the `bool`,
@@ -1079,17 +1079,17 @@ module BinOp
           when ">>" {
             ref ea = e;
             ref ra = r.a;
-            [(ei,ri) in zip(ea,ra)] if (0 <= ri && ri < 64) then ei = val:int >> ri:int;
+            [(ei,ri) in zip(ea,ra)] if 0 <= ri && ri < 64 then ei = val:int >> ri:int;
           }
           when "<<" {
             ref ea = e;
             ref ra = r.a;
-            [(ei,ri) in zip(ea,ra)] if (0 <= ri && ri < 64) then ei = val:int << ri:int;
+            [(ei,ri) in zip(ea,ra)] if 0 <= ri && ri < 64 then ei = val:int << ri:int;
           }
           otherwise do return MsgTuple.error(nie);
         }
       return st.insert(new shared SymEntry(e));
-    } else if ((r.etype == real && val.type == bool) || (r.etype == bool && val.type == real)) {
+    } else if (r.etype == real && val.type == bool) || (r.etype == bool && val.type == real) {
       select op {
           when "+" {
             e = val:real + r.a:real;
@@ -1103,15 +1103,15 @@ module BinOp
           otherwise do return MsgTuple.error(nie);
         }
       return st.insert(new shared SymEntry(e));
-    } else if (r.etype == bool && val.type == bool)  {
+    } else if r.etype == bool && val.type == bool  {
       select op {
           when "<<" {
-            if(val){
+            if val{
               e = val:int << r.a:int;
             }
           }
           when ">>" {
-            if(val){
+            if val{
               e = val:int >> r.a:int;
             }
           }
