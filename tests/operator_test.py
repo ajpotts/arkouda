@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 import arkouda as ak
-
+from typeguard import TypeCheckError
 NUMERIC_TYPES = ["int64", "float64", "bool", "uint64"]
 
 
@@ -679,7 +679,7 @@ class TestOperator:
             with pytest.raises(NotImplementedError):
                 iter(arr)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             ak.ones(100).any([0])
 
         with pytest.raises(AttributeError):

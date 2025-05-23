@@ -627,7 +627,7 @@ def ones(
 @typechecked
 def full(
     size: Union[int_scalars, Tuple[int_scalars, ...], str],
-    fill_value: Union[numeric_scalars, str],
+    fill_value: Union[numeric_scalars,np.bool, str],
     dtype: Union[np.dtype, type, str, bigint] = float64,
     max_bits: Optional[int] = None,
 ) -> Union[pdarray, Strings]:

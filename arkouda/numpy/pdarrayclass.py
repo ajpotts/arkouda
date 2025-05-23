@@ -1387,7 +1387,7 @@ class pdarray:
         return self.size * self.dtype.itemsize
 
     @typechecked
-    def fill(self, value: numeric_scalars) -> None:
+    def fill(self, value: Union[numeric_scalars, bool_scalars]) -> None:
         """
         Fill the array (in place) with a constant value.
 
@@ -3356,9 +3356,9 @@ def _compute_dot_result_shape(s1, s2):
 
 @typechecked
 def dot(
-    pda1: Union[np.int64, np.float64, np.uint64, pdarray],
-    pda2: Union[np.int64, np.float64, np.uint64, pdarray],
-) -> Union[numeric_scalars, pdarray]:
+    pda1: Union[int, np.int64, np.float64, np.uint64, pdarray],
+    pda2: Union[int, np.int64, np.float64, np.uint64, pdarray],
+) -> Union[numeric_scalars, np.bool, pdarray]:
     """
     Computes dot product of two arrays.
 

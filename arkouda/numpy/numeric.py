@@ -1743,7 +1743,7 @@ def _str_cat_where(
 
 @typechecked
 def where(
-    condition: pdarray,
+    condition: Union[ pdarray,List],
     A: Union[str, numeric_scalars, pdarray, Strings, Categorical],  # type: ignore
     B: Union[str, numeric_scalars, pdarray, Strings, Categorical],  # type: ignore
 ) -> Union[pdarray, Strings, Categorical]:  # type: ignore

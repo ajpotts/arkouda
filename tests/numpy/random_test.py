@@ -9,7 +9,7 @@ from scipy import stats as sp_stats
 import arkouda as ak
 from arkouda.numpy import random
 from arkouda.scipy import chisquare as akchisquare
-
+from typeguard import TypeCheckError
 INT_FLOAT = [ak.int64, ak.float64]
 
 
@@ -537,13 +537,13 @@ class TestRandom:
         with pytest.raises(ValueError):
             ak.random.randint(low=1, high=0, size=1, dtype=ak.float64)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             ak.random.randint(0, 1, "1000")
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             ak.random.randint("0", 1, 1000)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             ak.random.randint(0, "1", 1000)
 
         # Test that int_scalars covers uint8, uint16, uint32
@@ -623,13 +623,13 @@ class TestRandom:
             uArray.to_list(),
         )
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             ak.random.uniform(low="0", high=5, size=100)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             ak.random.uniform(low=0, high="5", size=100)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             ak.random.uniform(low=0, high=5, size="100")
 
         # Test that int_scalars covers uint8, uint16, uint32

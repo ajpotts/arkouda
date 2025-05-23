@@ -1,7 +1,7 @@
 import os
 from collections import Counter, namedtuple
 from typing import List
-
+from typeguard import TypeCheckError
 import numpy as np
 import pandas as pd
 import pytest
@@ -287,22 +287,22 @@ class TestString:
         stringsOne = ak.random_strings_uniform(1, 10, size // 4, characters="printable")
         stringsTwo = ak.random_strings_uniform(1, 10, size // 4, characters="printable")
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             stringsOne.lstick(stringsTwo, delimiter=1)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             stringsOne.lstick([1], 1)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             stringsOne.startswith(1)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             stringsOne.endswith(1)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             stringsOne.contains(1)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             stringsOne.peel(1)
 
         with pytest.raises(ValueError):

@@ -6,7 +6,7 @@ import pytest
 import arkouda as ak
 from arkouda import io_util, logger
 from arkouda.logger import LogLevel, getArkoudaClientLogger, getArkoudaLogger
-
+from typeguard import TypeCheckError
 
 class TestLogger:
     logger_test_base_tmp = f"{pytest.temp_directory}/logger_io_test"
@@ -101,5 +101,5 @@ class TestLogger:
         with pytest.raises(ValueError):
             logger.getHandler("not-a-handler")
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             logger.disableVerbose(logLevel="INFO")
