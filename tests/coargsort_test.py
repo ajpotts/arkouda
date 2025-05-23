@@ -5,7 +5,7 @@ import pytest
 
 import arkouda as ak
 from arkouda.numpy.sorting import SortingAlgorithm
-
+from typeguard import TypeCheckError
 NUMERIC_TYPES = ["int64", "float64", "uint64", "bigint", "bool"]
 
 
@@ -124,5 +124,5 @@ class TestCoargsort:
         with pytest.raises(ValueError):
             ak.coargsort([ones, short_ones], algo)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             ak.coargsort([list(range(0, 10)), [0]], algo)

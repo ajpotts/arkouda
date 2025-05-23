@@ -8,7 +8,7 @@ from arkouda import sort as aksort
 from arkouda import sum as aksum
 from arkouda.groupbyclass import GroupByReductionType
 from arkouda.scipy import chisquare as akchisquare
-
+from typeguard import TypeCheckError
 #  block of variables and functions used in test_unique
 
 UNIQUE_TYPES = [ak.categorical, ak.int64, ak.float64, ak.str_]
@@ -476,7 +476,7 @@ class TestGroupBy:
         with pytest.raises(TypeError):
             ak.GroupBy(ak.arange(4), ak.arange(4))
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             gb.broadcast([])
 
         with pytest.raises(TypeError):

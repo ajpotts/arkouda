@@ -1376,7 +1376,7 @@ class Categorical:
     @staticmethod
     @typechecked
     def _parse_hdf_categoricals(
-        d: Mapping[str, Union[pdarray, Strings]],
+        d: Mapping[str, Union[pdarray, Strings, Categorical]],
     ) -> Tuple[List[str], Dict[str, Categorical]]:
         """
         Parse mapping of pdarray and Stings objects from hdf5 files.

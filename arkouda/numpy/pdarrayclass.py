@@ -2944,7 +2944,7 @@ def _make_reduction_func(
         pda: pdarray,
         axis: Optional[Union[int_scalars, Tuple[int_scalars, ...]]] = None,
         keepdims: bool = False,
-    ) -> Union[numeric_scalars, pdarray]:
+    ) -> Union[numeric_scalars, np.bool_, pdarray]:
         return _common_reduction(op, pda, axis, keepdims=keepdims)
 
     op_func.__doc__ = f"""
@@ -3048,7 +3048,7 @@ def _common_reduction(
     pda: pdarray,
     axis: Optional[Union[int_scalars, Tuple[int_scalars, ...], None]] = None,
     keepdims: bool = False,
-) -> Union[numeric_scalars, pdarray]:
+) -> Union[numeric_scalars, np.bool_, pdarray]:
     """
     Return reduction of a pdarray by an operation along an axis.
 

@@ -3,7 +3,7 @@ import pytest
 
 import arkouda as ak
 from arkouda.testing import assert_arkouda_array_equivalent
-
+from typeguard import TypeCheckError
 NUMERIC_TYPES = ["int64", "uint64", "float64", "bool"]
 
 
@@ -117,10 +117,10 @@ class TestExtrema:
     def test_error_handling(self):
         test_array = ak.randint(0, 100, 100)
         for op in ak.mink, ak.maxk, ak.argmink, ak.argmaxk:
-            with pytest.raises(TypeError):
+            with pytest.raises(TypeCheckError):
                 op(list(range(10)), 1)
 
-            with pytest.raises(TypeError):
+            with pytest.raises(TypeCheckError):
                 op(test_array, "1")
 
             with pytest.raises(ValueError):
