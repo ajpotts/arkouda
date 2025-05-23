@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from typeguard import TypeCheckError
 
 import arkouda as ak
 from arkouda.pandas import join
@@ -235,7 +236,7 @@ class TestJoin:
         """
         Tests error TypeError and ValueError handling
         """
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             ak.join_on_eq_with_dt([list(range(0, 11))], self.a1, self.t1, self.t2, 8, "pos_dt")
         with pytest.raises(TypeError):
             ak.join_on_eq_with_dt([self.a1, list(range(0, 11))], self.t1, self.t2, 8, "pos_dt")
@@ -243,7 +244,7 @@ class TestJoin:
             ak.join_on_eq_with_dt([self.a1, self.a1, list(range(0, 11))], self.t2, 8, "pos_dt")
         with pytest.raises(TypeError):
             ak.join_on_eq_with_dt([self.a1, self.a1, self.t1, list(range(0, 11))], 8, "pos_dt")
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             ak.join_on_eq_with_dt(self.a1, self.a1, self.t1, self.t2, "8", "pos_dt")
         with pytest.raises(ValueError):
             ak.join_on_eq_with_dt(self.a1, self.a1, self.t1, self.t1 * 10, 8, "ab_dt")

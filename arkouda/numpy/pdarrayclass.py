@@ -1473,7 +1473,7 @@ class pdarray:
         return self.size * self.dtype.itemsize
 
     @typechecked
-    def fill(self, value: numeric_scalars) -> None:
+    def fill(self, value: Union[numeric_scalars, bool_scalars]) -> None:
         """
         Fill the array (in place) with a constant value.
 
@@ -3152,7 +3152,7 @@ class pdarray:
 #       all values have been checked by python module and...
 #       server has created pdarray already before this is called
 @typechecked
-def create_pdarray(repMsg: str, max_bits=None) -> pdarray:
+def create_pdarray(repMsg: Union[str, memoryview[int]], max_bits=None) -> pdarray:
     """
     Return a pdarray instance pointing to an array created by the arkouda server.
     The user should not call this function directly.
@@ -3265,7 +3265,7 @@ def _make_reduction_func(
         pda: pdarray,
         axis: Optional[Union[int_scalars, Tuple[int_scalars, ...]]] = None,
         keepdims: bool = False,
-    ) -> Union[numeric_scalars, pdarray]:
+    ) -> Union[numeric_scalars, np.bool_, pdarray]:
         return _common_reduction(op, pda, axis, keepdims=keepdims)
 
     op_func.__doc__ = f"""
@@ -3419,7 +3419,7 @@ def _common_reduction(
     pda: pdarray,
     axis: Optional[Union[int_scalars, Tuple[int_scalars, ...], None]] = None,
     keepdims: bool = False,
-) -> Union[numeric_scalars, pdarray]:
+) -> Union[numeric_scalars, np.bool_, pdarray]:
     """
     Return reduction of a pdarray by an operation along an axis.
 
@@ -3827,9 +3827,9 @@ def _compute_dot_result_shape(s1, s2):
 
 @typechecked
 def dot(
-    pda1: Union[np.int64, np.float64, np.uint64, pdarray],
-    pda2: Union[np.int64, np.float64, np.uint64, pdarray],
-) -> Union[numeric_scalars, pdarray]:
+    pda1: Union[int, np.int64, np.float64, np.uint64, pdarray],
+    pda2: Union[int, np.int64, np.float64, np.uint64, pdarray],
+) -> Union[numeric_scalars, np.bool, pdarray]:
     """
     Computes dot product of two arrays.
 

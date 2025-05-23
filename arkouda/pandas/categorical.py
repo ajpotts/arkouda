@@ -55,7 +55,6 @@ from typing import (
     DefaultDict,
     Dict,
     List,
-    Mapping,
     Optional,
     Sequence,
     Tuple,
@@ -1430,10 +1429,29 @@ class Categorical:
         """Print information about all components of self in a human-readable format."""
         [p.pretty_print_info() for p in Categorical._get_components_dict(self).values()]
 
+    from arkouda.client_dtypes import IPv4
+    from arkouda.dataframe import DataFrame
+    from arkouda.index import Index
+    from arkouda.numpy.segarray import SegArray
+    from arkouda.timeclass import Datetime, Timedelta
+
     @staticmethod
     @typechecked
     def _parse_hdf_categoricals(
-        d: Mapping[str, Union[pdarray, Strings]],
+        d: dict[
+            str,
+            Union[
+                pdarray
+                | Strings
+                | SegArray
+                | Categorical
+                | DataFrame
+                | IPv4
+                | Datetime
+                | Timedelta
+                | Index
+            ],
+        ],
     ) -> Tuple[List[str], Dict[str, Categorical]]:
         """
         Parse mapping of pdarray and Stings objects from hdf5 files.

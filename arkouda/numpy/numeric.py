@@ -1904,7 +1904,7 @@ def _str_cat_where(
 
 @typechecked
 def where(
-    condition: pdarray,
+    condition: Union[pdarray, List],
     A: Union[str, numeric_scalars, pdarray, Strings, Categorical],  # type: ignore
     B: Union[str, numeric_scalars, pdarray, Strings, Categorical],  # type: ignore
 ) -> Union[pdarray, Strings, Categorical]:  # type: ignore
@@ -2925,7 +2925,7 @@ def tril(pda: pdarray, diag: int_scalars = 0) -> pdarray:
 
 
 @typechecked
-def transpose(pda: pdarray, axes: Optional[Tuple[int, ...]] = None) -> pdarray:
+def transpose(pda: pdarray, axes: Optional[Tuple[int_scalars, ...]] = None) -> pdarray:
     """
     Compute the transpose of a matrix.
 
