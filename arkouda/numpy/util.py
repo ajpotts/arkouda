@@ -22,7 +22,6 @@ from arkouda.numpy.pdarraysetops import unique
 from arkouda.numpy.sorting import coargsort
 from arkouda.numpy.strings import Strings
 from arkouda.numpy.timeclass import Datetime, Timedelta
-from arkouda.pandas.categorical import Categorical
 from arkouda.pandas.groupbyclass import GroupBy
 
 __all__ = [
@@ -50,10 +49,10 @@ __all__ = [
 
 
 if TYPE_CHECKING:
+    from arkouda.categorical import Categorical
     from arkouda.client import generic_msg, get_config, get_mem_used
-    from arkouda.numpy.segarray import SegArray
-    from arkouda.pandas.index import Index
     from arkouda.pandas.series import Series
+    from arkouda.pandas.index import Index
 
 else:
     Index = TypeVar("Index")
@@ -62,6 +61,7 @@ else:
     generic_msg = TypeVar("generic_msg")
     get_config = TypeVar("get_config")
     get_mem_used = TypeVar("get_mem_used")
+    Categorical = TypeVar("Categorical")
 
 
 def identity(x):
@@ -273,6 +273,7 @@ def attach(name: str):
     from arkouda.pandas.dataframe import DataFrame
     from arkouda.pandas.index import Index, MultiIndex
     from arkouda.pandas.series import Series
+    from arkouda.pandas.categorical import Categorical
 
     rep_msg = json.loads(cast(str, generic_msg(cmd="attach", args={"name": name})))
     rtn_obj = None

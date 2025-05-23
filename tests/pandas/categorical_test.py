@@ -4,6 +4,7 @@ import tempfile
 import numpy as np
 import pytest
 from pandas import Categorical as pd_Categorical
+from typeguard import TypeCheckError
 
 import arkouda as ak
 from arkouda.pandas import io, io_util
@@ -245,7 +246,7 @@ class TestCategorical:
         with pytest.raises(NotImplementedError):
             cat._binop("string 1", "===")
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             cat._binop(1, "==")
 
     def test_in1d(self):

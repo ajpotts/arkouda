@@ -44,7 +44,6 @@ See Also
 - pandas.Categorical
 
 """
-
 from __future__ import annotations
 
 import itertools
@@ -52,10 +51,10 @@ import json
 from collections import defaultdict
 from typing import (
     TYPE_CHECKING,
+    Any,
     DefaultDict,
     Dict,
     List,
-    Mapping,
     Optional,
     Sequence,
     Tuple,
@@ -90,10 +89,12 @@ if TYPE_CHECKING:
     from arkouda.client import generic_msg
     from arkouda.numpy import cast as akcast
     from arkouda.numpy import where
+    from arkouda.numpy.segarray import SegArray
 else:
     generic_msg = TypeVar("generic_msg")
     akcast = TypeVar("akcast")
     where = TypeVar("where")
+    SegArray = TypeVar("SegArray")
 
 
 __all__ = ["Categorical"]
@@ -1430,11 +1431,15 @@ class Categorical:
         """Print information about all components of self in a human-readable format."""
         [p.pretty_print_info() for p in Categorical._get_components_dict(self).values()]
 
+    from arkouda.client_dtypes import IPv4
+    from arkouda.dataframe import DataFrame
+    from arkouda.index import Index
+    from arkouda.numpy.segarray import SegArray
+    from arkouda.timeclass import Datetime, Timedelta
+
     @staticmethod
     @typechecked
-    def _parse_hdf_categoricals(
-        d: Mapping[str, Union[pdarray, Strings]],
-    ) -> Tuple[List[str], Dict[str, Categorical]]:
+    def _parse_hdf_categoricals(d: Dict[str, Any]) -> Tuple[List[str], Dict[str, Categorical]]:
         """
         Parse mapping of pdarray and Stings objects from hdf5 files.
 
@@ -1462,29 +1467,45 @@ class Categorical:
         Categorical.save, load_all
 
         """
-        removal_names: List[str] = []
-        groups: DefaultDict[str, List[str]] = defaultdict(list)
+        keys_to_remove: List[str] = []
+        grouped: Dict[str, Dict[str, Any]] = defaultdict(dict)
+
+        for full_key, value in d.items():
+            if '.' not in full_key:
+                continue
+            base, attr = full_key.rsplit('.', 1)
+            grouped[base][attr] = value
+            keys_to_remove.append(full_key)
+
         result_categoricals: Dict[str, Categorical] = {}
-        for k in d.keys():  # build dict of str->list[components]
-            if "." in k:
-                groups[k.split(".")[0]].append(k)
 
-        # for each of the groups, find categorical by testing values in the group for ".categories"
-        for k, v in groups.items():  # str->list[str]
-            if any(i.endswith(".categories") for i in v):  # we have a categorical
-                # gather categorical pieces and replace the original mapping with the categorical object
-                cat_parts = {}
-                base_name = ""
-                for part in v:
-                    removal_names.append(part)  # flag it for removal from original
-                    cat_parts[part.split(".")[-1]] = d[part]  # put the part into our categorical parts
-                    if part.endswith(".categories"):
-                        base_name = ".".join(part.split(".categories")[0:-1])
+        for base_name, parts in grouped.items():
+            if "codes" not in parts or "categories" not in parts:
+                raise ValueError(f"Missing required components in categorical '{base_name}'")
 
-                # Construct categorical and add it to the return_categoricals under the parent name
-                result_categoricals[base_name] = Categorical.from_codes(**cat_parts)
+            codes = parts["codes"]
+            categories = parts["categories"]
 
-        return removal_names, result_categoricals
+            if not isinstance(codes, pdarray):
+                raise TypeError(f"'codes' must be a pdarray in '{base_name}', got {type(codes)}")
+            if not isinstance(categories, Strings):
+                raise TypeError(f"'categories' must be a Strings object in '{base_name}', got {type(categories)}")
+            if not isinstance(categories, Strings):
+                try:
+                    categories = Strings(categories)
+                except Exception as e:
+                    raise TypeError(f"Could not convert 'categories' to Strings in '{base_name}': {e}")
+
+            cat = Categorical.from_codes(
+                codes=codes,
+                categories=categories,
+                permutation=parts.get("permutation"),
+                segments=parts.get("segments"),
+                _akNAcode=parts.get("_akNAcode")
+            )
+            result_categoricals[base_name] = cat
+
+        return keys_to_remove, result_categoricals
 
     def transfer(self, hostname: str, port: int_scalars):
         """

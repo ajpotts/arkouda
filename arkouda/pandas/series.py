@@ -25,19 +25,20 @@ from arkouda.numpy.pdarraycreation import arange, array, full, zeros
 from arkouda.numpy.pdarraysetops import argsort, concatenate, in1d, indexof1d
 from arkouda.numpy.strings import Strings
 from arkouda.numpy.util import get_callback, is_float
-from arkouda.pandas.categorical import Categorical
 from arkouda.pandas.groupbyclass import GroupBy, groupable_element_type
 from arkouda.pandas.index import Index, MultiIndex
 
 if TYPE_CHECKING:
+    from arkouda.categorical import Categorical
     from arkouda.numpy import cast as akcast
-    from arkouda.numpy import isnan, value_counts
     from arkouda.numpy.segarray import SegArray
 else:
     SegArray = TypeVar("SegArray")
     akcast = TypeVar("akcast")
     isnan = TypeVar("isnan")
     value_counts = TypeVar("value_counts")
+    Categorical = TypeVar("Categorical")
+
 
 # pd.set_option("display.max_colwidth", 65) is being called in DataFrame.py. This will resolve BitVector
 # truncation issues. If issues arise, that's where to look for it.

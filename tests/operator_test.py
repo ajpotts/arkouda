@@ -3,6 +3,7 @@ from itertools import product
 
 import numpy as np
 import pytest
+from typeguard import TypeCheckError
 
 import arkouda as ak
 
@@ -676,7 +677,7 @@ class TestOperator:
             with pytest.raises(NotImplementedError):
                 iter(arr)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             ak.ones(100).any([0])
 
         with pytest.raises(AttributeError):
