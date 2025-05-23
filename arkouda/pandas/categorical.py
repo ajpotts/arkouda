@@ -53,6 +53,7 @@ import json
 from typing import (
     TYPE_CHECKING,
     Any,
+    DefaultDict,
     Dict,
     List,
     Optional,
@@ -90,6 +91,9 @@ if TYPE_CHECKING:
     from arkouda.numpy import cast as akcast
     from arkouda.numpy import where
     from arkouda.numpy.sorting import SortingAlgorithm
+
+    from arkouda.numpy.segarray import SegArray
+
 else:
     generic_msg = TypeVar("generic_msg")
     akcast = TypeVar("akcast")
@@ -98,6 +102,8 @@ else:
 
     class SortingAlgorithm(Enum):
         RadixSortLSD = "RadixSortLSD"
+
+    SegArray = TypeVar("SegArray")
 
 
 __all__ = ["Categorical"]
@@ -1585,6 +1591,12 @@ class Categorical:
         """Print information about all components of self in a human-readable format."""
         [p.pretty_print_info() for p in Categorical._get_components_dict(self).values()]
 
+    from arkouda.client_dtypes import IPv4
+    from arkouda.dataframe import DataFrame
+    from arkouda.index import Index
+    from arkouda.numpy.segarray import SegArray
+    from arkouda.timeclass import Datetime, Timedelta
+
     @staticmethod
     @typechecked
     def _parse_hdf_categoricals(d: Dict[str, Any]) -> Tuple[List[str], Dict[str, Categorical]]:
@@ -1622,6 +1634,7 @@ class Categorical:
             if "." not in full_key:
                 continue
             base, attr = full_key.rsplit(".", 1)
+
             grouped[base][attr] = value
             keys_to_remove.append(full_key)
 
@@ -1640,6 +1653,7 @@ class Categorical:
                 raise TypeError(
                     f"'categories' must be a Strings object in '{base_name}', got {type(categories)}"
                 )
+
             if not isinstance(categories, Strings):
                 try:
                     categories = Strings(categories)
