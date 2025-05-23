@@ -3,7 +3,7 @@ from __future__ import annotations
 import builtins
 from enum import Enum
 import sys
-from typing import TYPE_CHECKING, List, Union, cast
+from typing import Union, cast
 
 import numpy as np
 from numpy import (
@@ -60,9 +60,6 @@ from numpy.dtypes import (
 )
 
 
-if TYPE_CHECKING:
-    from arkouda.pdarrayclass import pdarray
-
 __all__ = [
     "_datatype_check",
     "ARKOUDA_SUPPORTED_DTYPES",
@@ -78,6 +75,7 @@ __all__ = [
     "_val_isinstance_of_union",
     "all_scalars",
     "bigint",
+    "bigint_",
     "bitType",
     "bool",
     "bool_scalars",
@@ -165,46 +163,88 @@ def _datatype_check(the_dtype, allowed_list, name):
         raise TypeError(f"{name} only implements types {allowed_list}")
 
 
-def dtype(dtype):
+def dtype(x):
     """
-    Create a data type object.
+    Normalize a dtype-like object or scalar/class into an Arkouda dtype sentinel
+    or a NumPy dtype for non-Arkouda types.
 
-    Parameters
-    ----------
-    dtype: object
-        Object to be converted to a data type object.
-
-    Returns
-    -------
-    type
-
+    Rules:
+      - "bigint" (string), bigint sentinel instance/class, or bigint_ scalar/class → ak.bigint()
+      - Python ints routed by magnitude:
+          [-2^63, 2^63-1] → int64
+          [2^63, 2^64-1]  → uint64
+          outside that     → ak.bigint()
+      - Python float → float64
+      - Python bool  → bool_
+      - "str"/"str_" or str/np.str_ → np.str_
+      - Fallback to np.dtype(...) for the rest
     """
-    # we had to create our own bigint type since numpy
-    # gives them dtype=object there's no np equivalent
+    import builtins
+
+    import numpy as np
+
+    # Robust access to bigint_ even if defined later in the module
+    _bigint_scalar = globals().get("bigint_")
+
+    # ---- Arkouda bigint family (catch these FIRST) ----
     if (
-        (isinstance(dtype, str) and dtype == "bigint")
-        or isinstance(dtype, bigint)
-        or (hasattr(dtype, "name") and dtype.name == "bigint")
+        (isinstance(x, str) and x.lower() == "bigint")
+        or isinstance(x, bigint)  # sentinel instance
+        or x is bigint  # sentinel class object
+        or getattr(x, "name", "").lower() == "bigint"
+        or (isinstance(x, type) and x.__name__ == "bigint")  # class by name
+        or (_bigint_scalar is not None and isinstance(x, _bigint_scalar))  # scalar instance
+        or (isinstance(x, type) and x.__name__ == "bigint_")  # scalar class object
     ):
         return bigint()
-    if isinstance(dtype, str) and dtype in ["Strings"]:
+
+    # ---- String dtype spellings (no Strings sentinel support here) ----
+    if isinstance(x, str) and x.lower() in {"str", "str_"}:
+        return np.dtype(np.str_)
+    if x in (str, np.str_):
         return np.dtype(np.str_)
 
-    if isinstance(dtype, int):
-        if 0 < dtype and dtype < 2**64:
-            return np.dtype(np.uint64)
-        if dtype >= 2**64:
-            return bigint()
-        else:
-            return np.dtype(np.int64)
-    if isinstance(dtype, float):
+    # ---- Core Python scalar types ----
+    if x is float:
         return np.dtype(np.float64)
-    if isinstance(dtype, builtins.bool):
-        return np.dtype(np.bool)
-    return np.dtype(dtype)
+    if x is bool or x is builtins.bool:
+        return np.dtype(np.bool_)
+
+    # Normalize NumPy integer scalars to Python int so they reuse the same path
+    if isinstance(x, np.integer):
+        x = int(x)
+
+    # Magnitude-aware routing for Python ints
+    if isinstance(x, int):
+        _INT64_MIN = -(1 << 63)
+        _INT64_MAX = (1 << 63) - 1
+        _UINT64_MAX = (1 << 64) - 1
+        if x < 0:
+            # negative: fits in int64?
+            return bigint() if x < _INT64_MIN else np.dtype(np.int64)
+        else:
+            # non-negative: prefer int64 up to max, then uint64 window, else bigint
+            if x <= _INT64_MAX:
+                return np.dtype(np.int64)
+            if x <= _UINT64_MAX:
+                return np.dtype(np.uint64)
+            return bigint()
+
+    if isinstance(x, float):
+        return np.dtype(np.float64)
+    if isinstance(x, bool):
+        return np.dtype(np.bool_)
+
+    # ---- Fallback to NumPy dtype for everything else ----
+    try:
+        return np.dtype(x)
+    except TypeError as e:
+        # Re-raise with a clearer message including the repr of x
+        raise TypeError(f"Unsupported dtype-like object for arkouda.numpy.dtype: {x!r}") from e
 
 
 _dtype_for_chapel = dict()  # type: ignore
+
 
 _dtype_name_for_chapel = {  # see DType
     "real": "float64",
@@ -261,104 +301,163 @@ def dtype_for_chapel(type_name: str):
         return result
 
 
-def can_cast(from_, to) -> builtins.bool:
+def can_cast(from_dt, to_dt, casting: str = "safe") -> bool:
     """
-    Returns True if cast between data types can occur according to the casting rule.
+    NumPy-like can_cast with Arkouda bigint support.
 
-    Parameters
-    ----------
-    from_: dtype, dtype specifier, NumPy scalar, or pdarray
-        Data type, NumPy scalar, or array to cast from.
-    to: dtype or dtype specifier
-        Data type to cast to.
-
-    Returns
-    -------
-    builtins.bool
-        True if cast can occur according to the casting rule.
-
+    Rules (safe/default):
+      • bigint → bigint                        True
+      • bigint → float (any)                   True   (magnitude preserved; precision may round)
+      • bigint → signed/unsigned integers      False  (possible overflow)
+      • int64/uint64 → bigint                  True   (widen)
+      • float → bigint                         False  (information loss)
+      • otherwise                              defer to numpy.can_cast(...)
     """
-    if isSupportedInt(from_):
-        if isinstance(from_, int):
-            if (from_ < 2**64) and (from_ >= 0) and (to == dtype(uint64)):
+    import numpy as np
+
+    def _is_bigint_like(x) -> bool:
+        if x is bigint or isinstance(x, bigint):
+            return True
+        if getattr(x, "name", "").lower() == "bigint":
+            return True
+        if isinstance(x, str) and x.lower() == "bigint":
+            return True
+        _bigint_scalar = globals().get("bigint_")
+        if _bigint_scalar is not None and isinstance(x, _bigint_scalar):
+            return True
+        if isinstance(x, type) and x.__name__ in ("bigint", "bigint_"):
+            return True
+        return False
+
+    def _to_np_dtype(x):
+        # normalize a dtype-ish into np.dtype, but NEVER feed bigint to NumPy
+        if isinstance(x, np.dtype):
+            return x
+        if isinstance(x, type):
+            return np.dtype(x)
+        if hasattr(x, "dtype") and not isinstance(x, type):
+            dt = getattr(x, "dtype")
+            if isinstance(dt, np.dtype):
+                return dt
+            return np.dtype(dt)
+        return np.dtype(x)
+
+    from_is_big = _is_bigint_like(from_dt)
+    to_is_big = _is_bigint_like(to_dt)
+
+    if from_is_big and to_is_big:
+        return True
+
+    if from_is_big:
+        # bigint → NumPy dtype family
+        np_to = _to_np_dtype(to_dt)
+        if np.issubdtype(np_to, np.floating):
+            return True
+        if np_to.kind in ("i", "u"):  # integer kinds
+            return False  # unsafe under "safe" policy
+        if np_to.kind == "O":  # object
+            return True
+        # default conservative
+        return False
+
+    if to_is_big:
+        # → bigint (widen from integers; floats lose info under "safe")
+        try:
+            np_from = _to_np_dtype(from_dt)
+        except TypeError:
+            # If it's bigint-like we would have returned earlier;
+            # otherwise, let NumPy decide below.
+            np_from = None
+        if isinstance(np_from, np.dtype):
+            if np.issubdtype(np_from, np.integer):
                 return True
-            elif (from_ < 2**63) and (from_ >= -(2**63)) and (to == dtype(int64)):
-                return True
-    elif isSupportedFloat(from_):
-        return _is_dtype_in_union(to, float_scalars)
+            if np.issubdtype(np_from, np.floating):
+                return False
+        # Non-numpy dtypes: conservative default
+        return False
 
-    if (np.isscalar(from_) or _is_dtype_in_union(from_, numeric_scalars)) and not isinstance(
-        from_, (int, float, complex)
-    ):
-        return np.can_cast(from_, to)
-
-    return False
+    # Neither side is bigint → exactly match NumPy
+    return bool(np.can_cast(_to_np_dtype(from_dt), _to_np_dtype(to_dt), casting=casting))
 
 
-def result_type(*args: Union[pdarray, np.dtype, type]) -> Union[np.dtype, type]:
+def result_type(*args):
     """
-    Determine the promoted result dtype of inputs, including support for Arkouda's bigint.
+    NumPy-like result_type with Arkouda bigint support.
 
-    Determine the result dtype that would be returned by a NumPy-like operation
-    on the provided input arguments, accounting for Arkouda's extended types
-    such as ak.bigint.
-
-    This function mimics numpy.result_type, with support for Arkouda types.
-
-    Parameters
-    ----------
-    *args: Union[pdarray, np.dtype, type]
-        One or more input objects. These can be NumPy arrays, dtypes, Python
-        scalar types, or Arkouda pdarrays.
-
-    Returns
-    -------
-    Union[np.dtype, type]
-        The dtype (or equivalent Arkouda type) that results from applying
-        type promotion rules to the inputs.
-
-    Notes
-    -----
-    This function is meant to be a drop-in replacement for numpy.result_type
-    but includes logic to support Arkouda's bigint type.
+    Rules:
+      • If any arg is bigint-like:
+          – with any float → float64
+          – otherwise → ak.bigint()
+      • Else defer to numpy.result_type(...)
     """
-    from numpy.typing import DTypeLike
+    import numpy as np
+
+    def _is_bigint_like(x) -> bool:
+        # accept sentinel instance/class, name, scalar instance/class
+        if x is bigint or isinstance(x, bigint):
+            return True
+        if getattr(x, "name", "").lower() == "bigint":
+            return True
+        if isinstance(x, str) and x.lower() == "bigint":
+            return True
+        _bigint_scalar = globals().get("bigint_")
+        if _bigint_scalar is not None and isinstance(x, _bigint_scalar):
+            return True
+        if isinstance(x, type) and x.__name__ in ("bigint", "bigint_"):
+            return True
+        return False
 
     has_bigint = False
     has_float = False
-    np_dtypes: List[DTypeLike] = []
+    np_args: list[np.dtype] = []
 
-    for arg in args:
-        if isinstance(arg, (np.dtype, type)):
-            dt = arg
-        elif hasattr(arg, "dtype"):
-            dt = arg.dtype
-        else:
-            dt = np.result_type(arg)
-
-        # Normalize Arkouda custom dtypes
-        if dt == bigint:
+    for a in args:
+        # 0) bigint-like → short-circuit, do not feed to NumPy
+        if _is_bigint_like(a):
             has_bigint = True
-        elif _is_dtype_in_union(dt, Union[float, float64]):
-            has_float = True
-            np_dtypes.append(np.dtype(np.float64))
-        elif _is_dtype_in_union(dt, Union[int, int64]):
-            np_dtypes.append(np.dtype(np.int64))
-        elif isinstance(dt, np.dtype):
-            if dt.kind == "f":
-                has_float = True
-            np_dtypes.append(dt)
-        else:
-            # Fallback for unrecognized types
-            np_dtypes.append(np.result_type(dt))
+            continue
 
-    if has_float:
-        return np.result_type(float64)
+        # 1) explicit numpy dtype object
+        if isinstance(a, np.dtype):
+            np_dt = a
+
+        # 2) type objects (np.float64, np.int64, bool, int, etc.)
+        elif isinstance(a, type):
+            # bigint-like types already caught above
+            np_dt = np.dtype(a)
+
+        # 3) Python / NumPy scalar values (ints, floats, numpy numbers)
+        elif isinstance(a, (int, float, bool, np.number)):
+            if isinstance(a, (int, np.integer)):
+                ak_dt = dtype(a)  # uses your magnitude-aware int routing
+                if _is_bigint_like(ak_dt):
+                    has_bigint = True
+                    continue
+                np_dt = np.dtype(ak_dt)
+            else:
+                np_dt = np.result_type(a)
+
+        # 4) instances with a real .dtype (arrays, pdarray, numpy scalars)
+        elif hasattr(a, "dtype") and not isinstance(a, type):
+            dt = getattr(a, "dtype")
+            if _is_bigint_like(dt):
+                has_bigint = True
+                continue
+            np_dt = np.dtype(dt)
+
+        # 5) generic fallback
+        else:
+            np_dt = np.result_type(a)
+
+        np_dt = np.dtype(np_dt)
+        np_args.append(np_dt)
+        if np.issubdtype(np_dt, np.floating):
+            has_float = True
 
     if has_bigint:
-        return bigint
-    else:
-        return np.result_type(*np_dtypes)
+        return np.dtype(np.float64) if has_float else bigint()
+
+    return np.result_type(*np_args)
 
 
 def _is_dtype_in_union(dtype, union_type) -> builtins.bool:
@@ -394,21 +493,43 @@ def _val_isinstance_of_union(val, union_type) -> builtins.bool:
     return hasattr(union_type, "__args__") and isinstance(val, union_type.__args__)
 
 
-class bigint:
+# --- new code (near your bigint definition) ---
+
+
+class _BigIntMeta(type):
+    def __call__(cls, *args, **kwargs):
+        # ak.bigint()  -> dtype sentinel (preserve current behavior)
+        if not args and not kwargs:
+            return super().__call__()
+        # ak.bigint(1) -> scalar, like np.int64(1)
+        return bigint_(args[0] if args else 0)
+
+
+class bigint(metaclass=_BigIntMeta):
     """
-    Datatype for representing integers of variable size.
+    Arkouda dtype sentinel for variable-width integers.
 
-    May be used for integers that exceed 64 bits.
+    - ak.bigint() returns the dtype sentinel (singleton)
+    - ak.bigint(…) returns a bigint_ scalar (see below)
     """
 
-    # an estimate of the itemsize of bigint (128 bytes)
-    itemsize = 128
-    name = "bigint"
-    ndim = 0
-    shape = ()
+    __slots__ = ()
+    name: str = "bigint"
+    kind: str = "ui"
+    itemsize: int = 128
+    ndim: int = 0
+    shape: tuple = ()
+    _INSTANCE = None
 
-    def __init__(self):
-        self.kind = "ui"
+    def __new__(cls):
+        inst = getattr(cls, "_INSTANCE", None)
+        if inst is None:
+            inst = super().__new__(cls)
+            cls._INSTANCE = inst
+        return inst
+
+    def __reduce__(self):
+        return (bigint, ())
 
     def __str__(self):
         return self.name
@@ -417,18 +538,30 @@ class bigint:
         return f"dtype({self.name})"
 
     def __hash__(self):
-        return hash(str(self))
+        return hash(self.name)
 
     def __eq__(self, other):
-        if isinstance(dtype(other), bigint):
+        if other is self or other is bigint:
             return True
-        return False
+        if isinstance(other, str):
+            return other.lower() == "bigint"
+        name = getattr(other, "name", None)
+        return name == "bigint"
 
-    def __neq__(self, other):
-        return not (self == other)
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
+    # dtype-like conversion hook (kept for compatibility)
     def type(self, x):
         return int(x)
+
+    @property
+    def is_signed(self) -> bool:
+        return True
+
+    @property
+    def is_variable_width(self) -> bool:
+        return True
 
 
 intTypes = frozenset((dtype("int64"), dtype("uint64"), dtype("uint8")))
@@ -507,7 +640,34 @@ class DType(Enum):
         return self.value
 
 
+# --- bigint scalar type ---
+
+
+class bigint_(int):
+    """Arkouda bigint scalar (inherits Python int for arbitrary precision)."""
+
+    __slots__ = ()
+
+    def __new__(cls, x=0):
+        if isinstance(x, (str, bytes)):
+            val = int(x, 0)
+        else:
+            val = int(x)
+        return super().__new__(cls, val)
+
+    @property
+    def dtype(self):
+        return bigint()
+
+    def item(self):
+        return int(self)
+
+    def __repr__(self):
+        return f"ak.bigint_({int(self)})"
+
+
 ARKOUDA_SUPPORTED_BOOLS = (builtins.bool, np.bool_)
+
 
 ARKOUDA_SUPPORTED_INTS = (
     int,
@@ -520,6 +680,7 @@ ARKOUDA_SUPPORTED_INTS = (
     np.uint32,
     np.uint64,
     bigint,
+    bigint_,
 )
 
 ARKOUDA_SUPPORTED_FLOATS = (float, np.float64, np.float32)
@@ -537,6 +698,7 @@ ARKOUDA_SUPPORTED_NUMBERS = (
     np.uint32,
     np.uint64,
     bigint,
+    bigint_,
 )
 
 # TODO: bring supported data types into parity with all numpy dtypes
