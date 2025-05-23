@@ -82,7 +82,6 @@ from arkouda.pandas.row import Row
 if TYPE_CHECKING:
     from arkouda.categorical import Categorical
     from arkouda.numpy import cast as akcast
-    from arkouda.numpy import cumsum, where
     from arkouda.numpy.segarray import SegArray
     from arkouda.pandas.series import Series
 else:
