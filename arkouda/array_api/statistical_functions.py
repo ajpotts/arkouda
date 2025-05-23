@@ -293,7 +293,10 @@ def prod(
     if not isinstance(x_op, pdarray):
         raise TypeError(f"Expected pdarray, got {type(x_op)}")
 
-    return Array._new(ak_prod(x_op, axis=axis, keepdims=keepdims))
+    if axis is not None:
+        raise NotImplementedError("axis argument is not supported by arkouda.prod")
+
+    return Array._new(ak_prod(x_op))
 
 
 # Not working with XArray yet, pending a fix for:
@@ -444,7 +447,7 @@ def sum(
     if not isinstance(x_op, pdarray):
         raise TypeError(f"Expected pdarray, got {type(x_op)}")
 
-    return Array._new(ak_sum(x_op, axis=axis, keepdims=keepdims))
+    return Array._new(ak_sum(x_op))
 
 
 # Not working with XArray yet, pending a fix for:
@@ -614,7 +617,7 @@ def cumulative_sum(
         if x_.dtype == "bool":
             x_ = akcast(x_, int)
     else:
-        x_ = akcast(x_, dtype)
+        x_ = Array(akcast(x._array, dtype))
 
     resp = generic_msg(
         cmd=f"cumSum<{x_.dtype},{x.ndim}>",
