@@ -27,7 +27,6 @@ import numpy as np
 
 import arkouda as ak
 from arkouda import array_api
-from arkouda.numpy.pdarraycreation import scalar_array
 
 from ._dtypes import (
     _complex_floating_dtypes,
@@ -45,6 +44,161 @@ if TYPE_CHECKING:
 
 
 HANDLED_FUNCTIONS: Dict[str, Callable] = {}
+
+
+def _all_int_indices(key) -> bool:
+    import numpy as np
+
+    if not isinstance(key, tuple):
+        key = (key,)
+    for k in key:
+        if k is Ellipsis:
+            continue
+        if isinstance(k, slice):
+            return False
+        if isinstance(k, (list, tuple, np.ndarray)):
+            return False
+        if hasattr(k, "shape"):  # Array or np scalar array
+            # only OK if it's a scalar
+            try:
+                size = k.size
+                shape = k.shape
+            except Exception:
+                return False
+            if not (size == 1 or shape == ()):
+                return False
+        elif not isinstance(k, (int, np.integer)):
+            return False
+    return True
+
+
+def _wrap_scalar(value, dt) -> "Array":
+    import arkouda as ak
+
+    ndt = _normalize_dt(dt)  # np.dtype
+    pyv = _to_builtin_for_dtype(value, ndt)
+    return Array._new(ak.full(1, pyv, dtype=ndt))
+
+
+def _promote2(lhs_dt, rhs_dt):
+    # lhs_dt/rhs_dt may be str/np.dtype/np type — normalize both.
+    return np.result_type(_normalize_dt(lhs_dt), _normalize_dt(rhs_dt))
+
+
+def _wrap_scalar_with_dtype(val, res_dt) -> "Array":
+    """
+    Robust scalar wrapper: allocate on the server with ak.full to avoid host-side
+    NumPy packing issues that can corrupt float payloads.
+    """
+    v = _to_python_builtin(val)
+    dt = _normalize_dtype_for_ak_array(res_dt)
+    # IMPORTANT: use ak.full, not ak.array([...])
+    return Array._new(ak.full(1, v, dtype=dt))
+
+
+def _normalize_dt(dt):
+    import numpy as np
+
+    # Always return a *np.dtype* object
+    try:
+        return np.dtype(dt)
+    except TypeError:
+        # last-ditch: objects that carry a dtype-like
+        inner = getattr(dt, "dtype", None)
+        if inner is not None:
+            return np.dtype(inner)
+        raise
+
+
+def _normalize_dtype_for_ak_array(dt):
+    import numpy as np
+
+    if isinstance(dt, np.dtype):
+        return dt
+    if isinstance(dt, type) and getattr(dt, "__module__", "") == np.__name__:
+        return dt
+    if isinstance(dt, str):
+        try:
+            return np.dtype(dt)
+        except Exception:
+            pass
+    return np.dtype(dt)
+
+
+def _to_builtin_for_dtype(val, dt):
+    import numpy as np
+
+    if isinstance(val, np.generic):
+        val = val.item()
+    k = dt.kind  # now safe: dt is a np.dtype
+    if k == "f":
+        return float(val)
+    if k in ("i", "u"):
+        return int(val)
+    if k == "b":
+        return bool(val)
+    return float(val)  # fallback
+
+
+def _to_python_builtin(val):
+    import numpy as np
+
+    return val.item() if isinstance(val, np.generic) else val
+
+
+def _is_scalar_array(x: "Array") -> bool:
+    return isinstance(x, Array) and (x.shape == () or x.size == 1)
+
+
+def _to_python_scalar(x: "Array"):
+    a = x._array
+    return a[0] if getattr(a, "size", 1) == 1 else a  # returns NumPy/Python scalar
+
+
+# array_object.py
+def scalar_array(x, dtype: str | None = None) -> ak.pdarray:
+    """
+    Wrap a Python/NumPy scalar as a 0-D Array (backed by a 1-element pdarray).
+    Correctly infers dtype so floats don't get packed as ints, etc.
+    """
+    import numpy as np
+
+    import arkouda as ak
+
+    # If user explicitly provided dtype, trust it
+    if dtype is None:
+        # NumPy scalars carry a dtype already
+        if isinstance(x, np.generic):
+            kind = x.dtype.kind
+            if kind == "b":
+                dtype = "bool"
+            elif kind == "f":
+                dtype = "float64"
+            elif kind == "i":
+                dtype = "int64"
+            elif kind == "u":
+                # Array API doesn’t define unsigned scalars; pick int64 unless you need uint64
+                # If your semantics prefer uint64 here, set dtype = "uint64"
+                dtype = "int64"
+            else:
+                # Fallback: float64 is safest
+                dtype = "float64"
+        else:
+            # Plain Python types
+            if isinstance(x, bool):
+                dtype = "bool"
+            elif isinstance(x, float):
+                dtype = "float64"
+            elif isinstance(x, int):
+                # If you want magnitude-aware routing, you could call ak.numpy.dtypes.dtype(x)
+                # For Array API consistency, int64 is fine:
+                dtype = "int64"
+            else:
+                # Last resort: try float
+                dtype = "float64"
+
+    # Build a 1-element array then treat it as 0-D at the wrapper layer
+    return ak.array([x], dtype=dtype)
 
 
 class Array:
@@ -351,12 +505,13 @@ class Array:
         """
         return Array._new(ak.abs(self._array))
 
-    def __add__(self: Array, other: Union[int, float, Array], /) -> Array:
-        """Compute the sum of this array and another array or scalar."""
-        if isinstance(other, (int, float)):
-            return Array._new(self._array + other)
-        else:
-            return Array._new(self._array + other._array)
+    def __add__(self, other):
+        if _is_scalar_array(self) and _is_scalar_array(other):
+            lhs = _to_python_scalar(self)
+            rhs = _to_python_scalar(other)
+            res_dt = _promote2(self.dtype, other.dtype)
+            return _wrap_scalar(lhs + rhs, res_dt)
+        return Array._new(self._array + (other._array if isinstance(other, Array) else other))
 
     def __and__(self: Array, other: Union[int, bool, Array], /) -> Array:
         """Compute the logical AND operation of this array and another array or scalar."""
@@ -429,39 +584,34 @@ class Array:
         else:
             return Array._new(self._array >= other._array)
 
-    def __getitem__(
-        self: Array,
-        key: Union[int, slice, Tuple[Union[int, slice], ...], Array],
-        /,
-    ) -> Array:
-        if isinstance(key, Array):
-            if key.size == 1 or key.shape == ():
-                k = key._array[0]
-            else:
-                k = key._array
-        elif isinstance(key, np.ndarray):
-            k = asarray(key)
-        elif isinstance(key, tuple):
-            k = []
-            for kt in key:
-                if isinstance(kt, Array):
-                    if kt.size == 1 or kt.shape == ():
-                        k.append(kt._array[0])
-                    else:
-                        k.append(kt._array)
-                elif isinstance(kt, np.ndarray):
-                    k.append(asarray(kt)._array)
-                else:
-                    k.append(kt)
-            k = tuple(k)
-        else:  # int, slice
-            k = key
+    def __getitem__(self, key) -> "Array":
+        import numpy as np
+
+        def _unwrap(kt):
+            from .array_object import asarray
+
+            if isinstance(kt, Array):
+                return kt._array[0] if (kt.size == 1 or kt.shape == ()) else kt._array
+            if isinstance(kt, np.ndarray):
+                a = asarray(kt)
+                return a._array[0] if (a.size == 1 or a.shape == ()) else a._array
+            return kt
+
+        orig = key
+        if isinstance(key, tuple):
+            k = tuple(_unwrap(kt) for kt in key)
+        else:
+            k = _unwrap(key)
 
         a = self._array[k]
+
+        # a is result of self._array[k]
         if isinstance(a, ak.pdarray):
+            if getattr(a, "size", 1) == 1:
+                return _wrap_scalar(a[0], a.dtype)  # use the pdarray’s dtype
             return Array._new(a)
-        else:
-            return Array._new(scalar_array(a))
+        # Python scalar (0-d selection on arkouda server gave us a Python value)
+        return _wrap_scalar(a, self.dtype)  # indexing does not change dtype
 
     def __gt__(self: Array, other: Union[int, float, Array], /) -> Array:
         """Check if this array is greater than another array or scalar."""
@@ -536,12 +686,13 @@ class Array:
         else:
             return Array._new(self._array % other._array)
 
-    def __mul__(self: Array, other: Union[int, float, Array], /) -> Array:
-        """Compute the element-wise product of this array and another array or scalar."""
-        if isinstance(other, (int, float)):
-            return Array._new(self._array * other)
-        else:
-            return Array._new(self._array * other._array)
+    def __mul__(self, other):
+        if _is_scalar_array(self) and _is_scalar_array(other):
+            lhs = _to_python_scalar(self)
+            rhs = _to_python_scalar(other)
+            res_dt = _promote2(self.dtype, other.dtype)
+            return _wrap_scalar(lhs * rhs, res_dt)
+        return Array._new(self._array * (other._array if isinstance(other, Array) else other))
 
     def __ne__(self: Array, other: object, /) -> bool:
         """Check if this array is not equal to another array or scalar."""
@@ -604,19 +755,20 @@ class Array:
             else:
                 self._array[key] = value
 
-    def __sub__(self: Array, other: Union[int, float, Array], /) -> Array:
-        """Compute the difference of this array and another array or scalar."""
-        if isinstance(other, (int, float)):
-            return Array._new(self._array - other)
-        else:
-            return Array._new(self._array - other._array)
+    def __sub__(self, other):
+        if _is_scalar_array(self) and _is_scalar_array(other):
+            lhs = _to_python_scalar(self)
+            rhs = _to_python_scalar(other)
+            res_dt = _promote2(self.dtype, other.dtype)
+            return _wrap_scalar(lhs - rhs, res_dt)
+        return Array._new(self._array - (other._array if isinstance(other, Array) else other))
 
-    def __truediv__(self: Array, other: Union[float, Array], /) -> Array:
-        """Compute the true division of this array by another array or scalar."""
-        if isinstance(other, (int, float)):
-            return Array._new(self._array / other)
-        else:
-            return Array._new(self._array / other._array)
+    def __truediv__(self, other):
+        if _is_scalar_array(self) and _is_scalar_array(other):
+            lhs = _to_python_scalar(self)
+            rhs = _to_python_scalar(other)
+            return _wrap_scalar(lhs / rhs, np.float64)  # Array API: division -> float
+        return Array._new(self._array / (other._array if isinstance(other, Array) else other))
 
     def __xor__(self: Array, other: Union[int, bool, Array], /) -> Array:
         """Compute the logical XOR operation of this array and another array or scalar."""
@@ -634,12 +786,13 @@ class Array:
             self._array += other._array
             return self
 
-    def __radd__(self: Array, other: Union[int, float, Array], /) -> Array:
-        """Compute the sum of another array or scalar and this array."""
-        if isinstance(other, (int, float)):
-            return Array._new(other + self._array)
-        else:
-            return Array._new(other._array + self._array)
+    def __radd__(self, other):
+        if _is_scalar_array(self) and _is_scalar_array(other):
+            rhs = _to_python_scalar(self)
+            lhs = _to_python_scalar(other)
+            res_dt = _promote2(other.dtype, self.dtype)
+            return _wrap_scalar(lhs + rhs, res_dt)
+        return Array._new((other._array if isinstance(other, Array) else other) + self._array)
 
     def __iand__(self: Array, other: Union[int, bool, Array], /) -> Array:
         """Compute the logical AND operation of this array and another array or scalar in place."""
@@ -730,12 +883,13 @@ class Array:
             self._array *= other._array
             return self
 
-    def __rmul__(self: Array, other: Union[int, float, Array], /) -> Array:
-        """Compute the product of another array or scalar and this array."""
-        if isinstance(other, (int, float)):
-            return Array._new(other * self._array)
-        else:
-            return Array._new(other._array * self._array)
+    def __rmul__(self, other):
+        if _is_scalar_array(self) and _is_scalar_array(other):
+            rhs = _to_python_scalar(self)
+            lhs = _to_python_scalar(other)
+            res_dt = _promote2(other.dtype, self.dtype)
+            return _wrap_scalar(lhs * rhs, res_dt)
+        return Array._new((other._array if isinstance(other, Array) else other) * self._array)
 
     def __ior__(self: Array, other: Union[int, bool, Array], /) -> Array:
         """Compute the logical OR operation of this array and another array or scalar in place."""
@@ -794,12 +948,13 @@ class Array:
             self._array -= other._array
             return self
 
-    def __rsub__(self: Array, other: Union[int, float, Array], /) -> Array:
-        """Compute the difference of another array or scalar by this array."""
-        if isinstance(other, (int, float)):
-            return Array._new(other - self._array)
-        else:
-            return Array._new(other._array - self._array)
+    def __rsub__(self, other):
+        if _is_scalar_array(self) and _is_scalar_array(other):
+            rhs = _to_python_scalar(self)
+            lhs = _to_python_scalar(other)
+            res_dt = _promote2(other.dtype, self.dtype)
+            return _wrap_scalar(lhs - rhs, res_dt)
+        return Array._new((other._array if isinstance(other, Array) else other) - self._array)
 
     def __itruediv__(self: Array, other: Union[float, Array], /) -> Array:
         """Compute the true division of this array by another array or scalar in place."""
@@ -810,12 +965,12 @@ class Array:
             self._array /= other._array
             return self
 
-    def __rtruediv__(self: Array, other: Union[float, Array], /) -> Array:
-        """Compute the true division of another array or scalar by this array."""
-        if isinstance(other, (int, float)):
-            return Array._new(other / self._array)
-        else:
-            return Array._new(other._array / self._array)
+    def __rtruediv__(self, other):
+        if _is_scalar_array(self) and _is_scalar_array(other):
+            rhs = _to_python_scalar(self)
+            lhs = _to_python_scalar(other)
+            return _wrap_scalar(lhs / rhs, np.float64)
+        return Array._new((other._array if isinstance(other, Array) else other) / self._array)
 
     def __ixor__(self: Array, other: Union[int, bool, Array], /) -> Array:
         """Compute the logical XOR operation of this array and another array or scalar in place."""
