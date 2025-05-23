@@ -119,7 +119,7 @@ setup(
         "numpy>=2.0",
         "pandas>=1.4.0,!=2.2.0",
         "pyzmq>=20.0.0",
-        "typeguard==2.10.0",
+        "typeguard==4.4.2",
         "tabulate",
         "pyfiglet",
         "versioneer",
