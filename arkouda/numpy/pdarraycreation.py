@@ -712,10 +712,10 @@ def full(
         a.max_bits = max_bits
     return a
 
-
+from arkouda.numpy.dtypes import bool_scalars
 @typechecked
 def scalar_array(
-    value: numeric_scalars, dtype: Optional[Union[np.dtype, type, str, bigint]] = None
+    value: [numeric_scalars, bool_scalars], dtype: Optional[Union[np.dtype,  type, str, bigint]] = None
 ) -> pdarray:
     """
     Create a pdarray from a single scalar value.

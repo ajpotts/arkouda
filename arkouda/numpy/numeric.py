@@ -2752,7 +2752,7 @@ def tril(pda: pdarray, diag: int_scalars = 0) -> pdarray:
 
 
 @typechecked
-def transpose(pda: pdarray, axes: Optional[Tuple[int, ...]] = None) -> pdarray:
+def transpose(pda: pdarray, axes: Optional[Tuple[int_scalars,...]] = None) -> pdarray:
     """
     Compute the transpose of a matrix.
 
