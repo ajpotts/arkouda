@@ -393,7 +393,6 @@ class TestPdarrayClass:
         result = a.argsort()  # axis default = 0
         assert isinstance(result, ak.pdarray)
 
-
     def test_argsort_algorithm_enum(self):
         from arkouda.sorting import SortingAlgorithm
 
@@ -403,9 +402,9 @@ class TestPdarrayClass:
 
     @pytest.mark.parametrize("size", pytest.prob_size)
     @pytest.mark.parametrize("ascending", [True, False])
-    @pytest.mark.parametrize("dtype",[ak.int64, ak.float64, ak.bool_, ak.uint64, ak.bigint])
-    def test_argsort_random(self, size, ascending,dtype):
-        a = ak.randint(0, 1_000_000, size, dtype= dtype if dtype !=ak.bigint else ak.int64, seed = 1)
+    @pytest.mark.parametrize("dtype", [ak.int64, ak.float64, ak.bool_, ak.uint64, ak.bigint])
+    def test_argsort_random(self, size, ascending, dtype):
+        a = ak.randint(0, 1_000_000, size, dtype=dtype if dtype != ak.bigint else ak.int64, seed=1)
         if dtype == ak.bigint:
             a = a + 2**70
         perm = a.argsort(ascending=ascending)

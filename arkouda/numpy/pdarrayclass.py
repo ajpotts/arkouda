@@ -35,6 +35,7 @@ from arkouda.numpy.dtypes import (
 from arkouda.numpy.dtypes import str_ as akstr_
 from arkouda.numpy.dtypes import uint64 as akuint64
 
+
 module = modules[__name__]
 
 
@@ -1438,7 +1439,7 @@ class pdarray:
             The axis to sort along. Must be between -1 and the array rank.
         ascending : bool, default True
             Whether to sort in ascending order. If False, returns a reversed permutation.
-            Ignored for multidimensional arrays.
+            Note: ascending=False is only supported for 1D arrays.
 
         Returns
         -------
@@ -1455,6 +1456,7 @@ class pdarray:
         array([7 19 42])
         >>> a.argsort(ascending=False)
         array([0 2 1])
+
         """
         from arkouda.numpy.manipulation_functions import flip
         from arkouda.numpy.pdarraycreation import zeros
@@ -1462,19 +1464,19 @@ class pdarray:
 
         ndim = cast(Union[int, np.integer], getattr(self, "ndim"))
 
-        if axis < -1 or axis > int(ndim):
-            raise ValueError(f"Axis must be between -1 and the array's rank ({int(ndim)})")
-        if axis == -1:
-            axis = int(ndim) - 1
+        if not (-1 <= axis <= ndim):
+            raise ValueError(f"axis={axis} is invalid for array with ndim={ndim}")
+        axis = ndim - 1 if axis == -1 else axis
 
-        if self.size == 0 and hasattr(self, "dtype"):
+        if self.size == 0:
             return zeros(0, dtype=akint64)
 
         if self.dtype == bigint:
             return coargsort(self.bigint_to_uint_arrays(), algorithm)
 
+        cmd = f"argsort<{self.dtype.name},{self.ndim}>"
         repMsg = generic_msg(
-            cmd=f"argsort<{self.dtype.name},{self.ndim}>",
+            cmd=cmd,
             args={
                 "name": self.name,
                 "algoName": algorithm.name,
@@ -1485,7 +1487,9 @@ class pdarray:
 
         sorted_array = create_pdarray(cast(str, repMsg))
 
-        return sorted_array if ascending or self.ndim != 1 else flip(sorted_array)
+        if ascending or ndim != 1:
+            return sorted_array
+        return flip(sorted_array)
 
     def any(
         self, axis: Optional[Union[int, Tuple[int, ...]]] = None, keepdims: bool = False
