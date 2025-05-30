@@ -239,7 +239,6 @@ class DataFrameGroupBy:
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({"A":[1,2,2,3],"B":[3,4,5,6]})
         >>> display(df)
 
@@ -461,7 +460,6 @@ class DataFrameGroupBy:
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({"A":[3,1,2,1,2,3],"B":[3,4,5,6,7,8]})
         >>> display(df)
         +----+-----+-----+
@@ -634,7 +632,6 @@ class DataFrameGroupBy:
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({"A":[1,2,2,2,3,3],"B":[3,9,11,27,86,100]})
         >>> display(df)
 
@@ -682,7 +679,6 @@ class DataFrameGroupBy:
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> from arkouda.dataframe import DataFrameGroupBy
         >>> df = ak.DataFrame({"A":[1,2,2,3],"B":[3,4,5,6]})
 
@@ -788,13 +784,12 @@ class DataFrame(UserDict):
     Examples
     --------
     >>> import arkouda as ak
-    Create an empty DataFrame and add a column of data:
 
+    Create an empty DataFrame and add a column of data:
     >>> import arkouda as ak
-    >>> ak.connect()
     >>> df = ak.DataFrame()
     >>> df['a'] = ak.array([1,2,3])
-    >>> display(df)
+    >>> df
 
     +----+-----+
     |    |   a |
@@ -814,8 +809,8 @@ class DataFrame(UserDict):
     >>> day = ak.array([5, 5, 6, 5, 6, 6])
     >>> amount = ak.array([0.5, 0.6, 1.1, 1.2, 4.3, 0.6])
     >>> df = ak.DataFrame({'userName': userName, 'userID': userID,
-    >>>            'item': item, 'day': day, 'amount': amount})
-    >>> display(df)
+        ... 'item': item, 'day': day, 'amount': amount})
+    >>> df
 
     +----+------------+----------+--------+-------+----------+
     |    | userName   |   userID |   item |   day |   amount |
@@ -835,7 +830,8 @@ class DataFrame(UserDict):
 
     Indexing works slightly differently than with pandas:
 
-    >>> df[0]
+    >>> df[0].values
+
 
     +------------+----------+
     | keys       |   values |
@@ -1457,7 +1453,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> import pandas as pd
         >>> pd_df = pd.DataFrame({"A":[1,2],"B":[3,4]})
         >>> type(pd_df)
@@ -1556,7 +1551,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({'col1': [1, 2], 'col2': [3, 4]})
         >>> display(df)
 
@@ -1703,7 +1697,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({'col1': [1, 2, 3], 'col2': [4, 5, 6]})
         >>> df
 
@@ -1739,7 +1732,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({'col1': [1, 2], 'col2': ["a", "b"]})
         >>> df
 
@@ -1794,7 +1786,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({})
         >>> df
          0 rows x 0 columns
@@ -1817,7 +1808,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({'col1': [1, 2, 3], 'col2': [4, 5, 6]})
         >>> df
 
@@ -1853,7 +1843,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({'col1': [1, 2], 'col2': [3, 4]})
         >>> df
 
@@ -1889,7 +1878,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({'col1': [1, 2], 'col2': [3, 4]})
         >>> df
 
@@ -2016,7 +2004,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({'col1': [1, 2], 'col2': ["a", "b"]})
         >>> df
 
@@ -2454,7 +2441,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({'col1': ak.arange(10), 'col2': -1 * ak.arange(10)})
         >>> display(df)
 
@@ -2536,7 +2522,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({'col1': ak.arange(10), 'col2': -1 * ak.arange(10)})
         >>> display(df)
 
@@ -2686,7 +2671,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({'col1': [1.0, 1.0, 2.0, np.nan], 'col2': [4, 5, 6, 7]})
         >>> df
 
@@ -2772,7 +2756,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> dtypes = [ak.int64, ak.float64,  ak.bool]
         >>> data = dict([(str(t), ak.ones(5000, dtype=ak.int64).astype(t)) for t in dtypes])
         >>> df = ak.DataFrame(data)
@@ -2870,7 +2853,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({'col1': ak.arange(1000), 'col2': ak.arange(1000)})
         >>> df.memory_usage_info()
         '0.00 GB'
@@ -2908,7 +2890,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> ak_df = ak.DataFrame({"A": ak.arange(2), "B": -1 * ak.arange(2)})
         >>> type(ak_df)
         arkouda.dataframe.DataFrame
@@ -3029,7 +3010,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({"animal_1": ["elk", "pig"], "animal_2": ["dog", "quetzal"]})
         >>> print(df.to_markdown())
         +----+------------+------------+
@@ -3102,7 +3082,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> import os.path
         >>> from pathlib import Path
         >>> my_path = os.path.join(os.getcwd(), 'hdf_output')
@@ -3254,7 +3233,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> import os.path
         >>> from pathlib import Path
         >>> my_path = os.path.join(os.getcwd(), 'hdf_output')
@@ -3336,7 +3314,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> import os.path
         >>> from pathlib import Path
         >>> my_path = os.path.join(os.getcwd(), 'parquet_output')
@@ -3427,7 +3404,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> import os.path
         >>> from pathlib import Path
         >>> my_path = os.path.join(os.getcwd(), 'csv_output')
@@ -3500,7 +3476,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> import os.path
         >>> from pathlib import Path
         >>> my_path = os.path.join(os.getcwd(), 'csv_output','my_data')
@@ -3551,7 +3526,6 @@ class DataFrame(UserDict):
         use "<my_dir>/my_data" as the prefix.
 
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> import os.path
         >>> from pathlib import Path
         >>> my_path = os.path.join(os.getcwd(), 'hdf5_output','my_data')
@@ -3614,7 +3588,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({'col1': [1.1, 3.1, 2.1], 'col2': [6, 5, 4]})
         >>> display(df)
 
@@ -3798,7 +3771,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({'col1': [2, 2, 1], 'col2': [3, 4, 3], 'col3':[5, 6, 7]})
         >>> display(df)
 
@@ -3877,7 +3849,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({'col1': [1, 2, 3], 'col2': [4, 5, 6]})
 
         +----+--------+--------+
@@ -4021,7 +3992,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({'col1': [1, 2], 'col2': [3, 4]})
         >>> display(df)
 
@@ -4109,7 +4079,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({'col1': [1.0, 1.0, 2.0, np.nan], 'col2': [4, 5, 6, 7]})
         >>> df
 
@@ -4176,7 +4145,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({'col_A': ak.array([7, 3]), 'col_B':ak.array([1, 9])})
         >>> display(df)
 
@@ -4326,7 +4294,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> import numpy as np
         >>> df = ak.DataFrame({'col_A': ak.array([7, np.nan]), 'col_B':ak.array([1, 9])})
         >>> display(df)
@@ -4538,7 +4505,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> left_df = ak.DataFrame({'col1': ak.arange(5), 'col2': -1 * ak.arange(5)})
         >>> display(left_df)
 
@@ -4667,7 +4633,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> import numpy as np
         >>> df = ak.DataFrame({"A": [np.nan, 2, 2, 3], "B": [3, np.nan, 5, 6],
         ...          "C": [1, np.nan, 2, np.nan], "D":["a","b","c","d"]})
@@ -4722,7 +4687,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> import numpy as np
         >>> df = ak.DataFrame({"A": [np.nan, 2, 2, 3], "B": [3, np.nan, 5, 6],
         ...          "C": [1, np.nan, 2, np.nan], "D":["a","b","c","d"]})
@@ -4794,7 +4758,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({"A":[True,True,True,False],"B":[True,True,True,False],
         ...          "C":[True,False,True,False],"D":[False,False,False,False]})
 
@@ -4893,7 +4856,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> df = ak.DataFrame({"A":[True,True,True,False],"B":[True,True,True,False],
         ...          "C":[True,False,True,False],"D":[True,True,True,True]})
 
@@ -4999,7 +4961,6 @@ class DataFrame(UserDict):
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> import numpy as np
         >>> df = ak.DataFrame(
             {
@@ -5496,7 +5457,6 @@ def intx(a, b):
     Examples
     --------
     >>> import arkouda as ak
-    >>> ak.connect()
     >>> a = ak.DataFrame({'a':ak.arange(5),'b': 2* ak.arange(5)})
     >>> display(a)
 
@@ -5594,7 +5554,6 @@ def intersect(a, b, positions=True, unique=False):
     Examples
     --------
     >>> import arkouda as ak
-    >>> ak.connect()
     >>> a = ak.arange(10)
     >>> print(a)
     [0 1 2 3 4 5 6 7 8 9]
@@ -5719,7 +5678,6 @@ def invert_permutation(perm):
     Examples
     --------
     >>> import arkouda as ak
-    >>> ak.connect()
     >>> from arkouda.index import Index
     >>> i = Index(ak.array([1,2,0,5,4]))
     >>> perm = i.argsort()
@@ -6140,7 +6098,6 @@ def merge(
     Examples
     --------
     >>> import arkouda as ak
-    >>> ak.connect()
     >>> from arkouda import merge
     >>> left_df = ak.DataFrame({'col1': ak.arange(5), 'col2': -1 * ak.arange(5)})
     >>> display(left_df)
