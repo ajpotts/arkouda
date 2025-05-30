@@ -21,7 +21,6 @@ Key Features
 Example:
 -------
 >>> import arkouda as ak
->>> ak.connect()
 >>> a = ak.array([1, 2, 3])
 >>> b = a + 5
 >>> print(b)

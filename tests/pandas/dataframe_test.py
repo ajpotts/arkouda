@@ -37,13 +37,13 @@ def df_test_base_tmp(request):
 
 
 class TestDataFrame:
-    # def test_dataframe_docstrings(self):
-    #     import doctest
-    #
-    #     result = doctest.testmod(
-    #         dataframe, optionflags=doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE
-    #     )
-    #     assert result.failed == 0, f"Doctest failed: {result.failed} failures"
+    def test_dataframe_docstrings(self):
+        import doctest
+
+        from arkouda import dataframe
+
+        result = doctest.testmod(dataframe, optionflags=doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE)
+        assert result.failed == 0, f"Doctest failed: {result.failed} failures"
 
     @staticmethod
     def build_pd_df():

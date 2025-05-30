@@ -354,7 +354,6 @@ class Index:
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> i = ak.Index([1, 2, 3])
         >>> i_cpy = ak.Index([1, 2, 3])
         >>> i.equals(i_cpy)
@@ -428,7 +427,6 @@ class Index:
         Examples
         --------
         >>> import arkouda as ak
-        >>> ak.connect()
         >>> idx = Index(ak.array([1, 2, 3]))
         >>> idx.memory_usage()
         24

@@ -1324,7 +1324,6 @@ def generate_history(
     Examples
     --------
     >>> import arkouda as ak
-    >>> ak.connect()
     connected to arkouda server tcp://*:5555
     >>> ak.get_config()
     >>> ak.ones(10000, dtype=int)
