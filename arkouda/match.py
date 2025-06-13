@@ -58,6 +58,28 @@ MatchType = Enum("MatchType", ["SEARCH", "MATCH", "FULLMATCH"])
 
 
 class Match:
+    """
+    Encapsulates regular expression match results on Arkouda segmented string arrays.
+
+    Created by calling `search()`, `match()`, or `fullmatch()` on a `Strings` object. Provides access
+    to match booleans, span information, capture groups, and origin indices of matches.
+
+    Attributes
+    ----------
+    matched : pdarray
+        Boolean array indicating whether each element matched.
+    starts : pdarray
+        Start indices of matches.
+    lengths : pdarray
+        Lengths of matches.
+    indices : pdarray
+        Mapping from match results to parent strings.
+    match_type : MatchType
+        Type of regex match used (SEARCH, MATCH, FULLMATCH).
+    re : str
+        Regex pattern used.
+    """
+
     def __init__(
         self,
         matched: pdarray,
@@ -80,6 +102,14 @@ class Match:
         self.re = pattern
 
     def __str__(self):
+        """
+        Return a string representation of the match object, previewing match status and spans.
+
+        Returns
+        -------
+        str
+            Human-readable summary of match objects and spans.
+        """
         from arkouda.client import pdarrayIterThresh
 
         if self._matched.size <= pdarrayIterThresh:
@@ -91,6 +121,19 @@ class Match:
         return f"<ak.{self._objtype} object: {'; '.join(vals)}>"
 
     def __getitem__(self, item):
+        """
+        Return a summary string for the match at a given index.
+
+        Parameters
+        ----------
+        item : int
+            Index of the match to describe.
+
+        Returns
+        -------
+        str
+            Description of whether the item matched, and its span if it did.
+        """
         return (
             f"matched={self._matched[item]}, span=({self._starts[self._indices[item]]}"
             f", {self._ends[self._indices[item]]})"
@@ -99,6 +142,14 @@ class Match:
         )
 
     def __repr__(self):
+        """
+        Return the formal string representation of the Match object.
+
+        Returns
+        -------
+        str
+            Same as __str__ for now.
+        """
         return self.__str__()
 
     def matched(self) -> pdarray:
