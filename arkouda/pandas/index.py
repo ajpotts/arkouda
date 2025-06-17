@@ -29,7 +29,6 @@ __all__ = [
 
 if TYPE_CHECKING:
     from arkouda.categorical import Categorical
-    from arkouda.numpy import cast as akcast
     from arkouda.pandas.series import Series
 else:
     Series = TypeVar("Series")

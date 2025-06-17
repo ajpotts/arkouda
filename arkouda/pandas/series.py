@@ -31,7 +31,6 @@ from arkouda.pandas.index import Index, MultiIndex
 if TYPE_CHECKING:
     from arkouda.categorical import Categorical
     from arkouda.numpy import cast as akcast
-    from arkouda.numpy import isnan, value_counts
     from arkouda.numpy.segarray import SegArray
 else:
     SegArray = TypeVar("SegArray")

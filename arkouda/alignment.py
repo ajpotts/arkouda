@@ -387,8 +387,8 @@ def lookup(keys, values, arguments, fillvalue=-1):
     >>> revkeys = values
     >>> revindices = ak.arange(values.size)
     >>> revargs = ak.array([24, 21, 22])
-    >>> idx = ak.lookup(revkeys, revindices, revargs)
-    >>> keys1[idx], keys2[idx]
+    >>> indx = ak.lookup(revkeys, revindices, revargs)
+    >>> keys1[indx], keys2[indx]
     (array(['twenty', 'twenty', 'twenty']),
     array(['four', 'one', 'two']))
 
@@ -806,6 +806,8 @@ def interval_lookup(keys, values, arguments, fillvalue=-1, tiebreak=None, hierar
         in any interval.
 
     """
+    from arkouda.categorical import Categorical
+
     if isinstance(values, Categorical):
         codes = interval_lookup(keys, values.codes, arguments, fillvalue=values._NAcode)
         return Categorical.from_codes(codes, values.categories, NAvalue=values.NAvalue)
