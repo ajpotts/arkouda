@@ -22,7 +22,6 @@ from arkouda.numpy.pdarraysetops import unique
 from arkouda.numpy.sorting import coargsort
 from arkouda.numpy.strings import Strings
 from arkouda.numpy.timeclass import Datetime, Timedelta
-from arkouda.pandas.categorical import Categorical
 from arkouda.pandas.groupbyclass import GroupBy
 
 __all__ = [
@@ -50,6 +49,7 @@ __all__ = [
 
 
 if TYPE_CHECKING:
+    from arkouda.categorical import Categorical
     from arkouda.client import generic_msg, get_config, get_mem_used
     from arkouda.numpy.segarray import SegArray
     from arkouda.pandas.index import Index
@@ -62,6 +62,7 @@ else:
     generic_msg = TypeVar("generic_msg")
     get_config = TypeVar("get_config")
     get_mem_used = TypeVar("get_mem_used")
+    Categorical = TypeVar("Categorical")
 
 
 def identity(x):

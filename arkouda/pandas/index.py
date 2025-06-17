@@ -20,7 +20,6 @@ from arkouda.numpy.pdarraysetops import argsort, in1d
 from arkouda.numpy.sorting import coargsort
 from arkouda.numpy.strings import Strings
 from arkouda.numpy.util import convert_if_categorical, generic_concat, get_callback
-from arkouda.pandas.categorical import Categorical
 from arkouda.pandas.groupbyclass import GroupBy, unique
 
 __all__ = [
@@ -28,12 +27,14 @@ __all__ = [
     "MultiIndex",
 ]
 
-
 if TYPE_CHECKING:
+    from arkouda.categorical import Categorical
     from arkouda.numpy import cast as akcast
     from arkouda.pandas.series import Series
 else:
+    Series = TypeVar("Series")
     akcast = TypeVar("akcast")
+    Categorical = TypeVar("Categorical")
 
 
 class Index:

@@ -755,6 +755,8 @@ def scalar_array(
     ----------
     value: numeric_scalars
         Value to create pdarray from
+    dtype: np.dtype, type, str, bigint, or None
+        The data type of the created array.
 
     Returns
     -------

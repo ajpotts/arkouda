@@ -40,12 +40,12 @@ from arkouda.numpy.sorting import argsort, coargsort
 from arkouda.numpy.sorting import sort as aksort
 from arkouda.numpy.strings import Strings
 from arkouda.numpy.timeclass import Datetime, Timedelta
-from arkouda.pandas.categorical import Categorical
 from arkouda.pandas.groupbyclass import GROUPBY_REDUCTION_TYPES, GroupBy, unique
 from arkouda.pandas.join import inner_join
 from arkouda.pandas.row import Row
 
 if TYPE_CHECKING:
+    from arkouda.categorical import Categorical
     from arkouda.numpy import cast as akcast
     from arkouda.numpy import cumsum, where
     from arkouda.numpy.segarray import SegArray
@@ -56,6 +56,8 @@ else:
     akcast = TypeVar("akcast")
     cumsum = TypeVar("cumsum")
     where = TypeVar("where")
+    Categorical = TypeVar("Categorical")
+
 
 # This is necessary for displaying DataFrames with BitVector columns,
 # because pandas _html_repr automatically truncates the number of displayed bits

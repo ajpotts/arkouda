@@ -43,7 +43,7 @@ array([100 200 200])
 """
 
 import functools
-from typing import Sequence
+from typing import TYPE_CHECKING, Sequence, TypeVar
 from warnings import warn
 
 import numpy as np
@@ -57,8 +57,14 @@ from arkouda.numpy.pdarraycreation import arange, full, ones, zeros
 from arkouda.numpy.pdarraysetops import concatenate, in1d
 from arkouda.numpy.sorting import argsort, coargsort
 from arkouda.numpy.strings import Strings
-from arkouda.pandas.categorical import Categorical
 from arkouda.pandas.groupbyclass import GroupBy, broadcast, unique
+
+if TYPE_CHECKING:
+    from arkouda.categorical import Categorical
+
+else:
+    Categorical = TypeVar("Categorical")
+
 
 __all__ = [
     "NonUniqueError",
