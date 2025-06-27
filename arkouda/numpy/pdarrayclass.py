@@ -3152,8 +3152,7 @@ class pdarray:
 #       all values have been checked by python module and...
 #       server has created pdarray already before this is called
 @typechecked
-def create_pdarray(repMsg: str, max_bits=None) -> pdarray:
-    # def create_pdarray(repMsg: Union[str, memoryview[int]], max_bits=None) -> pdarray:
+def create_pdarray(repMsg: Union[str, memoryview], max_bits=None) -> pdarray:
     """
     Return a pdarray instance pointing to an array created by the arkouda server.
     The user should not call this function directly.
