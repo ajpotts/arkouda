@@ -263,6 +263,8 @@ def find(query, space, all_occurrences=False, remove_missing=False):
     """
     from arkouda.client import generic_msg
     from arkouda.numpy import cumsum, where
+    from arkouda.numpy.strings import Strings
+    from arkouda.pandas.categorical import Categorical
 
     # Concatenate the space and query in fast (block interleaved) mode
     if isinstance(query, (pdarray, Strings, Categorical)):
@@ -393,6 +395,7 @@ def lookup(keys, values, arguments, fillvalue=-1):
     array(['four', 'one', 'two']))
 
     """
+    from arkouda.pandas.categorical import Categorical
     if isinstance(values, Categorical):
         codes = lookup(keys, values.codes, arguments, fillvalue=values._NAcode)
         return Categorical.from_codes(codes, values.categories, NAvalue=values.NAvalue)

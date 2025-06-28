@@ -167,9 +167,6 @@ def coargsort(
     from arkouda.numpy import cast as akcast
     from arkouda.pandas.categorical import Categorical
 
-    check_type(
-        argname="coargsort", value=arrays, expected_type=Sequence[Union[pdarray, Strings, Categorical]]
-    )
     check_type(value=arrays, expected_type=Sequence[Union[pdarray, Strings, Categorical]])
 
     size: int_scalars = -1

@@ -272,6 +272,7 @@ def attach(name: str):
     from arkouda.pandas.dataframe import DataFrame
     from arkouda.pandas.index import Index, MultiIndex
     from arkouda.pandas.series import Series
+    from arkouda.pandas.categorical import Categorical
 
     rep_msg = json.loads(cast(str, generic_msg(cmd="attach", args={"name": name})))
     rtn_obj = None

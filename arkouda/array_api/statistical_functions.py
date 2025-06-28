@@ -286,9 +286,6 @@ def sum(
     if not isinstance(x_op, pdarray):
         raise TypeError(f"Expected pdarray, got {type(x_op)}")
 
-    if axis is not None:
-        raise NotImplementedError("axis argument is not supported by arkouda.sum")
-
     return Array._new(ak_sum(x_op))
 
 
