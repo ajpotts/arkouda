@@ -62,7 +62,17 @@ RUN source spack-develop/share/spack/setup-env.sh && spack compilers
 #version("20.0.0", sha256="67e31a4f46528634b8c3cbb0dc60ac8f85859d906b400d83d0b6f732b0c5b0e3") #mwm
 
 RUN source spack-develop/share/spack/setup-env.sh && spack install arrow  #arrow@19.0.1
-#spack install chapel #chapel@2.4.0
+
+
+##  This section should be unnecessary and is just to break the chapel install into smaller steps for debugging purposes:
+RUN source spack-develop/share/spack/setup-env.sh && spack install boost --reuse
+#RUN source spack-develop/share/spack/setup-env.sh && spack install pigz --reuse
+#RUN source spack-develop/share/spack/setup-env.sh && spack install hdf5 --reuse
+#RUN source spack-develop/share/spack/setup-env.sh && spack install protobuf --reuse
+
+
+
+#RUN source spack-develop/share/spack/setup-env.sh && spack install chapel #chapel@2.4.0
 
 
 ## Stop here
