@@ -4,8 +4,14 @@ FROM almalinux:9.0
 USER root
 
 
+WORKDIR /opt
 
 
+RUN dnf groupinstall -y "Development Tools"
+RUN dnf install -y git #gcc
+
+#   These ones are for debugging and can be removed in the final version:
+RUN dnf install -y vim
 
 # spack-develop-setup-Amanda
 
@@ -16,30 +22,39 @@ USER root
 #rm -f spack-develop spack-packages
 
 # clone the spack-develop repo from https://github.com/spack/spack
-#git clone -c feature.manyFiles=true --depth=2 https://github.com/spack/spack.git spack-develop-$(date +%Y-%m-%d)
+RUN git clone -c feature.manyFiles=true --depth=2 https://github.com/spack/spack.git spack-develop-$(date +%Y-%m-%d)
 # create a symbolic link
-#ln -s spack-develop-$(date +%Y-%m-%d) spack-develop
+RUN ln -s spack-develop-$(date +%Y-%m-%d) spack-develop
 
 # install libelf, a library that provide an API for reading, writing and manipulating
 # ELF (Executable and Linkable Format) files.
-#cd; spack-develop/bin/spack install libelf
+RUN spack-develop/bin/spack install libelf
 
 # source the spack-develop setup-env
-#cd; source spack-develop/share/spack/setup-env.sh
+RUN source spack-develop/share/spack/setup-env.sh && spack compiler find && spack spec zlib
 
+#RUN spack compiler find
 # bootstrapping clingo
-#spack spec zlib
+#RUN spack spec zlib
 
 ## disable the bootstrap of clingo
-#spack bootstrap disable github-actions-v0.6
-#spack bootstrap disable github-actions-v0.5
+RUN source spack-develop/share/spack/setup-env.sh && spack bootstrap disable github-actions-v0.6
+RUN source spack-develop/share/spack/setup-env.sh && spack bootstrap disable github-actions-v0.5
 
 # verify the active bootstrap repositories were disabled
-#spack bootstrap list
+RUN source spack-develop/share/spack/setup-env.sh && spack bootstrap list
 
 # install a compiler that has fortran
-#spack install gcc@11.5.0 cmake@3.31:
+RUN source spack-develop/share/spack/setup-env.sh && spack install gcc@11.5.0 cmake@3.31:
 #spack compilers
+
+
+
+
+#SHELL ["/bin/bash", "-l", "-c", "source spack-develop/share/spack/setup-env.sh && bash -c"]
+
+
+RUN source spack-develop/share/spack/setup-env.sh && spack compilers
 
 #spack edit arrow
 # add
@@ -83,9 +98,7 @@ USER root
 
 
 
+ENTRYPOINT ["/bin/bash", "-l", "-c", "source spack-develop/share/spack/setup-env.sh && exec bash"]
 
 
 
-
-
-ENTRYPOINT ["/bin/bash", "-l"]
