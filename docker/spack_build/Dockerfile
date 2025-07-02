@@ -61,7 +61,7 @@ RUN source spack-develop/share/spack/setup-env.sh && spack compilers
 #list_url = "https://dlcdn.apache.org/arrow/" #mwm
 #version("20.0.0", sha256="67e31a4f46528634b8c3cbb0dc60ac8f85859d906b400d83d0b6f732b0c5b0e3") #mwm
 
-#spack install arrow  #arrow@19.0.1
+RUN source spack-develop/share/spack/setup-env.sh && spack install arrow  #arrow@19.0.1
 #spack install chapel #chapel@2.4.0
 
 
