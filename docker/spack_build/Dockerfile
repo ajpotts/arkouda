@@ -183,10 +183,27 @@ packages:
     variants: ~lz4
 EOF
 
-# Then install arkouda using that variant
+
+RUN source spack-develop/share/spack/setup-env.sh && \
+    spack spec arkouda
+
+
+
+# Add custom packages.yaml with Arrow's lz4 disabled
+RUN mkdir -p /root/.spack/linux && \
+    echo "packages:" > /root/.spack/linux/packages.yaml && \
+    echo "  arrow:" >> /root/.spack/linux/packages.yaml && \
+    echo "    variants: ~lz4" >> /root/.spack/linux/packages.yaml && \
+    echo "    buildable: true" >> /root/.spack/linux/packages.yaml
+
+# Explicitly add arkouda with arrow~lz4 pinned in spec
 RUN source spack-develop/share/spack/setup-env.sh && \
     spack clean -m && \
-    spack install arkouda
+    spack uninstall --force arrow || true && \
+    spack uninstall --force arkouda || true && \
+    spack install arkouda ^arrow~lz4
+
+
 
 
 
