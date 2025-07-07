@@ -21,9 +21,7 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 - Adds quantile and percentile functions to match numpy -- Closes 3292 ([PR #4361](https://github.com/Bears-R-Us/arkouda/pull/4361))
 - pdarray.argsort (#4458, [PR #4552](https://github.com/Bears-R-Us/arkouda/pull/4552))
 
-**Random Module**
 
-- Adds standard gamma distribution function (#3846, [PR #4089](https://github.com/Bears-R-Us/arkouda/pull/4089))
 
 **Checkpointing and Logging**
 
@@ -47,16 +45,13 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 - add missing __all__ (#4426, [PR #4427](https://github.com/Bears-R-Us/arkouda/pull/4427))
 - Tweaks a few files to avoid relying on CHPL_HOME ([PR #4551](https://github.com/Bears-R-Us/arkouda/pull/4551))
 - add darglint to the project (#4343, [PR #4345](https://github.com/Bears-R-Us/arkouda/pull/4345))
-
-**Third-party Upgrades**
-
-
 - Upgrade to arrow 19.0.1 (#3981, [PR #3982](https://github.com/Bears-R-Us/arkouda/pull/3982), [PR #4342](https://github.com/Bears-R-Us/arkouda/pull/4342))
 
 
 **Other**
 
 - Introduced `ak.apply` ([PR #3963](https://github.com/Bears-R-Us/arkouda/pull/3963))
+- Adds standard gamma distribution function (#3846, [PR #4089](https://github.com/Bears-R-Us/arkouda/pull/4089))
 - result_type function that also handles bigint (#4483, [PR #4484](https://github.com/Bears-R-Us/arkouda/pull/4484))
 - `coargsort` now supports `ascending` keyword (#4464, [PR #4467](https://github.com/Bears-R-Us/arkouda/pull/4467))
 - searchsorted function (#3005, [PR #4214](https://github.com/Bears-R-Us/arkouda/pull/4214))
@@ -65,29 +60,7 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 ---
 
 
-## Deprecations and Refactors
 
-- remove deprecated lookup function (#4375, [PR #4376](https://github.com/Bears-R-Us/arkouda/pull/4376))
-- refactor arange to use instantiateAndRegister (#4382, [PR #4383](https://github.com/Bears-R-Us/arkouda/pull/4383))
-- Simplify and extend logic in binopvv (#4459, [PR #4462](https://github.com/Bears-R-Us/arkouda/pull/4462))
-- Simplify and extend logic in binopvs (#4460, [PR #4563](https://github.com/Bears-R-Us/arkouda/pull/4563))
-- parse_single_value to handle uints represented as nega… (#4147, [PR #4150](https://github.com/Bears-R-Us/arkouda/pull/4150))
-- Change some nested foralls to for/foralls in HistogramMsg ([PR #4180](https://github.com/Bears-R-Us/arkouda/pull/4180))
-- remove try! in toSymEntry (#4175, [PR #4176](https://github.com/Bears-R-Us/arkouda/pull/4176))
-- Workaround an issue with using PrivateSpace domains in formals ([PR #4633](https://github.com/Bears-R-Us/arkouda/pull/4633))
-- Remove deprecated functions (#4308, [PR #4309](https://github.com/Bears-R-Us/arkouda/pull/4309))
-- Removed deprecated functions ([PR #4374](https://github.com/Bears-R-Us/arkouda/pull/4374))
-- removes the old registerND annotations from the remaining modules (#3721, #3723, [PR #3986](https://github.com/Bears-R-Us/arkouda/pull/3986))
-- Create a repartitionByLocaleString function (#4497, [PR #4557](https://github.com/Bears-R-Us/arkouda/pull/4557))
-- Create a repartitionByHashString function (#4499, [PR #4617](https://github.com/Bears-R-Us/arkouda/pull/4617))
-- Server functions `repartitionByLocaleString` and `repartitionByHashString` added (#4497, #4499)
-- Make an unordered set union of two Strings arrays function (#4244, [PR #4245](https://github.com/Bears-R-Us/arkouda/pull/4245))
-- Closes 4140, reverts to previous ak.zeros code ([PR #4141](https://github.com/Bears-R-Us/arkouda/pull/4141))
-- Add a compatibility module for Time to handle the new totalMicroseconds method ([PR #4142](https://github.com/Bears-R-Us/arkouda/pull/4142))
-- refactor arkouda/numpy/imports/__init__.py ([PR #4453](https://github.com/Bears-R-Us/arkouda/pull/4453))
-- Sort module updates for Chapel 2.3 ([PR #3972](https://github.com/Bears-R-Us/arkouda/pull/3972))
-
----
 
 
 
@@ -121,17 +94,49 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 - `comm_diagnostics` now returns a DataFrame (#3970, [PR #3971](https://github.com/Bears-R-Us/arkouda/pull/3971))
 
 
----
-
-## DataFrame and Merge Improvements
+**DataFrame and Merge Improvements**
 
 - Added `right_on` and `left_on` to `DataFrame.merge` (#4234, [PR #4240](https://github.com/Bears-R-Us/arkouda/pull/4240))
 - `ak.merge` supports `Categorical` (#4313, [PR #4344](https://github.com/Bears-R-Us/arkouda/pull/4344))
 - Fixed `DataFrame.__getitem__` behavior during merges (#4360, [PR #4362](https://github.com/Bears-R-Us/arkouda/pull/4362))
 
+---
+
+## Deprecations and Refactors
+
+- remove deprecated lookup function (#4375, [PR #4376](https://github.com/Bears-R-Us/arkouda/pull/4376))
+- refactor arange to use instantiateAndRegister (#4382, [PR #4383](https://github.com/Bears-R-Us/arkouda/pull/4383))
+- Simplify and extend logic in binopvv (#4459, [PR #4462](https://github.com/Bears-R-Us/arkouda/pull/4462))
+- Simplify and extend logic in binopvs (#4460, [PR #4563](https://github.com/Bears-R-Us/arkouda/pull/4563))
+- parse_single_value to handle uints represented as nega… (#4147, [PR #4150](https://github.com/Bears-R-Us/arkouda/pull/4150))
+- Change some nested foralls to for/foralls in HistogramMsg ([PR #4180](https://github.com/Bears-R-Us/arkouda/pull/4180))
+- remove try! in toSymEntry (#4175, [PR #4176](https://github.com/Bears-R-Us/arkouda/pull/4176))
+- Workaround an issue with using PrivateSpace domains in formals ([PR #4633](https://github.com/Bears-R-Us/arkouda/pull/4633))
+- Remove deprecated functions (#4308, [PR #4309](https://github.com/Bears-R-Us/arkouda/pull/4309))
+- Removed deprecated functions ([PR #4374](https://github.com/Bears-R-Us/arkouda/pull/4374))
+- removes the old registerND annotations from the remaining modules (#3721, #3723, [PR #3986](https://github.com/Bears-R-Us/arkouda/pull/3986))
+- Create a repartitionByLocaleString function (#4497, [PR #4557](https://github.com/Bears-R-Us/arkouda/pull/4557))
+- Create a repartitionByHashString function (#4499, [PR #4617](https://github.com/Bears-R-Us/arkouda/pull/4617))
+- Server functions `repartitionByLocaleString` and `repartitionByHashString` added (#4497, #4499)
+- Make an unordered set union of two Strings arrays function (#4244, [PR #4245](https://github.com/Bears-R-Us/arkouda/pull/4245))
+- Closes 4140, reverts to previous ak.zeros code ([PR #4141](https://github.com/Bears-R-Us/arkouda/pull/4141))
+- Add a compatibility module for Time to handle the new totalMicroseconds method ([PR #4142](https://github.com/Bears-R-Us/arkouda/pull/4142))
+- refactor arkouda/numpy/imports/__init__.py ([PR #4453](https://github.com/Bears-R-Us/arkouda/pull/4453))
+- Sort module updates for Chapel 2.3 ([PR #3972](https://github.com/Bears-R-Us/arkouda/pull/3972))
 
 ---
 
+
+
+
+---
+
+## Performance Improvements
+
+- permutation performance fix (#3974, [PR #3975](https://github.com/Bears-R-Us/arkouda/pull/3975))
+- Fix distributed array creation and sorting issues ([PR #4242](https://github.com/Bears-R-Us/arkouda/pull/4242))
+
+---
 
 
 ## Bug Fixes
@@ -192,12 +197,7 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 
 
 
-## Performance Improvements
 
-- permutation performance fix (#3974, [PR #3975](https://github.com/Bears-R-Us/arkouda/pull/3975))
-- Fix distributed array creation and sorting issues ([PR #4242](https://github.com/Bears-R-Us/arkouda/pull/4242))
-
----
 
 ## Benchmark Refactor
 
@@ -222,6 +222,33 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 
 ---
 
+
+
+
+## Testing Improvements
+- `skip_by_rank` enhanced for set containment (#3954, [PR #3955](https://github.com/Bears-R-Us/arkouda/pull/3955))
+- Increases multidimensional testing for pdarraycreation module (#4028, [PR #4108](https://github.com/Bears-R-Us/arkouda/pull/4108))
+- add `ARKOUDA_DEFAULT_TEMP_DIRECTORY` to globally set the default temp directory ([PR #4198](https://github.com/Bears-R-Us/arkouda/pull/4198))
+- Detect server exit while reading connection file ([PR #4403](https://github.com/Bears-R-Us/arkouda/pull/4403))
+- Improved launch scripts for PBS environments ([PR #4088](https://github.com/Bears-R-Us/arkouda/pull/4088))
+- Avoid 0 in test with unsigned numbers ([PR #4104](https://github.com/Bears-R-Us/arkouda/pull/4104))
+- Temporarily skip scipy testing for Python 3.13+ ([PR #4123](https://github.com/Bears-R-Us/arkouda/pull/4123))
+- pytest marker for python version (#4130, [PR #4132](https://github.com/Bears-R-Us/arkouda/pull/4132))
+- update unit tests handling of bigint (#4137, [PR #4138](https://github.com/Bears-R-Us/arkouda/pull/4138))
+- Remove verbose output from comm diag test ([PR #4179](https://github.com/Bears-R-Us/arkouda/pull/4179))
+- Add `pytest.temp_directory` ([PR #4181](https://github.com/Bears-R-Us/arkouda/pull/4181))
+- Closes-4045 adds multi-dim tests to scipy_test ([PR #4172](https://github.com/Bears-R-Us/arkouda/pull/4172))
+- Restore scipy skipifs removed in #4172 ([PR #4197](https://github.com/Bears-R-Us/arkouda/pull/4197))
+- union1d needs more rigorous unit tests on Strings (#4317, [PR #4322](https://github.com/Bears-R-Us/arkouda/pull/4322))
+- pdarray_creation_test.py unit test improvements Part 1 ([PR #4369](https://github.com/Bears-R-Us/arkouda/pull/4369))
+- Closes-4567 aligns use of pytest.seed in numeric_test.py ([PR #4568](https://github.com/Bears-R-Us/arkouda/pull/4568))
+- add pytest-timeout (#4445, [PR #4654](https://github.com/Bears-R-Us/arkouda/pull/4654))
+- Increase unit test timeout to 30 minutes ([PR #4666](https://github.com/Bears-R-Us/arkouda/pull/4666))
+- add logging to pytest (#4667, [PR #4669](https://github.com/Bears-R-Us/arkouda/pull/4669))
+- Skipif test_checkpoint() ([PR #4690](https://github.com/Bears-R-Us/arkouda/pull/4690))
+
+
+---
 
 
 ## Documentation
@@ -316,33 +343,7 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 
 ---
 
-## Testing Improvements
-- `skip_by_rank` enhanced for set containment (#3954, [PR #3955](https://github.com/Bears-R-Us/arkouda/pull/3955))
-- Increases multidimensional testing for pdarraycreation module (#4028, [PR #4108](https://github.com/Bears-R-Us/arkouda/pull/4108))
-- add `ARKOUDA_DEFAULT_TEMP_DIRECTORY` to globally set the default temp directory ([PR #4198](https://github.com/Bears-R-Us/arkouda/pull/4198))
-- Detect server exit while reading connection file ([PR #4403](https://github.com/Bears-R-Us/arkouda/pull/4403))
-- Improved launch scripts for PBS environments ([PR #4088](https://github.com/Bears-R-Us/arkouda/pull/4088))
-- Avoid 0 in test with unsigned numbers ([PR #4104](https://github.com/Bears-R-Us/arkouda/pull/4104))
-- Temporarily skip scipy testing for Python 3.13+ ([PR #4123](https://github.com/Bears-R-Us/arkouda/pull/4123))
-- pytest marker for python version (#4130, [PR #4132](https://github.com/Bears-R-Us/arkouda/pull/4132))
-- update unit tests handling of bigint (#4137, [PR #4138](https://github.com/Bears-R-Us/arkouda/pull/4138))
-- Remove verbose output from comm diag test ([PR #4179](https://github.com/Bears-R-Us/arkouda/pull/4179))
-- Add `pytest.temp_directory` ([PR #4181](https://github.com/Bears-R-Us/arkouda/pull/4181))
-- Closes-4045 adds multi-dim tests to scipy_test ([PR #4172](https://github.com/Bears-R-Us/arkouda/pull/4172))
-- Restore scipy skipifs removed in #4172 ([PR #4197](https://github.com/Bears-R-Us/arkouda/pull/4197))
-- union1d needs more rigorous unit tests on Strings (#4317, [PR #4322](https://github.com/Bears-R-Us/arkouda/pull/4322))
-- pdarray_creation_test.py unit test improvements Part 1 ([PR #4369](https://github.com/Bears-R-Us/arkouda/pull/4369))
-- Closes-4567 aligns use of pytest.seed in numeric_test.py ([PR #4568](https://github.com/Bears-R-Us/arkouda/pull/4568))
-- add pytest-timeout (#4445, [PR #4654](https://github.com/Bears-R-Us/arkouda/pull/4654))
-- Increase unit test timeout to 30 minutes ([PR #4666](https://github.com/Bears-R-Us/arkouda/pull/4666))
-- add logging to pytest (#4667, [PR #4669](https://github.com/Bears-R-Us/arkouda/pull/4669))
-- Skipif test_checkpoint() ([PR #4690](https://github.com/Bears-R-Us/arkouda/pull/4690))
-
-
----
-
 ## Developer Experience
-
 
 - Runs isort and black on project ([PR #4139](https://github.com/Bears-R-Us/arkouda/pull/4139))
 - update CI to use chapel 2.3.0 (#4085, [PR #4086](https://github.com/Bears-R-Us/arkouda/pull/4086))
@@ -354,6 +355,7 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 - add git pre-commit hooks #4356 (#4356, [PR #4357](https://github.com/Bears-R-Us/arkouda/pull/4357))
 - add check mypy version to CI ([PR #4457](https://github.com/Bears-R-Us/arkouda/pull/4457))
 - add cancel-in-progress to CI (#4698, [PR #4699](https://github.com/Bears-R-Us/arkouda/pull/4699))
+
 
 - Add memory logging to the CI ([PR #4695](https://github.com/Bears-R-Us/arkouda/pull/4695))
 - Add external tools documentation (#4079, [PR #4080](https://github.com/Bears-R-Us/arkouda/pull/4080))
@@ -370,7 +372,10 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 - arkouda_benchmark_linux and arkouda_tests_linux to use ubuntu-with-arkouda-deps (#4236, [PR #4238](https://github.com/Bears-R-Us/arkouda/pull/4238))
 
 
-## Makefile Improvements
+**Linters**
+
+
+**Makefile Improvements**
 - make doc-clean should depend on stub-clean (#4155, [PR #4156](https://github.com/Bears-R-Us/arkouda/pull/4156))
 - add isort to Makefile (#4199, [PR #4211](https://github.com/Bears-R-Us/arkouda/pull/4211))
 - Closes 4206:  add install-pytables to Makefile ([PR #4208](https://github.com/Bears-R-Us/arkouda/pull/4208))
