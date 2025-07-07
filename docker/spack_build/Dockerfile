@@ -141,6 +141,12 @@ RUN source spack-develop/share/spack/setup-env.sh && \
 #   lz4 location found with:
 #   spack location -i lz4
 
+
+
+
+
+
+
 # This assumes `spack` is already initialized earlier
 RUN mkdir -p /root/.spack/linux && \
     echo "packages:" > /root/.spack/linux/packages.yaml && \
@@ -163,7 +169,23 @@ EOF
 
 
 
+# Make arrow~lz4 the default
+RUN mkdir -p /root/.spack/linux && \
+    echo "packages:" > /root/.spack/linux/packages.yaml && \
+    echo "  arrow:" >> /root/.spack/linux/packages.yaml && \
+    echo "    variants: ~lz4" >> /root/.spack/linux/packages.yaml
+
+# Force Arrow without LZ4 globally
+RUN mkdir -p /root/.spack/linux && \
+    cat <<EOF > /root/.spack/linux/packages.yaml
+packages:
+  arrow:
+    variants: ~lz4
+EOF
+
+# Then install arkouda using that variant
 RUN source spack-develop/share/spack/setup-env.sh && \
+    spack clean -m && \
     spack install arkouda
 
 
