@@ -15,7 +15,7 @@ RUN dnf install -y git
 #   These ones are for debugging and can be removed in the final version:
 RUN dnf install -y vim
 
-ENV DATE=$(date +%Y-%m-%d)
+ENV DATE=2025-07-08
 
 
 # clone the spack-develop repo from https://github.com/spack/spack
