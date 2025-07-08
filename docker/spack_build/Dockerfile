@@ -97,8 +97,8 @@ RUN . $SPACK_ROOT/share/spack/setup-env.sh && \
 # ---------------------------
 # Install Arkouda with patched Spack package
 # ---------------------------
-#RUN . $SPACK_ROOT/share/spack/setup-env.sh && \
-#    spack install arkouda@2024.10.02
+RUN . $SPACK_ROOT/share/spack/setup-env.sh && \
+    spack install arkouda@2024.10.02
 
 # ---------------------------
 # Set environment variables for runtime
