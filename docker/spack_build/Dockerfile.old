@@ -1,0 +1,126 @@
+FROM almalinux:9.0
+
+# Set user to root
+USER root
+
+ENV CHPL_GMP=bundled
+
+
+WORKDIR /opt
+
+
+RUN dnf groupinstall -y "Development Tools"
+RUN dnf install -y git 
+
+#   These ones are for debugging and can be removed in the final version:
+RUN dnf install -y vim
+
+ENV DATE=$(date +%Y-%m-%d)
+
+
+# clone the spack-develop repo from https://github.com/spack/spack
+RUN git clone -c feature.manyFiles=true --depth=2 https://github.com/spack/spack.git spack-develop-$DATE
+# create a symbolic link
+RUN ln -s spack-develop-$DATE spack-develop
+
+# install libelf, a library that provide an API for reading, writing and manipulating
+# ELF (Executable and Linkable Format) files.
+RUN spack-develop/bin/spack install libelf
+
+
+
+## disable the bootstrap of clingo
+RUN source spack-develop/share/spack/setup-env.sh && spack bootstrap disable github-actions-v0.6
+RUN source spack-develop/share/spack/setup-env.sh && spack bootstrap disable github-actions-v0.5
+
+# verify the active bootstrap repositories were disabled
+RUN source spack-develop/share/spack/setup-env.sh && spack bootstrap list
+
+#spack compilers
+RUN source spack-develop/share/spack/setup-env.sh && spack install gcc@11.5.0 cmake@3.31:
+
+
+RUN source spack-develop/share/spack/setup-env.sh && spack compiler find && spack spec zlib
+
+
+
+RUN source spack-develop/share/spack/setup-env.sh && spack compilers
+
+
+RUN source spack-develop/share/spack/setup-env.sh && spack install arrow
+
+
+##  This section should be unnecessary and is just to break the chapel install into smaller steps for debugging purposes:
+RUN source spack-develop/share/spack/setup-env.sh && spack install boost --reuse
+RUN source spack-develop/share/spack/setup-env.sh && spack install pigz --reuse
+RUN source spack-develop/share/spack/setup-env.sh && spack install protobuf --reuse
+RUN source spack-develop/share/spack/setup-env.sh && spack install pcre2 --reuse
+RUN source spack-develop/share/spack/setup-env.sh && spack install libzmq --reuse
+RUN source spack-develop/share/spack/setup-env.sh && spack install llvm --reuse
+RUN source spack-develop/share/spack/setup-env.sh && spack install libsigsegv --reuse
+RUN source spack-develop/share/spack/setup-env.sh && spack install libevent --reuse
+RUN source spack-develop/share/spack/setup-env.sh && spack install findutils --reuse
+RUN source spack-develop/share/spack/setup-env.sh && spack install m4 --reuse
+RUN source spack-develop/share/spack/setup-env.sh && spack install autoconf --reuse
+RUN source spack-develop/share/spack/setup-env.sh && spack install automake --reuse
+RUN source spack-develop/share/spack/setup-env.sh && spack install libtool --reuse
+RUN source spack-develop/share/spack/setup-env.sh && spack install gmp --reuse
+
+
+
+RUN source spack-develop/share/spack/setup-env.sh && spack install chapel@2.4.0
+
+# The path to chpl is found using:
+# find $(spack location -i chapel) -type f -name chpl
+#ENV PATH="/opt/spack-develop-2025-07-02/opt/spack/linux-skylake/chapel-2.5.0-rlqgyjmqp5f5y72rqqnqdyr2pyaj2p2f/bin:${PATH}"
+
+
+
+
+
+
+RUN source spack-develop/share/spack/setup-env.sh && spack repo create /opt/local-spack-repo bears_r_us
+
+
+#   get the package file with:
+#  find /root/.spack/package_repos -name package.py | grep arkouda
+#   Then use sed to replace
+#   depends_on("chapel@2.1: +hdf5 +zmq", type=("build", "link", "run", "test"))
+#   with
+#   depends_on("chapel@2.4.0:2.4.99 +hdf5 +zmq", type=("build", "link", "run", "test"))
+RUN sed -E -i 's|depends_on\("chapel@[^"]*", type=\(([^)]*)\)\)|depends_on("chapel@2.4.0:2.4.99 +hdf5 +zmq", type=(\1))|' \
+    /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages/arkouda/package.py
+
+#   Now replace:
+#   depends_on(
+#        "arrow +parquet +snappy +zlib +brotli +bz2 +lz4 +zstd",
+#        type=("build", "link", "run", "test"),
+#    )
+#   with
+#   depends_on(
+#    "arrow +parquet +snappy +zlib +brotli +bz2 ~lz4 +zstd",
+#    type=("build", "link", "run", "test"),
+#   )
+RUN perl -0777 -pi -e 's|depends_on\(\n\s*"arrow \+parquet \+snappy \+zlib \+brotli \+bz2 \+lz4 \+zstd",\n\s*type=\("build", "link", "run", "test"\),\n\s*\)|depends_on(\n    "arrow +parquet +snappy +zlib +brotli +bz2 ~lz4 +zstd",\n    type=("build", "link", "run", "test"),\n)|g' \
+    /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages/arkouda/package.py
+
+
+RUN source spack-develop/share/spack/setup-env.sh && spack repo add /opt/local-spack-repo/spack_repo/bears_r_us
+RUN source spack-develop/share/spack/setup-env.sh && spack install arkouda
+
+#   To get ARKOUDA_HOME:
+#   export ARKOUDA_HOME=$(spack location -i arkouda)/bin
+ENV ARKOUDA_HOME=/opt/spack-develop-2025-07-03/opt/spack/linux-skylake/arkouda-2024.10.02-j2xdyerofa7gzxmjrykvh2xfzf5cgab5/bin
+
+WORKDIR $ARKOUDA_HOME
+
+
+
+
+
+
+
+ENTRYPOINT ["/bin/bash", "-l", "-c", "source /opt/spack-develop/share/spack/setup-env.sh && exec bash"]
+
+
+
