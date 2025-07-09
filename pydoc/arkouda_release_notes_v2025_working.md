@@ -19,7 +19,7 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 - Adds axis handling to mean, var, std (#4425, [PR #4442](https://github.com/Bears-R-Us/arkouda/pull/4442))
 - Adds negative axis coverage to ak.repeat, ak.argmin, ak.argmax, Closes 4407 and 4421 ([PR #4408](https://github.com/Bears-R-Us/arkouda/pull/4408))
 - Adds quantile and percentile functions to match numpy -- Closes 3292 ([PR #4361](https://github.com/Bears-R-Us/arkouda/pull/4361))
-- pdarray.argsort (#4458, [PR #4552](https://github.com/Bears-R-Us/arkouda/pull/4552))
+- Adds pdarray.argsort (#4458, [PR #4552](https://github.com/Bears-R-Us/arkouda/pull/4552))
 
 
 
@@ -36,15 +36,6 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 
 
 **Project Infrastructure**
-
-- add pydocstyle to the project (#4320, [PR #4324](https://github.com/Bears-R-Us/arkouda/pull/4324))
-- add pydoclint to the project (#4363, [PR #4364](https://github.com/Bears-R-Us/arkouda/pull/4364))
-- add docstr-coverage (#4386, [PR #4387](https://github.com/Bears-R-Us/arkouda/pull/4387))
-- add chplcheck (#4388, [PR #4389](https://github.com/Bears-R-Us/arkouda/pull/4389))
-- docstr-coverage ignore for overload functions ([PR #4432](https://github.com/Bears-R-Us/arkouda/pull/4432))
-- add missing __all__ (#4426, [PR #4427](https://github.com/Bears-R-Us/arkouda/pull/4427))
-- Tweaks a few files to avoid relying on CHPL_HOME ([PR #4551](https://github.com/Bears-R-Us/arkouda/pull/4551))
-- add darglint to the project (#4343, [PR #4345](https://github.com/Bears-R-Us/arkouda/pull/4345))
 - Upgrade to arrow 19.0.1 (#3981, [PR #3982](https://github.com/Bears-R-Us/arkouda/pull/3982), [PR #4342](https://github.com/Bears-R-Us/arkouda/pull/4342))
 
 
@@ -102,6 +93,15 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 
 ---
 
+
+
+## Performance Improvements
+
+- permutation performance fix (#3974, [PR #3975](https://github.com/Bears-R-Us/arkouda/pull/3975))
+- Fix distributed array creation and sorting issues ([PR #4242](https://github.com/Bears-R-Us/arkouda/pull/4242))
+
+---
+
 ## Deprecations and Refactors
 
 - remove deprecated lookup function (#4375, [PR #4376](https://github.com/Bears-R-Us/arkouda/pull/4376))
@@ -123,18 +123,34 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 - Add a compatibility module for Time to handle the new totalMicroseconds method ([PR #4142](https://github.com/Bears-R-Us/arkouda/pull/4142))
 - refactor arkouda/numpy/imports/__init__.py ([PR #4453](https://github.com/Bears-R-Us/arkouda/pull/4453))
 - Sort module updates for Chapel 2.3 ([PR #3972](https://github.com/Bears-R-Us/arkouda/pull/3972))
-
----
-
-
+- Tweaks a few files to avoid relying on CHPL_HOME ([PR #4551](https://github.com/Bears-R-Us/arkouda/pull/4551))
+- add missing __all__ (#4426, [PR #4427](https://github.com/Bears-R-Us/arkouda/pull/4427))
 
 
----
 
-## Performance Improvements
+**Benchmark Refactor**
 
-- permutation performance fix (#3974, [PR #3975](https://github.com/Bears-R-Us/arkouda/pull/3975))
-- Fix distributed array creation and sorting issues ([PR #4242](https://github.com/Bears-R-Us/arkouda/pull/4242))
+- Refactor benchmark handling of running mode. (#3964, [PR #4471](https://github.com/Bears-R-Us/arkouda/pull/4471))
+- Part of #3964:  Refactor benchmark handling of running mode ([PR #4358](https://github.com/Bears-R-Us/arkouda/pull/4358))
+- Part 2 of #3964:  Refactor benchmark handling of running mode ([PR #4373](https://github.com/Bears-R-Us/arkouda/pull/4373))
+- Part 3 of #3964:  Refactor benchmark handling of running mode ([PR #4385](https://github.com/Bears-R-Us/arkouda/pull/4385))
+
+- Update stream_benchmark (#3580, [PR #4562](https://github.com/Bears-R-Us/arkouda/pull/4562))
+- Closes 4581 -- adds benchmark for where ([PR #4591](https://github.com/Bears-R-Us/arkouda/pull/4591))
+- improve benchmark flags ([PR #4616](https://github.com/Bears-R-Us/arkouda/pull/4616))
+- Update array_create_benchmark (#3561, [PR #4607](https://github.com/Bears-R-Us/arkouda/pull/4607))
+- Update array_transfer_benchmark (#3562, [PR #4608](https://github.com/Bears-R-Us/arkouda/pull/4608))
+- Update bigint_bitwise_binops_benchmark (#3563, [PR #4609](https://github.com/Bears-R-Us/arkouda/pull/4609))
+- Update gather_benchmark (#3569, [PR #4612](https://github.com/Bears-R-Us/arkouda/pull/4612))
+- Update scatter_benchmark (#3576, [PR #4615](https://github.com/Bears-R-Us/arkouda/pull/4615))
+- Update dataframe_indexing_benchmark (#3566, [PR #4605](https://github.com/Bears-R-Us/arkouda/pull/4605))
+- Fix a benchmark's output ([PR #4151](https://github.com/Bears-R-Us/arkouda/pull/4151))
+- Refactored benchmarks: `stream`, `scatter`, `bitwise`, `array_create`, `gather`, etc. (#3580, #3561, #3563)
+- Introduced `where` benchmark (#4581)
+
+
+
+
 
 ---
 
@@ -198,26 +214,6 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 
 
 
-
-## Benchmark Refactor
-
-- Refactor benchmark handling of running mode. (#3964, [PR #4471](https://github.com/Bears-R-Us/arkouda/pull/4471))
-- Part of #3964:  Refactor benchmark handling of running mode ([PR #4358](https://github.com/Bears-R-Us/arkouda/pull/4358))
-- Part 2 of #3964:  Refactor benchmark handling of running mode ([PR #4373](https://github.com/Bears-R-Us/arkouda/pull/4373))
-- Part 3 of #3964:  Refactor benchmark handling of running mode ([PR #4385](https://github.com/Bears-R-Us/arkouda/pull/4385))
-
-- Update stream_benchmark (#3580, [PR #4562](https://github.com/Bears-R-Us/arkouda/pull/4562))
-- Closes 4581 -- adds benchmark for where ([PR #4591](https://github.com/Bears-R-Us/arkouda/pull/4591))
-- improve benchmark flags ([PR #4616](https://github.com/Bears-R-Us/arkouda/pull/4616))
-- Update array_create_benchmark (#3561, [PR #4607](https://github.com/Bears-R-Us/arkouda/pull/4607))
-- Update array_transfer_benchmark (#3562, [PR #4608](https://github.com/Bears-R-Us/arkouda/pull/4608))
-- Update bigint_bitwise_binops_benchmark (#3563, [PR #4609](https://github.com/Bears-R-Us/arkouda/pull/4609))
-- Update gather_benchmark (#3569, [PR #4612](https://github.com/Bears-R-Us/arkouda/pull/4612))
-- Update scatter_benchmark (#3576, [PR #4615](https://github.com/Bears-R-Us/arkouda/pull/4615))
-- Update dataframe_indexing_benchmark (#3566, [PR #4605](https://github.com/Bears-R-Us/arkouda/pull/4605))
-- Fix a benchmark's output ([PR #4151](https://github.com/Bears-R-Us/arkouda/pull/4151))
-- Refactored benchmarks: `stream`, `scatter`, `bitwise`, `array_create`, `gather`, etc. (#3580, #3561, #3563)
-- Introduced `where` benchmark (#4581)
 
 
 ---
@@ -373,7 +369,12 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 
 
 **Linters**
-
+- add pydocstyle to the project (#4320, [PR #4324](https://github.com/Bears-R-Us/arkouda/pull/4324))
+- add pydoclint to the project (#4363, [PR #4364](https://github.com/Bears-R-Us/arkouda/pull/4364))
+- add docstr-coverage (#4386, [PR #4387](https://github.com/Bears-R-Us/arkouda/pull/4387))
+- add chplcheck (#4388, [PR #4389](https://github.com/Bears-R-Us/arkouda/pull/4389))
+- docstr-coverage ignore for overload functions ([PR #4432](https://github.com/Bears-R-Us/arkouda/pull/4432))
+- add darglint to the project (#4343, [PR #4345](https://github.com/Bears-R-Us/arkouda/pull/4345))
 
 **Makefile Improvements**
 - make doc-clean should depend on stub-clean (#4155, [PR #4156](https://github.com/Bears-R-Us/arkouda/pull/4156))
