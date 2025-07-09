@@ -13,14 +13,17 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 ## Features
 
 **Array Functions**
-- Added: `append, diff, eye, newaxis, nextafter, percentile, quantile, repeat, result_type, take, tile, vecdot` (#3000, #2998, #3004, #3292, #4483, #4502), `newaxis` ([PR #4393](https://github.com/Bears-R-Us/arkouda/pull/4393)), `xp.trapz` ([PR #4127](https://github.com/Bears-R-Us/arkouda/pull/4127))
-- Improved: `diff` (#2998, [PR #4418](https://github.com/Bears-R-Us/arkouda/pull/4418)), `nextafter` (#3004, [PR #4219](https://github.com/Bears-R-Us/arkouda/pull/4219)), `repeat` (#3000, [PR #4146](https://github.com/Bears-R-Us/arkouda/pull/4146)), `reshape` (#4165), [PR #4394](https://github.com/Bears-R-Us/arkouda/pull/4394)), `take` (#3755, [PR #4419](https://github.com/Bears-R-Us/arkouda/pull/4419)), `tile` (#3003, [PR #4101](https://github.com/Bears-R-Us/arkouda/pull/4101))
-- Adds negative axis handling to squeeze ([PR #4406](https://github.com/Bears-R-Us/arkouda/pull/4406))
-- Adds axis handling to mean, var, std (#4425, [PR #4442](https://github.com/Bears-R-Us/arkouda/pull/4442))
-- Adds negative axis coverage to ak.repeat, ak.argmin, ak.argmax, Closes 4407 and 4421 ([PR #4408](https://github.com/Bears-R-Us/arkouda/pull/4408))
-- Adds quantile and percentile functions to match numpy -- Closes 3292 ([PR #4361](https://github.com/Bears-R-Us/arkouda/pull/4361))
-- Adds pdarray.argsort (#4458, [PR #4552](https://github.com/Bears-R-Us/arkouda/pull/4552))
 
+- **Added**: `append`, `argsort`, `diff`, `eye`, `newaxis`, `nextafter`, `percentile`, `quantile`, `repeat`, `result_type`, `take`, `tile`, `vecdot`, `xp.trapz`  
+  (#2998, #3000, #3003, #3004, #3292, #3755, #4393, #4418, #4419, #4458, #4483, #4484, #4502, [PR #4101](https://github.com/Bears-R-Us/arkouda/pull/4101), [PR #4127](https://github.com/Bears-R-Us/arkouda/pull/4127), [PR #4146](https://github.com/Bears-R-Us/arkouda/pull/4146), [PR #4219](https://github.com/Bears-R-Us/arkouda/pull/4219), [PR #4361](https://github.com/Bears-R-Us/arkouda/pull/4361), [PR #4393](https://github.com/Bears-R-Us/arkouda/pull/4393)), [PR #4394](https://github.com/Bears-R-Us/arkouda/pull/4394), [PR #4418](https://github.com/Bears-R-Us/arkouda/pull/4418), [PR #4419](https://github.com/Bears-R-Us/arkouda/pull/4419), [PR #4552](https://github.com/Bears-R-Us/arkouda/pull/4552))
+
+- **Improved**: `ak.diff`, `ak.nextafter`, `ak.repeat`, `ak.reshape`, `ak.take`, `ak.tile`, `ak.argsort`  
+  (#2998, #3000, #3004, #3755, #4101, #4146, #4147, #4165, #4394, #4418, #4419, #4458, [PRs #4101](https://github.com/Bears-R-Us/arkouda/pull/4101), [#4146](https://github.com/Bears-R-Us/arkouda/pull/4146), [#4394](https://github.com/Bears-R-Us/arkouda/pull/4394), [#4552](https://github.com/Bears-R-Us/arkouda/pull/4552))
+
+- **Axis and Broadcasting Enhancements**:
+  - Axis support in `ak.mean`, `ak.var`, `ak.std` (#4425, [PR #4442](https://github.com/Bears-R-Us/arkouda/pull/4442))  
+  - Negative axis handling in `ak.squeeze`, `ak.repeat`, `ak.argmin`, `ak.argmax` (#4407, #4421, [PR #4406](https://github.com/Bears-R-Us/arkouda/pull/4406), [PR #4408](https://github.com/Bears-R-Us/arkouda/pull/4408))  
+  
 
 
 **Checkpointing and Logging**
@@ -49,10 +52,6 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 
 
 ---
-
-
-
-
 
 
 ## API Enhancements and Compatibility
@@ -92,8 +91,6 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 - Fixed `DataFrame.__getitem__` behavior during merges (#4360, [PR #4362](https://github.com/Bears-R-Us/arkouda/pull/4362))
 
 ---
-
-
 
 ## Performance Improvements
 
