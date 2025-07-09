@@ -51,46 +51,55 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 - Added standard gamma distribution function to `ak.random`  
   (#3846, [PR #4089](https://github.com/Bears-R-Us/arkouda/pull/4089))
 
-
-
+  
 ---
 
 
 ## API Enhancements and Compatibility
 
-- Reorg modules into our Numpy Directory ([PR #4103](https://github.com/Bears-R-Us/arkouda/pull/4103))
-- Reorg modules into our Scipy Directory ([PR #4185](https://github.com/Bears-R-Us/arkouda/pull/4185))
-- Reorg scipy part2 ([PR #4390](https://github.com/Bears-R-Us/arkouda/pull/4390))
-
-- upgrade to numpy 2.0.0 (#4098, [PR #4213](https://github.com/Bears-R-Us/arkouda/pull/4213))
-- Part 1 of #4098:  upgrade to numpy 2.0.0 ([PR #4188](https://github.com/Bears-R-Us/arkouda/pull/4188))
-- NumPy 2.0 compatibility: `can_cast`, `sign`, `result_type`, `dtype`, etc. (#3337, #4098, #4555)
-
-- Closes 3990 - aligns ak.arange to np.arange ([PR #4116](https://github.com/Bears-R-Us/arkouda/pull/4116))
-- Closes-4092 aligns ak.transpose to numpy transpose ([PR #4174](https://github.com/Bears-R-Us/arkouda/pull/4174))
-- Closes 4124, align ak.dot to np.dot. ([PR #4224](https://github.com/Bears-R-Us/arkouda/pull/4224))
-- adds `range` parameter to `histogram` functions (#4096, [PR #4078](https://github.com/Bears-R-Us/arkouda/pull/4078))
-- hstack to match numpy (#3329, [PR #4105](https://github.com/Bears-R-Us/arkouda/pull/4105))
-- Closes-4481 corrects default dtype of ak.eye ([PR #4482](https://github.com/Bears-R-Us/arkouda/pull/4482))
 - aligns ak.sign output type to np.sign output type (#4555, [PR #4556](https://github.com/Bears-R-Us/arkouda/pull/4556))
 - aligning vecdot function to numpy (#4468, [PR #4472](https://github.com/Bears-R-Us/arkouda/pull/4472))
 - Closes 4520, incorporates where parameter in several functions where it had been missing ([PR #4522](https://github.com/Bears-R-Us/arkouda/pull/4522))
 - Closes-4501, aligns parameter names of ak.eye to those of np.eye ([PR #4505](https://github.com/Bears-R-Us/arkouda/pull/4505))
 - Added `where` parameter to many functions (#4520)
-- bool alias for bool_ (#4627, [PR #4628](https://github.com/Bears-R-Us/arkouda/pull/4628))
-
-- dtype function to handle builtins bool, float, int (#4186, [PR #4187](https://github.com/Bears-R-Us/arkouda/pull/4187))
 
 - Shape-related: `ak.reshape`, `ak.transpose`, `ak.arange`, `ak.full` enhancements (#4165, #4092, #4321, #4312)
-
-- `comm_diagnostics` now returns a DataFrame (#3970, [PR #3971](https://github.com/Bears-R-Us/arkouda/pull/3971))
-
 
 **DataFrame and Merge Improvements**
 
 - Added `right_on` and `left_on` to `DataFrame.merge` (#4234, [PR #4240](https://github.com/Bears-R-Us/arkouda/pull/4240))
 - `ak.merge` supports `Categorical` (#4313, [PR #4344](https://github.com/Bears-R-Us/arkouda/pull/4344))
 - Fixed `DataFrame.__getitem__` behavior during merges (#4360, [PR #4362](https://github.com/Bears-R-Us/arkouda/pull/4362))
+
+
+**API Enhancements and Compatibility**
+
+- Improved NumPy 2.0 compatibility:
+  - Upgraded numpy dependency to 2.0.0 (#4098, [PR #4188](https://github.com/Bears-R-Us/arkouda/pull/4188), [PR #4213](https://github.com/Bears-R-Us/arkouda/pull/4213)) 
+  - Added or aligned: `ak.can_cast`, `ak.sign`, `ak.result_type`, `ak.dtype`, `ak.vecdot`, `ak.eye`, `ak.dot`, `ak.arange`, `ak.transpose`, `ak.hstack`, `ak.where`, `ak.full`, `ak.reshape` 
+  (#3329,  #3337, #4555, [PR #4105](https://github.com/Bears-R-Us/arkouda/pull/4105), [PR #4116](https://github.com/Bears-R-Us/arkouda/pull/4116), [PR #4174](https://github.com/Bears-R-Us/arkouda/pull/4174), [PR #4224](https://github.com/Bears-R-Us/arkouda/pull/4224))
+  - Improved parameter alignment to NumPy (`ak.eye`, `ak.where`, `ak.histogram`, etc.) (#4096, [PR #4078](https://github.com/Bears-R-Us/arkouda/pull/4078), [PR #4482](https://github.com/Bears-R-Us/arkouda/pull/4482))
+  - Enabled `bool` as alias for `bool_`; enhanced dtype detection for builtins `bool`, `float`, `int` (#4186, #4627, [PR #4187](https://github.com/Bears-R-Us/arkouda/pull/4187), [PR #4628](https://github.com/Bears-R-Us/arkouda/pull/4628))
+  (#3337, #3329, #3337, #3981, #4092, #4096,  #4105, #4116, #4124, #4165, #4186, #4188, #4213, #4224, #4321, #4312, #4468, #4481, #4483, #4501, #4520, #4555, #4556, #4552, #4627; [PRs #4078](https://github.com/Bears-R-Us/arkouda/pull/4078), [#4103](https://github.com/Bears-R-Us/arkouda/pull/4103), [#4174](https://github.com/Bears-R-Us/arkouda/pull/4174), [#4185](https://github.com/Bears-R-Us/arkouda/pull/4185), [#4390](https://github.com/Bears-R-Us/arkouda/pull/4390), [#4213](https://github.com/Bears-R-Us/arkouda/pull/4213), [#4505](https://github.com/Bears-R-Us/arkouda/pull/4505), [#4522](https://github.com/Bears-R-Us/arkouda/pull/4522), [#4628](https://github.com/Bears-R-Us/arkouda/pull/4628))
+
+- Reorganized modules into dedicated `numpy/`, `scipy/` directories for API clarity  
+  ([PRs #4103](https://github.com/Bears-R-Us/arkouda/pull/4103), [#4185](https://github.com/Bears-R-Us/arkouda/pull/4185), [#4390](https://github.com/Bears-R-Us/arkouda/pull/4390))
+
+- Miscellaneous API additions and improvements:
+  - `ak.coargsort` now supports `ascending=` keyword (#4464, [PR #4467](https://github.com/Bears-R-Us/arkouda/pull/4467))
+  - `comm_diagnostics` now returns a DataFrame (#3970, [PR #3971](https://github.com/Bears-R-Us/arkouda/pull/3971))
+
+- DataFrame and Merge Improvements
+
+  - `DataFrame.merge` now supports `left_on` and `right_on`  
+  (#4234, [PR #4240](https://github.com/Bears-R-Us/arkouda/pull/4240))
+
+  - `ak.merge` now supports merging on `Categorical` columns  
+  (#4313, [PR #4344](https://github.com/Bears-R-Us/arkouda/pull/4344))
+
+  - Fixed `DataFrame.__getitem__` dispatch behavior during merges  
+  (#4360, [PR #4362](https://github.com/Bears-R-Us/arkouda/pull/4362))
+
 
 ---
 
