@@ -22,33 +22,35 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 
 - **Axis and Broadcasting Enhancements**:
   - Axis support in `ak.mean`, `ak.var`, `ak.std` (#4425, [PR #4442](https://github.com/Bears-R-Us/arkouda/pull/4442))  
-  - Negative axis handling in `ak.squeeze`, `ak.repeat`, `ak.argmin`, `ak.argmax` (#4407, #4421, [PR #4406](https://github.com/Bears-R-Us/arkouda/pull/4406), [PR #4408](https://github.com/Bears-R-Us/arkouda/pull/4408))  
-  
+  - Negative axis handling in `ak.squeeze`, `ak.repeat`, `ak.argmin`, `ak.argmax` (#4407, #4421, [PR #4406](https://github.com/Bears-R-Us/arkouda/pull/4406), [PR #4408](https://github.com/Bears-R-Us/arkouda/pull/4408))
 
 
 **Checkpointing and Logging**
 
-- Use server's mechanism to redirect logs to a file ([PR #4152](https://github.com/Bears-R-Us/arkouda/pull/4152))
-- Part of #2384: Auto checkpoint upon exceeding memory percentage or idle time ([PR #4391](https://github.com/Bears-R-Us/arkouda/pull/4391))
-- Fewer 'throws' while logging ([PR #4433](https://github.com/Bears-R-Us/arkouda/pull/4433))
-- Part of #2384: Preserve previous auto-checkpoint ([PR #4549](https://github.com/Bears-R-Us/arkouda/pull/4549))
-- Initial capability to checkpoint partial server state ([PR #3915](https://github.com/Bears-R-Us/arkouda/pull/3915))
-- Experimental checkpointing of server state (#2384)
-- Part of #2384: Checkpoint numeric arrays; improved framework ([PR #4644](https://github.com/Bears-R-Us/arkouda/pull/4644))
+- Introduced experimental checkpointing of server state, with support for numeric arrays and automatic checkpointing triggered by memory limits or idle time.  
+  (#2384, [PRs #3915](https://github.com/Bears-R-Us/arkouda/pull/3915), [#4391](https://github.com/Bears-R-Us/arkouda/pull/4391), [#4549](https://github.com/Bears-R-Us/arkouda/pull/4549), [#4644](https://github.com/Bears-R-Us/arkouda/pull/4644))
 
-
+- Improved logging behavior:
+  - Logs can now be redirected to a file using the server’s logging mechanism ([PR #4152](https://github.com/Bears-R-Us/arkouda/pull/4152))
+  - Reduced use of `throws` in logging routines ([PR #4433](https://github.com/Bears-R-Us/arkouda/pull/4433))
 
 **Project Infrastructure**
-- Upgrade to arrow 19.0.1 (#3981, [PR #3982](https://github.com/Bears-R-Us/arkouda/pull/3982), [PR #4342](https://github.com/Bears-R-Us/arkouda/pull/4342))
+
+- Upgraded Apache Arrow to 19.0.1 for compatibility and stability improvements  
+  (#3981, [PRs #3982](https://github.com/Bears-R-Us/arkouda/pull/3982), [#4342](https://github.com/Bears-R-Us/arkouda/pull/4342))
 
 
 **Other**
 
-- Introduced `ak.apply` ([PR #3963](https://github.com/Bears-R-Us/arkouda/pull/3963))
-- Adds standard gamma distribution function (#3846, [PR #4089](https://github.com/Bears-R-Us/arkouda/pull/4089))
-- result_type function that also handles bigint (#4483, [PR #4484](https://github.com/Bears-R-Us/arkouda/pull/4484))
-- `coargsort` now supports `ascending` keyword (#4464, [PR #4467](https://github.com/Bears-R-Us/arkouda/pull/4467))
-- searchsorted function (#3005, [PR #4214](https://github.com/Bears-R-Us/arkouda/pull/4214))
+- Introduced `ak.apply`, `ak.result_type` (now with `bigint` support), and `ak.searchsorted`  
+  (#3005, #4483, [PRs #3963](https://github.com/Bears-R-Us/arkouda/pull/3963), [#4214](https://github.com/Bears-R-Us/arkouda/pull/4214), [#4484](https://github.com/Bears-R-Us/arkouda/pull/4484))
+
+- Added `ak.coargsort(ascending=...)` keyword argument  
+  (#4464, [PR #4467](https://github.com/Bears-R-Us/arkouda/pull/4467))
+
+- Added standard gamma distribution function to `ak.random`  
+  (#3846, [PR #4089](https://github.com/Bears-R-Us/arkouda/pull/4089))
+
 
 
 ---
