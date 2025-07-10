@@ -87,8 +87,6 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
   (#4360, [PR #4362](https://github.com/Bears-R-Us/arkouda/pull/4362))
 
 
-
-
 ---
 
 ## Performance Improvements
@@ -100,23 +98,6 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 ---
 
 ## Deprecations and Refactors
-
-- parse_single_value to handle uints represented as nega… (#4147, [PR #4150](https://github.com/Bears-R-Us/arkouda/pull/4150))
-- Change some nested foralls to for/foralls in HistogramMsg ([PR #4180](https://github.com/Bears-R-Us/arkouda/pull/4180))
-- remove try! in toSymEntry (#4175, [PR #4176](https://github.com/Bears-R-Us/arkouda/pull/4176))
-- Workaround an issue with using PrivateSpace domains in formals ([PR #4633](https://github.com/Bears-R-Us/arkouda/pull/4633))
-- Create a repartitionByLocaleString function (#4497, [PR #4557](https://github.com/Bears-R-Us/arkouda/pull/4557))
-- Create a repartitionByHashString function (#4499, [PR #4617](https://github.com/Bears-R-Us/arkouda/pull/4617))
-- Server functions `repartitionByLocaleString` and `repartitionByHashString` added (#4497, #4499)
-- Make an unordered set union of two Strings arrays function (#4244, [PR #4245](https://github.com/Bears-R-Us/arkouda/pull/4245))
-- Add a compatibility module for Time to handle the new totalMicroseconds method ([PR #4142](https://github.com/Bears-R-Us/arkouda/pull/4142))
-- refactor arkouda/numpy/imports/__init__.py ([PR #4453](https://github.com/Bears-R-Us/arkouda/pull/4453))
-- Sort module updates for Chapel 2.3 ([PR #3972](https://github.com/Bears-R-Us/arkouda/pull/3972))
-- Tweaks a few files to avoid relying on CHPL_HOME ([PR #4551](https://github.com/Bears-R-Us/arkouda/pull/4551))
-- add missing __all__ (#4426, [PR #4427](https://github.com/Bears-R-Us/arkouda/pull/4427))
-
-
-**Deprecations and Refactors**
 
 - Removed deprecated or obsolete features:
   - Removed deprecated functions including `lookup` function and legacy server utilities  
@@ -133,7 +114,7 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 
 - Simplified internals and extended platform support:
   - Logic cleanup in `parse_single_value`, `HistogramMsg`, `toSymEntry`, and PrivateSpace domain usage  
-    ([PRs #4150](https://github.com/Bears-R-Us/arkouda/pull/4150), [#4176](https://github.com/Bears-R-Us/arkouda/pull/4176), [#4180](https://github.com/Bears-R-Us/arkouda/pull/4180), [#4633](https://github.com/Bears-R-Us/arkouda/pull/4633))
+    (#4147, [PRs #4150](https://github.com/Bears-R-Us/arkouda/pull/4150), [#4176](https://github.com/Bears-R-Us/arkouda/pull/4176), [#4180](https://github.com/Bears-R-Us/arkouda/pull/4180), [PR #4427](https://github.com/Bears-R-Us/arkouda/pull/4427), [#4633](https://github.com/Bears-R-Us/arkouda/pull/4633))
 
 - Added internal or system-level functionality:
   - `repartitionByLocaleString` and `repartitionByHashString` server functions  
@@ -142,30 +123,18 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
   - Compatibility module for `Time.totalMicroseconds()` ([PR #4142](https://github.com/Bears-R-Us/arkouda/pull/4142))
   - Added missing `__all__` to ensure symbol export consistency (#4426, [PR #4427](https://github.com/Bears-R-Us/arkouda/pull/4427))
 
-
-
+  
 **Benchmark Refactor**
 
-- Refactor benchmark handling of running mode. (#3964, [PR #4471](https://github.com/Bears-R-Us/arkouda/pull/4471))
-- Part of #3964:  Refactor benchmark handling of running mode ([PR #4358](https://github.com/Bears-R-Us/arkouda/pull/4358))
-- Part 2 of #3964:  Refactor benchmark handling of running mode ([PR #4373](https://github.com/Bears-R-Us/arkouda/pull/4373))
-- Part 3 of #3964:  Refactor benchmark handling of running mode ([PR #4385](https://github.com/Bears-R-Us/arkouda/pull/4385))
+- Refactored benchmark infrastructure and running mode handling  
+  (#3964, [PRs #4358](https://github.com/Bears-R-Us/arkouda/pull/4358), [#4373](https://github.com/Bears-R-Us/arkouda/pull/4373), [#4385](https://github.com/Bears-R-Us/arkouda/pull/4385), [#4471](https://github.com/Bears-R-Us/arkouda/pull/4471))
 
-- Update stream_benchmark (#3580, [PR #4562](https://github.com/Bears-R-Us/arkouda/pull/4562))
-- Closes 4581 -- adds benchmark for where ([PR #4591](https://github.com/Bears-R-Us/arkouda/pull/4591))
-- improve benchmark flags ([PR #4616](https://github.com/Bears-R-Us/arkouda/pull/4616))
-- Update array_create_benchmark (#3561, [PR #4607](https://github.com/Bears-R-Us/arkouda/pull/4607))
-- Update array_transfer_benchmark (#3562, [PR #4608](https://github.com/Bears-R-Us/arkouda/pull/4608))
-- Update bigint_bitwise_binops_benchmark (#3563, [PR #4609](https://github.com/Bears-R-Us/arkouda/pull/4609))
-- Update gather_benchmark (#3569, [PR #4612](https://github.com/Bears-R-Us/arkouda/pull/4612))
-- Update scatter_benchmark (#3576, [PR #4615](https://github.com/Bears-R-Us/arkouda/pull/4615))
-- Update dataframe_indexing_benchmark (#3566, [PR #4605](https://github.com/Bears-R-Us/arkouda/pull/4605))
-- Fix a benchmark's output ([PR #4151](https://github.com/Bears-R-Us/arkouda/pull/4151))
-- Refactored benchmarks: `stream`, `scatter`, `bitwise`, `array_create`, `gather`, etc. (#3580, #3561, #3563)
-- Introduced `where` benchmark (#4581)
+- Improved and extended benchmark suite:
+  - Added `where` benchmark (#4581, [PR #4591](https://github.com/Bears-R-Us/arkouda/pull/4591))
+  - Updated and refactored: `stream_benchmark`, `array_create_benchmark`, `array_transfer_benchmark`, `bigint_bitwise_binops_benchmark`, `gather_benchmark`, `scatter_benchmark`, `dataframe_indexing_benchmark`  
+    (#3561, #3562, #3563, #3566, #3569, #3576, #3580, [PRs #4151](https://github.com/Bears-R-Us/arkouda/pull/4151), [#4562](https://github.com/Bears-R-Us/arkouda/pull/4562), [#4605](https://github.com/Bears-R-Us/arkouda/pull/4605), [#4607](https://github.com/Bears-R-Us/arkouda/pull/4607), [#4608](https://github.com/Bears-R-Us/arkouda/pull/4608), [#4609](https://github.com/Bears-R-Us/arkouda/pull/4609), [#4612](https://github.com/Bears-R-Us/arkouda/pull/4612), [#4615](https://github.com/Bears-R-Us/arkouda/pull/4615))
 
-
-
+- Improved benchmark CLI flags and output formatting ([PR #4616](https://github.com/Bears-R-Us/arkouda/pull/4616))
 
 
 ---
