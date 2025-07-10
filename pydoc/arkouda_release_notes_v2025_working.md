@@ -148,16 +148,13 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 - flake8 errors in master (#4113, [PR #4114](https://github.com/Bears-R-Us/arkouda/pull/4114))
 - Corrects error messages in conftest.py (#4117, [PR #4118](https://github.com/Bears-R-Us/arkouda/pull/4118))
 - bug in standard_gamma when no seed is used (#4111, [PR #4115](https://github.com/Bears-R-Us/arkouda/pull/4115))
-- Fix `xp.diff` ([PR #4128](https://github.com/Bears-R-Us/arkouda/pull/4128))
 - Fix the shutdown test by using the correct server ([PR #4158](https://github.com/Bears-R-Us/arkouda/pull/4158))
 - Fix can_cast with NumPy 2.0 breaking changes (#3337, [PR #4136](https://github.com/Bears-R-Us/arkouda/pull/4136))
-- Closes-4173 by raising errors when using max_bits had been causing server crashes ([PR #4189](https://github.com/Bears-R-Us/arkouda/pull/4189))
 - mypy errors in history.py (#4193, [PR #4196](https://github.com/Bears-R-Us/arkouda/pull/4196))
 - Fix the .rst files (Segarray and Strings) after they were commented out during the Numpy Reorg (#4163, [PR #4191](https://github.com/Bears-R-Us/arkouda/pull/4191))
 - Fix delete in arkouda/pdarraymanipulation.py (#4119, [PR #4192](https://github.com/Bears-R-Us/arkouda/pull/4192))
 - Fixes flake8 errors in client.py ([PR #4215](https://github.com/Bears-R-Us/arkouda/pull/4215))
 - Part of #4228:  CI failing due to dependency errors ([PR #4229](https://github.com/Bears-R-Us/arkouda/pull/4229))
-- Fix max_bits on multidimensional arrays (#4203, [PR #4204](https://github.com/Bears-R-Us/arkouda/pull/4204))
 - Fixes abs function in array_api/array_object ([PR #4226](https://github.com/Bears-R-Us/arkouda/pull/4226))
 - Fix arkouda commit in containers following upgrade to arrow 19.0.1 ([PR #4359](https://github.com/Bears-R-Us/arkouda/pull/4359))
 - Fix CSV reading failures due to array misuse ([PR #4384](https://github.com/Bears-R-Us/arkouda/pull/4384))
@@ -186,16 +183,53 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 - Fixes pydoclint error when using user conda environment ([PR #4604](https://github.com/Bears-R-Us/arkouda/pull/4604))
 
 - Fixed permutation instability (#3974)
-- Fixed `ak.ceil`, `ak.trunc`, `ak.permutation`, `ak.full` errors (#3984, #4312)
 - Resolved segmented search crash ([PR #4367](https://github.com/Bears-R-Us/arkouda/pull/4367))
-- Resolved issues with `max_bits`, `searchsorted`, and `repartition` functions (#4173, #4203, #4235)
+- Resolved issues with  `searchsorted`, and `repartition` functions ( #4203, #4235)
 - gh-pages action seems to need rsync (#4469, [PR #4470](https://github.com/Bears-R-Us/arkouda/pull/4470))
 - Converting between multidimensional numpy and pdarrays of bigints (#4167, [PR #4168](https://github.com/Bears-R-Us/arkouda/pull/4168))
 - Resolve server crashes in SegStringSort ([PR #4327](https://github.com/Bears-R-Us/arkouda/pull/4327))
 - searchsorted to work with uint type (#4235, [PR #4440](https://github.com/Bears-R-Us/arkouda/pull/4440))
 
----
 
+
+**Bug Fixes**
+
+- **Computation correctness**
+  - Fixed errors in `ak.ceil`, `ak.trunc`, `ak.permutation`, `ak.full`, `ak.diff`, `ak.result_type`, and `xp.diff`
+  - Resolved `max_bits` crashes for multidimensional arrays and integer edge cases  
+    (#3984, #3974, #4203, #4312, #4173, [PRs #3985](https://github.com/Bears-R-Us/arkouda/pull/3985), [#4128](https://github.com/Bears-R-Us/arkouda/pull/4128), [#4189](https://github.com/Bears-R-Us/arkouda/pull/4189), [PR #4204](https://github.com/Bears-R-Us/arkouda/pull/4204), [#4447](https://github.com/Bears-R-Us/arkouda/pull/4447))
+
+- **I/O and file handling**
+  - Fixed errors reading multiple Parquet row groups and locale-count changes  
+    (#4076, [PRs #3989](https://github.com/Bears-R-Us/arkouda/pull/3989), [#4077](https://github.com/Bears-R-Us/arkouda/pull/4077))
+  - Fixed CSV reading failure due to array misuse ([PR #4384](https://github.com/Bears-R-Us/arkouda/pull/4384))
+
+- **Compatibility with NumPy and Mypy**
+  - Resolved NumPy 2.0 breaking change in `can_cast` (#3337, [PR #4136](https://github.com/Bears-R-Us/arkouda/pull/4136))
+  - Fixed errors involving `dtype`, `bool`, `abs`, and type-checkers (`mypy`, `pydoclint`)  
+    (#4193, #4451, #4465, #4594, #4604, #4623, [PRs #4196](https://github.com/Bears-R-Us/arkouda/pull/4196), [#4452](https://github.com/Bears-R-Us/arkouda/pull/4452), [#4466](https://github.com/Bears-R-Us/arkouda/pull/4466), [#4604](https://github.com/Bears-R-Us/arkouda/pull/4604), [#4636](https://github.com/Bears-R-Us/arkouda/pull/4636), [#4614](https://github.com/Bears-R-Us/arkouda/pull/4614))
+
+- **Indexing and multidimensional fixes**
+  - Resolved indexing crashes in `take`, `argmin`, `argmax`, and segmentation logic  
+    (#4321, #4235, #4420, [PRs #4367](https://github.com/Bears-R-Us/arkouda/pull/4367), [#4422](https://github.com/Bears-R-Us/arkouda/pull/4422), [#4440](https://github.com/Bears-R-Us/arkouda/pull/4440))
+
+- **Documentation and testing issues**
+  - Fixed `darglint`, `pydoclint`, `flake8` errors and misconfigured doc `.rst` entries  
+    (#4113, #4402, #4163, [PRs #4114](https://github.com/Bears-R-Us/arkouda/pull/4114), [#4404](https://github.com/Bears-R-Us/arkouda/pull/4404), [#4191](https://github.com/Bears-R-Us/arkouda/pull/4191))
+  - Unit test fixes for `groupby`, `auto checkpoint`, and `numeric_tests`  
+    (#4430, #4594, [PRs #4431](https://github.com/Bears-R-Us/arkouda/pull/4431), [#4592](https://github.com/Bears-R-Us/arkouda/pull/4592), [#4655](https://github.com/Bears-R-Us/arkouda/pull/4655))
+
+- **Infrastructure and container fixes**
+  - Fixed issues with `start_arkouda_server`, container builds, shutdowns, and host-related failures  
+    ([PRs #4158](https://github.com/Bears-R-Us/arkouda/pull/4158), [#4359](https://github.com/Bears-R-Us/arkouda/pull/4359), [#4454](https://github.com/Bears-R-Us/arkouda/pull/4454))
+  - Temporarily disabled pytest timeout for debugging ([PR #4686](https://github.com/Bears-R-Us/arkouda/pull/4686))
+
+- **Other Fixes**
+  - Fixed accessor bug in `Series.str` and `Series.dt` ([PR #4525](https://github.com/Bears-R-Us/arkouda/pull/4525))
+  - Fixed a crash in SegStringSort ([PR #4327](https://github.com/Bears-R-Us/arkouda/pull/4327))
+  - Fixed bug in `registry/register_commands.py` ([PR #4087](https://github.com/Bears-R-Us/arkouda/pull/4087))
+  - Fixed trapz instability (#4489, [PR #4645](https://github.com/Bears-R-Us/arkouda/pull/4645))
+  - Added regression test for `PR #3950` fix (#3967, [PR #3968](https://github.com/Bears-R-Us/arkouda/pull/3968))
 
 
 
