@@ -221,6 +221,9 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 
 ## Documentation
 
+- Update docstrings in `arkouda.numeric` (#3546, [PR #3988](https://github.com/Bears-R-Us/arkouda/pull/3988))
+- Update and correct docstrings in `pdarraycreation.py` (#3548, [PR #3987](https://github.com/Bears-R-Us/arkouda/pull/3987))
+
 
 - docstring bug in standard_gamma (#4110, [PR #4112](https://github.com/Bears-R-Us/arkouda/pull/4112))
 - Test examples in arkouda.util.py (#4004, [PR #4100](https://github.com/Bears-R-Us/arkouda/pull/4100))
@@ -285,34 +288,16 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 - docstring for io module (#4582, [PR #4583](https://github.com/Bears-R-Us/arkouda/pull/4583))
 - docstring for the security module (#4584, [PR #4585](https://github.com/Bears-R-Us/arkouda/pull/4585))
 - adds missing docstrings to installers.py ([PR #4624](https://github.com/Bears-R-Us/arkouda/pull/4624))
-- plotting module docstring improvement ([PR #4625](https://github.com/Bears-R-Us/arkouda/pull/4625))
-- add docstring for client_dtypes (#4590, [PR #4595](https://github.com/Bears-R-Us/arkouda/pull/4595))
-- adds missing docstrings to the message module ([PR #4641](https://github.com/Bears-R-Us/arkouda/pull/4641))
-- add docstring for comm diagnostics module (#4601, [PR #4602](https://github.com/Bears-R-Us/arkouda/pull/4602))
-- docstring for the history module (#4600, [PR #4603](https://github.com/Bears-R-Us/arkouda/pull/4603))
-- adds missing docstrings for accessor module ([PR #4618](https://github.com/Bears-R-Us/arkouda/pull/4618))
-- add skips for hpe systems to test_comm_diagnostics_docstrings ([PR #4658](https://github.com/Bears-R-Us/arkouda/pull/4658))
-- add skip_doctest option to tests (#4659, [PR #4660](https://github.com/Bears-R-Us/arkouda/pull/4660))
-- Test examples in `arkouda.sorting.py` (#4006, [PR #4084](https://github.com/Bears-R-Us/arkouda/pull/4084))
-- Test examples in `arkouda.strings.py` (#4005, [PR #4090](https://github.com/Bears-R-Us/arkouda/pull/4090))
-- Test examples in `arkouda.categorical.py` (#3993, [PR #4008](https://github.com/Bears-R-Us/arkouda/pull/4008))
-- Test examples in `arkouda.alignment.py` (#3992, [PR #4007](https://github.com/Bears-R-Us/arkouda/pull/4007))
-- Update docstrings in `arkouda.numeric` (#3546, [PR #3988](https://github.com/Bears-R-Us/arkouda/pull/3988))
-- Update and correct docstrings in `pdarraycreation.py` (#3548, [PR #3987](https://github.com/Bears-R-Us/arkouda/pull/3987))
-- numpy imports not showing up in docs (#4377, [PR #4380](https://github.com/Bears-R-Us/arkouda/pull/4380))
 
 
-- Doctest coverage added across `strings`, `categorical`, `numeric`, `groupbyclass`, `array_api`, and more (#4282, #4274, #4291)
-- Removed pydocstyle and darglint errors: `DAR102`, `DAR202`, `D400`, `D205`, `DOC602`, etc. (#4352, #4355, #4339)
-- Numpy-style modules reorganized into dedicated directories (`numpy`, `pandas`, `scipy`) ([PR #4183](https://github.com/Bears-R-Us/arkouda/pull/4183))
-- gh-pages action seems to need rsync (#4469, [PR #4470](https://github.com/Bears-R-Us/arkouda/pull/4470))
+
 
 
 **Documentation**
 
 - **Docstring updates across the codebase**
   - Added or revised docstrings in core modules including `numeric`, `categorical`, `groupbyclass`, `alignment`, `strings`, `accessor`, `setup.py`, `client_dtypes`, `history`, `logger`, `io`, `security`, `installers`, and many more  
-    (#3546, #3547, #3548, #3992, #3993, #4002, #4005, #4006, #4007, #4008, #4274, #4282, #4300, #4352, #4355, #4534, #4544, #4582, #4584, #4590, #4600, #4601, #4618, #4624, #4625)
+    (#3546, #3547, #3548, #3992, #3993, #4002, #4005, #4006, #4007, #4008, #4274, #4282, #4300, #4352, #4291, #4355, #4534, #4544, #4582, #4584, #4590, #4600, #4601, #4618, #4624, #4625, [PR #4641](https://github.com/Bears-R-Us/arkouda/pull/4641), [PR #4625](https://github.com/Bears-R-Us/arkouda/pull/4625))
 
 - **Expanded doctest coverage**
   - Added `doctest` examples for 30+ modules, including `array_api`, `strings`, `sparsematrix`, `segarray`, `pdarrayclass`, `plotting`, and internal utilities  
