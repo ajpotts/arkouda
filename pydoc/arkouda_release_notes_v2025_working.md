@@ -231,7 +231,6 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 - Closes 3547 updating docstrings in pdarrayclass.py ([PR #4109](https://github.com/Bears-R-Us/arkouda/pull/4109))
 - Closes-3549 Updates docstrings in pdarraysetops ([PR #4171](https://github.com/Bears-R-Us/arkouda/pull/4171))
 - Test examples in arkouda.client.py (#3994, [PR #4212](https://github.com/Bears-R-Us/arkouda/pull/4212))
-- Closes-4195 docstrings in array_object.py and makes some minor executable changes. ([PR #4201](https://github.com/Bears-R-Us/arkouda/pull/4201))
 - Test examples in arkouda.numpy._utils.py (#4003, [PR #4221](https://github.com/Bears-R-Us/arkouda/pull/4221))
 - Test examples in arkouda.series.py (#4002, [PR #4222](https://github.com/Bears-R-Us/arkouda/pull/4222))
 - add doctest to the project (#4237, [PR #4239](https://github.com/Bears-R-Us/arkouda/pull/4239))
@@ -245,26 +244,13 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 - Closes 4423:  update documentation build ([PR #4424](https://github.com/Bears-R-Us/arkouda/pull/4424))
 - Adds examples where they were missing from docstrings in numpy/numeric.py ([PR #4463](https://github.com/Bears-R-Us/arkouda/pull/4463))
 - Resolve D400 docstring errors (#4339, [PR #4517](https://github.com/Bears-R-Us/arkouda/pull/4517))
-- Remove the DAR202 errors from the docstrings (#4350, [PR #4558](https://github.com/Bears-R-Us/arkouda/pull/4558))
-- docstring for infoclass module (#4548, [PR #4550](https://github.com/Bears-R-Us/arkouda/pull/4550))
-- docstring for setup.py (#4528, [PR #4529](https://github.com/Bears-R-Us/arkouda/pull/4529))
-- Remove the DAR102 errors from the docstrings (#4352, [PR #4553](https://github.com/Bears-R-Us/arkouda/pull/4553))
-- add ellipses to floats in numeric.py docstrings to avoid precision related errors ([PR #4573](https://github.com/Bears-R-Us/arkouda/pull/4573))
-- apply module docstring (#4576, [PR #4578](https://github.com/Bears-R-Us/arkouda/pull/4578))
-- Closes 4579:  message module docstring ([PR #4580](https://github.com/Bears-R-Us/arkouda/pull/4580))
-- add docstring for the match module (#4588, [PR #4589](https://github.com/Bears-R-Us/arkouda/pull/4589))
-- add docstring for the alignment module (#4586, [PR #4587](https://github.com/Bears-R-Us/arkouda/pull/4587))
-- docstring for categorical module (#4536, [PR #4537](https://github.com/Bears-R-Us/arkouda/pull/4537))
-- docstring for logger module (#4544, [PR #4545](https://github.com/Bears-R-Us/arkouda/pull/4545))
-- docstring for io_util (#4534, [PR #4535](https://github.com/Bears-R-Us/arkouda/pull/4535))
-
 
 
 **Documentation**
 
 - **Docstring updates across the codebase**
   - Added or revised docstrings in core modules including `numeric`, `categorical`, `groupbyclass`, `alignment`, `strings`, `accessor`, `setup.py`, `client_dtypes`, `history`, `logger`, `io`, `security`, `installers`, and many more  
-    (#3546, #3547, #3548, #3992, #3993, #4002, #4005, #4006, #4007, #4008, #4274, #4282, #4300, #4352, #4291, #4355, #4534, #4544, #4582, #4584, #4590, #4600, #4601, #4618, #4624, #4625, [PR #4641](https://github.com/Bears-R-Us/arkouda/pull/4641), [PR #4625](https://github.com/Bears-R-Us/arkouda/pull/4625))
+    (#3546, #3547, #3548, #3992, #3993, #4002, #4005, #4006, #4007, #4008, #4195, #4274, #4282, #4300, #4291, #4355, #4528, #4534, #4536, #4544, #4548, #4576, #4579, #4582, #4584, #4586, #4588, #4590, #4600, #4601, #4618, #4624, #4625, [PR #4641](https://github.com/Bears-R-Us/arkouda/pull/4641), [PR #4625](https://github.com/Bears-R-Us/arkouda/pull/4625))
 
 - **Expanded doctest coverage**
   - Added `doctest` examples for 30+ modules, including `array_api`, `strings`, `sparsematrix`, `segarray`, `pdarrayclass`, `plotting`, and internal utilities  
