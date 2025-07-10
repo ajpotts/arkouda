@@ -172,55 +172,54 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
   - Fixed issues with `start_arkouda_server`, container builds, shutdowns, and host-related failures  
     ([PRs #4158](https://github.com/Bears-R-Us/arkouda/pull/4158), [#4359](https://github.com/Bears-R-Us/arkouda/pull/4359), [#4454](https://github.com/Bears-R-Us/arkouda/pull/4454))
 
-
 - **Other Fixes**
   - Fixed accessor bug in `Series.str` and `Series.dt` (#4524, [PR #4525](https://github.com/Bears-R-Us/arkouda/pull/4525))
   - Fixed a crash in SegStringSort ([PR #4327](https://github.com/Bears-R-Us/arkouda/pull/4327))
   - Fixed bug in `registry/register_commands.py` ([PR #4087](https://github.com/Bears-R-Us/arkouda/pull/4087))
   - Fixed trapz instability (#4489, [PR #4645](https://github.com/Bears-R-Us/arkouda/pull/4645))
-  - Added regression test for `PR #3950` fix (#3967, [PR #3968](https://github.com/Bears-R-Us/arkouda/pull/3968))
   - Converting between multidimensional numpy and pdarrays of bigints (#4167, [PR #4168](https://github.com/Bears-R-Us/arkouda/pull/4168))
   - Fixed in standard_gamma when no seed is used (#4111, [PR #4115](https://github.com/Bears-R-Us/arkouda/pull/4115))
 
 
-
-
 ---
 
 
-
-
 ## Testing Improvements
-- `skip_by_rank` enhanced for set containment (#3954, [PR #3955](https://github.com/Bears-R-Us/arkouda/pull/3955))
-- Increases multidimensional testing for pdarraycreation module (#4028, [PR #4108](https://github.com/Bears-R-Us/arkouda/pull/4108))
-- add `ARKOUDA_DEFAULT_TEMP_DIRECTORY` to globally set the default temp directory ([PR #4198](https://github.com/Bears-R-Us/arkouda/pull/4198))
-- Detect server exit while reading connection file ([PR #4403](https://github.com/Bears-R-Us/arkouda/pull/4403))
-- Improved launch scripts for PBS environments ([PR #4088](https://github.com/Bears-R-Us/arkouda/pull/4088))
-- Avoid 0 in test with unsigned numbers ([PR #4104](https://github.com/Bears-R-Us/arkouda/pull/4104))
-- Temporarily skip scipy testing for Python 3.13+ ([PR #4123](https://github.com/Bears-R-Us/arkouda/pull/4123))
-- pytest marker for python version (#4130, [PR #4132](https://github.com/Bears-R-Us/arkouda/pull/4132))
-- update unit tests handling of bigint (#4137, [PR #4138](https://github.com/Bears-R-Us/arkouda/pull/4138))
-- Remove verbose output from comm diag test ([PR #4179](https://github.com/Bears-R-Us/arkouda/pull/4179))
-- Add `pytest.temp_directory` ([PR #4181](https://github.com/Bears-R-Us/arkouda/pull/4181))
-- Closes-4045 adds multi-dim tests to scipy_test ([PR #4172](https://github.com/Bears-R-Us/arkouda/pull/4172))
-- Restore scipy skipifs removed in #4172 ([PR #4197](https://github.com/Bears-R-Us/arkouda/pull/4197))
-- union1d needs more rigorous unit tests on Strings (#4317, [PR #4322](https://github.com/Bears-R-Us/arkouda/pull/4322))
-- pdarray_creation_test.py unit test improvements Part 1 ([PR #4369](https://github.com/Bears-R-Us/arkouda/pull/4369))
-- Closes-4567 aligns use of pytest.seed in numeric_test.py ([PR #4568](https://github.com/Bears-R-Us/arkouda/pull/4568))
-- add pytest-timeout (#4445, [PR #4654](https://github.com/Bears-R-Us/arkouda/pull/4654))
-- Temporarily don't timeout pytest for debugging ([PR #4686](https://github.com/Bears-R-Us/arkouda/pull/4686))
-- Increase unit test timeout to 30 minutes ([PR #4666](https://github.com/Bears-R-Us/arkouda/pull/4666))
-- Temporarily disabled pytest timeout for debugging ([PR #4686](https://github.com/Bears-R-Us/arkouda/pull/4686))
-- add logging to pytest (#4667, [PR #4669](https://github.com/Bears-R-Us/arkouda/pull/4669))
-- Skipif test_checkpoint() ([PR #4690](https://github.com/Bears-R-Us/arkouda/pull/4690))
-- Corrects error messages in conftest.py (#4117, [PR #4118](https://github.com/Bears-R-Us/arkouda/pull/4118))
-- Adds unit test for fix in PR #3950 ([PR #3968](https://github.com/Bears-R-Us/arkouda/pull/3968)) (closes #3967)
-- 
+
+
+- **Expanded coverage and multidimensional testing**
+  - Added new unit tests for `pdarraycreation`, `scipy_test`, `union1d`, and `numeric_test`  
+    (#4028, #4045, #4317, #4567, [PRs #4108](https://github.com/Bears-R-Us/arkouda/pull/4108), [#4172](https://github.com/Bears-R-Us/arkouda/pull/4172), [#4322](https://github.com/Bears-R-Us/arkouda/pull/4322), [#4369](https://github.com/Bears-R-Us/arkouda/pull/4369), [#4568](https://github.com/Bears-R-Us/arkouda/pull/4568))
+
+  - Improved testing of unsigned numbers and `skip_by_rank` behavior  
+    (#3954, [PRs #3955](https://github.com/Bears-R-Us/arkouda/pull/3955), [#4104](https://github.com/Bears-R-Us/arkouda/pull/4104))
+
+  - Improved unit tests handling of bigint (#4137, [PR #4138](https://github.com/Bears-R-Us/arkouda/pull/4138))
+
+- **Improved test environments and launch scripts**
+  - Restored `skipif` decorators and added compatibility logic for Python 3.13+  
+    ([PRs #4123](https://github.com/Bears-R-Us/arkouda/pull/4123), [#4172](https://github.com/Bears-R-Us/arkouda/pull/4172), [#4197](https://github.com/Bears-R-Us/arkouda/pull/4197), [#4690](https://github.com/Bears-R-Us/arkouda/pull/4690))
+  - Enhanced test environment support: `ARKOUDA_DEFAULT_TEMP_DIRECTORY`, PBS launch scripts, and connection handling  
+    ([PRs #4088](https://github.com/Bears-R-Us/arkouda/pull/4088), [#4198](https://github.com/Bears-R-Us/arkouda/pull/4198), [#4403](https://github.com/Bears-R-Us/arkouda/pull/4403))
+
+- **pytest infrastructure**
+  - Added `pytest.temp_directory`, `pytest-timeout`, and test logging support  
+    (#4445, #4667, [PRs #4181](https://github.com/Bears-R-Us/arkouda/pull/4181), [#4654](https://github.com/Bears-R-Us/arkouda/pull/4654), [#4669](https://github.com/Bears-R-Us/arkouda/pull/4669))
+  - Temporarily disabled or extended timeouts for long-running tests ([PRs #4666](https://github.com/Bears-R-Us/arkouda/pull/4666), [#4686](https://github.com/Bears-R-Us/arkouda/pull/4686))
+  - Introduced Python-version-based pytest markers (#4130, [PR #4132](https://github.com/Bears-R-Us/arkouda/pull/4132))
+
+- **Regression coverage and test fixes**
+  - Added test for fix in `PR #3950` (closes #3967)  
+    ([PR #3968](https://github.com/Bears-R-Us/arkouda/pull/3968))
+  - Improved error messages in test output ([PRs #4117](https://github.com/Bears-R-Us/arkouda/pull/4117), [#4118](https://github.com/Bears-R-Us/arkouda/pull/4118))
+  - Removed verbose test output from communication diagnostics ([PR #4179](https://github.com/Bears-R-Us/arkouda/pull/4179))
+
+
+
 ---
 
 
 ## Documentation
-
 
 
 - docstring bug in standard_gamma (#4110, [PR #4112](https://github.com/Bears-R-Us/arkouda/pull/4112))
@@ -307,6 +306,35 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 - Removed pydocstyle and darglint errors: `DAR102`, `DAR202`, `D400`, `D205`, `DOC602`, etc. (#4352, #4355, #4339)
 - Numpy-style modules reorganized into dedicated directories (`numpy`, `pandas`, `scipy`) ([PR #4183](https://github.com/Bears-R-Us/arkouda/pull/4183))
 - gh-pages action seems to need rsync (#4469, [PR #4470](https://github.com/Bears-R-Us/arkouda/pull/4470))
+
+
+**Documentation**
+
+- **Docstring updates across the codebase**
+  - Added or revised docstrings in core modules including `numeric`, `categorical`, `groupbyclass`, `alignment`, `strings`, `accessor`, `setup.py`, `client_dtypes`, `history`, `logger`, `io`, `security`, `installers`, and many more  
+    (#3546, #3547, #3548, #3992, #3993, #4002, #4005, #4006, #4007, #4008, #4274, #4282, #4300, #4352, #4355, #4534, #4544, #4582, #4584, #4590, #4600, #4601, #4618, #4624, #4625)
+
+- **Expanded doctest coverage**
+  - Added `doctest` examples for 30+ modules, including `array_api`, `strings`, `sparsematrix`, `segarray`, `pdarrayclass`, `plotting`, and internal utilities  
+    (#4247–#4305, [PRs #4239](https://github.com/Bears-R-Us/arkouda/pull/4239), [#4370](https://github.com/Bears-R-Us/arkouda/pull/4370), [#4439](https://github.com/Bears-R-Us/arkouda/pull/4439))
+
+- **Testing examples added to documentation**
+  - Added testable examples in modules like `util`, `client`, `series`, `sorting`, `numpy._utils`, `categorical`, `alignment`  
+    (#4002–#4008, #4212, #4221, #4222)
+
+- **Tooling and doc build improvements**
+  - Removed `pydocstyle`, `darglint`, and style errors (e.g. `DAR102`, `D205`, `D400`, `DOC602`)  
+    (#4339, #4340, #4350, #4352, #4355, [PRs #4371](https://github.com/Bears-R-Us/arkouda/pull/4371), [#4401](https://github.com/Bears-R-Us/arkouda/pull/4401), [#4553](https://github.com/Bears-R-Us/arkouda/pull/4553), [#4558](https://github.com/Bears-R-Us/arkouda/pull/4558))
+  - Added `skip_doctest` flags and conditional skipping on certain systems (e.g. HPE, CHPL_COMM=ugni)  
+    ([PRs #4446](https://github.com/Bears-R-Us/arkouda/pull/4446), [#4449](https://github.com/Bears-R-Us/arkouda/pull/4449), [#4456](https://github.com/Bears-R-Us/arkouda/pull/4456), [#4658](https://github.com/Bears-R-Us/arkouda/pull/4658), [#4660](https://github.com/Bears-R-Us/arkouda/pull/4660))
+  - Improved floating-point example stability using ellipses ([PR #4573](https://github.com/Bears-R-Us/arkouda/pull/4573))
+  - Fixed NumPy imports not appearing in generated docs (#4377, [PR #4380](https://github.com/Bears-R-Us/arkouda/pull/4380))
+
+- **Infrastructure**
+  - Updated Sphinx documentation build and `gh-pages` action  
+    (#4423, #4469, [PRs #4424](https://github.com/Bears-R-Us/arkouda/pull/4424), [#4470](https://github.com/Bears-R-Us/arkouda/pull/4470))
+  - Organized modules under `numpy`, `pandas`, and `scipy` namespaces ([PR #4183](https://github.com/Bears-R-Us/arkouda/pull/4183))
+
 
 
 ---
