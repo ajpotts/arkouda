@@ -111,6 +111,15 @@ RUN . $SPACK_ROOT/share/spack/setup-env.sh && \
 EXPOSE 5555
 
 
+# ---------------------------
+# Install arkouda python front end
+# Wheel files will be saved here /opt/wheels
+# So the project can be installed offline later
+# ---------------------------
+RUN dnf install -y wget
+RUN wget https://github.com/Bears-R-Us/arkouda/archive/refs/tags/v2024.10.02.tar.gz && tar -xf v2024.10.02.tar.gz && cd arkouda-2024.10.02 && \
+    mkdir -p /opt/wheels && python3 -m pip download -d /opt/wheels '.[dev]' && python3 -m pip install --no-index --find-links=/opt/wheels '.[dev]' 
+
 
 
 
