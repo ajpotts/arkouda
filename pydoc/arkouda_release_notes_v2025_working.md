@@ -221,52 +221,27 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 
 ## Documentation
 
-- Update docstrings in `arkouda.numeric` (#3546, [PR #3988](https://github.com/Bears-R-Us/arkouda/pull/3988))
-- Update and correct docstrings in `pdarraycreation.py` (#3548, [PR #3987](https://github.com/Bears-R-Us/arkouda/pull/3987))
-
-
-- docstring bug in standard_gamma (#4110, [PR #4112](https://github.com/Bears-R-Us/arkouda/pull/4112))
-- Test examples in arkouda.util.py (#4004, [PR #4100](https://github.com/Bears-R-Us/arkouda/pull/4100))
-- update docstrings arkouda.dtypes (#3535, [PR #4134](https://github.com/Bears-R-Us/arkouda/pull/4134))
-- Closes 3547 updating docstrings in pdarrayclass.py ([PR #4109](https://github.com/Bears-R-Us/arkouda/pull/4109))
-- Closes-3549 Updates docstrings in pdarraysetops ([PR #4171](https://github.com/Bears-R-Us/arkouda/pull/4171))
-- Test examples in arkouda.client.py (#3994, [PR #4212](https://github.com/Bears-R-Us/arkouda/pull/4212))
-- Test examples in arkouda.numpy._utils.py (#4003, [PR #4221](https://github.com/Bears-R-Us/arkouda/pull/4221))
-- Test examples in arkouda.series.py (#4002, [PR #4222](https://github.com/Bears-R-Us/arkouda/pull/4222))
-- add doctest to the project (#4237, [PR #4239](https://github.com/Bears-R-Us/arkouda/pull/4239))
-- Update Docstrings arkouda.util (#3558, [PR #4307](https://github.com/Bears-R-Us/arkouda/pull/4307))
-- Prevent comments in docstring Examples (#4365, [PR #4366](https://github.com/Bears-R-Us/arkouda/pull/4366))
-- Adds doctest to a subset of modules ([PR #4370](https://github.com/Bears-R-Us/arkouda/pull/4370))
-- Remove the DAR203 errors from the docstrings (#4355, [PR #4371](https://github.com/Bears-R-Us/arkouda/pull/4371))
-- Resolve D205 docstring errors (#4340, [PR #4401](https://github.com/Bears-R-Us/arkouda/pull/4401))
-- skip strings module doctest when CHPL_COMM=ugni ([PR #4446](https://github.com/Bears-R-Us/arkouda/pull/4446))
-- skips string module doctest unit test on apollo ([PR #4449](https://github.com/Bears-R-Us/arkouda/pull/4449))
-- Closes 4423:  update documentation build ([PR #4424](https://github.com/Bears-R-Us/arkouda/pull/4424))
-- Adds examples where they were missing from docstrings in numpy/numeric.py ([PR #4463](https://github.com/Bears-R-Us/arkouda/pull/4463))
-- Resolve D400 docstring errors (#4339, [PR #4517](https://github.com/Bears-R-Us/arkouda/pull/4517))
-
-
-**Documentation**
-
 - **Docstring updates across the codebase**
   - Added or revised docstrings in core modules including `numeric`, `categorical`, `groupbyclass`, `alignment`, `strings`, `accessor`, `setup.py`, `client_dtypes`, `history`, `logger`, `io`, `security`, `installers`, and many more  
-    (#3546, #3547, #3548, #3992, #3993, #4002, #4005, #4006, #4007, #4008, #4195, #4274, #4282, #4300, #4291, #4355, #4528, #4534, #4536, #4544, #4548, #4576, #4579, #4582, #4584, #4586, #4588, #4590, #4600, #4601, #4618, #4624, #4625, [PR #4641](https://github.com/Bears-R-Us/arkouda/pull/4641), [PR #4625](https://github.com/Bears-R-Us/arkouda/pull/4625))
+    (#3535, #3546, #3547, #3548, #3549, #3558, #3992, #3993, #4002, #4005, #4006, #4007, #4008, #4110, #4195, #4274, #4282, #4300, #4291, #4355, #4528, #4534, #4536, #4544, #4548, #4576, #4579, #4582, #4584, #4586, #4588, #4590, #4600, #4601, #4618, #4624, #4625, [PR #4641](https://github.com/Bears-R-Us/arkouda/pull/4641), [PR #4625](https://github.com/Bears-R-Us/arkouda/pull/4625), [PR #4463](https://github.com/Bears-R-Us/arkouda/pull/4463))
 
 - **Expanded doctest coverage**
   - Added `doctest` examples for 30+ modules, including `array_api`, `strings`, `sparsematrix`, `segarray`, `pdarrayclass`, `plotting`, and internal utilities  
     (#4247–#4305, [PRs #4239](https://github.com/Bears-R-Us/arkouda/pull/4239), [#4370](https://github.com/Bears-R-Us/arkouda/pull/4370), [#4439](https://github.com/Bears-R-Us/arkouda/pull/4439))
 
 - **Testing examples added to documentation**
-  - Added testable examples in modules like `util`, `client`, `series`, `sorting`, `numpy._utils`, `categorical`, `alignment`  
-    (#4002–#4008, #4212, #4221, #4222)
+  - Tested and corrected examples in modules like `util`, `client`, `series`, `sorting`, `numpy._utils`, `categorical`, `alignment`  
+    (#3994, #4002–#4008, #4212, #4221, #4222)
 
 - **Tooling and doc build improvements**
+  - Added `doctest` to the project (#4237, [PR #4239](https://github.com/Bears-R-Us/arkouda/pull/4239))
   - Removed `pydocstyle`, `darglint`, and style errors (e.g. `DAR102`, `D205`, `D400`, `DOC602`)  
     (#4339, #4340, #4350, #4352, #4355, [PRs #4371](https://github.com/Bears-R-Us/arkouda/pull/4371), [#4401](https://github.com/Bears-R-Us/arkouda/pull/4401), [#4553](https://github.com/Bears-R-Us/arkouda/pull/4553), [#4558](https://github.com/Bears-R-Us/arkouda/pull/4558))
   - Added `skip_doctest` flags and conditional skipping on certain systems (e.g. HPE, CHPL_COMM=ugni)  
     ([PRs #4446](https://github.com/Bears-R-Us/arkouda/pull/4446), [#4449](https://github.com/Bears-R-Us/arkouda/pull/4449), [#4456](https://github.com/Bears-R-Us/arkouda/pull/4456), [#4658](https://github.com/Bears-R-Us/arkouda/pull/4658), [#4660](https://github.com/Bears-R-Us/arkouda/pull/4660))
   - Improved floating-point example stability using ellipses ([PR #4573](https://github.com/Bears-R-Us/arkouda/pull/4573))
   - Fixed NumPy imports not appearing in generated docs (#4377, [PR #4380](https://github.com/Bears-R-Us/arkouda/pull/4380))
+  - CI detects comments in docstring Examples (#4365, [PR #4366](https://github.com/Bears-R-Us/arkouda/pull/4366))
 
 - **Infrastructure**
   - Updated Sphinx documentation build and `gh-pages` action  
@@ -306,21 +281,41 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 - arkouda_benchmark_linux and arkouda_tests_linux to use ubuntu-with-arkouda-deps (#4236, [PR #4238](https://github.com/Bears-R-Us/arkouda/pull/4238))
 
 
-**Linters**
-- add pydocstyle to the project (#4320, [PR #4324](https://github.com/Bears-R-Us/arkouda/pull/4324))
-- add pydoclint to the project (#4363, [PR #4364](https://github.com/Bears-R-Us/arkouda/pull/4364))
-- add docstr-coverage (#4386, [PR #4387](https://github.com/Bears-R-Us/arkouda/pull/4387))
-- add chplcheck (#4388, #4436, [PR #4389](https://github.com/Bears-R-Us/arkouda/pull/4389), [PR #4437](https://github.com/Bears-R-Us/arkouda/pull/4437))
-- docstr-coverage ignore for overload functions ([PR #4432](https://github.com/Bears-R-Us/arkouda/pull/4432))
-- add darglint to the project (#4343, [PR #4345](https://github.com/Bears-R-Us/arkouda/pull/4345))
 
-**Makefile Improvements**
-- make doc-clean should depend on stub-clean (#4155, [PR #4156](https://github.com/Bears-R-Us/arkouda/pull/4156))
-- add isort to Makefile (#4199, [PR #4211](https://github.com/Bears-R-Us/arkouda/pull/4211))
-- Closes 4206:  add install-pytables to Makefile ([PR #4208](https://github.com/Bears-R-Us/arkouda/pull/4208))
-- add ruff-format to Makefile (#4194, [PR #4200](https://github.com/Bears-R-Us/arkouda/pull/4200))
-- Add make format (#4231, [PR #4232](https://github.com/Bears-R-Us/arkouda/pull/4232))
-- Makefile additions: `make format`, `make ruff-format`, `make isort`, `install-pytables` (#4206, #4211, #4200)
+**Developer Experience**
+
+- **CI Modernization**
+  - Upgraded CI to Python 3.13, Chapel 2.3.0, and updated Ubuntu base image  
+    (#4085, #4160, #4228, [PRs #4086](https://github.com/Bears-R-Us/arkouda/pull/4086), [#4161](https://github.com/Bears-R-Us/arkouda/pull/4161))
+
+  - Enhanced CI reliability and speed:
+    - Added retry logic for install steps (#3978, [PR #3979](https://github.com/Bears-R-Us/arkouda/pull/3979))
+    - Removed duplicate Dockerfile and pinned dependencies (#3976, [PRs #3977](https://github.com/Bears-R-Us/arkouda/pull/3977), [#4097](https://github.com/Bears-R-Us/arkouda/pull/4097))
+    - Simplified offline builds (#3944, #3957, [PR #3958](https://github.com/Bears-R-Us/arkouda/pull/3958))
+    - Created Ubuntu container with Arkouda deps (#4217, [PR #4218](https://github.com/Bears-R-Us/arkouda/pull/4218))
+    - Cancel-in-progress enabled for concurrent CI runs (#4698, [PR #4699](https://github.com/Bears-R-Us/arkouda/pull/4699))
+    - CI benchmark and test jobs switched to use new image (#4236, [PR #4238](https://github.com/Bears-R-Us/arkouda/pull/4238))
+
+- **Linters and Style Enforcement**
+  - Added new tools: `flake8`, `ruff`, `darglint`, `pydocstyle`, `pydoclint`, `docstr-coverage`, `chplcheck`, `pytest-timeout`  
+    (#3980, #4113, #4402, #4343, #4320, #4363, #4386, #4388, #4436, #4445; [PRs #4324](https://github.com/Bears-R-Us/arkouda/pull/4324), [#4345](https://github.com/Bears-R-Us/arkouda/pull/4345), [#4364](https://github.com/Bears-R-Us/arkouda/pull/4364), [#4387](https://github.com/Bears-R-Us/arkouda/pull/4387), [#4389](https://github.com/Bears-R-Us/arkouda/pull/4389), [#4432](https://github.com/Bears-R-Us/arkouda/pull/4432), [#4437](https://github.com/Bears-R-Us/arkouda/pull/4437))
+
+  - Ran `isort` and `black` across the project ([PR #4139](https://github.com/Bears-R-Us/arkouda/pull/4139))
+
+  - Git pre-commit hooks added to enforce formatting and linter checks (#4356, [PR #4357](https://github.com/Bears-R-Us/arkouda/pull/4357))
+
+  - Added memory usage logging to CI runs ([PR #4695](https://github.com/Bears-R-Us/arkouda/pull/4695))
+
+- **Makefile Enhancements**
+  - New targets added: `make format`, `make ruff-format`, `make isort`, `make install-pytables`  
+    (#4155, #4206, #4231, #4194, #4199, [PRs #4156](https://github.com/Bears-R-Us/arkouda/pull/4156), [#4200](https://github.com/Bears-R-Us/arkouda/pull/4200), [#4208](https://github.com/Bears-R-Us/arkouda/pull/4208), [#4211](https://github.com/Bears-R-Us/arkouda/pull/4211), [#4232](https://github.com/Bears-R-Us/arkouda/pull/4232))
+
+- **Docs and Tooling Support**
+  - Added external tools documentation (#4079, [PR #4080](https://github.com/Bears-R-Us/arkouda/pull/4080))
+  - Removed `type: ignore` from `ak.arange` (#4395, [PR #4396](https://github.com/Bears-R-Us/arkouda/pull/4396))
+
+
+
 
 ---
 
