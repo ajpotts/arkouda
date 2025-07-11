@@ -3,9 +3,7 @@
 # Arkouda v2025.07.03
 
 
-
 We're excited to announce a feature-packed release of Arkouda with enhanced NumPy compatibility, powerful new array functions, performance improvements, CI tooling, and major documentation progress.
-
 
 
 ---
@@ -89,6 +87,7 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 
 ---
 
+
 ## Performance Improvements
 
 - Improved performance and stability in `ak.permutation`, distributed array creation, and sorting  
@@ -96,6 +95,7 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
 
 
 ---
+
 
 ## Deprecations and Refactors
 
@@ -214,8 +214,7 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
   - Improved error messages in test output ([PRs #4117](https://github.com/Bears-R-Us/arkouda/pull/4117), [#4118](https://github.com/Bears-R-Us/arkouda/pull/4118))
   - Removed verbose test output from communication diagnostics ([PR #4179](https://github.com/Bears-R-Us/arkouda/pull/4179))
 
-
-
+  
 ---
 
 
@@ -248,41 +247,10 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
     (#4423, #4469, [PRs #4424](https://github.com/Bears-R-Us/arkouda/pull/4424), [#4470](https://github.com/Bears-R-Us/arkouda/pull/4470))
   - Organized modules under `numpy`, `pandas`, and `scipy` namespaces ([PR #4183](https://github.com/Bears-R-Us/arkouda/pull/4183))
 
-
-
+  
 ---
 
 ## Developer Experience
-
-- Runs isort and black on project ([PR #4139](https://github.com/Bears-R-Us/arkouda/pull/4139))
-- update CI to use chapel 2.3.0 (#4085, [PR #4086](https://github.com/Bears-R-Us/arkouda/pull/4086))
-- add flake8 checks for unit tests to CI (#3980, [PR #3983](https://github.com/Bears-R-Us/arkouda/pull/3983))
-- Remove pinned Python versions and dependencies ([PR #4097](https://github.com/Bears-R-Us/arkouda/pull/4097))
-- update ubuntu version in CI (#4160, [PR #4161](https://github.com/Bears-R-Us/arkouda/pull/4161))
-- simplify makefile test in CI (#4205, [PR #4207](https://github.com/Bears-R-Us/arkouda/pull/4207))
-- Create ubuntu docker container to use with the CI. (#4217, [PR #4218](https://github.com/Bears-R-Us/arkouda/pull/4218))
-- add git pre-commit hooks #4356 (#4356, [PR #4357](https://github.com/Bears-R-Us/arkouda/pull/4357))
-- add check mypy version to CI ([PR #4457](https://github.com/Bears-R-Us/arkouda/pull/4457))
-- add cancel-in-progress to CI (#4698, [PR #4699](https://github.com/Bears-R-Us/arkouda/pull/4699))
-
-
-- Add memory logging to the CI ([PR #4695](https://github.com/Bears-R-Us/arkouda/pull/4695))
-- Add external tools documentation (#4079, [PR #4080](https://github.com/Bears-R-Us/arkouda/pull/4080))
-- Add retry on installation steps in CI (#3978, [PR #3979](https://github.com/Bears-R-Us/arkouda/pull/3979))
-- Remove duplicate Dockerfile (#3976, [PR #3977](https://github.com/Bears-R-Us/arkouda/pull/3977))
-- Simplify offline builds (#3957, #3944, [PR #3958](https://github.com/Bears-R-Us/arkouda/pull/3958))
-- Removed duplicate Dockerfile (#3976)
-
-- CI updated for Python 3.13, Chapel 2.3, and better dependency reuse (#4085, #4228)
-- Added: `flake8`, `ruff`, `darglint`, `pydocstyle`, `pydoclint`, `docstr-coverage`, `chplcheck`, `pytest-timeout` (#3980, #4113, #4402, #4386, #4388, #4445)
-- Git pre-commit hooks added (#4356)
-
-- remove type-ignore from arange (#4395, [PR #4396](https://github.com/Bears-R-Us/arkouda/pull/4396))
-- arkouda_benchmark_linux and arkouda_tests_linux to use ubuntu-with-arkouda-deps (#4236, [PR #4238](https://github.com/Bears-R-Us/arkouda/pull/4238))
-
-
-
-**Developer Experience**
 
 - **CI Modernization**
   - Upgraded CI to Python 3.13, Chapel 2.3.0, and updated Ubuntu base image  
@@ -295,6 +263,8 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
     - Created Ubuntu container with Arkouda deps (#4217, [PR #4218](https://github.com/Bears-R-Us/arkouda/pull/4218))
     - Cancel-in-progress enabled for concurrent CI runs (#4698, [PR #4699](https://github.com/Bears-R-Us/arkouda/pull/4699))
     - CI benchmark and test jobs switched to use new image (#4236, [PR #4238](https://github.com/Bears-R-Us/arkouda/pull/4238))
+    - Simplified makefile test in CI (#4205, [PR #4207](https://github.com/Bears-R-Us/arkouda/pull/4207))
+    - Added check mypy version to CI ([PR #4457](https://github.com/Bears-R-Us/arkouda/pull/4457))
 
 - **Linters and Style Enforcement**
   - Added new tools: `flake8`, `ruff`, `darglint`, `pydocstyle`, `pydoclint`, `docstr-coverage`, `chplcheck`, `pytest-timeout`  
@@ -315,10 +285,7 @@ We're excited to announce a feature-packed release of Arkouda with enhanced NumP
   - Removed `type: ignore` from `ak.arange` (#4395, [PR #4396](https://github.com/Bears-R-Us/arkouda/pull/4396))
 
 
-
-
 ---
-
 
 
 ## New Contributors
