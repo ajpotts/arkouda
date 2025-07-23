@@ -183,16 +183,19 @@ def add_default_mappings(field_lookup_map):
     return field_lookup_map
 
 
-
 def add_aggregate_ops(field_lookup_map):
     if "aggregate" not in field_lookup_map:
         field_lookup_map["aggregate"] = {}
+    if "reduce" not in field_lookup_map:
+        field_lookup_map["reduce"] = {}
 
     for op in AGGREGATE_OPS:
         for t in ["time", "rate"]:
             lookup_path = (
                 ["extra_info", "transfer_rate"] if t == "rate" else ["stats", "mean"]
             )
+
+            # GroupBy aggregate ops
             field_lookup_map["aggregate"][f"Aggregate {op} Average {t} ="] = {
                 "group": "GroupBy.aggregate",
                 "name": f"bench_aggregate[{op}]",
@@ -200,7 +203,18 @@ def add_aggregate_ops(field_lookup_map):
                 "lookup_path": lookup_path,
                 "lookup_regex": f"bench_aggregate\\[{op}\\]",
             }
+
+            # Reduce ops (int/float types)
+            if op in ["sum", "prod", "min", "max"]:
+                field_lookup_map["reduce"][f"Reduce {op} Average {t} ="] = {
+                    "group": "reduce",
+                    "name": f"bench_reduce[{op}]",
+                    "benchmark_name": "reduce",
+                    "lookup_path": lookup_path,
+                    "lookup_regex": f"bench_reduce\\[[\\w\\d]+-{op}\\]",
+                }
     return field_lookup_map
+
 
 
 def main():

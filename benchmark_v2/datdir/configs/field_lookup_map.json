@@ -1211,6 +1211,86 @@
         "transfer_rate"
       ],
       "lookup_regex": "bench_reduce\\[max\\]"
+    },
+    "Reduce prod Average time =": {
+      "group": "reduce",
+      "name": "bench_reduce[prod]",
+      "benchmark_name": "reduce",
+      "lookup_path": [
+        "stats",
+        "mean"
+      ],
+      "lookup_regex": "bench_reduce\\[[\\w\\d]+-prod\\]"
+    },
+    "Reduce prod Average rate =": {
+      "group": "reduce",
+      "name": "bench_reduce[prod]",
+      "benchmark_name": "reduce",
+      "lookup_path": [
+        "extra_info",
+        "transfer_rate"
+      ],
+      "lookup_regex": "bench_reduce\\[[\\w\\d]+-prod\\]"
+    },
+    "Reduce sum Average time =": {
+      "group": "reduce",
+      "name": "bench_reduce[sum]",
+      "benchmark_name": "reduce",
+      "lookup_path": [
+        "stats",
+        "mean"
+      ],
+      "lookup_regex": "bench_reduce\\[[\\w\\d]+-sum\\]"
+    },
+    "Reduce sum Average rate =": {
+      "group": "reduce",
+      "name": "bench_reduce[sum]",
+      "benchmark_name": "reduce",
+      "lookup_path": [
+        "extra_info",
+        "transfer_rate"
+      ],
+      "lookup_regex": "bench_reduce\\[[\\w\\d]+-sum\\]"
+    },
+    "Reduce min Average time =": {
+      "group": "reduce",
+      "name": "bench_reduce[min]",
+      "benchmark_name": "reduce",
+      "lookup_path": [
+        "stats",
+        "mean"
+      ],
+      "lookup_regex": "bench_reduce\\[[\\w\\d]+-min\\]"
+    },
+    "Reduce min Average rate =": {
+      "group": "reduce",
+      "name": "bench_reduce[min]",
+      "benchmark_name": "reduce",
+      "lookup_path": [
+        "extra_info",
+        "transfer_rate"
+      ],
+      "lookup_regex": "bench_reduce\\[[\\w\\d]+-min\\]"
+    },
+    "Reduce max Average time =": {
+      "group": "reduce",
+      "name": "bench_reduce[max]",
+      "benchmark_name": "reduce",
+      "lookup_path": [
+        "stats",
+        "mean"
+      ],
+      "lookup_regex": "bench_reduce\\[[\\w\\d]+-max\\]"
+    },
+    "Reduce max Average rate =": {
+      "group": "reduce",
+      "name": "bench_reduce[max]",
+      "benchmark_name": "reduce",
+      "lookup_path": [
+        "extra_info",
+        "transfer_rate"
+      ],
+      "lookup_regex": "bench_reduce\\[[\\w\\d]+-max\\]"
     }
   },
   "bigint_bitwise_binops": {

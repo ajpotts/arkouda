@@ -36,7 +36,7 @@ BENCHMARKS = [
     "aggregate",
     "gather",
     "scatter",
-    # "reduce",
+    "reduce",
     # "in1d",
     # "scan",
     # "noop",
