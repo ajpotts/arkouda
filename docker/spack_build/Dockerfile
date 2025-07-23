@@ -52,19 +52,7 @@ RUN . $SPACK_ROOT/share/spack/setup-env.sh && spack compiler find
 
 
 
-
-
-
 RUN source spack-develop/share/spack/setup-env.sh && spack compilers
-
-
-
-
-
-
-
-RUN source spack-develop/share/spack/setup-env.sh && spack repo create /opt/local-spack-repo bears_r_us
-
 
 
 
@@ -79,10 +67,6 @@ RUN export ARKOUDA_PACKAGE_FILE=$(find /root/.spack/package_repos -name package.
     $ARKOUDA_PACKAGE_FILE && \
     sed -i 's|arrow +parquet +snappy +zlib +brotli +bz2 +lz4 +zstd|arrow +parquet +snappy +zlib +brotli +bz2 ~lz4 +zstd|' \
     $ARKOUDA_PACKAGE_FILE
-
-
-RUN source spack-develop/share/spack/setup-env.sh && spack repo add /opt/local-spack-repo/spack_repo/bears_r_us
-
 
 
 
@@ -116,11 +100,14 @@ EXPOSE 5555
 # Wheel files will be saved here /opt/wheels
 # So the project can be installed offline later
 # ---------------------------
-RUN dnf install -y wget
-RUN wget https://github.com/Bears-R-Us/arkouda/archive/refs/tags/v2024.10.02.tar.gz && tar -xf v2024.10.02.tar.gz && cd arkouda-2024.10.02 && \
-    mkdir -p /opt/wheels && python3 -m pip download -d /opt/wheels '.[dev]' && python3 -m pip install --no-index --find-links=/opt/wheels '.[dev]' 
+#RUN dnf install -y wget
+#RUN wget https://github.com/Bears-R-Us/arkouda/archive/refs/tags/v2024.10.02.tar.gz && tar -xf v2024.10.02.tar.gz && cd arkouda-2024.10.02 && \
+#    mkdir -p /opt/wheels && python3 -m pip download -d /opt/wheels '.[dev]' && python3 -m pip install --no-index --find-links=/opt/wheels '.[dev]' 
 
-
+RUN dnf -y update && dnf -y install gfortran
+RUN spack compiler find
+RUN spack install py-arkouda ^py-setuptools@68.2.2 ^openblas@0.3.28
+RUN spack install py-arkouda ^py-setuptools@68.2.2 ^openblas@0.3.28 #installed py-arkouda@2024.10.02
 
 
 
