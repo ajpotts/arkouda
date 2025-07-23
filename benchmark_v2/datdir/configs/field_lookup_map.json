@@ -2908,5 +2908,27 @@
       ],
       "lookup_regex": "bench_scatter\\[[\\w\\d]*\\]"
     }
+  },
+  "str-gather": {
+    "Average rate =": {
+      "group": "",
+      "name": "bench_str-gather",
+      "benchmark_name": "str_gather",
+      "lookup_path": [
+        "extra_info",
+        "transfer_rate"
+      ],
+      "lookup_regex": "bench_gather\\[[\\w\\d]*\\]"
+    },
+    "Average time =": {
+      "group": "",
+      "name": "bench_str-gather",
+      "benchmark_name": "str_gather",
+      "lookup_path": [
+        "stats",
+        "mean"
+      ],
+      "lookup_regex": "bench_gather\\[[\\w\\d]*\\]"
+    }
   }
 }

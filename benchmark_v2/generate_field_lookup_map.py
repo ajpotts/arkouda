@@ -22,16 +22,18 @@ GROUP_MAP = {
     "argsort": "argsort",
     "gather": "gather",
     "scatter": "scatter",
+    "str-gather": "gather",
     # add others as needed
 }
 
 def infer_regex(benchmark_name: str, field: str) -> str:
-    """Infer a regex for JSON benchmark names based on perfkey field names."""
-    base_bench = (
-        benchmark_name.replace("str-", "").replace("bigint-", "")
-    )
+    base_bench = benchmark_name.replace("str-", "").replace("bigint-", "")
 
-    # Handle array cases (groupby, coargsort, etc.)
+    # str-gather simple default case
+    if benchmark_name == "str-gather":
+        return f"bench_{base_bench}\\[str\\]"
+
+    # Handle array cases
     if "array" in field:
         m = re.search(r"(\d+)-array", field)
         if m:
@@ -43,6 +45,13 @@ def infer_regex(benchmark_name: str, field: str) -> str:
             else:
                 dtype = "(?:int64|float64|bool|uint64)"
             return f"bench_{base_bench}\\[{dtype}-{num}\\]"
+
+    # Fallback for gather/str-gather without "array" naming
+    if benchmark_name in {"gather", "str-gather"}:
+        if benchmark_name.startswith("str-"):
+            return f"bench_{base_bench}\\[str\\]"
+        else:
+            return f"bench_{base_bench}\\[(?:int64|float64|bool|uint64)\\]"
 
     # Handle sort-cases (heuristic)
     if benchmark_name == "sort-cases":
@@ -100,28 +109,30 @@ def build_field_lookup_map():
 
     return field_lookup_map
 
-
 DEFAULT_BENCHMARKS = [
-    "stream", "argsort", "gather", "scatter", "dataframe", "bigint_stream"
+    "stream", "argsort", "gather", "scatter", "dataframe", "bigint_stream",
+    "str-gather"  # ✅ now included
 ]
 
 def add_default_mappings(field_lookup_map):
     for b in DEFAULT_BENCHMARKS:
         if b not in field_lookup_map:
+            base_bench = b.replace("str-", "").replace("bigint-", "").replace("-", "_")
             field_lookup_map[b] = {
                 "Average rate =": {
                     "group": "",
                     "name": f"bench_{b}",
-                    "benchmark_name": b,
+                    "benchmark_name": b.replace("-", "_"),
                     "lookup_path": ["extra_info", "transfer_rate"],
-                    "lookup_regex": f"bench_{b}\\[[\\w\\d]*\\]",
+                    "lookup_regex": f"bench_{base_bench}\\[[\\w\\d]*\\]",
+
                 },
                 "Average time =": {
                     "group": "",
                     "name": f"bench_{b}",
-                    "benchmark_name": b,
+                    "benchmark_name": b.replace("-", "_"),
                     "lookup_path": ["stats", "mean"],
-                    "lookup_regex": f"bench_{b}\\[[\\w\\d]*\\]",
+                    "lookup_regex": f"bench_{base_bench}\\[[\\w\\d]*\\]",
                 },
             }
     return field_lookup_map
