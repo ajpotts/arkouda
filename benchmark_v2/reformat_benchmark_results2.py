@@ -153,7 +153,7 @@ def get_header_dict(directory_path):
 
     for key in headers.keys():
         headers[key].insert(0, "# Date")
-
+    print("Loaded headers:", headers.keys())
     return headers
 
 
@@ -271,7 +271,129 @@ def get_float_value(value: Union[float, str]):
         raise TypeError("In get_float_value, value must be a float or string.")
 
 
+def infer_regex(benchmark_name: str, field: str) -> str:
+    base_bench = benchmark_name.replace("str-", "")
 
+    # Special handling for sort-cases
+    if benchmark_name == "sort-cases":
+        if "Random Uniform" in field:
+            m = re.search(r"(\d+)-bit", field)
+            bits = f"{m.group(1)}-bit" if m else "64-bit"
+            return f"bench_random_uniform\\[[\\w]+-{bits}\\]"
+
+        if "Power Law" in field:
+            return r"bench_power_law\[[\w\d]+\]"
+
+        if "RMAT" in field:
+            return r"bench_rmat\[[\w\d]+\]"
+
+        if "Block Sorted" in field:
+            if "concat" in field.lower():
+                return r"bench_block_sorted\[concat\]"
+            else:
+                return r"bench_block_sorted\[interleaved\]"
+
+        if "Refinement" in field:
+            return r"bench_refinement\[[\w\d]+\]"
+
+        if "Time Like" in field:
+            return r"bench_time_like\[[\w\d]+\]"
+
+        if "IP Like" in field:
+            return r"bench_ip_like\[[\w\d]+\]"
+
+    # Groupby, coargsort, etc.
+    if "array" in field:
+        m = re.search(r"(\d+)-array", field)
+        if m:
+            num = m.group(1)
+            dtype = "str" if benchmark_name.startswith("str-") else "(?:int64|float64|bool|uint64|bigint|mixed)"
+            return f"bench_{base_bench}\\[{dtype}-{num}\\]"
+
+    # Aggregate / reduce style ops (e.g., Reduce sum Average time =)
+    if "Reduce" in field:
+        op = field.split()[1]
+        return f"bench_{base_bench}\\[{op}\\]"
+
+    # Fallback
+    return f"bench_{base_bench}\\[[\\w\\d]*\\]"
+
+
+
+def gen_lookup_map_from_perfkeys(directory_path):
+    headers = get_header_fields_from_directory(directory_path)
+    field_lookup_map = {}
+
+    group_map = {
+        "groupby": "GroupBy_Creation",
+        "str-groupby": "GroupBy_Creation",
+        "coargsort": "Arkouda_CoArgSort",
+        "str-coargsort": "Arkouda_CoArgSort",
+        "sort-cases": "AK_Sort_Cases",
+        # others...
+    }
+
+    for benchmark_name, fields in headers.items():
+        field_lookup_map[benchmark_name] = {}
+
+        for field in fields:
+            if field == "# Date":
+                continue
+
+            regex = infer_regex(benchmark_name, field)
+            lookup_path = ["extra_info", "transfer_rate"] if "rate" in field else ["stats", "mean"]
+
+            field_lookup_map[benchmark_name][field] = get_lookup_dict(
+                group=group_map.get(benchmark_name, ""),
+                benchmark_name=benchmark_name.replace("str-", "").replace("-", "_"),
+                lookup_path=lookup_path,
+                lookup_regex=regex,
+            )
+
+    for b in BENCHMARKS:
+        if b not in field_lookup_map:
+            field_lookup_map[b] = {
+                "Average rate =": get_lookup_dict(
+                    name="bench_" + b,
+                    benchmark_name=b,
+                    lookup_path=["extra_info", "transfer_rate"],
+                    lookup_regex=f"bench_{b}\\[[\\w\\d]*\\]",
+                ),
+                "Average time =": get_lookup_dict(
+                    name="bench_" + b,
+                    benchmark_name=b,
+                    lookup_path=["stats", "mean"],
+                    lookup_regex=f"bench_{b}\\[[\\w\\d]*\\]",
+                ),
+            }
+
+    return field_lookup_map
+
+
+
+
+def gen_lookup_map(write=False, out_file="field_lookup_map.json"):
+    """Temporarily use a script to generate the lookup dictionary and save to file when write=True."""
+
+    field_lookup_map = gen_lookup_map_from_perfkeys("/home/amandapotts/git/arkouda/benchmark_v2/graph_infra")
+
+    if write:
+        with open(out_file, "w") as fp:
+            json.dump(field_lookup_map, fp)
+
+    return field_lookup_map
+
+
+def get_lookup_dict(group="", name="", benchmark_name="", lookup_path=[], lookup_regex=""):
+    """Populate the lookup dictionary fields and return a dictionary."""
+    ret_dict = {
+        "group": group,
+        "name": name,
+        "benchmark_name": benchmark_name,
+        "lookup_path": lookup_path,
+        "lookup_regex": lookup_regex,
+    }
+    return ret_dict
 
 
 # ./benchmark_v2/reformat_benchmark_results.py
@@ -286,6 +408,9 @@ def main():
 
     lookup_map_path = configs_dir + "/field_lookup_map.json"
 
+    #   TODO: remove gen_lookup_map
+    gen_lookup_map(True, lookup_map_path)
+
     with open(lookup_map_path, "r") as file:
         field_lookup_map = json.load(file)
 
@@ -298,11 +423,17 @@ def main():
     #   Convert benchmark data to output rows, in dictionary format with benchmark names as the keys.
     out_data = {}
 
-    for benchmark_name in BENCHMARKS:
+    for benchmark_name in headers.keys():
+        print(benchmark_name)
         if benchmark_name not in headers.keys():
             print(f"Could could not find headers for {benchmark_name}.")
         else:
             header = headers[benchmark_name]
+
+            if benchmark_name not in field_lookup_map:
+                logging.warning(f"Skipping {benchmark_name}: no lookup map found")
+                continue
+
             row = [
                 get_value(field, benchmark_name, field_lookup_map, benchmark_data) for field in header
             ]
