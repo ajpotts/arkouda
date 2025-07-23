@@ -31,7 +31,7 @@ BENCHMARKS = [
     "stream",
     "argsort",
     "coargsort",
-    # "groupby",
+    "groupby",
     # "flatten",
     "aggregate",
     "gather",
@@ -333,22 +333,25 @@ def gen_lookup_map(write=False, out_file="field_lookup_map.json"):
         )
 
     for num in [1, 2, 8, 16]:
-        field_lookup_map["coargsort"][f"{num}-array Average rate ="] = get_lookup_dict(
-            group="Arkouda_CoArgSort",
-            benchmark_name="coargsort",
-            lookup_path=["extra_info", "transfer_rate"],
-            lookup_regex=f"bench_coargsort\\[[\\w\\d]*-{num}\\]",
-        )
+        for key, (group, bench) in {
+            "coargsort": ("Arkouda_CoArgSort", "coargsort"),
+            "groupby": ("GroupBy_Creation", "groupby"),
+        }.items():
+            regex = f"bench_{bench}\\[[\\w\\d]*-{num}\\]"
 
-        field_lookup_map["coargsort"][f"{num}-array Average time ="] = get_lookup_dict(
-            group="Arkouda_CoArgSort",
-            benchmark_name="coargsort",
-            lookup_path=[
-                "stats",
-                "mean",
-            ],
-            lookup_regex=f"bench_coargsort\\[[\\w\\d]*-{num}\\]",
-        )
+            field_lookup_map[key][f"{num}-array Average rate ="] = get_lookup_dict(
+                group=group,
+                benchmark_name=bench,
+                lookup_path=["extra_info", "transfer_rate"],
+                lookup_regex=regex,
+            )
+
+            field_lookup_map[key][f"{num}-array Average time ="] = get_lookup_dict(
+                group=group,
+                benchmark_name=bench,
+                lookup_path=["stats", "mean"],
+                lookup_regex=regex,
+            )
 
     field_lookup_map["bigint_stream"]["Average bigint stream time ="] = get_lookup_dict(
         group="stream",
