@@ -2,11 +2,18 @@
 import os
 import re
 import json
+import logging
 
 GRAPH_INFRA_DIR = "benchmark_v2/graph_infra"
 OUTPUT_JSON = "benchmark_v2/datdir/configs/field_lookup_map.json"
 
-# Group inference (extend as needed)
+# Benchmarks that just need default Average rate/time keys
+DEFAULT_BENCHMARKS = [
+    "stream", "argsort", "str-argsort", "gather", "str-gather",
+    "scatter", "dataframe", "bigint_stream", "flatten"
+]
+
+# Group inference (update as needed)
 GROUP_MAP = {
     "groupby": "GroupBy_Creation",
     "str-groupby": "GroupBy_Creation",
@@ -17,24 +24,31 @@ GROUP_MAP = {
     "sort-cases": "AK_Sort_Cases",
     "scan": "scan",
     "reduce": "reduce",
-    "aggregate": "aggregate",
+    "aggregate": "GroupBy.aggregate",
     "stream": "stream",
     "argsort": "argsort",
+    "str-argsort": "argsort",
     "gather": "gather",
-    "scatter": "scatter",
     "str-gather": "gather",
-    # add others as needed
+    "scatter": "scatter",
+    "dataframe": "dataframe",
+    "bigint_stream": "stream",
+    "flatten": "flatten",
 }
 
+# Aggregate operations explicitly defined
+AGGREGATE_OPS = [
+    "prod", "sum", "mean", "min", "max", "argmin", "argmax",
+    "any", "all", "xor", "and", "or", "nunique"
+]
+
+
 def infer_regex(benchmark_name: str, field: str) -> str:
+    """Infer a regex for JSON benchmark names based on perfkey field names."""
     base_bench = benchmark_name.replace("str-", "").replace("bigint-", "")
 
-    # str-gather simple default case
-    if benchmark_name == "str-gather":
-        return f"bench_{base_bench}\\[str\\]"
-
-    # Handle array cases
-    if "array" in field:
+    # Groupby & Coargsort (with array counts)
+    if "array" in field and any(k in benchmark_name for k in ["groupby", "coargsort"]):
         m = re.search(r"(\d+)-array", field)
         if m:
             num = m.group(1)
@@ -46,14 +60,7 @@ def infer_regex(benchmark_name: str, field: str) -> str:
                 dtype = "(?:int64|float64|bool|uint64)"
             return f"bench_{base_bench}\\[{dtype}-{num}\\]"
 
-    # Fallback for gather/str-gather without "array" naming
-    if benchmark_name in {"gather", "str-gather"}:
-        if benchmark_name.startswith("str-"):
-            return f"bench_{base_bench}\\[str\\]"
-        else:
-            return f"bench_{base_bench}\\[(?:int64|float64|bool|uint64)\\]"
-
-    # Handle sort-cases (heuristic)
+    # Sort-cases
     if benchmark_name == "sort-cases":
         if "RMAT" in field:
             return r"bench_rmat\[[\w\d]+\]"
@@ -68,13 +75,36 @@ def infer_regex(benchmark_name: str, field: str) -> str:
         if "power" in field or "uniform" in field:
             return r"bench_sort-cases\[[\w\d]*\]"
 
-    # Handle reduce/scan/aggregate
+    # Reduce/Scan/Aggregate
     if benchmark_name in {"reduce", "scan", "aggregate"}:
         op = field.split()[0]
         return f"bench_{benchmark_name}\\[{op}\\]"
 
-    # Fallback
-    return f"bench_{base_bench}\\[[\\w\\d]*\\]"
+    # Flatten (looser match)
+    if benchmark_name == "flatten":
+        return r"bench_flatten.*"
+
+    # Flatten (looser match)
+    if benchmark_name == "flatten":
+        return r"^bench_flatten.*$"
+
+    # Dataframe (special case)
+    if benchmark_name == "dataframe":
+        return r"^bench_dataframe.*$"
+
+    # Bigint Stream (special case)
+    if benchmark_name == "bigint_stream":
+        return r"bench_bigint_stream\[bigint\]"
+
+    # Default case (e.g., stream, argsort, gather, scatter)
+    if benchmark_name.startswith("str-"):
+        dtype = "str"
+    elif benchmark_name.startswith("bigint-"):
+        dtype = "bigint"
+    else:
+        dtype = "(?:int64|float64|bool|uint64)"
+    return f"bench_{base_bench}\\[{dtype}\\]"
+
 
 def get_header_fields_from_directory(directory_path):
     """Load perfkeys headers into a dict."""
@@ -87,6 +117,7 @@ def get_header_fields_from_directory(directory_path):
                 file_contents[key] = lines
     return file_contents
 
+
 def build_field_lookup_map():
     headers = get_header_fields_from_directory(GRAPH_INFRA_DIR)
     field_lookup_map = {}
@@ -97,7 +128,9 @@ def build_field_lookup_map():
             if field == "# Date":
                 continue
             regex = infer_regex(benchmark_name, field)
-            lookup_path = ["extra_info", "transfer_rate"] if "rate" in field else ["stats", "mean"]
+            lookup_path = (
+                ["extra_info", "transfer_rate"] if "rate" in field else ["stats", "mean"]
+            )
 
             field_lookup_map[benchmark_name][field] = {
                 "group": GROUP_MAP.get(benchmark_name, ""),
@@ -109,56 +142,47 @@ def build_field_lookup_map():
 
     return field_lookup_map
 
-DEFAULT_BENCHMARKS = [
-    "stream", "argsort", "gather", "scatter", "dataframe", "bigint_stream",
-    "str-gather" , "str-argsort" # ✅ now included
-]
 
 def add_default_mappings(field_lookup_map):
     for b in DEFAULT_BENCHMARKS:
         if b not in field_lookup_map:
             base_bench = b.replace("str-", "").replace("bigint-", "").replace("-", "_")
-
-            # ✅ Dtype pattern
             if b.startswith("str-"):
-                dtype_pattern = "str"
+                dtype = "str"
             elif b.startswith("bigint-"):
-                dtype_pattern = "bigint"
+                dtype = "bigint"
             else:
-                dtype_pattern = "(?:int64|float64|bool|uint64)"
+                dtype = "(?:int64|float64|bool|uint64)"
 
-            # ✅ Benchmarks with array counts (groupby/coargsort only)
-            uses_array_counts = any(k in b for k in ["groupby", "coargsort"])
-
-            regex_suffix = (
-                f"{dtype_pattern}-[\\w\\d]*" if uses_array_counts else dtype_pattern
-            )
+            # ✅ Special cases must come first
+            if base_bench == "flatten":
+                regex = r"^bench_flatten.*$"
+            elif base_bench == "dataframe":
+                regex = r"^bench_dataframe.*$"
+            elif base_bench == "bigint_stream":
+                regex = r"bench_bigint_stream\[bigint\]"
+            else:
+                regex = f"bench_{base_bench}\\[{dtype}\\]"
 
             field_lookup_map[b] = {
                 "Average rate =": {
-                    "group": "",
+                    "group": GROUP_MAP.get(b, ""),
                     "name": f"bench_{base_bench}",
                     "benchmark_name": base_bench,
                     "lookup_path": ["extra_info", "transfer_rate"],
-                    "lookup_regex": f"bench_{base_bench}\\[{regex_suffix}\\]",
+                    "lookup_regex": regex,
                 },
                 "Average time =": {
-                    "group": "",
+                    "group": GROUP_MAP.get(b, ""),
                     "name": f"bench_{base_bench}",
                     "benchmark_name": base_bench,
                     "lookup_path": ["stats", "mean"],
-                    "lookup_regex": f"bench_{base_bench}\\[{regex_suffix}\\]",
+                    "lookup_regex": regex,
                 },
             }
     return field_lookup_map
 
 
-
-
-AGGREGATE_OPS = [
-    "prod", "sum", "mean", "min", "max", "argmin", "argmax",
-    "any", "all", "xor", "and", "or", "nunique"
-]
 
 def add_aggregate_ops(field_lookup_map):
     if "aggregate" not in field_lookup_map:
@@ -178,23 +202,21 @@ def add_aggregate_ops(field_lookup_map):
             }
     return field_lookup_map
 
-import logging
-def add_str_bigint_cases(field_lookup_map):
-    for case in ["str-groupby", "str-coargsort", "bigint-groupby", "bigint-coargsort"]:
-        if case not in field_lookup_map:
-            logging.warning(f"{case} perfkeys exist but no mapping was built")
-    return field_lookup_map
 
 def main():
     field_lookup_map = build_field_lookup_map()
-    field_lookup_map = add_default_mappings(field_lookup_map)  # previous fix
-    field_lookup_map = add_aggregate_ops(field_lookup_map)     # ✅ add this
-    field_lookup_map = add_str_bigint_cases(field_lookup_map)
+    field_lookup_map = add_default_mappings(field_lookup_map)
+    field_lookup_map = add_aggregate_ops(field_lookup_map)
+
     os.makedirs(os.path.dirname(OUTPUT_JSON), exist_ok=True)
     with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
         json.dump(field_lookup_map, f, indent=2)
     print(f"✅ Updated {OUTPUT_JSON} with {len(field_lookup_map)} benchmarks.")
 
 
+
+
+
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.WARNING)
     main()

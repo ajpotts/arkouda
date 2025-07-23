@@ -32,7 +32,7 @@ BENCHMARKS = [
     "argsort",
     "coargsort",
     "groupby",
-    # "flatten",
+    "flatten",
     "aggregate",
     "gather",
     "scatter",
