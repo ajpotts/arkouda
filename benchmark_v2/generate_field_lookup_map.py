@@ -111,31 +111,48 @@ def build_field_lookup_map():
 
 DEFAULT_BENCHMARKS = [
     "stream", "argsort", "gather", "scatter", "dataframe", "bigint_stream",
-    "str-gather"  # ✅ now included
+    "str-gather" , "str-argsort" # ✅ now included
 ]
 
 def add_default_mappings(field_lookup_map):
     for b in DEFAULT_BENCHMARKS:
         if b not in field_lookup_map:
             base_bench = b.replace("str-", "").replace("bigint-", "").replace("-", "_")
+
+            # ✅ Dtype pattern
+            if b.startswith("str-"):
+                dtype_pattern = "str"
+            elif b.startswith("bigint-"):
+                dtype_pattern = "bigint"
+            else:
+                dtype_pattern = "(?:int64|float64|bool|uint64)"
+
+            # ✅ Benchmarks with array counts (groupby/coargsort only)
+            uses_array_counts = any(k in b for k in ["groupby", "coargsort"])
+
+            regex_suffix = (
+                f"{dtype_pattern}-[\\w\\d]*" if uses_array_counts else dtype_pattern
+            )
+
             field_lookup_map[b] = {
                 "Average rate =": {
                     "group": "",
-                    "name": f"bench_{b}",
-                    "benchmark_name": b.replace("-", "_"),
+                    "name": f"bench_{base_bench}",
+                    "benchmark_name": base_bench,
                     "lookup_path": ["extra_info", "transfer_rate"],
-                    "lookup_regex": f"bench_{base_bench}\\[[\\w\\d]*\\]",
-
+                    "lookup_regex": f"bench_{base_bench}\\[{regex_suffix}\\]",
                 },
                 "Average time =": {
                     "group": "",
-                    "name": f"bench_{b}",
-                    "benchmark_name": b.replace("-", "_"),
+                    "name": f"bench_{base_bench}",
+                    "benchmark_name": base_bench,
                     "lookup_path": ["stats", "mean"],
-                    "lookup_regex": f"bench_{base_bench}\\[[\\w\\d]*\\]",
+                    "lookup_regex": f"bench_{base_bench}\\[{regex_suffix}\\]",
                 },
             }
     return field_lookup_map
+
+
 
 
 AGGREGATE_OPS = [

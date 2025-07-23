@@ -46,7 +46,7 @@ BENCHMARKS = [
     # "IO",
     # "csvIO",
     # "small-str-groupby",
-    # "str-argsort",
+    "str-argsort",
     "str-coargsort",
     # "str-groupby",
     "str-gather",

@@ -2830,7 +2830,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_stream\\[[\\w\\d]*\\]"
+      "lookup_regex": "bench_stream\\[(?:int64|float64|bool|uint64)\\]"
     },
     "Average time =": {
       "group": "",
@@ -2840,7 +2840,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_stream\\[[\\w\\d]*\\]"
+      "lookup_regex": "bench_stream\\[(?:int64|float64|bool|uint64)\\]"
     }
   },
   "argsort": {
@@ -2852,7 +2852,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_argsort\\[[\\w\\d]*\\]"
+      "lookup_regex": "bench_argsort\\[(?:int64|float64|bool|uint64)\\]"
     },
     "Average time =": {
       "group": "",
@@ -2862,7 +2862,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_argsort\\[[\\w\\d]*\\]"
+      "lookup_regex": "bench_argsort\\[(?:int64|float64|bool|uint64)\\]"
     }
   },
   "gather": {
@@ -2874,7 +2874,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_gather\\[[\\w\\d]*\\]"
+      "lookup_regex": "bench_gather\\[(?:int64|float64|bool|uint64)\\]"
     },
     "Average time =": {
       "group": "",
@@ -2884,7 +2884,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_gather\\[[\\w\\d]*\\]"
+      "lookup_regex": "bench_gather\\[(?:int64|float64|bool|uint64)\\]"
     }
   },
   "scatter": {
@@ -2896,7 +2896,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_scatter\\[[\\w\\d]*\\]"
+      "lookup_regex": "bench_scatter\\[(?:int64|float64|bool|uint64)\\]"
     },
     "Average time =": {
       "group": "",
@@ -2906,29 +2906,51 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_scatter\\[[\\w\\d]*\\]"
+      "lookup_regex": "bench_scatter\\[(?:int64|float64|bool|uint64)\\]"
     }
   },
   "str-gather": {
     "Average rate =": {
       "group": "",
-      "name": "bench_str-gather",
-      "benchmark_name": "str_gather",
+      "name": "bench_gather",
+      "benchmark_name": "gather",
       "lookup_path": [
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_gather\\[[\\w\\d]*\\]"
+      "lookup_regex": "bench_gather\\[str\\]"
     },
     "Average time =": {
       "group": "",
-      "name": "bench_str-gather",
-      "benchmark_name": "str_gather",
+      "name": "bench_gather",
+      "benchmark_name": "gather",
       "lookup_path": [
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_gather\\[[\\w\\d]*\\]"
+      "lookup_regex": "bench_gather\\[str\\]"
+    }
+  },
+  "str-argsort": {
+    "Average rate =": {
+      "group": "",
+      "name": "bench_argsort",
+      "benchmark_name": "argsort",
+      "lookup_path": [
+        "extra_info",
+        "transfer_rate"
+      ],
+      "lookup_regex": "bench_argsort\\[str\\]"
+    },
+    "Average time =": {
+      "group": "",
+      "name": "bench_argsort",
+      "benchmark_name": "argsort",
+      "lookup_path": [
+        "stats",
+        "mean"
+      ],
+      "lookup_regex": "bench_argsort\\[str\\]"
     }
   }
 }
