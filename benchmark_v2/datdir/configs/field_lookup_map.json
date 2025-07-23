@@ -1,7 +1,7 @@
 {
   "scan": {
     "cumsum Average time =": {
-      "group": "",
+      "group": "scan",
       "name": "",
       "benchmark_name": "scan",
       "lookup_path": [
@@ -11,7 +11,7 @@
       "lookup_regex": "bench_scan\\[cumsum\\]"
     },
     "cumsum Average rate =": {
-      "group": "",
+      "group": "scan",
       "name": "",
       "benchmark_name": "scan",
       "lookup_path": [
@@ -21,7 +21,7 @@
       "lookup_regex": "bench_scan\\[cumsum\\]"
     },
     "cumprod Average time =": {
-      "group": "",
+      "group": "scan",
       "name": "",
       "benchmark_name": "scan",
       "lookup_path": [
@@ -31,7 +31,7 @@
       "lookup_regex": "bench_scan\\[cumprod\\]"
     },
     "cumprod Average rate =": {
-      "group": "",
+      "group": "scan",
       "name": "",
       "benchmark_name": "scan",
       "lookup_path": [
@@ -43,7 +43,7 @@
   },
   "sort-cases": {
     "uniform int64 16-bit RadixSortLSD average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -53,7 +53,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "uniform int64 16-bit RadixSortLSD average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -63,7 +63,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "uniform int64 16-bit TwoArrayRadixSort average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -73,7 +73,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "uniform int64 16-bit TwoArrayRadixSort average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -83,7 +83,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "uniform int64 32-bit RadixSortLSD average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -93,7 +93,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "uniform int64 32-bit RadixSortLSD average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -103,7 +103,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "uniform int64 32-bit TwoArrayRadixSort average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -113,7 +113,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "uniform int64 32-bit TwoArrayRadixSort average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -123,7 +123,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "uniform int64 64-bit RadixSortLSD average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -133,7 +133,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "uniform int64 64-bit RadixSortLSD average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -143,7 +143,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "uniform int64 64-bit TwoArrayRadixSort average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -153,7 +153,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "uniform int64 64-bit TwoArrayRadixSort average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -163,7 +163,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "uniform float64 RadixSortLSD average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -173,7 +173,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "uniform float64 RadixSortLSD average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -183,7 +183,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "uniform float64 TwoArrayRadixSort average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -193,7 +193,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "uniform float64 TwoArrayRadixSort average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -203,7 +203,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "power-law float64 RadixSortLSD average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -213,7 +213,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "power-law float64 RadixSortLSD average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -223,7 +223,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "power-law float64 TwoArrayRadixSort average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -233,7 +233,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "power-law float64 TwoArrayRadixSort average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -243,7 +243,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "power-law int64 RadixSortLSD average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -253,7 +253,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "power-law int64 RadixSortLSD average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -263,7 +263,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "power-law int64 TwoArrayRadixSort average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -273,7 +273,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "power-law int64 TwoArrayRadixSort average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -283,7 +283,7 @@
       "lookup_regex": "bench_sort-cases\\[[\\w\\d]*\\]"
     },
     "RMAT int64 RadixSortLSD average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -293,7 +293,7 @@
       "lookup_regex": "bench_rmat\\[[\\w\\d]+\\]"
     },
     "RMAT int64 RadixSortLSD average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -303,7 +303,7 @@
       "lookup_regex": "bench_rmat\\[[\\w\\d]+\\]"
     },
     "RMAT int64 TwoArrayRadixSort average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -313,7 +313,7 @@
       "lookup_regex": "bench_rmat\\[[\\w\\d]+\\]"
     },
     "RMAT int64 TwoArrayRadixSort average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -323,7 +323,7 @@
       "lookup_regex": "bench_rmat\\[[\\w\\d]+\\]"
     },
     "block-sorted concat int64 RadixSortLSD average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -333,7 +333,7 @@
       "lookup_regex": "bench_block_sorted\\[[\\w\\d]+\\]"
     },
     "block-sorted concat int64 RadixSortLSD average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -343,7 +343,7 @@
       "lookup_regex": "bench_block_sorted\\[[\\w\\d]+\\]"
     },
     "block-sorted concat int64 TwoArrayRadixSort average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -353,7 +353,7 @@
       "lookup_regex": "bench_block_sorted\\[[\\w\\d]+\\]"
     },
     "block-sorted concat int64 TwoArrayRadixSort average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -363,7 +363,7 @@
       "lookup_regex": "bench_block_sorted\\[[\\w\\d]+\\]"
     },
     "block-sorted interleaved int64 RadixSortLSD average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -373,7 +373,7 @@
       "lookup_regex": "bench_block_sorted\\[[\\w\\d]+\\]"
     },
     "block-sorted interleaved int64 RadixSortLSD average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -383,7 +383,7 @@
       "lookup_regex": "bench_block_sorted\\[[\\w\\d]+\\]"
     },
     "block-sorted interleaved int64 TwoArrayRadixSort average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -393,7 +393,7 @@
       "lookup_regex": "bench_block_sorted\\[[\\w\\d]+\\]"
     },
     "block-sorted interleaved int64 TwoArrayRadixSort average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -403,7 +403,7 @@
       "lookup_regex": "bench_block_sorted\\[[\\w\\d]+\\]"
     },
     "refinement int64 RadixSortLSD average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -413,7 +413,7 @@
       "lookup_regex": "bench_refinement\\[[\\w\\d]+\\]"
     },
     "refinement int64 RadixSortLSD average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -423,7 +423,7 @@
       "lookup_regex": "bench_refinement\\[[\\w\\d]+\\]"
     },
     "refinement int64 TwoArrayRadixSort average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -433,7 +433,7 @@
       "lookup_regex": "bench_refinement\\[[\\w\\d]+\\]"
     },
     "refinement int64 TwoArrayRadixSort average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -443,7 +443,7 @@
       "lookup_regex": "bench_refinement\\[[\\w\\d]+\\]"
     },
     "datetime64[ns] RadixSortLSD average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -453,7 +453,7 @@
       "lookup_regex": "bench_time_like\\[[\\w\\d]+\\]"
     },
     "datetime64[ns] RadixSortLSD average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -463,7 +463,7 @@
       "lookup_regex": "bench_time_like\\[[\\w\\d]+\\]"
     },
     "datetime64[ns] TwoArrayRadixSort average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -473,7 +473,7 @@
       "lookup_regex": "bench_time_like\\[[\\w\\d]+\\]"
     },
     "datetime64[ns] TwoArrayRadixSort average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -483,7 +483,7 @@
       "lookup_regex": "bench_time_like\\[[\\w\\d]+\\]"
     },
     "IP-like 2*int64 RadixSortLSD average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -493,7 +493,7 @@
       "lookup_regex": "bench_ip_like\\[[\\w\\d]+\\]"
     },
     "IP-like 2*int64 RadixSortLSD average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -503,7 +503,7 @@
       "lookup_regex": "bench_ip_like\\[[\\w\\d]+\\]"
     },
     "IP-like 2*int64 TwoArrayRadixSort average time =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -513,7 +513,7 @@
       "lookup_regex": "bench_ip_like\\[[\\w\\d]+\\]"
     },
     "IP-like 2*int64 TwoArrayRadixSort average rate =": {
-      "group": "",
+      "group": "AK_Sort_Cases",
       "name": "",
       "benchmark_name": "sort_cases",
       "lookup_path": [
@@ -1133,7 +1133,7 @@
   },
   "reduce": {
     "sum Average time =": {
-      "group": "",
+      "group": "reduce",
       "name": "",
       "benchmark_name": "reduce",
       "lookup_path": [
@@ -1143,7 +1143,7 @@
       "lookup_regex": "bench_reduce\\[sum\\]"
     },
     "sum Average rate =": {
-      "group": "",
+      "group": "reduce",
       "name": "",
       "benchmark_name": "reduce",
       "lookup_path": [
@@ -1153,7 +1153,7 @@
       "lookup_regex": "bench_reduce\\[sum\\]"
     },
     "prod Average time =": {
-      "group": "",
+      "group": "reduce",
       "name": "",
       "benchmark_name": "reduce",
       "lookup_path": [
@@ -1163,7 +1163,7 @@
       "lookup_regex": "bench_reduce\\[prod\\]"
     },
     "prod Average rate =": {
-      "group": "",
+      "group": "reduce",
       "name": "",
       "benchmark_name": "reduce",
       "lookup_path": [
@@ -1173,7 +1173,7 @@
       "lookup_regex": "bench_reduce\\[prod\\]"
     },
     "min Average time =": {
-      "group": "",
+      "group": "reduce",
       "name": "",
       "benchmark_name": "reduce",
       "lookup_path": [
@@ -1183,7 +1183,7 @@
       "lookup_regex": "bench_reduce\\[min\\]"
     },
     "min Average rate =": {
-      "group": "",
+      "group": "reduce",
       "name": "",
       "benchmark_name": "reduce",
       "lookup_path": [
@@ -1193,7 +1193,7 @@
       "lookup_regex": "bench_reduce\\[min\\]"
     },
     "max Average time =": {
-      "group": "",
+      "group": "reduce",
       "name": "",
       "benchmark_name": "reduce",
       "lookup_path": [
@@ -1203,7 +1203,7 @@
       "lookup_regex": "bench_reduce\\[max\\]"
     },
     "max Average rate =": {
-      "group": "",
+      "group": "reduce",
       "name": "",
       "benchmark_name": "reduce",
       "lookup_path": [
@@ -1326,7 +1326,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_groupby\\[(?:int64|float64|bool|uint64|bigint|mixed)-1\\]"
+      "lookup_regex": "bench_groupby\\[(?:int64|float64|bool|uint64)-1\\]"
     },
     "1-array Average rate =": {
       "group": "GroupBy_Creation",
@@ -1336,7 +1336,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_groupby\\[(?:int64|float64|bool|uint64|bigint|mixed)-1\\]"
+      "lookup_regex": "bench_groupby\\[(?:int64|float64|bool|uint64)-1\\]"
     },
     "2-array Average time =": {
       "group": "GroupBy_Creation",
@@ -1346,7 +1346,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_groupby\\[(?:int64|float64|bool|uint64|bigint|mixed)-2\\]"
+      "lookup_regex": "bench_groupby\\[(?:int64|float64|bool|uint64)-2\\]"
     },
     "2-array Average rate =": {
       "group": "GroupBy_Creation",
@@ -1356,7 +1356,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_groupby\\[(?:int64|float64|bool|uint64|bigint|mixed)-2\\]"
+      "lookup_regex": "bench_groupby\\[(?:int64|float64|bool|uint64)-2\\]"
     },
     "8-array Average time =": {
       "group": "GroupBy_Creation",
@@ -1366,7 +1366,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_groupby\\[(?:int64|float64|bool|uint64|bigint|mixed)-8\\]"
+      "lookup_regex": "bench_groupby\\[(?:int64|float64|bool|uint64)-8\\]"
     },
     "8-array Average rate =": {
       "group": "GroupBy_Creation",
@@ -1376,7 +1376,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_groupby\\[(?:int64|float64|bool|uint64|bigint|mixed)-8\\]"
+      "lookup_regex": "bench_groupby\\[(?:int64|float64|bool|uint64)-8\\]"
     },
     "16-array Average time =": {
       "group": "GroupBy_Creation",
@@ -1386,7 +1386,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_groupby\\[(?:int64|float64|bool|uint64|bigint|mixed)-16\\]"
+      "lookup_regex": "bench_groupby\\[(?:int64|float64|bool|uint64)-16\\]"
     },
     "16-array Average rate =": {
       "group": "GroupBy_Creation",
@@ -1396,7 +1396,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_groupby\\[(?:int64|float64|bool|uint64|bigint|mixed)-16\\]"
+      "lookup_regex": "bench_groupby\\[(?:int64|float64|bool|uint64)-16\\]"
     }
   },
   "array_transfer": {
@@ -1443,254 +1443,264 @@
   },
   "aggregate": {
     "Aggregate sum Average rate =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[sum]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[sum\\]"
     },
     "Aggregate prod Average rate =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[prod]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[prod\\]"
     },
     "Aggregate mean Average rate =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[mean]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[mean\\]"
     },
     "Aggregate min Average rate =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[min]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[min\\]"
     },
     "Aggregate max Average rate =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[max]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[max\\]"
     },
     "Aggregate argmin Average rate =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[argmin]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[argmin\\]"
     },
     "Aggregate argmax Average rate =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[argmax]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[argmax\\]"
     },
     "Aggregate any Average rate =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[any]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[any\\]"
     },
     "Aggregate all Average rate =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[all]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[all\\]"
     },
     "Aggregate xor Average rate =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[xor]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[xor\\]"
     },
     "Aggregate and Average rate =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[and]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[and\\]"
     },
     "Aggregate or Average rate =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[or]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[or\\]"
     },
     "Aggregate nunique Average rate =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[nunique]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[nunique\\]"
     },
     "Aggregate sum Average time =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[sum]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[sum\\]"
     },
     "Aggregate prod Average time =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[prod]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[prod\\]"
     },
     "Aggregate min Average time =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[min]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[min\\]"
     },
     "Aggregate max Average time =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[max]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[max\\]"
     },
     "Aggregate argmin Average time =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[argmin]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[argmin\\]"
     },
     "Aggregate argmax Average time =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[argmax]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[argmax\\]"
     },
     "Aggregate any Average time =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[any]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[any\\]"
     },
     "Aggregate all Average time =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[all]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[all\\]"
     },
     "Aggregate xor Average time =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[xor]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[xor\\]"
     },
     "Aggregate and Average time =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[and]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[and\\]"
     },
     "Aggregate or Average time =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[or]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[or\\]"
     },
     "Aggregate nunique Average time =": {
-      "group": "",
-      "name": "",
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[nunique]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_aggregate\\[Aggregate\\]"
+      "lookup_regex": "bench_aggregate\\[nunique\\]"
+    },
+    "Aggregate mean Average time =": {
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[mean]",
+      "benchmark_name": "aggregate",
+      "lookup_path": [
+        "stats",
+        "mean"
+      ],
+      "lookup_regex": "bench_aggregate\\[mean\\]"
     }
   },
   "parquetIO": {
@@ -1937,7 +1947,7 @@
   },
   "str-coargsort": {
     "1-array Average rate =": {
-      "group": "",
+      "group": "Arkouda_CoArgSort",
       "name": "",
       "benchmark_name": "coargsort",
       "lookup_path": [
@@ -1947,7 +1957,7 @@
       "lookup_regex": "bench_coargsort\\[str-1\\]"
     },
     "1-array Average time =": {
-      "group": "",
+      "group": "Arkouda_CoArgSort",
       "name": "",
       "benchmark_name": "coargsort",
       "lookup_path": [
@@ -1957,7 +1967,7 @@
       "lookup_regex": "bench_coargsort\\[str-1\\]"
     },
     "2-array Average rate =": {
-      "group": "",
+      "group": "Arkouda_CoArgSort",
       "name": "",
       "benchmark_name": "coargsort",
       "lookup_path": [
@@ -1967,7 +1977,7 @@
       "lookup_regex": "bench_coargsort\\[str-2\\]"
     },
     "2-array Average time =": {
-      "group": "",
+      "group": "Arkouda_CoArgSort",
       "name": "",
       "benchmark_name": "coargsort",
       "lookup_path": [
@@ -1977,7 +1987,7 @@
       "lookup_regex": "bench_coargsort\\[str-2\\]"
     },
     "8-array Average rate =": {
-      "group": "",
+      "group": "Arkouda_CoArgSort",
       "name": "",
       "benchmark_name": "coargsort",
       "lookup_path": [
@@ -1987,7 +1997,7 @@
       "lookup_regex": "bench_coargsort\\[str-8\\]"
     },
     "8-array Average time =": {
-      "group": "",
+      "group": "Arkouda_CoArgSort",
       "name": "",
       "benchmark_name": "coargsort",
       "lookup_path": [
@@ -1997,7 +2007,7 @@
       "lookup_regex": "bench_coargsort\\[str-8\\]"
     },
     "16-array Average rate =": {
-      "group": "",
+      "group": "Arkouda_CoArgSort",
       "name": "",
       "benchmark_name": "coargsort",
       "lookup_path": [
@@ -2007,7 +2017,7 @@
       "lookup_regex": "bench_coargsort\\[str-16\\]"
     },
     "16-array Average time =": {
-      "group": "",
+      "group": "Arkouda_CoArgSort",
       "name": "",
       "benchmark_name": "coargsort",
       "lookup_path": [
@@ -2143,7 +2153,7 @@
   },
   "str-groupby": {
     "1-array Average time =": {
-      "group": "",
+      "group": "GroupBy_Creation",
       "name": "",
       "benchmark_name": "groupby",
       "lookup_path": [
@@ -2153,7 +2163,7 @@
       "lookup_regex": "bench_groupby\\[str-1\\]"
     },
     "1-array Average rate =": {
-      "group": "",
+      "group": "GroupBy_Creation",
       "name": "",
       "benchmark_name": "groupby",
       "lookup_path": [
@@ -2163,7 +2173,7 @@
       "lookup_regex": "bench_groupby\\[str-1\\]"
     },
     "2-array Average time =": {
-      "group": "",
+      "group": "GroupBy_Creation",
       "name": "",
       "benchmark_name": "groupby",
       "lookup_path": [
@@ -2173,7 +2183,7 @@
       "lookup_regex": "bench_groupby\\[str-2\\]"
     },
     "2-array Average rate =": {
-      "group": "",
+      "group": "GroupBy_Creation",
       "name": "",
       "benchmark_name": "groupby",
       "lookup_path": [
@@ -2183,7 +2193,7 @@
       "lookup_regex": "bench_groupby\\[str-2\\]"
     },
     "8-array Average time =": {
-      "group": "",
+      "group": "GroupBy_Creation",
       "name": "",
       "benchmark_name": "groupby",
       "lookup_path": [
@@ -2193,7 +2203,7 @@
       "lookup_regex": "bench_groupby\\[str-8\\]"
     },
     "8-array Average rate =": {
-      "group": "",
+      "group": "GroupBy_Creation",
       "name": "",
       "benchmark_name": "groupby",
       "lookup_path": [
@@ -2203,7 +2213,7 @@
       "lookup_regex": "bench_groupby\\[str-8\\]"
     },
     "16-array Average time =": {
-      "group": "",
+      "group": "GroupBy_Creation",
       "name": "",
       "benchmark_name": "groupby",
       "lookup_path": [
@@ -2213,7 +2223,7 @@
       "lookup_regex": "bench_groupby\\[str-16\\]"
     },
     "16-array Average rate =": {
-      "group": "",
+      "group": "GroupBy_Creation",
       "name": "",
       "benchmark_name": "groupby",
       "lookup_path": [
@@ -2371,84 +2381,84 @@
   },
   "coargsort": {
     "1-array Average time =": {
-      "group": "",
+      "group": "Arkouda_CoArgSort",
       "name": "",
       "benchmark_name": "coargsort",
       "lookup_path": [
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_coargsort\\[(?:int64|float64|bool|uint64|bigint|mixed)-1\\]"
+      "lookup_regex": "bench_coargsort\\[(?:int64|float64|bool|uint64)-1\\]"
     },
     "1-array Average rate =": {
-      "group": "",
+      "group": "Arkouda_CoArgSort",
       "name": "",
       "benchmark_name": "coargsort",
       "lookup_path": [
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_coargsort\\[(?:int64|float64|bool|uint64|bigint|mixed)-1\\]"
+      "lookup_regex": "bench_coargsort\\[(?:int64|float64|bool|uint64)-1\\]"
     },
     "2-array Average time =": {
-      "group": "",
+      "group": "Arkouda_CoArgSort",
       "name": "",
       "benchmark_name": "coargsort",
       "lookup_path": [
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_coargsort\\[(?:int64|float64|bool|uint64|bigint|mixed)-2\\]"
+      "lookup_regex": "bench_coargsort\\[(?:int64|float64|bool|uint64)-2\\]"
     },
     "2-array Average rate =": {
-      "group": "",
+      "group": "Arkouda_CoArgSort",
       "name": "",
       "benchmark_name": "coargsort",
       "lookup_path": [
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_coargsort\\[(?:int64|float64|bool|uint64|bigint|mixed)-2\\]"
+      "lookup_regex": "bench_coargsort\\[(?:int64|float64|bool|uint64)-2\\]"
     },
     "8-array Average time =": {
-      "group": "",
+      "group": "Arkouda_CoArgSort",
       "name": "",
       "benchmark_name": "coargsort",
       "lookup_path": [
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_coargsort\\[(?:int64|float64|bool|uint64|bigint|mixed)-8\\]"
+      "lookup_regex": "bench_coargsort\\[(?:int64|float64|bool|uint64)-8\\]"
     },
     "8-array Average rate =": {
-      "group": "",
+      "group": "Arkouda_CoArgSort",
       "name": "",
       "benchmark_name": "coargsort",
       "lookup_path": [
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_coargsort\\[(?:int64|float64|bool|uint64|bigint|mixed)-8\\]"
+      "lookup_regex": "bench_coargsort\\[(?:int64|float64|bool|uint64)-8\\]"
     },
     "16-array Average time =": {
-      "group": "",
+      "group": "Arkouda_CoArgSort",
       "name": "",
       "benchmark_name": "coargsort",
       "lookup_path": [
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_coargsort\\[(?:int64|float64|bool|uint64|bigint|mixed)-16\\]"
+      "lookup_regex": "bench_coargsort\\[(?:int64|float64|bool|uint64)-16\\]"
     },
     "16-array Average rate =": {
-      "group": "",
+      "group": "Arkouda_CoArgSort",
       "name": "",
       "benchmark_name": "coargsort",
       "lookup_path": [
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_coargsort\\[(?:int64|float64|bool|uint64|bigint|mixed)-16\\]"
+      "lookup_regex": "bench_coargsort\\[(?:int64|float64|bool|uint64)-16\\]"
     }
   },
   "bigint_groupby": {
@@ -2460,7 +2470,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_bigint_groupby\\[(?:int64|float64|bool|uint64|bigint|mixed)-1\\]"
+      "lookup_regex": "bench_bigint_groupby\\[(?:int64|float64|bool|uint64)-1\\]"
     },
     "1-array Average rate =": {
       "group": "",
@@ -2470,7 +2480,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_bigint_groupby\\[(?:int64|float64|bool|uint64|bigint|mixed)-1\\]"
+      "lookup_regex": "bench_bigint_groupby\\[(?:int64|float64|bool|uint64)-1\\]"
     },
     "2-array Average time =": {
       "group": "",
@@ -2480,7 +2490,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_bigint_groupby\\[(?:int64|float64|bool|uint64|bigint|mixed)-2\\]"
+      "lookup_regex": "bench_bigint_groupby\\[(?:int64|float64|bool|uint64)-2\\]"
     },
     "2-array Average rate =": {
       "group": "",
@@ -2490,7 +2500,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_bigint_groupby\\[(?:int64|float64|bool|uint64|bigint|mixed)-2\\]"
+      "lookup_regex": "bench_bigint_groupby\\[(?:int64|float64|bool|uint64)-2\\]"
     },
     "8-array Average time =": {
       "group": "",
@@ -2500,7 +2510,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_bigint_groupby\\[(?:int64|float64|bool|uint64|bigint|mixed)-8\\]"
+      "lookup_regex": "bench_bigint_groupby\\[(?:int64|float64|bool|uint64)-8\\]"
     },
     "8-array Average rate =": {
       "group": "",
@@ -2510,7 +2520,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_bigint_groupby\\[(?:int64|float64|bool|uint64|bigint|mixed)-8\\]"
+      "lookup_regex": "bench_bigint_groupby\\[(?:int64|float64|bool|uint64)-8\\]"
     },
     "16-array Average time =": {
       "group": "",
@@ -2520,7 +2530,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_bigint_groupby\\[(?:int64|float64|bool|uint64|bigint|mixed)-16\\]"
+      "lookup_regex": "bench_bigint_groupby\\[(?:int64|float64|bool|uint64)-16\\]"
     },
     "16-array Average rate =": {
       "group": "",
@@ -2530,7 +2540,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_bigint_groupby\\[(?:int64|float64|bool|uint64|bigint|mixed)-16\\]"
+      "lookup_regex": "bench_bigint_groupby\\[(?:int64|float64|bool|uint64)-16\\]"
     }
   },
   "str-locality": {
@@ -2809,6 +2819,94 @@
         "transfer_rate"
       ],
       "lookup_regex": "bench_in1d\\[[\\w\\d]*\\]"
+    }
+  },
+  "stream": {
+    "Average rate =": {
+      "group": "",
+      "name": "bench_stream",
+      "benchmark_name": "stream",
+      "lookup_path": [
+        "extra_info",
+        "transfer_rate"
+      ],
+      "lookup_regex": "bench_stream\\[[\\w\\d]*\\]"
+    },
+    "Average time =": {
+      "group": "",
+      "name": "bench_stream",
+      "benchmark_name": "stream",
+      "lookup_path": [
+        "stats",
+        "mean"
+      ],
+      "lookup_regex": "bench_stream\\[[\\w\\d]*\\]"
+    }
+  },
+  "argsort": {
+    "Average rate =": {
+      "group": "",
+      "name": "bench_argsort",
+      "benchmark_name": "argsort",
+      "lookup_path": [
+        "extra_info",
+        "transfer_rate"
+      ],
+      "lookup_regex": "bench_argsort\\[[\\w\\d]*\\]"
+    },
+    "Average time =": {
+      "group": "",
+      "name": "bench_argsort",
+      "benchmark_name": "argsort",
+      "lookup_path": [
+        "stats",
+        "mean"
+      ],
+      "lookup_regex": "bench_argsort\\[[\\w\\d]*\\]"
+    }
+  },
+  "gather": {
+    "Average rate =": {
+      "group": "",
+      "name": "bench_gather",
+      "benchmark_name": "gather",
+      "lookup_path": [
+        "extra_info",
+        "transfer_rate"
+      ],
+      "lookup_regex": "bench_gather\\[[\\w\\d]*\\]"
+    },
+    "Average time =": {
+      "group": "",
+      "name": "bench_gather",
+      "benchmark_name": "gather",
+      "lookup_path": [
+        "stats",
+        "mean"
+      ],
+      "lookup_regex": "bench_gather\\[[\\w\\d]*\\]"
+    }
+  },
+  "scatter": {
+    "Average rate =": {
+      "group": "",
+      "name": "bench_scatter",
+      "benchmark_name": "scatter",
+      "lookup_path": [
+        "extra_info",
+        "transfer_rate"
+      ],
+      "lookup_regex": "bench_scatter\\[[\\w\\d]*\\]"
+    },
+    "Average time =": {
+      "group": "",
+      "name": "bench_scatter",
+      "benchmark_name": "scatter",
+      "lookup_path": [
+        "stats",
+        "mean"
+      ],
+      "lookup_regex": "bench_scatter\\[[\\w\\d]*\\]"
     }
   }
 }

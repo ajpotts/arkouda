@@ -272,8 +272,6 @@ def get_float_value(value: Union[float, str]):
 
 
 
-
-
 # ./benchmark_v2/reformat_benchmark_results.py
 def main():
     parser = create_parser()
