@@ -46,6 +46,7 @@ def bench_str_locality(benchmark, op, loc):
     )
     benchmark.extra_info["problem_size"] = data.size
     benchmark.extra_info["backend"] = "Arkouda"
-    benchmark.extra_info["transfer_rate"] = "{:.4f} GiB/sec".format(
+    #   units are GiB/sec:
+    benchmark.extra_info["transfer_rate"] = float(
         (nbytes / benchmark.stats["mean"]) / 2**30
     )
