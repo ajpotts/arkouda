@@ -37,32 +37,32 @@ BENCHMARKS = [
     "gather",
     "scatter",
     "reduce",
-    # "in1d",
-    # "scan",
-    # "noop",
-    # "setops",
-    # "array_create",
-    # "array_transfer",
-    # "IO",
-    # "csvIO",
-    # "small-str-groupby",
+    "in1d",
+    "scan",
+    "noop",
+    "setops",
+    "array_create",
+    "array_transfer",
+    "IO",
+    "csvIO",
+    "small-str-groupby",
     "str-argsort",
     "str-coargsort",
-    # "str-groupby",
+    "str-groupby",
     "str-gather",
-    # "str-in1d",
-    # "substring_search",
-    # "split",
-    # "sort-cases",
-    # "multiIO",
-    # "str-locality",
+    "str-in1d",
+    "substring_search",
+    #"split",
+     "sort-cases",
+    "multiIO",
+    "str-locality",
     "dataframe",
-    # "encode",
-    # "bigint_conversion",
+     "encode",
+     "bigint_conversion",
     "bigint_stream",
-    # "bigint_bitwise_binops",
-    # "bigint_groupby",
-    # "bigint_array_transfer",
+     "bigint_bitwise_binops",
+     "bigint_groupby",
+     "bigint_array_transfer",
 ]
 
 if os.getenv("ARKOUDA_SERVER_PARQUET_SUPPORT"):
@@ -208,6 +208,8 @@ def get_value(field: str, benchmark_name: str, field_lookup_map: dict, benchmark
     """get the value of a field in a benchmark using the field_lookup_map
     and the benchmark_data in pytest json format."""
     regex_str = None
+    print("\n\n***")
+    print(benchmark_name)
     if (
         field_lookup_map.get(benchmark_name).get(field) is not None
         and isinstance(field_lookup_map.get(benchmark_name).get(field).get("lookup_regex"), str)
@@ -301,6 +303,7 @@ def main():
             print(f"Could could not find headers for {benchmark_name}.")
         else:
             header = headers[benchmark_name]
+            print(benchmark_name)
             row = [
                 get_value(field, benchmark_name, field_lookup_map, benchmark_data) for field in header
             ]

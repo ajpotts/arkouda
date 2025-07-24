@@ -10,7 +10,7 @@ OUTPUT_JSON = "benchmark_v2/datdir/configs/field_lookup_map.json"
 # Benchmarks that just need default Average rate/time keys
 DEFAULT_BENCHMARKS = [
     "stream", "argsort", "str-argsort", "gather", "str-gather",
-    "scatter", "dataframe", "bigint_stream", "flatten"
+    "scatter", "dataframe", "bigint_stream", "flatten", "noop", "split"
 ]
 
 # Group inference (update as needed)
@@ -37,10 +37,12 @@ GROUP_MAP = {
 }
 
 # Aggregate operations explicitly defined
-AGGREGATE_OPS = [
-    "prod", "sum", "mean", "min", "max", "argmin", "argmax",
-    "any", "all", "xor", "and", "or", "nunique"
-]
+import arkouda as ak
+AGGREGATE_OPS =ak.GroupBy.Reductions
+# [
+#     "prod", "sum", "mean", "min", "max", "argmin", "argmax",
+#     "any", "all", "xor", "and", "or", "nunique"
+# ]
 
 
 def infer_regex(benchmark_name: str, field: str) -> str:
@@ -189,31 +191,36 @@ def add_aggregate_ops(field_lookup_map):
     if "reduce" not in field_lookup_map:
         field_lookup_map["reduce"] = {}
 
-    for op in AGGREGATE_OPS:
+    for op in AGGREGATE_OPS:  # should include all GroupBy.Reductions ops
         for t in ["time", "rate"]:
             lookup_path = (
                 ["extra_info", "transfer_rate"] if t == "rate" else ["stats", "mean"]
             )
 
-            # GroupBy aggregate ops
+            # ✅ Correct mapping for GroupBy.aggregate
             field_lookup_map["aggregate"][f"Aggregate {op} Average {t} ="] = {
                 "group": "GroupBy.aggregate",
                 "name": f"bench_aggregate[{op}]",
                 "benchmark_name": "aggregate",
                 "lookup_path": lookup_path,
-                "lookup_regex": f"bench_aggregate\\[{op}\\]",
+                "lookup_regex": f"^bench_aggregate\\[{op}\\]$",
             }
 
-            # Reduce ops (int/float types)
-            if op in ["sum", "prod", "min", "max"]:
-                field_lookup_map["reduce"][f"Reduce {op} Average {t} ="] = {
-                    "group": "reduce",
-                    "name": f"bench_reduce[{op}]",
-                    "benchmark_name": "reduce",
-                    "lookup_path": lookup_path,
-                    "lookup_regex": f"bench_reduce\\[[\\w\\d]+-{op}\\]",
-                }
+    # ✅ Keep reduce ops separate (only numeric ops)
+    for op in ["sum", "prod", "min", "max", "argmin", "argmax"]:
+        for t in ["time", "rate"]:
+            lookup_path = (
+                ["extra_info", "transfer_rate"] if t == "rate" else ["stats", "mean"]
+            )
+            field_lookup_map["reduce"][f"Reduce {op} Average {t} ="] = {
+                "group": "reduce",
+                "name": f"bench_reduce[{op}]",
+                "benchmark_name": "reduce",
+                "lookup_path": lookup_path,
+                "lookup_regex": f"bench_reduce\\[[\\w\\d]+-{op}\\]",
+            }
     return field_lookup_map
+
 
 
 
