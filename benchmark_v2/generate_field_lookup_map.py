@@ -91,6 +91,12 @@ def infer_regex(benchmark_name: str, field: str) -> str:
             op = m.group(1)
             return f"bench_groupby_small_str\\[{op}\\]"
 
+    # dataframe
+    if "dataframe" in benchmark_name:
+        m = re.search(r"((?:_get_head_tail_server|_get_head_tail)) Average", field)
+        if m:
+            op = m.group(1)
+            return f"bench_dataframe\\[{op}\\]"
 
     # Sort-cases
     if benchmark_name == "sort-cases":
