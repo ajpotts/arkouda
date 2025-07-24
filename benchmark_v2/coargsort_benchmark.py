@@ -47,4 +47,4 @@ def bench_coargsort(benchmark, dtype, numArrays):
         benchmark.extra_info["description"] = "Measures the performance of ak.coargsort"
         benchmark.extra_info["problem_size"] = N
         #   units are GiB/sec:
-        benchmark.extra_info["transfer_rate"] = float( (nbytes / benchmark.stats["mean"]) / 2**30)
+        benchmark.extra_info["transfer_rate"] = float((nbytes / benchmark.stats["mean"]) / 2**30)

@@ -51,4 +51,4 @@ def bench_decode(benchmark, encoding):
     benchmark.extra_info["description"] = f"Measures the performance of Strings.decode with '{encoding}'"
     benchmark.extra_info["problem_size"] = N
     #   units are GiB/sec:
-    benchmark.extra_info["transfer_rate"] = float(  (numBytes / benchmark.stats["mean"]) / 2**30)
+    benchmark.extra_info["transfer_rate"] = float((numBytes / benchmark.stats["mean"]) / 2**30)

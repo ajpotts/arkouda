@@ -27,4 +27,4 @@ def bench_noop(benchmark):
     benchmark.extra_info["problem_size"] = "N/A"
     benchmark.extra_info["backend"] = backend
     #   units are operations per second:
-    benchmark.extra_info["transfer_rate"] = float(benchmark.stats['rounds'] / benchmark.stats['total'])
+    benchmark.extra_info["transfer_rate"] = float(benchmark.stats["rounds"] / benchmark.stats["total"])

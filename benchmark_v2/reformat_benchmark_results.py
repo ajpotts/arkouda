@@ -53,16 +53,16 @@ BENCHMARKS = [
     "str-in1d",
     "substring_search",
     "split",
-     "sort-cases",
+    "sort-cases",
     "multiIO",
     "str-locality",
     "dataframe",
-     "encode",
-     "bigint_conversion",
+    "encode",
+    "bigint_conversion",
     "bigint_stream",
-     "bigint_bitwise_binops",
-     "bigint_groupby",
-     "bigint_array_transfer",
+    "bigint_bitwise_binops",
+    "bigint_groupby",
+    "bigint_array_transfer",
 ]
 
 if os.getenv("ARKOUDA_SERVER_PARQUET_SUPPORT"):
@@ -235,7 +235,7 @@ def get_value(field: str, benchmark_name: str, field_lookup_map: dict, benchmark
 
         for benchmark in benchmark_data["benchmarks"]:
             # if (benchmark["group"] == group) and (benchmark["name"] == name):
-            if (benchmark["name"] == name):
+            if benchmark["name"] == name:
                 value = get_nested_value(benchmark, lookup_path)
                 return get_float_value(value)
 
@@ -272,7 +272,6 @@ def get_float_value(value: Union[float, str]):
         return value
     else:
         raise TypeError("In get_float_value, value must be a float or string.")
-
 
 
 # ./benchmark_v2/reformat_benchmark_results.py

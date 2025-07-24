@@ -42,9 +42,7 @@ def bench_stream(benchmark, dtype):
     benchmark.extra_info["description"] = f"Measures performance of stream using {dtype} types."
     benchmark.extra_info["problem_size"] = N
     #   units are GiB/sec:
-    benchmark.extra_info["transfer_rate"] = float(
-        (nBytes / benchmark.stats["mean"]) / 2**30
-    )
+    benchmark.extra_info["transfer_rate"] = float((nBytes / benchmark.stats["mean"]) / 2**30)
 
 
 @pytest.mark.benchmark(group="stream")
@@ -74,6 +72,4 @@ def bench_bigint_stream(benchmark, dtype):
     benchmark.extra_info["description"] = f"Measures performance of stream using {dtype} types."
     benchmark.extra_info["problem_size"] = N
     #   units are GiB/sec:
-    benchmark.extra_info["transfer_rate"] = float(
-        (nBytes / benchmark.stats["mean"]) / 2**30
-    )
+    benchmark.extra_info["transfer_rate"] = float((nBytes / benchmark.stats["mean"]) / 2**30)

@@ -35,6 +35,4 @@ def bench_strings_contains(benchmark, search_string, use_regex):
     benchmark.extra_info["search_string"] = search_string
     benchmark.extra_info["regex"] = use_regex
     #   units are GiB/sec:
-    benchmark.extra_info["transfer_rate"] = float(
-        (num_bytes / benchmark.stats["mean"]) / 2**30
-    )
+    benchmark.extra_info["transfer_rate"] = float((num_bytes / benchmark.stats["mean"]) / 2**30)

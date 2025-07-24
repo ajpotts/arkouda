@@ -307,7 +307,11 @@ def infer_regex(benchmark_name: str, field: str) -> str:
         m = re.search(r"(\d+)-array", field)
         if m:
             num = m.group(1)
-            dtype = "str" if benchmark_name.startswith("str-") else "(?:int64|float64|bool|uint64|bigint|mixed)"
+            dtype = (
+                "str"
+                if benchmark_name.startswith("str-")
+                else "(?:int64|float64|bool|uint64|bigint|mixed)"
+            )
             return f"bench_{base_bench}\\[{dtype}-{num}\\]"
 
     # Aggregate / reduce style ops (e.g., Reduce sum Average time =)
@@ -317,7 +321,6 @@ def infer_regex(benchmark_name: str, field: str) -> str:
 
     # Fallback
     return f"bench_{base_bench}\\[[\\w\\d]*\\]"
-
 
 
 def gen_lookup_map_from_perfkeys(directory_path):
@@ -370,12 +373,12 @@ def gen_lookup_map_from_perfkeys(directory_path):
     return field_lookup_map
 
 
-
-
 def gen_lookup_map(write=False, out_file="field_lookup_map.json"):
     """Temporarily use a script to generate the lookup dictionary and save to file when write=True."""
 
-    field_lookup_map = gen_lookup_map_from_perfkeys("/home/amandapotts/git/arkouda/benchmark_v2/graph_infra")
+    field_lookup_map = gen_lookup_map_from_perfkeys(
+        "/home/amandapotts/git/arkouda/benchmark_v2/graph_infra"
+    )
 
     if write:
         with open(out_file, "w") as fp:

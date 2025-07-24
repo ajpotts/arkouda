@@ -2,7 +2,7 @@ import pytest
 
 import arkouda as ak
 
-OPS = ("sum", "prod", "min", "max","argmin", "argmax" )
+OPS = ("sum", "prod", "min", "max", "argmin", "argmax")
 TYPES = ("int64", "float64")
 
 
@@ -42,4 +42,4 @@ def bench_reduce(benchmark, op, dtype):
     benchmark.extra_info["problem_size"] = N
     benchmark.extra_info["backend"] = backend
     #   units are GiB/sec:
-    benchmark.extra_info["transfer_rate"] = float( (nbytes / benchmark.stats["mean"]) / 2**30)
+    benchmark.extra_info["transfer_rate"] = float((nbytes / benchmark.stats["mean"]) / 2**30)

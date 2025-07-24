@@ -36,6 +36,4 @@ def bench_setops_multiarray(benchmark, op, dtype):
     benchmark.extra_info["problem_size"] = N
     benchmark.extra_info["backend"] = "Arkouda"
     #   units are GiB/sec:
-    benchmark.extra_info["transfer_rate"] =float(
-        (bytes_processed / benchmark.stats["mean"]) / 2**30
-    )
+    benchmark.extra_info["transfer_rate"] = float((bytes_processed / benchmark.stats["mean"]) / 2**30)

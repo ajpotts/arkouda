@@ -34,7 +34,7 @@ def bench_array_transfer_tondarray(benchmark, dtype):
         benchmark.extra_info["description"] = "Measures the performance of pdarray.to_ndarray"
         benchmark.extra_info["problem_size"] = N
         #   units are GiB/sec:
-        benchmark.extra_info["transfer_rate"] = float ((numBytes / benchmark.stats["mean"]) / 2**30 )
+        benchmark.extra_info["transfer_rate"] = float((numBytes / benchmark.stats["mean"]) / 2**30)
         benchmark.extra_info["max_bit"] = pytest.max_bits
 
 

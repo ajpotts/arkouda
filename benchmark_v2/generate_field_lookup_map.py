@@ -1,16 +1,29 @@
+import json
+import logging
+
 #!/usr/bin/env python3
 import os
 import re
-import json
-import logging
+
+# Aggregate operations explicitly defined
+import arkouda as ak
 
 GRAPH_INFRA_DIR = "benchmark_v2/graph_infra"
 OUTPUT_JSON = "benchmark_v2/datdir/configs/field_lookup_map.json"
 
 # Benchmarks that just need default Average rate/time keys
 DEFAULT_BENCHMARKS = [
-    "stream", "argsort", "str-argsort", "gather", "str-gather",
-    "scatter", "dataframe", "bigint_stream", "flatten", "noop", "split"
+    "stream",
+    "argsort",
+    "str-argsort",
+    "gather",
+    "str-gather",
+    "scatter",
+    "dataframe",
+    "bigint_stream",
+    "flatten",
+    "noop",
+    "split",
 ]
 
 # Group inference (update as needed)
@@ -36,23 +49,18 @@ GROUP_MAP = {
     "flatten": "flatten",
 }
 
-# Aggregate operations explicitly defined
-import arkouda as ak
-AGGREGATE_OPS =ak.GroupBy.Reductions
+AGGREGATE_OPS = ak.GroupBy.Reductions
 
 
 def infer_regex(benchmark_name: str, field: str) -> str:
     """Infer a regex for JSON benchmark names based on perfkey field names."""
     base_bench = re.sub(r"^(str|bigint)(?:_|-)", "", benchmark_name)
 
-    if  "array_transfer" in base_bench :
-        print(base_bench)
-        print(field)
+    if "array_transfer" in base_bench:
         if "to_ndarray" in field:
             base_bench = base_bench + "_tondarray"
         elif "ak.array" in field:
             base_bench = base_bench + "_akarray"
-
 
     # Groupby & Coargsort (with array counts)
     if "array" in field and any(k in benchmark_name for k in ["groupby", "coargsort"]):
@@ -81,7 +89,6 @@ def infer_regex(benchmark_name: str, field: str) -> str:
             return r"bench_ip_like\[[\w\d]+\]"
         if "power" in field or "uniform" in field:
             return r"bench_sort-cases\[[\w\d]*\]"
-
 
     # Reduce/Scan/Aggregate
     if benchmark_name in {"reduce", "scan", "aggregate"}:
@@ -112,15 +119,7 @@ def infer_regex(benchmark_name: str, field: str) -> str:
     else:
         dtype = "(?:int64|float64|bool|uint64)"
 
-    if(benchmark_name=="bigint_array_transfer"):
-        print("***")
-        print(base_bench)
-        print(dtype)
-        print(f"bench_{base_bench}\\[{dtype}\\]")
-        print("+++")
     return f"bench_{base_bench}\\[{dtype}\\]"
-
-
 
 
 def get_header_fields_from_directory(directory_path):
@@ -145,14 +144,14 @@ def build_field_lookup_map():
             if field == "# Date":
                 continue
             regex = infer_regex(benchmark_name, field)
-            lookup_path = (
-                ["extra_info", "transfer_rate"] if "rate" in field else ["stats", "mean"]
-            )
+            lookup_path = ["extra_info", "transfer_rate"] if "rate" in field else ["stats", "mean"]
 
             field_lookup_map[benchmark_name][field] = {
                 "group": GROUP_MAP.get(benchmark_name, ""),
                 "name": "",
-                "benchmark_name": benchmark_name.replace("str-", "").replace("bigint-", "").replace("-", "_"),
+                "benchmark_name": benchmark_name.replace("str-", "")
+                .replace("bigint-", "")
+                .replace("-", "_"),
                 "lookup_path": lookup_path,
                 "lookup_regex": regex,
             }
@@ -208,9 +207,7 @@ def add_aggregate_ops(field_lookup_map):
 
     for op in AGGREGATE_OPS:  # should include all GroupBy.Reductions ops
         for t in ["time", "rate"]:
-            lookup_path = (
-                ["extra_info", "transfer_rate"] if t == "rate" else ["stats", "mean"]
-            )
+            lookup_path = ["extra_info", "transfer_rate"] if t == "rate" else ["stats", "mean"]
 
             # ✅ Correct mapping for GroupBy.aggregate
             field_lookup_map["aggregate"][f"Aggregate {op} Average {t} ="] = {
@@ -224,9 +221,7 @@ def add_aggregate_ops(field_lookup_map):
     # ✅ Keep reduce ops separate (only numeric ops)
     for op in ["sum", "prod", "min", "max", "argmin", "argmax"]:
         for t in ["time", "rate"]:
-            lookup_path = (
-                ["extra_info", "transfer_rate"] if t == "rate" else ["stats", "mean"]
-            )
+            lookup_path = ["extra_info", "transfer_rate"] if t == "rate" else ["stats", "mean"]
             field_lookup_map["reduce"][f"Reduce {op} Average {t} ="] = {
                 "group": "reduce",
                 "name": f"bench_reduce[{op}]",
@@ -235,8 +230,6 @@ def add_aggregate_ops(field_lookup_map):
                 "lookup_regex": f"bench_reduce\\[[\\w\\d]+-{op}\\]",
             }
     return field_lookup_map
-
-
 
 
 def main():
@@ -248,9 +241,6 @@ def main():
     with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
         json.dump(field_lookup_map, f, indent=2)
     print(f"✅ Updated {OUTPUT_JSON} with {len(field_lookup_map)} benchmarks.")
-
-
-
 
 
 if __name__ == "__main__":

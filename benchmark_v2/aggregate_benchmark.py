@@ -70,6 +70,3 @@ def bench_aggregate(benchmark, op):
     benchmark.extra_info["problem_size"] = N
     #   units are GiB/sec:
     benchmark.extra_info["transfer_rate"] = float((numBytes / benchmark.stats["mean"]) / 2**30)
-
-
-

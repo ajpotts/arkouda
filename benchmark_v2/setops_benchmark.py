@@ -43,9 +43,7 @@ def bench_segarr_setops_small(benchmark, op, dtype):
     benchmark.extra_info["description"] = "Measures the performance of SegArray setops (small input)"
     benchmark.extra_info["problem_size"] = N
     #   units are GiB/sec:
-    benchmark.extra_info["transfer_rate"] = float(
-        (nbytes / benchmark.stats["mean"]) / 2**30
-    )
+    benchmark.extra_info["transfer_rate"] = float((nbytes / benchmark.stats["mean"]) / 2**30)
 
 
 @pytest.mark.benchmark(group="Setops")
@@ -85,6 +83,4 @@ def bench_setops(benchmark, op, dtype):
     benchmark.extra_info["problem_size"] = N
     benchmark.extra_info["backend"] = backend
     #   units are GiB/sec:
-    benchmark.extra_info["transfer_rate"] = float(
-        (numBytes / benchmark.stats["mean"]) / 2**30
-    )
+    benchmark.extra_info["transfer_rate"] = float((numBytes / benchmark.stats["mean"]) / 2**30)
