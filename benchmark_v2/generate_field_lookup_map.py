@@ -80,13 +80,16 @@ def infer_regex(benchmark_name: str, field: str) -> str:
         m = re.search(r"((?:write|read)) Average", field)
         if m:
             op = m.group(1)
-            if benchmark_name.startswith("str-"):
-                dtype = "str"
-            elif benchmark_name.startswith("bigint-"):
-                dtype = "bigint"
-            else:
-                dtype = "(?:int64|float64|bool|uint64|str)"
+            dtype = "(?:int64|float64|bool|uint64|str)"
             return f"bench_{base_bench}\\[{op}-{dtype}\\]"
+
+
+    # small-str-groupby
+    if "small-str-groupby" in benchmark_name:
+        m = re.search(r"((?:small|medium|big)) str array Average", field)
+        if m:
+            op = m.group(1)
+            return f"bench_groupby_small_str\\[{op}\\]"
 
 
     # Sort-cases
