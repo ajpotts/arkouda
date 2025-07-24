@@ -34,8 +34,6 @@ GROUP_MAP = {
     "dataframe": "dataframe",
     "bigint_stream": "stream",
     "flatten": "flatten",
-    "bench_array_transfer_tondarray":"ArrayTransfer_tondarray",
-    "bench_array_transfer_akarray": "ArrayTransfer_ak.array",
 }
 
 # Aggregate operations explicitly defined
@@ -45,9 +43,11 @@ AGGREGATE_OPS =ak.GroupBy.Reductions
 
 def infer_regex(benchmark_name: str, field: str) -> str:
     """Infer a regex for JSON benchmark names based on perfkey field names."""
-    base_bench = benchmark_name.replace("str-", "").replace("bigint-", "")
+    base_bench = re.sub(r"^(str|bigint)(?:_|-)", "", benchmark_name)
 
-    if base_bench == "array_transfer":
+    if  "array_transfer" in base_bench :
+        print(base_bench)
+        print(field)
         if "to_ndarray" in field:
             base_bench = base_bench + "_tondarray"
         elif "ak.array" in field:
@@ -105,12 +105,19 @@ def infer_regex(benchmark_name: str, field: str) -> str:
         return r"bench_bigint_stream\[bigint\]"
 
     # Default case (e.g., stream, argsort, gather, scatter)
-    if benchmark_name.startswith("str-"):
+    if benchmark_name.startswith("str(?:_|-)"):
         dtype = "str"
-    elif benchmark_name.startswith("bigint-"):
+    elif benchmark_name.startswith("bigint(?:_|-)"):
         dtype = "bigint"
     else:
         dtype = "(?:int64|float64|bool|uint64)"
+
+    if(benchmark_name=="bigint_array_transfer"):
+        print("***")
+        print(base_bench)
+        print(dtype)
+        print(f"bench_{base_bench}\\[{dtype}\\]")
+        print("+++")
     return f"bench_{base_bench}\\[{dtype}\\]"
 
 
