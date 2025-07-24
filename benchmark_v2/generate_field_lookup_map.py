@@ -34,20 +34,25 @@ GROUP_MAP = {
     "dataframe": "dataframe",
     "bigint_stream": "stream",
     "flatten": "flatten",
+    "bench_array_transfer_tondarray":"ArrayTransfer_tondarray",
+    "bench_array_transfer_akarray": "ArrayTransfer_ak.array",
 }
 
 # Aggregate operations explicitly defined
 import arkouda as ak
 AGGREGATE_OPS =ak.GroupBy.Reductions
-# [
-#     "prod", "sum", "mean", "min", "max", "argmin", "argmax",
-#     "any", "all", "xor", "and", "or", "nunique"
-# ]
 
 
 def infer_regex(benchmark_name: str, field: str) -> str:
     """Infer a regex for JSON benchmark names based on perfkey field names."""
     base_bench = benchmark_name.replace("str-", "").replace("bigint-", "")
+
+    if base_bench == "array_transfer":
+        if "to_ndarray" in field:
+            base_bench = base_bench + "_tondarray"
+        elif "ak.array" in field:
+            base_bench = base_bench + "_akarray"
+
 
     # Groupby & Coargsort (with array counts)
     if "array" in field and any(k in benchmark_name for k in ["groupby", "coargsort"]):
@@ -76,6 +81,7 @@ def infer_regex(benchmark_name: str, field: str) -> str:
             return r"bench_ip_like\[[\w\d]+\]"
         if "power" in field or "uniform" in field:
             return r"bench_sort-cases\[[\w\d]*\]"
+
 
     # Reduce/Scan/Aggregate
     if benchmark_name in {"reduce", "scan", "aggregate"}:
@@ -106,6 +112,8 @@ def infer_regex(benchmark_name: str, field: str) -> str:
     else:
         dtype = "(?:int64|float64|bool|uint64)"
     return f"bench_{base_bench}\\[{dtype}\\]"
+
+
 
 
 def get_header_fields_from_directory(directory_path):

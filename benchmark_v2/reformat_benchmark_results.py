@@ -235,6 +235,7 @@ def get_value(field: str, benchmark_name: str, field_lookup_map: dict, benchmark
 
         for benchmark in benchmark_data["benchmarks"]:
             if (benchmark["group"] == group) and (benchmark["name"] == name):
+            # if (benchmark["name"] == name):
                 value = get_nested_value(benchmark, lookup_path)
                 return get_float_value(value)
 
