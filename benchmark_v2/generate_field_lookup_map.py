@@ -98,6 +98,20 @@ def infer_regex(benchmark_name: str, field: str) -> str:
             op = m.group(1)
             return f"bench_dataframe\\[{op}\\]"
 
+
+    # in1d & str-in1d
+    if "in1d" in  benchmark_name :
+        m = re.search(r"((?:Medium|Large)) average", field)
+        if m:
+            size = m.group(1).upper()
+            if benchmark_name.startswith("str-"):
+                dtype = "str"
+            elif benchmark_name.startswith("bigint-"):
+                dtype = "bigint"
+            else:
+                dtype = "(?:int64|float64|bool|uint64)"
+            return f"bench_in1d\\[{size}-{dtype}\\]"
+
     # Sort-cases
     if benchmark_name == "sort-cases":
         if "RMAT" in field:
