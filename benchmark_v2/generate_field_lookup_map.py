@@ -93,6 +93,15 @@ def infer_regex(benchmark_name: str, field: str) -> str:
             dtype = "(?:int64|float64|bool|uint64|str)"
             return f"bench_{op}_hdf\\[{dtype}\\]"
 
+    # encode
+    if "encode" in benchmark_name:
+        m1 = re.search(r"((?:ascii|idna))", field)
+        m2 = re.search(r"((?:encode|decode))", field)
+        if m1 and m2:
+            encoding = m1.group(1)
+            mode= m2.group(1)
+
+            return f"bench_{mode}\\[{encoding}\\]"
 
     # small-str-groupby
     if "small-str-groupby" in benchmark_name:
@@ -139,11 +148,8 @@ def infer_regex(benchmark_name: str, field: str) -> str:
 
     # str_locality
     if "str-locality" in  benchmark_name :
-        print(benchmark_name)
         m1 = re.search(r"((?:Hashing|Regex|Casting|Comparing))", field)
         m2 = re.search(r"((?:good|poor))", field)
-        print(m1)
-        print(m2)
         if m1 and m2:
             op = m1.group(1)
             locality= m2.group(1)
