@@ -94,7 +94,7 @@ def infer_regex(benchmark_name: str, field: str) -> str:
             op = m1.group(1)
             dtype = "(?:int64|float64|bool|uint64|str)"
             print(f"bench_csv_io_{op}\\[{dtype}\\]")
-            return f"bench_csv_io\\[{dtype}-{op}\\]"
+            return f"bench_csv_io\\[{op}-{dtype}\\]"
 
     # encode
     if "encode" in benchmark_name:
