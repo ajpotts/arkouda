@@ -99,12 +99,21 @@ def infer_regex(benchmark_name: str, field: str) -> str:
             return f"bench_dataframe\\[{op}\\]"
 
     #  reduce
-    if "reduce" in benchmark_name:
+    #     if "reduce" in benchmark_name:
+    if any(k in benchmark_name for k in ["reduce"]):
         m = re.search(r"(\w+) Average", field)
         if m:
             op = m.group(1)
             dtype = "(?:int64|float64|bool|uint64)"
-            return f"bench_reduce\\[{dtype}-{op}\\]"
+            return f"bench_{base_bench}\\[{dtype}-{op}\\]"
+
+    if "bigint_conversion" in benchmark_name:
+        print(benchmark_name)
+        m = re.search(r"(\w+) Average", field)
+        if m:
+            op = m.group(1)
+            print(op)
+            return f"bench_bigint_conversion\\[{op}\\]"
 
     # in1d & str-in1d
     if "in1d" in  benchmark_name :

@@ -257,7 +257,7 @@ def compute_average(benchmark_name_regex: str, keys: list, benchmark_data):
         if count > 0:
             return total / count
         else:
-            logging.warning(f"Could not compute average over {benchmark_name_regex}.")
+            logging.warning(f"Could not compute average over {benchmark_name_regex}, empty results.")
             return -1.0
     except Exception as e:
         logging.error(f"Exception in compute_average for {benchmark_name_regex}: {e}")
