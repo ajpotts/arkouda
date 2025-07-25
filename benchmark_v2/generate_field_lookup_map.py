@@ -112,12 +112,10 @@ def infer_regex(benchmark_name: str, field: str) -> str:
     #  reduce
     #     if "reduce" in benchmark_name:
     if any(k in benchmark_name for k in ["reduce","scan"]):
-        print(benchmark_name)
         m = re.search(r"(\w+) Average", field)
         if m:
             op = m.group(1)
             dtype = "(?:int64|float64|bool|uint64)"
-            print(f"bench_{base_bench}\\[{dtype}-{op}\\]")
             return f"bench_{base_bench}\\[{dtype}-{op}\\]"
 
     if "bigint_conversion" in benchmark_name:
@@ -140,14 +138,17 @@ def infer_regex(benchmark_name: str, field: str) -> str:
             return f"bench_in1d\\[{size}-{dtype}\\]"
 
     # str_locality
-    if "str_locality" in  benchmark_name :
-        m1 = re.search(r"((?:Hashing|Regex|Casting|Comparing)) average", field)
-        m2 = re.search(r"((?:good|poor)) average", field)
+    if "str-locality" in  benchmark_name :
+        print(benchmark_name)
+        m1 = re.search(r"((?:Hashing|Regex|Casting|Comparing))", field)
+        m2 = re.search(r"((?:good|poor))", field)
+        print(m1)
+        print(m2)
         if m1 and m2:
             op = m1.group(1)
             locality= m2.group(1)
 
-            return f"bench_str_locality\\[{op}-{locality}\\]"
+            return f"bench_str_locality\\[{locality}-{op}\\]"
 
     # Sort-cases
     if benchmark_name == "sort-cases":

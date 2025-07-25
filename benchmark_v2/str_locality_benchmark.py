@@ -4,9 +4,9 @@ import arkouda as ak
 
 OPS = {
     "Hashing": lambda x: x.hash(),
-    "Regex_Search": lambda x: x.contains(r"\d{3,5}\.\d{5,8}", regex=True),
+    "Regex": lambda x: x.contains(r"\d{3,5}\.\d{5,8}", regex=True),
     "Casting": lambda x: ak.cast(x, ak.float64),
-    "Scalar_Compare": lambda x: (x == "5.5"),
+    "Comparing": lambda x: (x == "5.5"),
 }
 
 LOCALITY = {"good", "poor"}
