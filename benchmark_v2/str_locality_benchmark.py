@@ -9,7 +9,7 @@ OPS = {
     "Scalar_Compare": lambda x: (x == "5.5"),
 }
 
-LOCALITY = {"Good", "Poor"}
+LOCALITY = {"good", "poor"}
 
 
 def _generate_data(loc):
@@ -25,7 +25,7 @@ def _generate_data(loc):
     random_strings = prefix.stick(suffix, delimiter=".")
     perm = ak.argsort(random_strings.get_lengths())
     sorted_strings = random_strings[perm]
-    return random_strings if loc == "Good" else sorted_strings
+    return random_strings if loc == "good" else sorted_strings
 
 
 @pytest.mark.skip_numpy(True)

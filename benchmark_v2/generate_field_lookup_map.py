@@ -139,6 +139,16 @@ def infer_regex(benchmark_name: str, field: str) -> str:
                 dtype = "(?:int64|float64|bool|uint64)"
             return f"bench_in1d\\[{size}-{dtype}\\]"
 
+    # str_locality
+    if "str_locality" in  benchmark_name :
+        m1 = re.search(r"((?:Hashing|Regex|Casting|Comparing)) average", field)
+        m2 = re.search(r"((?:good|poor)) average", field)
+        if m1 and m2:
+            op = m1.group(1)
+            locality= m2.group(1)
+
+            return f"bench_str_locality\\[{op}-{locality}\\]"
+
     # Sort-cases
     if benchmark_name == "sort-cases":
         if "RMAT" in field:
