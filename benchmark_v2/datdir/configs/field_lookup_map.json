@@ -330,7 +330,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_block_sorted\\[[\\w\\d]+\\]"
+      "lookup_regex": "bench_block_sorted\\[concat-SortingAlgorithm.RadixSortLSD\\]"
     },
     "block-sorted concat int64 RadixSortLSD average rate =": {
       "group": "AK_Sort_Cases",
@@ -340,7 +340,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_block_sorted\\[[\\w\\d]+\\]"
+      "lookup_regex": "bench_block_sorted\\[concat-SortingAlgorithm.RadixSortLSD\\]"
     },
     "block-sorted concat int64 TwoArrayRadixSort average time =": {
       "group": "AK_Sort_Cases",
@@ -350,7 +350,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_block_sorted\\[[\\w\\d]+\\]"
+      "lookup_regex": "bench_block_sorted\\[concat-SortingAlgorithm.TwoArrayRadixSort\\]"
     },
     "block-sorted concat int64 TwoArrayRadixSort average rate =": {
       "group": "AK_Sort_Cases",
@@ -360,7 +360,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_block_sorted\\[[\\w\\d]+\\]"
+      "lookup_regex": "bench_block_sorted\\[concat-SortingAlgorithm.TwoArrayRadixSort\\]"
     },
     "block-sorted interleaved int64 RadixSortLSD average time =": {
       "group": "AK_Sort_Cases",
@@ -370,7 +370,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_block_sorted\\[[\\w\\d]+\\]"
+      "lookup_regex": "bench_block_sorted\\[interleaved-SortingAlgorithm.RadixSortLSD\\]"
     },
     "block-sorted interleaved int64 RadixSortLSD average rate =": {
       "group": "AK_Sort_Cases",
@@ -380,7 +380,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_block_sorted\\[[\\w\\d]+\\]"
+      "lookup_regex": "bench_block_sorted\\[interleaved-SortingAlgorithm.RadixSortLSD\\]"
     },
     "block-sorted interleaved int64 TwoArrayRadixSort average time =": {
       "group": "AK_Sort_Cases",
@@ -390,7 +390,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_block_sorted\\[[\\w\\d]+\\]"
+      "lookup_regex": "bench_block_sorted\\[interleaved-SortingAlgorithm.TwoArrayRadixSort\\]"
     },
     "block-sorted interleaved int64 TwoArrayRadixSort average rate =": {
       "group": "AK_Sort_Cases",
@@ -400,7 +400,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_block_sorted\\[[\\w\\d]+\\]"
+      "lookup_regex": "bench_block_sorted\\[interleaved-SortingAlgorithm.TwoArrayRadixSort\\]"
     },
     "refinement int64 RadixSortLSD average time =": {
       "group": "AK_Sort_Cases",
@@ -1832,45 +1832,25 @@
       ],
       "lookup_regex": "^bench_aggregate\\[first\\]$"
     },
-    "Aggregate std Average time =": {
+    "Aggregate unique Average time =": {
       "group": "GroupBy.aggregate",
-      "name": "bench_aggregate[std]",
+      "name": "bench_aggregate[unique]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "stats",
         "mean"
       ],
-      "lookup_regex": "^bench_aggregate\\[std\\]$"
+      "lookup_regex": "^bench_aggregate\\[unique\\]$"
     },
-    "Aggregate std Average rate =": {
+    "Aggregate unique Average rate =": {
       "group": "GroupBy.aggregate",
-      "name": "bench_aggregate[std]",
+      "name": "bench_aggregate[unique]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "^bench_aggregate\\[std\\]$"
-    },
-    "Aggregate mode Average time =": {
-      "group": "GroupBy.aggregate",
-      "name": "bench_aggregate[mode]",
-      "benchmark_name": "aggregate",
-      "lookup_path": [
-        "stats",
-        "mean"
-      ],
-      "lookup_regex": "^bench_aggregate\\[mode\\]$"
-    },
-    "Aggregate mode Average rate =": {
-      "group": "GroupBy.aggregate",
-      "name": "bench_aggregate[mode]",
-      "benchmark_name": "aggregate",
-      "lookup_path": [
-        "extra_info",
-        "transfer_rate"
-      ],
-      "lookup_regex": "^bench_aggregate\\[mode\\]$"
+      "lookup_regex": "^bench_aggregate\\[unique\\]$"
     },
     "Aggregate mean Average time =": {
       "group": "GroupBy.aggregate",
@@ -1902,45 +1882,25 @@
       ],
       "lookup_regex": "^bench_aggregate\\[count\\]$"
     },
-    "Aggregate median Average time =": {
+    "Aggregate std Average time =": {
       "group": "GroupBy.aggregate",
-      "name": "bench_aggregate[median]",
+      "name": "bench_aggregate[std]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "stats",
         "mean"
       ],
-      "lookup_regex": "^bench_aggregate\\[median\\]$"
+      "lookup_regex": "^bench_aggregate\\[std\\]$"
     },
-    "Aggregate median Average rate =": {
+    "Aggregate std Average rate =": {
       "group": "GroupBy.aggregate",
-      "name": "bench_aggregate[median]",
+      "name": "bench_aggregate[std]",
       "benchmark_name": "aggregate",
       "lookup_path": [
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "^bench_aggregate\\[median\\]$"
-    },
-    "Aggregate unique Average time =": {
-      "group": "GroupBy.aggregate",
-      "name": "bench_aggregate[unique]",
-      "benchmark_name": "aggregate",
-      "lookup_path": [
-        "stats",
-        "mean"
-      ],
-      "lookup_regex": "^bench_aggregate\\[unique\\]$"
-    },
-    "Aggregate unique Average rate =": {
-      "group": "GroupBy.aggregate",
-      "name": "bench_aggregate[unique]",
-      "benchmark_name": "aggregate",
-      "lookup_path": [
-        "extra_info",
-        "transfer_rate"
-      ],
-      "lookup_regex": "^bench_aggregate\\[unique\\]$"
+      "lookup_regex": "^bench_aggregate\\[std\\]$"
     },
     "Aggregate var Average time =": {
       "group": "GroupBy.aggregate",
@@ -1961,6 +1921,46 @@
         "transfer_rate"
       ],
       "lookup_regex": "^bench_aggregate\\[var\\]$"
+    },
+    "Aggregate mode Average time =": {
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[mode]",
+      "benchmark_name": "aggregate",
+      "lookup_path": [
+        "stats",
+        "mean"
+      ],
+      "lookup_regex": "^bench_aggregate\\[mode\\]$"
+    },
+    "Aggregate mode Average rate =": {
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[mode]",
+      "benchmark_name": "aggregate",
+      "lookup_path": [
+        "extra_info",
+        "transfer_rate"
+      ],
+      "lookup_regex": "^bench_aggregate\\[mode\\]$"
+    },
+    "Aggregate median Average time =": {
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[median]",
+      "benchmark_name": "aggregate",
+      "lookup_path": [
+        "stats",
+        "mean"
+      ],
+      "lookup_regex": "^bench_aggregate\\[median\\]$"
+    },
+    "Aggregate median Average rate =": {
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[median]",
+      "benchmark_name": "aggregate",
+      "lookup_path": [
+        "extra_info",
+        "transfer_rate"
+      ],
+      "lookup_regex": "^bench_aggregate\\[median\\]$"
     }
   },
   "parquetIO": {

@@ -192,7 +192,10 @@ def infer_regex(benchmark_name: str, field: str) -> str:
             if "RMAT" in field:
                 return f"bench_rmat\\[{sort}\\]"
             if "block-sorted" in field:
-                return r"bench_block_sorted\[[\w\d]+\]"
+                m2 = re.search(r"((?:concat|interleaved))", field)
+                if m2:
+                    mode = m2.group(1)
+                    return f"bench_block_sorted\\[{mode}-{sort}\\]"
             if "refinement" in field:
                 return f"bench_refinement\\[{sort}\\]"
             if "datetime" in field:
