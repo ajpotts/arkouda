@@ -96,6 +96,20 @@ def infer_regex(benchmark_name: str, field: str) -> str:
             print(f"bench_csv_io_{op}\\[{dtype}\\]")
             return f"bench_csv_io\\[{op}-{dtype}\\]"
 
+    # parquet IO
+    if benchmark_name in ["parquetIO", "parquetMultiIO"] :
+        print(benchmark_name)
+        qualifier = "_multi" if "Multi" in benchmark_name else ""
+        m1 = re.search(r"((?:write|read)) Average", field)
+        m2 = re.search(r"(\w+) =", field)
+        if m1 and m2:
+            op = m1.group(1)
+            compression = m2.group(1)
+            compression= "None" if compression=="none" else compression
+            dtype = "(?:int64|float64|bool|uint64|str)"
+            print(f"bench_{op}_parquet{qualifier}\\[{compression}-{dtype}\\]")
+            return f"bench_{op}_parquet{qualifier}\\[{compression}-{dtype}\\]"
+
     # encode
     if "encode" in benchmark_name:
         m1 = re.search(r"((?:ascii|idna))", field)

@@ -732,7 +732,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet_multi\\[None-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average rate none =": {
       "group": "",
@@ -742,7 +742,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet_multi\\[None-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average time snappy =": {
       "group": "",
@@ -752,7 +752,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet_multi\\[snappy-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average rate snappy =": {
       "group": "",
@@ -762,7 +762,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet_multi\\[snappy-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average time gzip =": {
       "group": "",
@@ -772,7 +772,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet_multi\\[gzip-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average rate gzip =": {
       "group": "",
@@ -782,7 +782,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet_multi\\[gzip-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average time brotli =": {
       "group": "",
@@ -792,7 +792,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet_multi\\[brotli-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average rate brotli =": {
       "group": "",
@@ -802,7 +802,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet_multi\\[brotli-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average time zstd =": {
       "group": "",
@@ -812,7 +812,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet_multi\\[zstd-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average rate zstd =": {
       "group": "",
@@ -822,7 +822,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet_multi\\[zstd-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average time lz4 =": {
       "group": "",
@@ -832,7 +832,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet_multi\\[lz4-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average rate lz4 =": {
       "group": "",
@@ -842,7 +842,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet_multi\\[lz4-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average time none =": {
       "group": "",
@@ -852,7 +852,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet_multi\\[None-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average rate none =": {
       "group": "",
@@ -862,7 +862,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet_multi\\[None-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average time snappy =": {
       "group": "",
@@ -872,7 +872,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet_multi\\[snappy-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average rate snappy =": {
       "group": "",
@@ -882,7 +882,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet_multi\\[snappy-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average time gzip =": {
       "group": "",
@@ -892,7 +892,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet_multi\\[gzip-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average rate gzip =": {
       "group": "",
@@ -902,7 +902,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet_multi\\[gzip-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average time brotli =": {
       "group": "",
@@ -912,7 +912,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet_multi\\[brotli-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average rate brotli =": {
       "group": "",
@@ -922,7 +922,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet_multi\\[brotli-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average time zstd =": {
       "group": "",
@@ -932,7 +932,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet_multi\\[zstd-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average rate zstd =": {
       "group": "",
@@ -942,7 +942,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet_multi\\[zstd-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average time lz4 =": {
       "group": "",
@@ -952,7 +952,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet_multi\\[lz4-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average rate lz4 =": {
       "group": "",
@@ -962,7 +962,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetMultiIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet_multi\\[lz4-(?:int64|float64|bool|uint64|str)\\]"
     }
   },
   "bigint_conversion": {
@@ -1822,6 +1822,106 @@
       ],
       "lookup_regex": "^bench_aggregate\\[mean\\]$"
     },
+    "Aggregate first Average time =": {
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[first]",
+      "benchmark_name": "aggregate",
+      "lookup_path": [
+        "stats",
+        "mean"
+      ],
+      "lookup_regex": "^bench_aggregate\\[first\\]$"
+    },
+    "Aggregate first Average rate =": {
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[first]",
+      "benchmark_name": "aggregate",
+      "lookup_path": [
+        "extra_info",
+        "transfer_rate"
+      ],
+      "lookup_regex": "^bench_aggregate\\[first\\]$"
+    },
+    "Aggregate median Average time =": {
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[median]",
+      "benchmark_name": "aggregate",
+      "lookup_path": [
+        "stats",
+        "mean"
+      ],
+      "lookup_regex": "^bench_aggregate\\[median\\]$"
+    },
+    "Aggregate median Average rate =": {
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[median]",
+      "benchmark_name": "aggregate",
+      "lookup_path": [
+        "extra_info",
+        "transfer_rate"
+      ],
+      "lookup_regex": "^bench_aggregate\\[median\\]$"
+    },
+    "Aggregate mode Average time =": {
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[mode]",
+      "benchmark_name": "aggregate",
+      "lookup_path": [
+        "stats",
+        "mean"
+      ],
+      "lookup_regex": "^bench_aggregate\\[mode\\]$"
+    },
+    "Aggregate mode Average rate =": {
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[mode]",
+      "benchmark_name": "aggregate",
+      "lookup_path": [
+        "extra_info",
+        "transfer_rate"
+      ],
+      "lookup_regex": "^bench_aggregate\\[mode\\]$"
+    },
+    "Aggregate count Average time =": {
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[count]",
+      "benchmark_name": "aggregate",
+      "lookup_path": [
+        "stats",
+        "mean"
+      ],
+      "lookup_regex": "^bench_aggregate\\[count\\]$"
+    },
+    "Aggregate count Average rate =": {
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[count]",
+      "benchmark_name": "aggregate",
+      "lookup_path": [
+        "extra_info",
+        "transfer_rate"
+      ],
+      "lookup_regex": "^bench_aggregate\\[count\\]$"
+    },
+    "Aggregate unique Average time =": {
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[unique]",
+      "benchmark_name": "aggregate",
+      "lookup_path": [
+        "stats",
+        "mean"
+      ],
+      "lookup_regex": "^bench_aggregate\\[unique\\]$"
+    },
+    "Aggregate unique Average rate =": {
+      "group": "GroupBy.aggregate",
+      "name": "bench_aggregate[unique]",
+      "benchmark_name": "aggregate",
+      "lookup_path": [
+        "extra_info",
+        "transfer_rate"
+      ],
+      "lookup_regex": "^bench_aggregate\\[unique\\]$"
+    },
     "Aggregate var Average time =": {
       "group": "GroupBy.aggregate",
       "name": "bench_aggregate[var]",
@@ -1861,106 +1961,6 @@
         "transfer_rate"
       ],
       "lookup_regex": "^bench_aggregate\\[std\\]$"
-    },
-    "Aggregate unique Average time =": {
-      "group": "GroupBy.aggregate",
-      "name": "bench_aggregate[unique]",
-      "benchmark_name": "aggregate",
-      "lookup_path": [
-        "stats",
-        "mean"
-      ],
-      "lookup_regex": "^bench_aggregate\\[unique\\]$"
-    },
-    "Aggregate unique Average rate =": {
-      "group": "GroupBy.aggregate",
-      "name": "bench_aggregate[unique]",
-      "benchmark_name": "aggregate",
-      "lookup_path": [
-        "extra_info",
-        "transfer_rate"
-      ],
-      "lookup_regex": "^bench_aggregate\\[unique\\]$"
-    },
-    "Aggregate count Average time =": {
-      "group": "GroupBy.aggregate",
-      "name": "bench_aggregate[count]",
-      "benchmark_name": "aggregate",
-      "lookup_path": [
-        "stats",
-        "mean"
-      ],
-      "lookup_regex": "^bench_aggregate\\[count\\]$"
-    },
-    "Aggregate count Average rate =": {
-      "group": "GroupBy.aggregate",
-      "name": "bench_aggregate[count]",
-      "benchmark_name": "aggregate",
-      "lookup_path": [
-        "extra_info",
-        "transfer_rate"
-      ],
-      "lookup_regex": "^bench_aggregate\\[count\\]$"
-    },
-    "Aggregate first Average time =": {
-      "group": "GroupBy.aggregate",
-      "name": "bench_aggregate[first]",
-      "benchmark_name": "aggregate",
-      "lookup_path": [
-        "stats",
-        "mean"
-      ],
-      "lookup_regex": "^bench_aggregate\\[first\\]$"
-    },
-    "Aggregate first Average rate =": {
-      "group": "GroupBy.aggregate",
-      "name": "bench_aggregate[first]",
-      "benchmark_name": "aggregate",
-      "lookup_path": [
-        "extra_info",
-        "transfer_rate"
-      ],
-      "lookup_regex": "^bench_aggregate\\[first\\]$"
-    },
-    "Aggregate mode Average time =": {
-      "group": "GroupBy.aggregate",
-      "name": "bench_aggregate[mode]",
-      "benchmark_name": "aggregate",
-      "lookup_path": [
-        "stats",
-        "mean"
-      ],
-      "lookup_regex": "^bench_aggregate\\[mode\\]$"
-    },
-    "Aggregate mode Average rate =": {
-      "group": "GroupBy.aggregate",
-      "name": "bench_aggregate[mode]",
-      "benchmark_name": "aggregate",
-      "lookup_path": [
-        "extra_info",
-        "transfer_rate"
-      ],
-      "lookup_regex": "^bench_aggregate\\[mode\\]$"
-    },
-    "Aggregate median Average time =": {
-      "group": "GroupBy.aggregate",
-      "name": "bench_aggregate[median]",
-      "benchmark_name": "aggregate",
-      "lookup_path": [
-        "stats",
-        "mean"
-      ],
-      "lookup_regex": "^bench_aggregate\\[median\\]$"
-    },
-    "Aggregate median Average rate =": {
-      "group": "GroupBy.aggregate",
-      "name": "bench_aggregate[median]",
-      "benchmark_name": "aggregate",
-      "lookup_path": [
-        "extra_info",
-        "transfer_rate"
-      ],
-      "lookup_regex": "^bench_aggregate\\[median\\]$"
     }
   },
   "parquetIO": {
@@ -1972,7 +1972,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet\\[None-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average rate none =": {
       "group": "",
@@ -1982,7 +1982,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet\\[None-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average time snappy =": {
       "group": "",
@@ -1992,7 +1992,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet\\[snappy-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average rate snappy =": {
       "group": "",
@@ -2002,7 +2002,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet\\[snappy-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average time gzip =": {
       "group": "",
@@ -2012,7 +2012,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet\\[gzip-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average rate gzip =": {
       "group": "",
@@ -2022,7 +2022,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet\\[gzip-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average time brotli =": {
       "group": "",
@@ -2032,7 +2032,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet\\[brotli-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average rate brotli =": {
       "group": "",
@@ -2042,7 +2042,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet\\[brotli-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average time zstd =": {
       "group": "",
@@ -2052,7 +2052,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet\\[zstd-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average rate zstd =": {
       "group": "",
@@ -2062,7 +2062,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet\\[zstd-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average time lz4 =": {
       "group": "",
@@ -2072,7 +2072,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet\\[lz4-(?:int64|float64|bool|uint64|str)\\]"
     },
     "write Average rate lz4 =": {
       "group": "",
@@ -2082,7 +2082,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_write_parquet\\[lz4-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average time none =": {
       "group": "",
@@ -2092,7 +2092,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet\\[None-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average rate none =": {
       "group": "",
@@ -2102,7 +2102,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet\\[None-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average time snappy =": {
       "group": "",
@@ -2112,7 +2112,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet\\[snappy-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average rate snappy =": {
       "group": "",
@@ -2122,7 +2122,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet\\[snappy-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average time gzip =": {
       "group": "",
@@ -2132,7 +2132,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet\\[gzip-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average rate gzip =": {
       "group": "",
@@ -2142,7 +2142,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet\\[gzip-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average time brotli =": {
       "group": "",
@@ -2152,7 +2152,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet\\[brotli-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average rate brotli =": {
       "group": "",
@@ -2162,7 +2162,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet\\[brotli-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average time zstd =": {
       "group": "",
@@ -2172,7 +2172,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet\\[zstd-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average rate zstd =": {
       "group": "",
@@ -2182,7 +2182,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet\\[zstd-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average time lz4 =": {
       "group": "",
@@ -2192,7 +2192,7 @@
         "stats",
         "mean"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet\\[lz4-(?:int64|float64|bool|uint64|str)\\]"
     },
     "read Average rate lz4 =": {
       "group": "",
@@ -2202,7 +2202,7 @@
         "extra_info",
         "transfer_rate"
       ],
-      "lookup_regex": "bench_parquetIO\\[(?:int64|float64|bool|uint64)\\]"
+      "lookup_regex": "bench_read_parquet\\[lz4-(?:int64|float64|bool|uint64|str)\\]"
     }
   },
   "str-coargsort": {

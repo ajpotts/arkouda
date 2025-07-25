@@ -258,7 +258,7 @@ def bench_read_parquet(benchmark, dtype, comp):
 @pytest.mark.benchmark(group="Arkouda_IO_Read_Parquet")
 @pytest.mark.parametrize("dtype", TYPES)
 @pytest.mark.parametrize("comp", COMPRESSIONS)
-def bench_read_parquet_multi_column(benchmark, dtype, comp):
+def bench_read_parquet_multi(benchmark, dtype, comp):
     """
     Read files written by parquet multicolumn and parquet append modes
     """
