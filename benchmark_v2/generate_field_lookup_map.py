@@ -75,23 +75,26 @@ def infer_regex(benchmark_name: str, field: str) -> str:
                 dtype = "(?:int64|float64|bool|uint64)"
             return f"bench_{base_bench}\\[{dtype}-{num}\\]"
 
-    # CSV Read/Write
-    # if "csv" in benchmark_name:
-    if any(k in benchmark_name for k in ["csv"]):
+    # IO
+    if "IO" == benchmark_name :
         print(benchmark_name)
         m = re.search(r"((?:write|read)) Average", field)
         if m:
             op = m.group(1)
             dtype = "(?:int64|float64|bool|uint64|str)"
-            return f"bench_{base_bench}\\[{op}-{dtype}\\]"
-
-    # IO Read/Write
-    if any(k in benchmark_name for k in ["IO"]):
-        m = re.search(r"((?:write|read)) Average", field)
-        if m:
-            op = m.group(1)
-            dtype = "(?:int64|float64|bool|uint64|str)"
             return f"bench_{op}_hdf\\[{dtype}\\]"
+
+    # CSV Read/Write
+    if "csvIO" == benchmark_name :
+        print(benchmark_name)
+        print(field)
+        m1 = re.search(r"((?:write|read))", field)
+        print(m1)
+        if m1:
+            op = m1.group(1)
+            dtype = "(?:int64|float64|bool|uint64|str)"
+            print(f"bench_csv_io_{op}\\[{dtype}\\]")
+            return f"bench_csv_io\\[{dtype}-{op}\\]"
 
     # encode
     if "encode" in benchmark_name:
