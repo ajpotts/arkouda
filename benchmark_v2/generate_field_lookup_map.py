@@ -86,19 +86,16 @@ def infer_regex(benchmark_name: str, field: str) -> str:
 
     # CSV Read/Write
     if "csvIO" == benchmark_name :
-        print(benchmark_name)
-        print(field)
+
         m1 = re.search(r"((?:write|read))", field)
-        print(m1)
+
         if m1:
             op = m1.group(1)
             dtype = "(?:int64|float64|bool|uint64|str)"
-            print(f"bench_csv_io_{op}\\[{dtype}\\]")
             return f"bench_csv_io\\[{op}-{dtype}\\]"
 
     # parquet IO
     if benchmark_name in ["parquetIO", "parquetMultiIO"] :
-        print(benchmark_name)
         qualifier = "_multi" if "Multi" in benchmark_name else ""
         m1 = re.search(r"((?:write|read)) Average", field)
         m2 = re.search(r"(\w+) =", field)
@@ -107,7 +104,6 @@ def infer_regex(benchmark_name: str, field: str) -> str:
             compression = m2.group(1)
             compression= "None" if compression=="none" else compression
             dtype = "(?:int64|float64|bool|uint64|str)"
-            print(f"bench_{op}_parquet{qualifier}\\[{compression}-{dtype}\\]")
             return f"bench_{op}_parquet{qualifier}\\[{compression}-{dtype}\\]"
 
     # encode
@@ -174,16 +170,7 @@ def infer_regex(benchmark_name: str, field: str) -> str:
 
             return f"bench_str_locality\\[{locality}-{op}\\]"
 
-    # # sort-cases
-    # if "sort-cases" in  benchmark_name :
-    #     m1 = re.search(r"((?:power-law|Regex|Casting|Comparing))", field)
-    #     m2 = re.search(r"((?:RadixSortLSD|TwoArrayRadixSort))", field)
-    #     if m1 and m2:
-    #         op = m1.group(1)
-    #         sort= m2.group(1)
-    #
-    #
-    #         return f"bench_bitwise_binops\\[{locality}-{op}\\]"
+
 
     # bigint_bitwise_binops
     if "bigint_bitwise_binops" in  benchmark_name :
@@ -195,18 +182,28 @@ def infer_regex(benchmark_name: str, field: str) -> str:
 
     # Sort-cases
     if benchmark_name == "sort-cases":
-        if "RMAT" in field:
-            return r"bench_rmat\[[\w\d]+\]"
-        if "block-sorted" in field:
-            return r"bench_block_sorted\[[\w\d]+\]"
-        if "refinement" in field:
-            return r"bench_refinement\[[\w\d]+\]"
-        if "datetime" in field:
-            return r"bench_time_like\[[\w\d]+\]"
-        if "IP" in field:
-            return r"bench_ip_like\[[\w\d]+\]"
-        if "power" in field or "uniform" in field:
-            return r"bench_sort-cases\[[\w\d]*\]"
+        print(benchmark_name)
+        m1 = re.search(r"((?:RadixSortLSD|TwoArrayRadixSort))", field)
+        print(m1)
+        if m1 :
+            sort ="SortingAlgorithm."+ m1.group(1)
+            print(field)
+            dtype = "(?:int64|float64|bool|uint64|str)"
+            if "RMAT" in field:
+                return f"bench_rmat\\[{sort}\\]"
+            if "block-sorted" in field:
+                return r"bench_block_sorted\[[\w\d]+\]"
+            if "refinement" in field:
+                return f"bench_refinement\\[{sort}\\]"
+            if "datetime" in field:
+                return f"bench_time_like\\[{sort}\\]"
+            if "IP" in field:
+                return f"bench_ip_like\\[{sort}\\]"
+            if "uniform" in field:
+                return r"bench_sort-cases\[{sort}-[\w\d]*\]"
+            if "power" in field:
+                return f"bench_power_law\\[{dtype}-{sort}\\]"
+
 
     # Reduce/Scan/Aggregate
     if benchmark_name in {"reduce", "scan", "aggregate"}:
