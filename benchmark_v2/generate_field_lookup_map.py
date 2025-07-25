@@ -137,7 +137,8 @@ def infer_regex(benchmark_name: str, field: str) -> str:
 
     #  reduce
     #     if "reduce" in benchmark_name:
-    if any(k in benchmark_name for k in ["reduce","scan"]):
+    # if any(k in benchmark_name for k in ["reduce","scan","setops"]):
+    if benchmark_name in ["reduce","scan","setops","array_create"]:
         m = re.search(r"(\w+) Average", field)
         if m:
             op = m.group(1)
@@ -172,6 +173,25 @@ def infer_regex(benchmark_name: str, field: str) -> str:
             locality= m2.group(1)
 
             return f"bench_str_locality\\[{locality}-{op}\\]"
+
+    # # sort-cases
+    # if "sort-cases" in  benchmark_name :
+    #     m1 = re.search(r"((?:power-law|Regex|Casting|Comparing))", field)
+    #     m2 = re.search(r"((?:RadixSortLSD|TwoArrayRadixSort))", field)
+    #     if m1 and m2:
+    #         op = m1.group(1)
+    #         sort= m2.group(1)
+    #
+    #
+    #         return f"bench_bitwise_binops\\[{locality}-{op}\\]"
+
+    # bigint_bitwise_binops
+    if "bigint_bitwise_binops" in  benchmark_name :
+        m1 = re.search(r"((?:AND|OR|SHIFT))", field)
+        if m1 :
+            op = m1.group(1).lower()
+
+            return f"bench_bitwise_binops\\[{op}\\]"
 
     # Sort-cases
     if benchmark_name == "sort-cases":

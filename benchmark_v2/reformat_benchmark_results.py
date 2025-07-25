@@ -32,7 +32,7 @@ BENCHMARKS = [
     "argsort",
     "coargsort",
     "groupby",
-    "flatten",
+    #"flatten",
     "aggregate",
     "gather",
     "scatter",
@@ -64,7 +64,8 @@ BENCHMARKS = [
     "bigint_groupby",
     "bigint_array_transfer",
     "parquetIO",
-    "parquetMultiIO"
+    "parquetMultiIO",
+    #"substring_search",
 ]
 
 if os.getenv("ARKOUDA_SERVER_PARQUET_SUPPORT"):
