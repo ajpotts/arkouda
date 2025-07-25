@@ -76,12 +76,22 @@ def infer_regex(benchmark_name: str, field: str) -> str:
             return f"bench_{base_bench}\\[{dtype}-{num}\\]"
 
     # CSV Read/Write
-    if "csv" in benchmark_name:
+    # if "csv" in benchmark_name:
+    if any(k in benchmark_name for k in ["csv"]):
+        print(benchmark_name)
         m = re.search(r"((?:write|read)) Average", field)
         if m:
             op = m.group(1)
             dtype = "(?:int64|float64|bool|uint64|str)"
             return f"bench_{base_bench}\\[{op}-{dtype}\\]"
+
+    # IO Read/Write
+    if any(k in benchmark_name for k in ["IO"]):
+        m = re.search(r"((?:write|read)) Average", field)
+        if m:
+            op = m.group(1)
+            dtype = "(?:int64|float64|bool|uint64|str)"
+            return f"bench_{op}_hdf\\[{dtype}\\]"
 
 
     # small-str-groupby
@@ -92,27 +102,28 @@ def infer_regex(benchmark_name: str, field: str) -> str:
             return f"bench_groupby_small_str\\[{op}\\]"
 
     # dataframe
-    if "dataframe" in benchmark_name:
-        m = re.search(r"((?:_get_head_tail_server|_get_head_tail)) Average", field)
+    # if "dataframe" in benchmark_name:
+    if any(k in benchmark_name for k in ["dataframe"]):
+        m = re.search(r"([_\-\w]+) Average", field)
         if m:
             op = m.group(1)
-            return f"bench_dataframe\\[{op}\\]"
+            return f"bench_{base_bench}\\[{op}\\]"
 
     #  reduce
     #     if "reduce" in benchmark_name:
-    if any(k in benchmark_name for k in ["reduce"]):
-        m = re.search(r"(\w+) Average", field)
-        if m:
-            op = m.group(1)
-            dtype = "(?:int64|float64|bool|uint64)"
-            return f"bench_{base_bench}\\[{dtype}-{op}\\]"
-
-    if "bigint_conversion" in benchmark_name:
+    if any(k in benchmark_name for k in ["reduce","scan"]):
         print(benchmark_name)
         m = re.search(r"(\w+) Average", field)
         if m:
             op = m.group(1)
-            print(op)
+            dtype = "(?:int64|float64|bool|uint64)"
+            print(f"bench_{base_bench}\\[{dtype}-{op}\\]")
+            return f"bench_{base_bench}\\[{dtype}-{op}\\]"
+
+    if "bigint_conversion" in benchmark_name:
+        m = re.search(r"(\w+) Average", field)
+        if m:
+            op = m.group(1)
             return f"bench_bigint_conversion\\[{op}\\]"
 
     # in1d & str-in1d
