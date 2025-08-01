@@ -5,10 +5,24 @@ extend-exclude = [
   "tests/deprecated/**",        # skip that entire directory tree
   "runs/**",                    # skip anything under runs/
   "*.ipynb",                    # skip all Jupyter notebooks
-  "*.rst",                      # skip ReST docs
+  "*.rst",                      # skip ReST docs                    
+  "tests/*",         
+  "src/*",                
 ]
 
-# Add the `line-too-long` rule to the enforced rule set.
-lint.extend-select = ["E501"]
-lint.extend-ignore = ["E712"]
+target-version = "py310"
 
+[format]
+quote-style = "double"
+
+# Add the `line-too-long` rule to the enforced rule set.
+#lint.extend-select = ["E501"]
+#lint.extend-ignore = ["E712"]
+
+[lint]
+select = ["E", "F", "I"]  # E, F for general linting; I for isort rules
+fixable = ["I"]
+
+[lint.isort]
+known-first-party = ["arkouda"]
+force-sort-within-sections = true

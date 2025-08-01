@@ -47,9 +47,9 @@ Examples
 
 """
 
-import shutil
 from os.path import isdir
 from pathlib import Path
+import shutil
 from typing import Any, Dict, Mapping
 
 __all__ = [

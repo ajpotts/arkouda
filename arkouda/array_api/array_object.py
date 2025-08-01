@@ -24,8 +24,8 @@ of ndarray.
 
 from __future__ import annotations
 
-import types
 from enum import IntEnum
+import types
 from typing import (
     TYPE_CHECKING,
     Any,

@@ -43,11 +43,11 @@ Examples
 
 from __future__ import annotations
 
+from collections import UserDict
+from functools import reduce
 import json
 import os
 import random
-from collections import UserDict
-from functools import reduce
 from typing import (
     TYPE_CHECKING,
     Callable,
@@ -62,19 +62,18 @@ from typing import (
 from warnings import warn
 
 import numpy as np  # type: ignore
-import pandas as pd  # type: ignore
 from numpy import ndarray
 from numpy._typing import _8Bit, _16Bit, _32Bit, _64Bit
+import pandas as pd  # type: ignore
 from typeguard import typechecked
 
 from arkouda.client import maxTransferBytes
 from arkouda.client_dtypes import BitVector, Fields, IPv4
 from arkouda.index import Index, MultiIndex
-from arkouda.numpy.dtypes import _is_dtype_in_union, bigint
+from arkouda.numpy.dtypes import _is_dtype_in_union, bigint, numeric_scalars
 from arkouda.numpy.dtypes import bool_ as akbool
 from arkouda.numpy.dtypes import float64 as akfloat64
 from arkouda.numpy.dtypes import int64 as akint64
-from arkouda.numpy.dtypes import numeric_scalars
 from arkouda.numpy.dtypes import uint64 as akuint64
 from arkouda.numpy.pdarrayclass import RegistrationError, pdarray
 from arkouda.numpy.pdarraycreation import arange, array, create_pdarray, full, zeros

@@ -178,6 +178,7 @@ class Matcher:
     def split(self, maxsplit: int = 0, return_segments: bool = False):
         """
         Split string by the occurrences of pattern.
+
         If maxsplit is nonzero, at most maxsplit splits occur.
         """
         from arkouda.client import generic_msg

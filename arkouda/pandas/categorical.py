@@ -47,9 +47,9 @@ See Also
 
 from __future__ import annotations
 
+from collections import defaultdict
 import itertools
 import json
-from collections import defaultdict
 from typing import (
     TYPE_CHECKING,
     DefaultDict,
@@ -72,13 +72,11 @@ from typeguard import typechecked
 from arkouda.infoclass import information
 from arkouda.logger import getArkoudaLogger
 from arkouda.numpy.dtypes import bool_ as akbool
-from arkouda.numpy.dtypes import bool_scalars
+from arkouda.numpy.dtypes import bool_scalars, int_scalars, resolve_scalar_dtype, str_, str_scalars
 from arkouda.numpy.dtypes import dtype as akdtype
 from arkouda.numpy.dtypes import int64 as akint64
-from arkouda.numpy.dtypes import int_scalars, resolve_scalar_dtype, str_, str_scalars
-from arkouda.numpy.pdarrayclass import RegistrationError
+from arkouda.numpy.pdarrayclass import RegistrationError, create_pdarray, pdarray
 from arkouda.numpy.pdarrayclass import all as akall
-from arkouda.numpy.pdarrayclass import create_pdarray, pdarray
 from arkouda.numpy.pdarraycreation import arange, array, ones, zeros, zeros_like
 from arkouda.numpy.pdarraysetops import concatenate, in1d
 from arkouda.numpy.sorting import argsort

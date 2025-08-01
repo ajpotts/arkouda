@@ -62,9 +62,9 @@ import json
 from typing import TYPE_CHECKING, List, Optional, Tuple, TypeVar, Union
 
 import numpy as np
-import pandas as pd
 from numpy import array as ndarray
 from numpy import dtype as npdtype
+import pandas as pd
 from typeguard import typechecked
 
 from arkouda.numpy.dtypes import bool_ as akbool

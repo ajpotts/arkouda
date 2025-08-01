@@ -684,6 +684,7 @@ check:
 
 ruff-format:
 	ruff format .
+	ruff check $(ARKOUDA_PROJECT_DIR)/arkouda --fix
 	#  Verify if it will pass the CI check:
 	ruff format --check --diff
 

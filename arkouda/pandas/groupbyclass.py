@@ -62,12 +62,10 @@ import numpy as np
 from typeguard import typechecked
 
 from arkouda.logger import ArkoudaLogger, getArkoudaLogger
-from arkouda.numpy.dtypes import _val_isinstance_of_union, bigint
+from arkouda.numpy.dtypes import _val_isinstance_of_union, bigint, float_scalars, int_scalars
 from arkouda.numpy.dtypes import dtype as akdtype
 from arkouda.numpy.dtypes import float64 as akfloat64
-from arkouda.numpy.dtypes import float_scalars
 from arkouda.numpy.dtypes import int64 as akint64
-from arkouda.numpy.dtypes import int_scalars
 from arkouda.numpy.dtypes import uint64 as akuint64
 from arkouda.numpy.pdarrayclass import (
     RegistrationError,

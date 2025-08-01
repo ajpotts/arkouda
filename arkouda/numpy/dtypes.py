@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import builtins
-import sys
 from enum import Enum
+import sys
 from typing import TYPE_CHECKING, List, Union, cast
 
 import numpy as np
