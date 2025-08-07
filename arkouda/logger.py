@@ -1,5 +1,4 @@
-"""
-Logging utilities for Arkouda client operations.
+"""Logging utilities for Arkouda client operations.
 
 The `arkouda.logger` module provides an extensible, configurable logging system tailored
 to Arkouda's Python client. It supports structured logging using the standard `logging`
@@ -79,8 +78,7 @@ loggers = {}
 
 
 class LogLevel(Enum):
-    """
-    Enum for defining valid log levels used by ArkoudaLogger.
+    """Enum for defining valid log levels used by ArkoudaLogger.
 
     Members
     -------
@@ -148,8 +146,7 @@ class ArkoudaLogger(Logger):
         handlers: Optional[List[Handler]] = None,
         logFormat: Optional[str] = "[%(name)s] Line %(lineno)d %(levelname)s: %(message)s",
     ) -> None:
-        """
-        Initialize the ArkoudaLogger with the name, level, logFormat, and handlers parameters.
+        """Initialize the ArkoudaLogger with the name, level, logFormat, and handlers parameters.
 
         Parameters
         ----------
@@ -209,8 +206,7 @@ class ArkoudaLogger(Logger):
 
     @typechecked
     def changeLogLevel(self, level: LogLevel, handlerNames: Optional[List[str]] = None) -> None:
-        """
-        Dynamically changes the logging level for ArkoudaLogger and 1..n of configured Handlers.
+        """Dynamically changes the logging level for ArkoudaLogger and 1..n of configured Handlers.
 
         Parameters
         ----------
@@ -250,8 +246,7 @@ class ArkoudaLogger(Logger):
 
     @typechecked
     def disableVerbose(self, logLevel: LogLevel = LogLevel.INFO) -> None:
-        """
-        Disables verbose output.
+        """Disables verbose output.
 
         Disables verbose output by setting the log level for all handlers
         to a level other than DEBUG, with a default of INFO
@@ -272,8 +267,7 @@ class ArkoudaLogger(Logger):
 
     @typechecked
     def getHandler(self, name: str) -> Handler:
-        """
-        Retrieve the Handler object corresponding to the name.
+        """Retrieve the Handler object corresponding to the name.
 
         Parameters
         ----------
@@ -306,8 +300,7 @@ def getArkoudaLogger(
     logFormat: Optional[str] = ArkoudaLogger.DEFAULT_LOG_FORMAT,
     logLevel: Optional[LogLevel] = None,
 ) -> ArkoudaLogger:
-    """
-    Instantiate an ArkoudaLogger that retrieves the logging level from ARKOUDA_LOG_LEVEL env variable.
+    """Instantiate an ArkoudaLogger that retrieves the logging level from ARKOUDA_LOG_LEVEL env variable.
 
     Parameters
     ----------
@@ -348,8 +341,7 @@ def getArkoudaLogger(
 
 @typechecked
 def getArkoudaClientLogger(name: str) -> ArkoudaLogger:
-    """
-    Instantiate an ArkoudaLogger that retrieves the logging level from ARKOUDA_LOG_LEVEL env variable.
+    """Instantiate an ArkoudaLogger that retrieves the logging level from ARKOUDA_LOG_LEVEL env variable.
 
     Instantiate an ArkoudaLogger that retrieves the
     logging level from the ARKOUDA_LOG_LEVEL env variable and outputs log
@@ -387,8 +379,7 @@ def enableVerbose() -> None:
 
 @typechecked
 def disableVerbose(logLevel: LogLevel = LogLevel.INFO) -> None:
-    """
-    Disables verbose logging.
+    """Disables verbose logging.
 
     Disables verbose logging (DEBUG log level) for all ArkoudaLoggers, setting
     the log level for each to the logLevel parameter.
@@ -410,8 +401,7 @@ def disableVerbose(logLevel: LogLevel = LogLevel.INFO) -> None:
 
 @typechecked
 def write_log(log_msg: str, tag: str = "ClientGeneratedLog", log_lvl: LogLevel = LogLevel.INFO):
-    """
-    Allow the user to write custom logs.
+    """Allow the user to write custom logs.
 
     Parameters
     ----------

@@ -12,8 +12,7 @@ __all__ = [
 
 
 def xlogy(x: Union[pdarray, np.float64], y: pdarray):
-    """
-    Computes x * log(y).
+    """Computes x * log(y).
 
     Parameters
     ----------

@@ -12,8 +12,7 @@ Row structure based on UserDict.
 
 
 class Row(UserDict):
-    """
-    A dictionary‐like representation of a single row in an Arkouda DataFrame.
+    """A dictionary‐like representation of a single row in an Arkouda DataFrame.
 
     Wraps the column→value mapping for one row and provides convenient ASCII
     and HTML formatting for display.
@@ -40,8 +39,7 @@ class Row(UserDict):
     """
 
     def __str__(self) -> str:
-        """
-        Return an ASCII‐formatted table representation of the row.
+        """Return an ASCII‐formatted table representation of the row.
 
         Returns
         -------
@@ -63,8 +61,7 @@ class Row(UserDict):
         return tabulate(self.items(), headers=["keys", "values"], showindex=False)
 
     def __repr__(self) -> str:
-        """
-        Return the standard dictionary representation of the row.
+        """Return the standard dictionary representation of the row.
 
         Returns
         -------
@@ -75,8 +72,7 @@ class Row(UserDict):
         return dict(self).__repr__()
 
     def _repr_html_(self) -> str:
-        """
-        Return an HTML‐formatted table representation of the row.
+        """Return an HTML‐formatted table representation of the row.
 
         Returns
         -------

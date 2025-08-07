@@ -20,8 +20,7 @@ __all__ = [
 
 
 def argmax(x: Array, /, *, axis: Optional[int] = None, keepdims: bool = False) -> Array:
-    """
-    Return an array with the indices of the maximum values along a given axis.
+    """Return an array with the indices of the maximum values along a given axis.
 
     Parameters
     ----------
@@ -41,8 +40,7 @@ def argmax(x: Array, /, *, axis: Optional[int] = None, keepdims: bool = False) -
 
 
 def argmin(x: Array, /, *, axis: Optional[int] = None, keepdims: bool = False) -> Array:
-    """
-    Return an array with the indices of the minimum values along a given axis.
+    """Return an array with the indices of the minimum values along a given axis.
 
     Parameters
     ----------
@@ -53,6 +51,7 @@ def argmin(x: Array, /, *, axis: Optional[int] = None, keepdims: bool = False) -
         searching.
     keepdims : bool, optional
         Whether to keep the singleton dimension along `axis` in the result.
+
     """
     if x.dtype not in _real_numeric_dtypes:
         raise TypeError("Only real numeric dtypes are allowed in argmax")
@@ -60,9 +59,7 @@ def argmin(x: Array, /, *, axis: Optional[int] = None, keepdims: bool = False) -
 
 
 def nonzero(x: Array, /) -> Tuple[Array, ...]:
-    """
-    Return a tuple of arrays containing the indices of the non-zero elements of the input array.
-    """
+    """Return a tuple of arrays containing the indices of the non-zero elements of the input array."""
     from arkouda.client import generic_msg
 
     resp = cast(
@@ -77,8 +74,7 @@ def nonzero(x: Array, /) -> Tuple[Array, ...]:
 
 
 def where(condition: Array, x1: Array, x2: Array, /) -> Array:
-    """
-    Return elements, either from `x1` or `x2`, depending on `condition`.
+    """Return elements, either from `x1` or `x2`, depending on `condition`.
 
     Parameters
     ----------
@@ -88,6 +84,7 @@ def where(condition: Array, x1: Array, x2: Array, /) -> Array:
         Values selected at indices where `condition` is True.
     x2 : Array
         Values selected at indices where `condition` is False.
+
     """
     from arkouda.client import generic_msg
 
@@ -121,8 +118,7 @@ def searchsorted(
     x2_sorted: bool = False,
     sorter: Optional[Array] = None,
 ) -> Array:
-    """
-    Given a sorted array `x1`, find the indices to insert elements from another array `x2` such that
+    """Given a sorted array `x1`, find the indices to insert elements from another array `x2` such that
     the sorted order is maintained.
 
     Parameters
@@ -139,6 +135,7 @@ def searchsorted(
     x2_sorted : bool, default=False
         If True, assumes that `x2` is already sorted in ascending order. This can improve performance
         for large, sorted search arrays. If False, no assumption is made about the order of `x2`.
+
     """
     from arkouda.client import generic_msg
 

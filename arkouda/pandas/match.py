@@ -1,5 +1,4 @@
-r"""
-Regular expression match results for segmented string arrays in Arkouda.
+r"""Regular expression match results for segmented string arrays in Arkouda.
 
 The `arkouda.match` module defines the `Match` class, which encapsulates results from
 regex-based operations such as `search`, `match`, and `fullmatch` on Arkouda `Strings` arrays.
@@ -57,8 +56,7 @@ MatchType = Enum("MatchType", ["SEARCH", "MATCH", "FULLMATCH"])
 
 
 class Match:
-    """
-    Encapsulates regular expression match results on Arkouda segmented string arrays.
+    """Encapsulates regular expression match results on Arkouda segmented string arrays.
 
     Created by calling `search()`, `match()`, or `fullmatch()` on a `Strings` object. Provides access
     to match booleans, span information, capture groups, and origin indices of matches.
@@ -117,8 +115,7 @@ class Match:
         self.re = pattern
 
     def __str__(self):
-        """
-        Return a string representation of the match object, previewing match status and spans.
+        """Return a string representation of the match object, previewing match status and spans.
 
         Returns
         -------
@@ -137,8 +134,7 @@ class Match:
         return f"<ak.{self._objtype} object: {'; '.join(vals)}>"
 
     def __getitem__(self, item):
-        """
-        Return a summary string for the match at a given index.
+        """Return a summary string for the match at a given index.
 
         Parameters
         ----------
@@ -159,8 +155,7 @@ class Match:
         )
 
     def __repr__(self):
-        """
-        Return the formal string representation of the Match object.
+        """Return the formal string representation of the Match object.
 
         Returns
         -------
@@ -171,8 +166,7 @@ class Match:
         return self.__str__()
 
     def matched(self) -> pdarray:
-        """
-        Return a boolean array indiciating whether each element matched.
+        """Return a boolean array indiciating whether each element matched.
 
         Returns
         -------
@@ -190,8 +184,7 @@ class Match:
         return self._matched
 
     def start(self) -> pdarray:
-        """
-        Return the starts of matches.
+        """Return the starts of matches.
 
         Returns
         -------
@@ -209,8 +202,7 @@ class Match:
         return self._starts
 
     def end(self) -> pdarray:
-        """
-        Return the ends of matches.
+        """Return the ends of matches.
 
         Returns
         -------
@@ -228,8 +220,7 @@ class Match:
         return self._ends
 
     def match_type(self) -> str:
-        """
-        Return the type of the Match object.
+        """Return the type of the Match object.
 
         Returns
         -------
@@ -247,8 +238,7 @@ class Match:
         return self._match_type.name
 
     def find_matches(self, return_match_origins: bool = False):
-        """
-        Return all matches as a new Strings object.
+        """Return all matches as a new Strings object.
 
         Parameters
         ----------
@@ -301,8 +291,7 @@ class Match:
             return Strings.from_return_msg(repMsg)
 
     def group(self, group_num: int = 0, return_group_origins: bool = False):
-        r"""
-        Return a new Strings containing the capture group corresponding to group_num.
+        r"""Return a new Strings containing the capture group corresponding to group_num.
 
         For the default, group_num=0, return the full match.
 

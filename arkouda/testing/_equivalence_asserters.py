@@ -38,8 +38,7 @@ __all__ = [
 
 
 def _convert_to_arkouda(obj):
-    """
-    Convert a NumPy or pandas object to an Arkouda object.
+    """Convert a NumPy or pandas object to an Arkouda object.
 
     This function attempts to convert a supported NumPy or pandas object
     (including arrays, Series, DataFrames, Index types, or categoricals)
@@ -124,8 +123,7 @@ def assert_almost_equivalent(
     rtol: float = 1.0e-5,
     atol: float = 1.0e-8,
 ) -> None:
-    """
-    Check that two objects are approximately equal.
+    """Check that two objects are approximately equal.
 
     By approximately equal, we refer to objects that are numbers or that
     contain numbers which may be equivalent to specific levels of precision.
@@ -187,8 +185,7 @@ def assert_index_equivalent(
     atol: float = 1.0e-8,
     obj: str = "Index",
 ) -> None:
-    """
-    Check that two Index objects are equal.
+    """Check that two Index objects are equal.
 
     If the objects are pandas Index, they are converted to Arkouda Index.
     Then assert_index_equal is applied to the result.
@@ -266,8 +263,7 @@ def assert_arkouda_array_equivalent(
     obj: str = "pdarray",
     index_values=None,
 ) -> None:
-    """
-     Check that two Arkouda-compatible arrays are equal.
+    """Check that two Arkouda-compatible arrays are equal.
 
     Supported types include numpy arrays, pandas Categorical, and Arkouda arrays.
 
@@ -349,8 +345,7 @@ def assert_series_equivalent(
     check_index: bool = True,
     check_like: bool = False,
 ) -> None:
-    """
-    Check that two Series are equal.
+    """Check that two Series are equal.
 
     This function compares two Series and raises an assertion if they differ.
     pandas Series are converted to Arkouda equivalents before comparison.
@@ -448,8 +443,7 @@ def assert_frame_equivalent(
     atol: float = 1.0e-8,
     obj: str = "DataFrame",
 ) -> None:
-    """
-    Check that two DataFrames are equal.
+    """Check that two DataFrames are equal.
 
     This function compares two DataFrames and raises an assertion if they differ.
     It is intended primarily for use in unit tests. pandas DataFrames are converted to
@@ -534,8 +528,7 @@ def assert_frame_equivalent(
 
 
 def assert_equivalent(left, right, **kwargs) -> None:
-    """
-    Dispatch to the appropriate assertion function depending on object types.
+    """Dispatch to the appropriate assertion function depending on object types.
 
     Parameters
     ----------

@@ -1,5 +1,4 @@
-"""
-Alignment and lookup utilities for Arkouda arrays.
+"""Alignment and lookup utilities for Arkouda arrays.
 
 This module provides functions to align multiple arrays to a common
 0-up index, perform lookups and mappings across sparse identifiers,
@@ -83,8 +82,7 @@ __all__ = [
 
 
 def unsqueeze(p):
-    """
-    Ensure that the input is returned as a list.
+    """Ensure that the input is returned as a list.
 
     If the input is a single pdarray, Strings, or Categorical object, wrap it in a list.
     Otherwise, return the input unchanged.
@@ -114,8 +112,7 @@ def unsqueeze(p):
 
 
 def zero_up(vals):
-    """
-    Map an array of sparse values to 0-up indices.
+    """Map an array of sparse values to 0-up indices.
 
     Parameters
     ----------
@@ -136,8 +133,7 @@ def zero_up(vals):
 
 
 def align(*args):
-    """
-    Map multiple arrays of sparse identifiers to a common 0-up index.
+    """Map multiple arrays of sparse identifiers to a common 0-up index.
 
     Parameters
     ----------
@@ -162,8 +158,7 @@ def align(*args):
 
 
 def right_align(left, right):
-    """
-    Map two arrays of sparse values to the 0-up index.
+    """Map two arrays of sparse values to the 0-up index.
 
     Map two arrays of sparse values to the 0-up index set implied by the right array,
     discarding values from left that do not appear in right.
@@ -192,8 +187,7 @@ def right_align(left, right):
 
 
 def left_align(left, right):
-    """
-    Map two arrays of sparse identifiers to the 0-up index.
+    """Map two arrays of sparse identifiers to the 0-up index.
 
     Map two arrays of sparse identifiers to the 0-up index set implied by the left array,
     discarding values from right that do not appear in left.
@@ -202,8 +196,7 @@ def left_align(left, right):
 
 
 class NonUniqueError(ValueError):
-    """
-    Exception raised when duplicate values are found in a set of keys that are expected to be unique.
+    """Exception raised when duplicate values are found in a set of keys that are expected to be unique.
 
     This is typically raised in lookup and alignment operations that assume
     a one-to-one mapping between keys and values.
@@ -222,8 +215,7 @@ class NonUniqueError(ValueError):
 
 
 def find(query, space, all_occurrences=False, remove_missing=False):
-    """
-    Return indices of query items in a search list of items.
+    """Return indices of query items in a search list of items.
 
     Parameters
     ----------
@@ -385,8 +377,7 @@ def find(query, space, all_occurrences=False, remove_missing=False):
 
 
 def lookup(keys, values, arguments, fillvalue=-1):
-    """
-    Apply the function defined by the mapping keys --> values to arguments.
+    """Apply the function defined by the mapping keys --> values to arguments.
 
     Parameters
     ----------
@@ -451,8 +442,7 @@ def lookup(keys, values, arguments, fillvalue=-1):
 
 
 def in1d_intervals(vals, intervals, symmetric=False):
-    """
-    Test each value for membership in *any* of a set of half-open (pythonic) intervals.
+    """Test each value for membership in *any* of a set of half-open (pythonic) intervals.
 
     Parameters
     ----------
@@ -501,8 +491,7 @@ def in1d_intervals(vals, intervals, symmetric=False):
 
 
 def search_intervals(vals, intervals, tiebreak=None, hierarchical=True):
-    """
-    Return the index of the best interval containing each query value.
+    """Return the index of the best interval containing each query value.
 
     Given an array of query vals and non-overlapping, closed intervals, return
     the index of the best (see tiebreak) interval containing each query value,
@@ -775,8 +764,7 @@ def search_intervals(vals, intervals, tiebreak=None, hierarchical=True):
 
 
 def is_cosorted(arrays):
-    """
-    Return True iff the arrays are cosorted.
+    """Return True iff the arrays are cosorted.
 
     Return True iff the arrays are cosorted, i.e., if the arrays were columns in a table
     then the rows are sorted.
@@ -823,8 +811,7 @@ def is_cosorted(arrays):
 
 
 def interval_lookup(keys, values, arguments, fillvalue=-1, tiebreak=None, hierarchical=False):
-    """
-    Apply a function defined over intervals to an array of arguments.
+    """Apply a function defined over intervals to an array of arguments.
 
     Parameters
     ----------

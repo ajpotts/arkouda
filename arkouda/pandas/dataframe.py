@@ -1,5 +1,4 @@
-"""
-Pandas-like DataFrame module for Arkouda.
+"""Pandas-like DataFrame module for Arkouda.
 
 This module provides distributed data frame functionality inspired by pandas,
 enabling scalable manipulation of structured data using Arkouda's parallel computing
@@ -118,8 +117,7 @@ __all__ = [
 
 
 def apply_if_callable(maybe_callable, obj, **kwargs):
-    """
-    Evaluate possibly callable input using obj and kwargs if it is callable, otherwise return as it is.
+    """Evaluate callable input using obj and kwargs if it is callable, otherwise return as it is.
 
     Parameters
     ----------
@@ -142,8 +140,7 @@ def groupby_operators(cls):
 
 @groupby_operators
 class DataFrameGroupBy:
-    """
-    A DataFrame that has been grouped by a subset of columns.
+    """A DataFrame that has been grouped by a subset of columns.
 
     Parameters
     ----------
@@ -220,8 +217,7 @@ class DataFrameGroupBy:
         numerical_dtypes = [akfloat64, akint64, akuint64]
 
         def aggop(self, colnames=None):
-            """
-            Aggregate the operation, with the grouped column(s) values as keys.
+            """Aggregate the operation, with the grouped column(s) values as keys.
 
             Parameters
             ----------
@@ -269,8 +265,7 @@ class DataFrameGroupBy:
         return aggop
 
     def size(self, as_series=None, sort_index=True):
-        """
-        Compute the size of each value as the total number of rows, including NaN values.
+        """Compute the size of each value as the total number of rows, including NaN values.
 
         Parameters
         ----------
@@ -313,8 +308,7 @@ class DataFrameGroupBy:
         n: int = 5,
         sort_index: bool = True,
     ) -> DataFrame:
-        """
-        Return the first n rows from each group.
+        """Return the first n rows from each group.
 
         Parameters
         ----------
@@ -366,8 +360,7 @@ class DataFrameGroupBy:
         n: int = 5,
         sort_index: bool = True,
     ) -> DataFrame:
-        """
-        Return the last n rows from each group.
+        """Return the last n rows from each group.
 
         Parameters
         ----------
@@ -415,8 +408,7 @@ class DataFrameGroupBy:
         return self.df[indx]
 
     def sample(self, n=None, frac=None, replace=False, weights=None, random_state=None):
-        """
-        Return a random sample from each group.
+        """Return a random sample from each group.
 
         You can either specify the number of elements
         or the fraction of elements to be sampled. random_state can be used for reproducibility
@@ -576,8 +568,7 @@ class DataFrameGroupBy:
             return Series(values).to_dataframe(index_labels=self.gb_key_names, value_label=name)
 
     def diff(self, colname):
-        """
-        Create a difference aggregate for the given column.
+        """Create a difference aggregate for the given column.
 
         For each group, the difference between successive values is calculated.
         Aggregate operations (mean,min,max,std,var) can be done on the results.
@@ -613,8 +604,7 @@ class DataFrameGroupBy:
         return DiffAggregate(self.gb, self.df.data[colname])
 
     def broadcast(self, x, permute=True):
-        """
-        Fill each group’s segment with a constant value.
+        """Fill each group’s segment with a constant value.
 
         Parameters
         ----------
@@ -665,8 +655,7 @@ class DataFrameGroupBy:
 
 @groupby_operators
 class DiffAggregate:
-    """
-    A column in a GroupBy that has been differenced.
+    """A column in a GroupBy that has been differenced.
 
     Aggregation operations can be done on the result.
 
@@ -705,8 +694,7 @@ DataFrame structure based on Arkouda arrays.
 
 
 class DataFrame(UserDict):
-    """
-    A DataFrame structure based on arkouda arrays.
+    """A DataFrame structure based on arkouda arrays.
 
     Parameters
     ----------
@@ -924,8 +912,7 @@ class DataFrame(UserDict):
             self.update_nrows()
 
     def __getattr__(self, key):
-        """
-        Return the column in the DataFrame with the given name.
+        """Return the column in the DataFrame with the given name.
 
         Parameters
         ----------
@@ -952,8 +939,7 @@ class DataFrame(UserDict):
         return Series(data=self[key], index=self.index.index)
 
     def __dir__(self):
-        """
-        Return a list of attributes for use with dir().
+        """Return a list of attributes for use with dir().
 
         Returns
         -------
@@ -965,8 +951,7 @@ class DataFrame(UserDict):
 
     # delete a column
     def __delitem__(self, key: str):
-        """
-        Delete the specified column from the DataFrame.
+        """Delete the specified column from the DataFrame.
 
         Parameters
         ----------
@@ -991,8 +976,7 @@ class DataFrame(UserDict):
         self.update_nrows()
 
     def __getitem__(self, key):
-        """
-        Retrieve one or more columns from the DataFrame.
+        """Retrieve one or more columns from the DataFrame.
 
         Parameters
         ----------
@@ -1067,8 +1051,7 @@ class DataFrame(UserDict):
             raise IndexError("Invalid selector: unknown error.")
 
     def __setitem__(self, key: str, value):
-        """
-        Set the value of a column in the DataFrame.
+        """Set the value of a column in the DataFrame.
 
         Parameters
         ----------
@@ -1139,8 +1122,7 @@ class DataFrame(UserDict):
         return self._nrows
 
     def _ncols(self):
-        """
-        Return number of columns.
+        """Return number of columns.
 
         If index appears, we now want to utilize this
         because the actual index has been moved to a property.
@@ -1298,8 +1280,7 @@ class DataFrame(UserDict):
         return new_df.to_pandas(retain_index=True)[self._columns]
 
     def transfer(self, hostname, port):
-        """
-        Send a DataFrame to a different Arkouda server.
+        """Send a DataFrame to a different Arkouda server.
 
         Parameters
         ----------
@@ -1399,8 +1380,7 @@ class DataFrame(UserDict):
 
     @classmethod
     def from_pandas(cls, pd_df):
-        """
-        Copy the data from a pandas DataFrame into a new arkouda.pandas.dataframe.DataFrame.
+        """Copy the data from a pandas DataFrame into a new arkouda.pandas.dataframe.DataFrame.
 
         Parameters
         ----------
@@ -1435,8 +1415,7 @@ class DataFrame(UserDict):
         return DataFrame(initialdata=pd_df)
 
     def _drop_column(self, keys):
-        """
-        Drop a column or columns from the dataframe, in-place.
+        """Drop a column or columns from the dataframe, in-place.
 
         keys : list
             The labels to be dropped on the given axis
@@ -1447,8 +1426,7 @@ class DataFrame(UserDict):
             del self[key]
 
     def _drop_row(self, keys):
-        """
-        Drop a row or rows from the dataframe, in-place.
+        """Drop a row or rows from the dataframe, in-place.
 
         keys : list
             The indexes to be dropped on the given axis
@@ -1480,8 +1458,7 @@ class DataFrame(UserDict):
         axis: Union[str, int] = 0,
         inplace: bool = False,
     ) -> Union[None, DataFrame]:
-        """
-        Drop column/s or row/s from the dataframe.
+        """Drop column/s or row/s from the dataframe.
 
         Parameters
         ----------
@@ -1546,8 +1523,7 @@ class DataFrame(UserDict):
         return None
 
     def drop_duplicates(self, subset=None, keep="first"):
-        """
-        Drop duplcated rows and returns resulting DataFrame.
+        """Drop duplcated rows and returns resulting DataFrame.
 
         If a subset of the columns are provided then only one instance of each
         duplicated row will be returned (keep determines which row).
@@ -1608,8 +1584,7 @@ class DataFrame(UserDict):
 
     @property
     def size(self):
-        """
-        Return the number of bytes on the arkouda server.
+        """Return the number of bytes on the arkouda server.
 
         Returns
         -------
@@ -1637,8 +1612,7 @@ class DataFrame(UserDict):
 
     @property
     def dtypes(self):
-        """
-        The dtypes of the dataframe.
+        """The dtypes of the dataframe.
 
         Returns
         -------
@@ -1680,8 +1654,7 @@ class DataFrame(UserDict):
 
     @property
     def empty(self):
-        """
-        Whether the dataframe is empty.
+        """Whether the dataframe is empty.
 
         Returns
         -------
@@ -1705,8 +1678,7 @@ class DataFrame(UserDict):
 
     @property
     def shape(self):
-        """
-        The shape of the dataframe.
+        """The shape of the dataframe.
 
         Returns
         -------
@@ -1734,8 +1706,7 @@ class DataFrame(UserDict):
 
     @property
     def columns(self):
-        """
-        An Index where the values are the column names of the dataframe.
+        """An Index where the values are the column names of the dataframe.
 
         Returns
         -------
@@ -1764,8 +1735,7 @@ class DataFrame(UserDict):
 
     @property
     def index(self):
-        """
-        The index of the dataframe.
+        """The index of the dataframe.
 
         Returns
         -------
@@ -1802,8 +1772,7 @@ class DataFrame(UserDict):
 
     @typechecked
     def reset_index(self, size: Optional[int] = None, inplace: bool = False) -> Union[None, DataFrame]:
-        """
-        Set the index to an integer range.
+        """Set the index to an integer range.
 
         Useful if this dataframe is the result of a slice operation from
         another dataframe, or if you have permuted the rows and no longer need
@@ -1867,8 +1836,7 @@ class DataFrame(UserDict):
 
     @property
     def info(self):
-        """
-        Return a summary string of this dataframe.
+        """Return a summary string of this dataframe.
 
         Returns
         -------
@@ -1931,8 +1899,7 @@ class DataFrame(UserDict):
     def _rename_column(
         self, mapper: Union[Callable, Dict], inplace: bool = False
     ) -> Optional[DataFrame]:
-        """
-        Rename columns within the dataframe.
+        """Rename columns within the dataframe.
 
         Parameters
         ----------
@@ -1985,8 +1952,7 @@ class DataFrame(UserDict):
 
     @typechecked
     def _rename_index(self, mapper: Union[Callable, Dict], inplace: bool = False) -> Optional[DataFrame]:
-        """
-        Rename indexes within the dataframe.
+        """Rename indexes within the dataframe.
 
         Parameters
         ----------
@@ -2042,8 +2008,7 @@ class DataFrame(UserDict):
         axis: Union[str, int] = 0,
         inplace: bool = False,
     ) -> Optional[DataFrame]:
-        """
-        Rename indexes or columns according to a mapping.
+        """Rename indexes or columns according to a mapping.
 
         Parameters
         ----------
@@ -2132,8 +2097,7 @@ class DataFrame(UserDict):
             raise RuntimeError("Rename expects index or columns to be specified.")
 
     def append(self, other, ordered=True):
-        """
-        Concatenate data from 'other' onto the end of this DataFrame, in place.
+        """Concatenate data from 'other' onto the end of this DataFrame, in place.
 
         Explicitly, use the arkouda concatenate function to append the data
         from each column in other to the end of self. This operation is done
@@ -2251,8 +2215,7 @@ class DataFrame(UserDict):
         return ret
 
     def head(self, n=5):
-        """
-        Return the first `n` rows.
+        """Return the first `n` rows.
 
         This function returns the first `n` rows of the the dataframe. It is
         useful for quickly verifying data, for example, after sorting or
@@ -2306,8 +2269,7 @@ class DataFrame(UserDict):
         return self[:n]
 
     def tail(self, n=5):
-        """
-        Return the last `n` rows.
+        """Return the last `n` rows.
 
         This function returns the last `n` rows for the dataframe. It is
         useful for quickly testing if your object has the right type of data in
@@ -2364,8 +2326,7 @@ class DataFrame(UserDict):
         return self[self._nrows - n :]
 
     def sample(self, n=5) -> DataFrame:
-        """
-        Return a random sample of `n` rows.
+        """Return a random sample of `n` rows.
 
         Parameters
         ----------
@@ -2407,8 +2368,7 @@ class DataFrame(UserDict):
     def GroupBy(
         self, keys, use_series=False, as_index=True, dropna=True
     ) -> Union[DataFrameGroupBy, GroupBy_class]:
-        """
-        Group the dataframe by a column or a list of columns.
+        """Group the dataframe by a column or a list of columns.
 
         Parameters
         ----------
@@ -2480,8 +2440,7 @@ class DataFrame(UserDict):
         return gb
 
     def memory_usage(self, index=True, unit="B") -> Series:
-        """
-        Return the memory usage of each column in bytes.
+        """Return the memory usage of each column in bytes.
 
         The memory usage can optionally include the contribution of
         the index.
@@ -2564,8 +2523,7 @@ class DataFrame(UserDict):
         return result
 
     def memory_usage_info(self, unit="GB"):
-        """
-        Return a formatted string representation of the size of this DataFrame.
+        """Return a formatted string representation of the size of this DataFrame.
 
         Parameters
         ----------
@@ -2595,8 +2553,7 @@ class DataFrame(UserDict):
         return "{:.2f} {}".format(data_size, unit)
 
     def to_pandas(self, datalimit=maxTransferBytes, retain_index=False):
-        """
-        Send this DataFrame to a pandas DataFrame.
+        """Send this DataFrame to a pandas DataFrame.
 
         Parameters
         ----------
@@ -2696,8 +2653,7 @@ class DataFrame(UserDict):
             return pd.DataFrame(data=pandas_data)
 
     def to_markdown(self, mode="wt", index=True, tablefmt="grid", storage_options=None, **kwargs):
-        r"""
-        Print DataFrame in Markdown-friendly format.
+        r"""Print DataFrame in Markdown-friendly format.
 
         Parameters
         ----------
@@ -2763,8 +2719,7 @@ class DataFrame(UserDict):
         return data
 
     def to_hdf(self, path, index=False, columns=None, file_type="distribute"):
-        """
-        Save DataFrame to disk as hdf5, preserving column names.
+        """Save DataFrame to disk as hdf5, preserving column names.
 
         Parameters
         ----------
@@ -2815,8 +2770,7 @@ class DataFrame(UserDict):
         to_hdf(data, prefix_path=path, file_type=file_type)
 
     def _to_hdf_snapshot(self, path, dataset="DataFrame", mode="truncate", file_type="distribute"):
-        """
-        Save a dataframe as a group with columns within the group.
+        """Save a dataframe as a group with columns within the group.
 
         This allows saving other
         datasets in the HDF5 file without impacting the integrity of the dataframe.
@@ -2905,8 +2859,7 @@ class DataFrame(UserDict):
         )
 
     def update_hdf(self, prefix_path: str, index=False, columns=None, repack: bool = True):
-        """
-        Overwrite the dataset with the name provided with this dataframe.
+        """Overwrite the dataset with the name provided with this dataframe.
 
         If the dataset does not exist it is added.
 
@@ -2976,8 +2929,7 @@ class DataFrame(UserDict):
         compression: Optional[str] = None,
         convert_categoricals: bool = False,
     ):
-        """
-        Save DataFrame to disk as parquet, preserving column names.
+        """Save DataFrame to disk as parquet, preserving column names.
 
         Parameters
         ----------
@@ -3055,8 +3007,7 @@ class DataFrame(UserDict):
         col_delim: str = ",",
         overwrite: bool = False,
     ):
-        r"""
-        Write DataFrame to CSV file(s).
+        r"""Write DataFrame to CSV file(s).
 
         File will contain a column for each column in the DataFrame.
         All CSV Files written by Arkouda include a header denoting data types of the columns.
@@ -3123,8 +3074,7 @@ class DataFrame(UserDict):
 
     @classmethod
     def read_csv(cls, filename: str, col_delim: str = ","):
-        r"""
-        Read the columns of a CSV file into an Arkouda DataFrame.
+        r"""Read the columns of a CSV file into an Arkouda DataFrame.
 
         If the file contains the appropriately formatted header, typed data will be returned.
         Otherwise, all data will be returned as a Strings objects.
@@ -3190,8 +3140,7 @@ class DataFrame(UserDict):
 
     @classmethod
     def load(cls, prefix_path, file_format="INFER"):
-        """
-        Load dataframe from file.
+        """Load dataframe from file.
 
         file_format needed for consistency with other load functions.
 
@@ -3246,8 +3195,7 @@ class DataFrame(UserDict):
         return df if filetype == "HDF5" else df[df.columns.values[::-1]]
 
     def argsort(self, key, ascending=True):
-        """
-        Return the permutation that sorts the dataframe by `key`.
+        """Return the permutation that sorts the dataframe by `key`.
 
         Parameters
         ----------
@@ -3309,8 +3257,7 @@ class DataFrame(UserDict):
                 return argsort(self[key])[arange(self._nrows - 1, -1, -1)]
 
     def coargsort(self, keys, ascending=True):
-        """
-        Return the permutation that sorts the dataframe by `keys`.
+        """Return the permutation that sorts the dataframe by `keys`.
 
         Note: Sorting using Strings may not yield correct sort order.
 
@@ -3360,8 +3307,7 @@ class DataFrame(UserDict):
         return DataFrame(self[idx], index=new_index)
 
     def sort_index(self, ascending=True):
-        """
-        Sort the DataFrame by indexed columns.
+        """Sort the DataFrame by indexed columns.
 
         Note: Fails on sort order of arkouda.numpy.strings.Strings columns when
             multiple columns being sorted.
@@ -3397,8 +3343,7 @@ class DataFrame(UserDict):
         return self._reindex(idx)
 
     def sort_values(self, by=None, ascending=True):
-        """
-        Sort the DataFrame by one or more columns.
+        """Sort the DataFrame by one or more columns.
 
         If no column is specified, all columns are used.
 
@@ -3454,8 +3399,7 @@ class DataFrame(UserDict):
         return self[i]
 
     def apply_permutation(self, perm):
-        """
-        Apply a permutation to an entire DataFrame.
+        """Apply a permutation to an entire DataFrame.
 
         The operation is done in place and the original DataFrame will be modified.
 
@@ -3503,8 +3447,7 @@ class DataFrame(UserDict):
         self._set_index(self.index[perm])
 
     def filter_by_range(self, keys, low=1, high=None):
-        """
-        Filter rows by the size of groups defined on one or more columns.
+        """Filter rows by the size of groups defined on one or more columns.
 
         Group the DataFrame by the specified `keys`, compute the count of each group,
         and return a boolean mask indicating which rows belong to groups whose sizes
@@ -3572,8 +3515,7 @@ class DataFrame(UserDict):
         return broadcast[invert_permutation(gb.permutation)]
 
     def copy(self, deep=True):
-        """
-        Make a copy of this object's data.
+        """Make a copy of this object's data.
 
         When `deep = True` (default), a new object will be created with a copy of
         the calling object's data. Modifications to the data of the copy will not
@@ -3636,8 +3578,7 @@ class DataFrame(UserDict):
             return DataFrame(self)
 
     def groupby(self, keys, use_series=True, as_index=True, dropna=True):
-        """
-        Group the dataframe by a column or a list of columns.
+        """Group the dataframe by a column or a list of columns.
 
         Alias for GroupBy.
 
@@ -3697,8 +3638,7 @@ class DataFrame(UserDict):
 
     @typechecked
     def isin(self, values: Union[pdarray, Dict, Series, DataFrame]) -> DataFrame:
-        """
-        Determine whether each element in the DataFrame is contained in values.
+        """Determine whether each element in the DataFrame is contained in values.
 
         Parameters
         ----------
@@ -3813,8 +3753,7 @@ class DataFrame(UserDict):
         return DataFrame(df_def, index=self.index)
 
     def count(self, axis: Union[int, str] = 0, numeric_only=False) -> Series:
-        """
-        Count non-NA cells for each column or row.
+        """Count non-NA cells for each column or row.
 
         The values np.NaN are considered NA.
 
@@ -3923,8 +3862,7 @@ class DataFrame(UserDict):
             raise ValueError(f"No axis named {axis} for object type DataFrame")
 
     def corr(self) -> DataFrame:
-        """
-        Return new DataFrame with pairwise correlation of columns.
+        """Return new DataFrame with pairwise correlation of columns.
 
         Returns
         -------
@@ -3946,7 +3884,7 @@ class DataFrame(UserDict):
 
         Attempts to convert to numeric values where possible for inclusion in the matrix.
 
-        Example
+        Example:
         -------
         >>> import arkouda as ak
         >>> df = ak.DataFrame({'col1': [1, 2], 'col2': [-1, -2]})
@@ -3991,8 +3929,7 @@ class DataFrame(UserDict):
         convert_ints: bool = True,
         sort: bool = True,
     ) -> DataFrame:
-        r"""
-        Merge Arkouda DataFrames with a database-style join.
+        r"""Merge Arkouda DataFrames with a database-style join.
 
         The resulting dataframe contains rows from both DataFrames as specified by
         the merge condition (based on the "how" and "on" parameters).
@@ -4101,8 +4038,7 @@ class DataFrame(UserDict):
 
     @typechecked
     def isna(self) -> DataFrame:
-        """
-        Detect missing values.
+        """Detect missing values.
 
         Return a boolean same-sized object indicating if the values are NA.
         numpy.NaN values get mapped to True values.
@@ -4149,8 +4085,7 @@ class DataFrame(UserDict):
 
     @typechecked
     def notna(self) -> DataFrame:
-        """
-        Detect existing (non-missing) values.
+        """Detect existing (non-missing) values.
 
         Return a boolean same-sized object indicating if the values are not NA.
         numpy.NaN values get mapped to False values.
@@ -4196,8 +4131,7 @@ class DataFrame(UserDict):
 
     @typechecked
     def any(self, axis=0) -> Union[Series, bool]:
-        """
-        Return whether any element is True, potentially over an axis.
+        """Return whether any element is True, potentially over an axis.
 
         Returns False unless there is at least one element along a Dataframe axis that is True.
 
@@ -4288,8 +4222,7 @@ class DataFrame(UserDict):
 
     @typechecked
     def all(self, axis=0) -> Union[Series, bool]:
-        """
-        Return whether all elements are True, potentially over an axis.
+        """Return whether all elements are True, potentially over an axis.
 
         Returns True unless there at least one element along a Dataframe axis that is False.
 
@@ -4387,8 +4320,7 @@ class DataFrame(UserDict):
         thresh: Optional[int] = None,
         ignore_index: bool = False,
     ) -> DataFrame:
-        """
-        Remove missing values.
+        """Remove missing values.
 
         Parameters
         ----------
@@ -4515,8 +4447,7 @@ class DataFrame(UserDict):
 
     @typechecked
     def register(self, user_defined_name: str) -> DataFrame:
-        """
-        Register this DataFrame object and underlying components with the Arkouda server.
+        """Register this DataFrame object and underlying components with the Arkouda server.
 
         Parameters
         ----------
@@ -4631,8 +4562,7 @@ class DataFrame(UserDict):
         return self
 
     def unregister(self):
-        """
-        Unregister this DataFrame object in the arkouda server.
+        """Unregister this DataFrame object in the arkouda server.
 
         Unregister this DataFrame object in the arkouda server which was previously
         registered using register() and/or attached to using attach().
@@ -4654,7 +4584,7 @@ class DataFrame(UserDict):
         Objects registered with the server are immune to deletion until
         they are unregistered.
 
-        Example
+        Example:
         -------
         >>> import arkouda as ak
         >>> df = ak.DataFrame({'col1': [1, 2, 3], 'col2': [4, 5, 6]})
@@ -4679,8 +4609,7 @@ class DataFrame(UserDict):
         self.registered_name = None  # Clear our internal DataFrame object name
 
     def is_registered(self) -> bool:
-        """
-        Return True if the object is contained in the registry.
+        """Return True if the object is contained in the registry.
 
         Returns
         -------
@@ -4703,7 +4632,7 @@ class DataFrame(UserDict):
         Objects registered with the server are immune to deletion until
         they are unregistered.
 
-        Example
+        Example:
         -------
         >>> import arkouda as ak
         >>> df = ak.DataFrame({'col1': [1, 2, 3], 'col2': [4, 5, 6]})
@@ -4728,8 +4657,7 @@ class DataFrame(UserDict):
 
     @staticmethod
     def _parse_col_name(entryName, dfName):
-        """
-        Parse the registered name of the data component and pull out the column type and column name.
+        """Parse the registered name of the data component and pull out the column type and column name.
 
         Helper method used by from_return_msg.
 
@@ -4762,8 +4690,7 @@ class DataFrame(UserDict):
 
     @classmethod
     def from_return_msg(cls, rep_msg):
-        """
-        Create a DataFrame object from an arkouda server response message.
+        """Create a DataFrame object from an arkouda server response message.
 
         Parameters
         ----------
@@ -4809,8 +4736,7 @@ class DataFrame(UserDict):
         return cls(columns, idx)
 
     def assign(self, **kwargs) -> DataFrame:
-        r"""
-        Assign new columns to a DataFrame.
+        r"""Assign new columns to a DataFrame.
 
         Return a new object with all original columns in addition to new ones.
         Existing columns that are re-assigned will be overwritten.
@@ -4879,8 +4805,7 @@ class DataFrame(UserDict):
 
 
 def intx(a, b):
-    """
-    Find all the rows that are in both dataframes.
+    """Find all the rows that are in both dataframes.
 
     Columns should be in identical order.
 
@@ -4934,8 +4859,7 @@ def intx(a, b):
 
 
 def intersect(a, b, positions=True, unique=False):
-    """
-    Find the intersection of two arkouda arrays.
+    """Find the intersection of two arkouda arrays.
 
     This function can be especially useful when `positions=True` so
     that the caller gets the indices of values present in both arrays.
@@ -5074,8 +4998,7 @@ def intersect(a, b, positions=True, unique=False):
 
 
 def invert_permutation(perm):
-    """
-    Find the inverse of a permutation array.
+    """Find the inverse of a permutation array.
 
     Parameters
     ----------
@@ -5117,8 +5040,7 @@ def _inner_join_merge(
     right_suffix: str = "_y",
     sort: bool = True,
 ) -> DataFrame:
-    """
-    Return a DataFrame object containing only rows that are in both the left and right Dataframes.
+    """Return a DataFrame object containing only rows that are in both the left and right Dataframes.
 
     Rows must match based on the "left_on" and "right_on" parameters, as well as their associated values.
 
@@ -5206,8 +5128,7 @@ def _right_join_merge(
     sort: bool = True,
     actually_left_join: bool = False,
 ) -> DataFrame:
-    """
-    Perform a right‐join merge of two DataFrames.
+    """Perform a right‐join merge of two DataFrames.
 
     This internal helper returns a new DataFrame containing all rows from
     `right`, combined with matching rows from `left` based on the key column(s)
@@ -5311,8 +5232,7 @@ def _outer_join_merge(
     convert_ints: bool = True,
     sort: bool = True,
 ) -> DataFrame:
-    """
-    Return a DataFrame object containing all the rows in each DataFrame.
+    """Return a DataFrame object containing all the rows in each DataFrame.
 
     Rows must match based on the `left_on` and `right_on` parameters, and all of their associated values.
 
@@ -5462,8 +5382,7 @@ def merge(
     convert_ints: bool = True,
     sort: bool = True,
 ) -> DataFrame:
-    r"""
-    Merge Arkouda DataFrames with a database-style join.
+    r"""Merge Arkouda DataFrames with a database-style join.
 
     The resulting dataframe contains rows from both DataFrames as specified by
     the merge condition (based on the "how" and "on" parameters).

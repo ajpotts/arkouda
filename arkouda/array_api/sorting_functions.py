@@ -13,8 +13,7 @@ __all__ = [
 
 
 def argsort(x: Array, /, *, axis: int = -1, descending: bool = False, stable: bool = True) -> Array:
-    """
-    Return the indices that sort an array along a specified axis.
+    """Return the indices that sort an array along a specified axis.
 
     Parameters
     ----------
@@ -39,8 +38,7 @@ def argsort(x: Array, /, *, axis: int = -1, descending: bool = False, stable: bo
 
 
 def sort(x: Array, /, *, axis: int = -1, descending: bool = False, stable: bool = True) -> Array:
-    """
-    Return a sorted copy of an array along a specified axis.
+    """Return a sorted copy of an array along a specified axis.
 
     Parameters
     ----------
@@ -53,6 +51,7 @@ def sort(x: Array, /, *, axis: int = -1, descending: bool = False, stable: bool 
     stable : bool, optional
         Whether to use a stable sorting algorithm. Note: arkouda's sorting algorithm is always stable so
         this argument is ignored.
+
     """
     if x.dtype not in _real_numeric_dtypes:
         raise TypeError("Only real numeric dtypes are allowed in sort")

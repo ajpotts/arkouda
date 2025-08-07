@@ -53,8 +53,7 @@ CMD_TO_NDARRAY = "segStr-tondarray"
 
 
 class Strings:
-    """
-    Represents an array of strings whose data resides on the
+    """Represents an array of strings whose data resides on the
     arkouda server. The user should not call this class directly;
     rather its instances are created by other arkouda functions.
 
@@ -83,6 +82,7 @@ class Strings:
     Strings is composed of two pdarrays: (1) offsets, which contains the
     starting indices for each string and (2) bytes, which contains the
     raw bytes of all strings, delimited by nulls.
+
     """
 
     entry: pdarray
@@ -97,8 +97,7 @@ class Strings:
 
     @staticmethod
     def from_return_msg(rep_msg: str) -> Strings:
-        """
-        Create a Strings object from an Arkouda server response message.
+        """Create a Strings object from an Arkouda server response message.
 
         Parse the server’s response descriptor and construct a `Strings` array
         with its underlying pdarray and total byte size.
@@ -135,6 +134,7 @@ class Strings:
         >>> s = ak.Strings.from_return_msg(rep_msg)
         >>> isinstance(s, ak.Strings)
         True
+
         """
         left, right = cast(str, rep_msg).split("+")
         try:
@@ -145,8 +145,7 @@ class Strings:
 
     @staticmethod
     def from_parts(offset_attrib: Union[pdarray, str], bytes_attrib: Union[pdarray, str]) -> Strings:
-        """
-        Assemble a Strings object from separate offset and bytes arrays.
+        """Assemble a Strings object from separate offset and bytes arrays.
 
         This factory method constructs a segmented `Strings` array by sending two
         separate components—offsets and values—to the Arkouda server and instructing
@@ -204,8 +203,7 @@ class Strings:
         return Strings.from_return_msg(response)
 
     def __init__(self, strings_pdarray: pdarray, bytes_size: int_scalars) -> None:
-        """
-        Initialize the Strings instance by setting all instance
+        """Initialize the Strings instance by setting all instance
         attributes, some of which are derived from the array parameters.
 
         Parameters
@@ -223,6 +221,7 @@ class Strings:
         ValueError
             Raised if there's an error in generating instance attributes
             from either the offset_attrib or bytes_attrib parameter
+
         """
         self.entry: pdarray = strings_pdarray
         self.registered_name: Optional[str] = None
@@ -273,8 +272,7 @@ class Strings:
 
     @typechecked
     def _binop(self, other: Union[Strings, str_scalars], op: str) -> pdarray:
-        """
-        Execute the requested binop on this Strings instance and the
+        """Execute the requested binop on this Strings instance and the
         parameter Strings object and returns the results within
         a pdarray object.
 
@@ -299,6 +297,7 @@ class Strings:
         RuntimeError
             Raised if a server-side error is thrown while executing the
             binary operation
+
         """
         from arkouda.client import generic_msg
 
@@ -411,26 +410,22 @@ class Strings:
 
     @property
     def dtype(self) -> npdtype:
-        """
-        Return the dtype object of the underlying data.
-        """
+        """Return the dtype object of the underlying data."""
         return npdtype("<U")
 
     @property
     def inferred_type(self) -> str:
-        """
-        Return a string of the type inferred from the values.
-        """
+        """Return a string of the type inferred from the values."""
         return "string"
 
     def copy(self) -> Strings:
-        """
-        Return a deep copy of the Strings object.
+        """Return a deep copy of the Strings object.
 
         Returns
         -------
         Strings
             A deep copy of the Strings.
+
         """
         from arkouda.pdarraycreation import array
 
@@ -441,8 +436,7 @@ class Strings:
             raise RuntimeError("Could not copy Strings object.")
 
     def equals(self, other) -> bool_scalars:
-        """
-        Whether Strings are the same size and all entries are equal.
+        """Whether Strings are the same size and all entries are equal.
 
         Parameters
         ----------
@@ -464,6 +458,7 @@ class Strings:
         >>> s2 = ak.array(["a", "x", "c"])
         >>> s.equals(s2)
         np.False_
+
         """
         if isinstance(other, Strings):
             if other.size != self.size:
@@ -475,8 +470,7 @@ class Strings:
         return False
 
     def get_lengths(self) -> pdarray:
-        """
-        Return the length of each string in the array.
+        """Return the length of each string in the array.
 
         Returns
         -------
@@ -487,6 +481,7 @@ class Strings:
         ------
         RuntimeError
             Raised if there is a server-side error thrown
+
         """
         from arkouda.client import generic_msg
 
@@ -495,20 +490,20 @@ class Strings:
         )
 
     def get_bytes(self) -> pdarray:
-        """
-        Getter for the bytes component (uint8 pdarray) of this Strings.
+        """Getter for the bytes component (uint8 pdarray) of this Strings.
 
         Returns
         -------
         pdarray
             Pdarray of bytes of the string accessed
 
-        Example
+        Example:
         -------
         >>> import arkouda as ak
         >>> x = ak.array(['one', 'two', 'three'])
         >>> x.get_bytes()
         array([111 110 101 0 116 119 111 0 116 104 114 101 101 0])
+
         """
         from arkouda.client import generic_msg
 
@@ -523,20 +518,20 @@ class Strings:
         return self._bytes
 
     def get_offsets(self) -> pdarray:
-        """
-        Getter for the offsets component (int64 pdarray) of this Strings.
+        """Getter for the offsets component (int64 pdarray) of this Strings.
 
         Returns
         -------
         pdarray
             Pdarray of offsets of the string accessed
 
-        Example
+        Example:
         -------
         >>> import arkouda as ak
         >>> x = ak.array(['one', 'two', 'three'])
         >>> x.get_offsets()
         array([0 4 8])
+
         """
         from arkouda.client import generic_msg
 
@@ -572,6 +567,7 @@ class Strings:
         ------
         RuntimeError
             Raised if there is a server-side error thrown
+
         """
         from arkouda.client import generic_msg
 
@@ -631,6 +627,7 @@ class Strings:
         ------
         RuntimeError
             Raised if there is a server-side error thrown
+
         """
         return self.encode(toEncoding, fromEncoding)
 
@@ -663,6 +660,7 @@ class Strings:
         array(['StrINgS 0', 'StrINgS 1', 'StrINgS 2', 'StrINgS 3', 'StrINgS 4'])
         >>> strings.lower()
         array(['strings 0', 'strings 1', 'strings 2', 'strings 3', 'strings 4'])
+
         """
         from arkouda.client import generic_msg
 
@@ -700,6 +698,7 @@ class Strings:
         array(['StrINgS 0', 'StrINgS 1', 'StrINgS 2', 'StrINgS 3', 'StrINgS 4'])
         >>> strings.upper()
         array(['STRINGS 0', 'STRINGS 1', 'STRINGS 2', 'STRINGS 3', 'STRINGS 4'])
+
         """
         from arkouda.client import generic_msg
 
@@ -710,8 +709,7 @@ class Strings:
 
     @typechecked
     def title(self) -> Strings:
-        """
-        Return a new Strings from the original replaced with their titlecase equivalent.
+        """Return a new Strings from the original replaced with their titlecase equivalent.
 
         Returns
         -------
@@ -736,6 +734,7 @@ class Strings:
         array(['StrINgS 0', 'StrINgS 1', 'StrINgS 2', 'StrINgS 3', 'StrINgS 4'])
         >>> strings.title()
         array(['Strings 0', 'Strings 1', 'Strings 2', 'Strings 3', 'Strings 4'])
+
         """
         from arkouda.client import generic_msg
 
@@ -746,8 +745,7 @@ class Strings:
 
     @typechecked
     def isdecimal(self) -> pdarray:
-        """
-        Return a boolean pdarray where index i indicates whether string i of the
+        """Return a boolean pdarray where index i indicates whether string i of the
         Strings has all decimal characters.
 
         Returns
@@ -782,6 +780,7 @@ class Strings:
         array(['3.14', '0', '²', '2³₇', '2³x₇'])
         >>> special_strings.isdecimal()
         array([False True False False False])
+
         """
         from arkouda.client import generic_msg
 
@@ -794,8 +793,7 @@ class Strings:
 
     @typechecked
     def isnumeric(self) -> pdarray:
-        """
-        Return a boolean pdarray where index i indicates whether string i of the
+        """Return a boolean pdarray where index i indicates whether string i of the
         Strings has all numeric characters. There are 1922 unicode characters that
         qualify as numeric, including the digits 0 through 9, superscripts and
         subscripted digits, special characters with the digits encircled or
@@ -833,6 +831,7 @@ class Strings:
         array(['3.14', '0', '²', '2³₇', '2³x₇'])
         >>> special_strings.isnumeric()
         array([False True True True False])
+
         """
         from arkouda.client import generic_msg
 
@@ -845,8 +844,7 @@ class Strings:
 
     @typechecked
     def capitalize(self) -> Strings:
-        """
-        Return a new Strings from the original replaced with the first letter capitilzed
+        """Return a new Strings from the original replaced with the first letter capitilzed
         and the remaining letters lowercase.
 
         Returns
@@ -875,6 +873,7 @@ class Strings:
         >>> strings.title()
         array(['Strings Are Here 0', 'Strings Are Here 1', 'Strings Are Here 2', \
 'Strings Are Here 3', 'Strings Are Here 4'])
+
         """
         from arkouda.client import generic_msg
 
@@ -913,6 +912,7 @@ class Strings:
         array(['strings 0', 'strings 1', 'strings 2', 'STRINGS 0', 'STRINGS 1', 'STRINGS 2'])
         >>> strings.islower()
         array([True True True False False False])
+
         """
         from arkouda.client import generic_msg
 
@@ -952,6 +952,7 @@ class Strings:
         array(['strings 0', 'strings 1', 'strings 2', 'STRINGS 0', 'STRINGS 1', 'STRINGS 2'])
         >>> strings.isupper()
         array([False False False True True True])
+
         """
         from arkouda.client import generic_msg
 
@@ -992,6 +993,7 @@ class Strings:
         array(['sTrINgs 0', 'sTrINgs 1', 'sTrINgs 2', 'Strings 0', 'Strings 1', 'Strings 2'])
         >>> strings.istitle()
         array([False False False True True True])
+
         """
         from arkouda.client import generic_msg
 
@@ -1003,8 +1005,7 @@ class Strings:
 
     @typechecked
     def isalnum(self) -> pdarray:
-        """
-        Return a boolean pdarray where index i indicates whether string i of the
+        """Return a boolean pdarray where index i indicates whether string i of the
         Strings is alphanumeric.
 
         Returns
@@ -1033,6 +1034,7 @@ class Strings:
         array(['%Strings 0', '%Strings 1', '%Strings 2', 'Strings0', 'Strings1', 'Strings2'])
         >>> strings.isalnum()
         array([False False False True True True])
+
         """
         from arkouda.client import generic_msg
 
@@ -1044,8 +1046,7 @@ class Strings:
 
     @typechecked
     def isalpha(self) -> pdarray:
-        """
-        Return a boolean pdarray where index i indicates whether string i of the
+        """Return a boolean pdarray where index i indicates whether string i of the
         Strings is alphabetic.  This means there is at least one character,
         and all the characters are alphabetic.
 
@@ -1076,6 +1077,7 @@ class Strings:
         array(['%Strings 0', '%Strings 1', '%Strings 2', 'StringA', 'StringB', 'StringC'])
         >>> strings.isalpha()
         array([False False False True True True])
+
         """
         from arkouda.client import generic_msg
 
@@ -1087,8 +1089,7 @@ class Strings:
 
     @typechecked
     def isdigit(self) -> pdarray:
-        """
-        Return a boolean pdarray where index i indicates whether string i of the
+        """Return a boolean pdarray where index i indicates whether string i of the
         Strings has all digit characters.
 
         Returns
@@ -1125,6 +1126,7 @@ class Strings:
         array(['3.14', '0', '²', '2³₇', '2³x₇'])
         >>> special_strings.isdigit()
         array([False True True True False])
+
         """
         from arkouda.client import generic_msg
 
@@ -1136,8 +1138,7 @@ class Strings:
 
     @typechecked
     def isempty(self) -> pdarray:
-        """
-        Return a boolean pdarray where index i indicates whether string i of the
+        """Return a boolean pdarray where index i indicates whether string i of the
         Strings is empty.
 
 
@@ -1169,6 +1170,7 @@ class Strings:
         array(['Strings 0', 'Strings 1', 'Strings 2', '', '', ''])
         >>> strings.isempty()
         array([False False False True True True])
+
         """
         from arkouda.client import generic_msg
 
@@ -1223,8 +1225,7 @@ class Strings:
 
     @typechecked
     def strip(self, chars: Optional[Union[bytes, str_scalars]] = "") -> Strings:
-        """
-        Return a new Strings object with all leading and trailing occurrences of characters contained
+        """Return a new Strings object with all leading and trailing occurrences of characters contained
         in chars removed. The chars argument is a string specifying the set of characters to be removed.
         If omitted, the chars argument defaults to removing whitespace. The chars argument is not a
         prefix or suffix; rather, all combinations of its values are stripped.
@@ -1257,6 +1258,7 @@ class Strings:
         >>> s = strings.strip(' 12')
         >>> s
         array(['Strings', 'StringS', 'StringS'])
+
         """
         from arkouda.client import generic_msg
 
@@ -1271,14 +1273,13 @@ class Strings:
     def cached_regex_patterns(self) -> List:
         """
         Returns the regex patterns for which Match objects have been cached.
+
         """
         return list(self._regex_dict.keys())
 
     @typechecked
     def purge_cached_regex_patterns(self) -> None:
-        """
-        Purges cached regex patterns.
-        """
+        """Purges cached regex patterns."""
         self._regex_dict = dict()
 
     def _empty_pattern_verification(self, pattern):
@@ -1290,9 +1291,7 @@ class Strings:
             )
 
     def _get_matcher(self, pattern: Union[bytes, str_scalars], create: bool = True):
-        """
-        Internal function to fetch cached Matcher objects.
-        """
+        """Internal function to fetch cached Matcher objects."""
         from arkouda.pandas.matcher import Matcher
 
         if isinstance(pattern, bytes):
@@ -1355,6 +1354,7 @@ class Strings:
         array([0 9 0 9 0 9 0 9 0 9])
         >>> lens
         array([1 1 1 1 1 1 1 1 1 1])
+
         """
         matcher = self._get_matcher(pattern)
         matcher.find_locations()
@@ -1384,6 +1384,7 @@ class Strings:
         >>> strings.search('_+')
         <ak.Match object: matched=True, span=(1, 2); matched=True, span=(0, 4);
         matched=False; matched=True, span=(0, 2); matched=False>
+
         """
         return self._get_matcher(pattern).get_match(MatchType.SEARCH, self)
 
@@ -1411,6 +1412,7 @@ class Strings:
         >>> strings.match('_+')
         <ak.Match object: matched=False; matched=True, span=(0, 4); matched=False;
         matched=True, span=(0, 2); matched=False>
+
         """
         return self._get_matcher(pattern).get_match(MatchType.MATCH, self)
 
@@ -1438,6 +1440,7 @@ class Strings:
         >>> strings.fullmatch('_+')
         <ak.Match object: matched=False; matched=True, span=(0, 4); matched=False;
         matched=False; matched=False>
+
         """
         return self._get_matcher(pattern).get_match(MatchType.FULLMATCH, self)
 
@@ -1476,6 +1479,7 @@ class Strings:
         >>> strings = ak.array(['1_2___', '____', '3', '__4___5____6___7', ''])
         >>> strings.regex_split('_+', maxsplit=2, return_segments=True)
         (array(['1', '2', '', '', '', '3', '', '4', '5____6___7', '']), array([0 3 5 6 9]))
+
         """
         return self._get_matcher(pattern).split(maxsplit, return_segments)
 
@@ -1529,8 +1533,7 @@ class Strings:
     def sub(
         self, pattern: Union[bytes, str_scalars], repl: Union[bytes, str_scalars], count: int = 0
     ) -> Strings:
-        """
-        Return new Strings obtained by replacing non-overlapping occurrences of pattern with the
+        """Return new Strings obtained by replacing non-overlapping occurrences of pattern with the
         replacement repl.
 
         If count is nonzero, at most count substitutions occur.
@@ -1843,6 +1846,7 @@ class Strings:
         array(['one', 'two', 'three', 'four', 'five', 'six'])
         >>> under_map
         array([0 2 5])
+
         """
         from arkouda.client import generic_msg
 
@@ -1883,8 +1887,7 @@ class Strings:
         fromRight: bool = False,
         regex: bool = False,
     ) -> Tuple[Strings, Strings]:
-        """
-        Peel off one or more delimited fields from each string (similar
+        """Peel off one or more delimited fields from each string (similar
         to string.partition), returning two new arrays of strings.
         *Warning*: This function is experimental and not guaranteed to work.
 
@@ -1947,6 +1950,7 @@ class Strings:
         (array(['', '', 'e.f']), array(['a.b', 'c.d', 'g']))
         >>> s.peel('.', times=2, keepPartial=True)
         (array(['a.b', 'c.d', 'e.f']), array(['', '', 'g']))
+
         """
         from arkouda.client import generic_msg
 
@@ -1992,8 +1996,7 @@ class Strings:
         keepPartial: bool = False,
         regex: bool = False,
     ) -> Tuple[Strings, Strings]:
-        """
-        Peel off one or more delimited fields from the end of each string
+        """Peel off one or more delimited fields from the end of each string
         (similar to string.rpartition), returning two new arrays of strings.
         *Warning*: This function is experimental and not guaranteed to work.
 
@@ -2050,6 +2053,7 @@ class Strings:
 
         >>> s.peel('.')
         (array(['a', 'c', 'e']), array(['b', 'd', 'f.g']))
+
         """
         return self.peel(
             delimiter,
@@ -2064,8 +2068,7 @@ class Strings:
     def stick(
         self, other: Strings, delimiter: Union[bytes, str_scalars] = "", toLeft: bool = False
     ) -> Strings:
-        """
-        Join the strings from another array onto one end of the strings
+        """Join the strings from another array onto one end of the strings
         of this array, optionally inserting a delimiter.
         *Warning*: This function is experimental and not guaranteed to work.
 
@@ -2105,6 +2108,7 @@ class Strings:
         >>> t = ak.array(['b', 'd', 'f'])
         >>> s.stick(t, delimiter='.')
         array(['a.b', 'c.d', 'e.f'])
+
         """
         from arkouda.client import generic_msg
 
@@ -2128,8 +2132,7 @@ class Strings:
         return self.stick(other)
 
     def lstick(self, other: Strings, delimiter: Union[bytes, str_scalars] = "") -> Strings:
-        """
-        Join the strings from another array onto the left of the strings
+        """Join the strings from another array onto the left of the strings
         of this array, optionally inserting a delimiter.
         *Warning*: This function is experimental and not guaranteed to work.
 
@@ -2165,6 +2168,7 @@ class Strings:
         >>> t = ak.array(['b', 'd', 'f'])
         >>> s.lstick(t, delimiter='.')
         array(['b.a', 'd.c', 'f.e'])
+
         """
         return self.stick(other, delimiter=delimiter, toLeft=True)
 
@@ -2198,6 +2202,7 @@ class Strings:
             origin_indices : pdarray, bool
                 Boolean array that is True where the string was long enough to return
                 an n-character prefix, False otherwise.
+
         """
         from arkouda.client import generic_msg
 
@@ -2250,6 +2255,7 @@ class Strings:
             origin_indices : pdarray, bool
                 Boolean array that is True where the string was long enough to return
                 an n-character suffix, False otherwise.
+
         """
         from arkouda.client import generic_msg
 
@@ -2276,8 +2282,7 @@ class Strings:
             return Strings.from_return_msg(repMsg)
 
     def hash(self) -> Tuple[pdarray, pdarray]:
-        """
-        Compute a 128-bit hash of each string.
+        """Compute a 128-bit hash of each string.
 
         Returns
         -------
@@ -2291,6 +2296,7 @@ class Strings:
         by Python for dictionaries and sets). For realistic numbers of strings (up
         to about 10**15), the probability of a collision between two 128-bit hash
         values is negligible.
+
         """
         from arkouda.client import generic_msg
 
@@ -2300,8 +2306,7 @@ class Strings:
         return create_pdarray(h1), create_pdarray(h2)
 
     def group(self) -> pdarray:
-        """
-        Return the permutation that groups the array, placing equivalent
+        """Return the permutation that groups the array, placing equivalent
         strings together. All instances of the same string are guaranteed to lie
         in one contiguous block of the permuted array, but the blocks are not
         necessarily ordered.
@@ -2328,6 +2333,7 @@ class Strings:
         RuntimeError
             Raised if there is a server-side error in executing group request or
             creating the pdarray encapsulating the return message
+
         """
         from arkouda.client import generic_msg
 
@@ -2336,8 +2342,7 @@ class Strings:
         )
 
     def _get_grouping_keys(self) -> List[Strings]:
-        """
-        Private method for generating grouping keys used by GroupBy.
+        """Private method for generating grouping keys used by GroupBy.
 
         API: this method must be defined by all groupable arrays, and it
         must return a list of arrays that can be (co)argsorted.
@@ -2345,23 +2350,22 @@ class Strings:
         return [self]
 
     def flatten(self) -> Strings:
-        """
-        Return a copy of the array collapsed into one dimension.
+        """Return a copy of the array collapsed into one dimension.
 
         Returns
         -------
         A copy of the input array, flattened to one dimension.
 
-        Note
+        Note:
         ----
         As multidimensional Strings are currently supported,
         flatten on a Strings object will always return itself.
+
         """
         return self
 
     def to_ndarray(self) -> np.ndarray:
-        """
-        Convert the array to a np.ndarray, transferring array data from the
+        """Convert the array to a np.ndarray, transferring array data from the
         arkouda server to Python. If the array exceeds a built-in size limit,
         a RuntimeError is raised.
 
@@ -2393,6 +2397,7 @@ class Strings:
         array(['hello', 'my', 'world'], dtype='<U5')
         >>> type(a.to_ndarray())
         <class 'numpy.ndarray'>
+
         """
         # Get offsets and append total bytes for length calculation
         npoffsets = np.hstack((self._comp_to_ndarray("offsets"), np.array([self.nbytes])))
@@ -2409,8 +2414,7 @@ class Strings:
         return res
 
     def tolist(self) -> List[str]:
-        """
-        Convert the SegString to a list, transferring data from the
+        """Convert the SegString to a list, transferring data from the
         arkouda server to Python. If the SegString exceeds a built-in size limit,
         a RuntimeError is raised.
 
@@ -2441,6 +2445,7 @@ class Strings:
         ['hello', 'my', 'world']
         >>> type(a.tolist())
         <class 'list'>
+
         """
         return cast(List[str], self.to_ndarray().tolist())
 
@@ -2474,6 +2479,7 @@ class Strings:
         distributed system with much more memory than the client. The user
         may override this limit by setting client.maxTransferBytes to a larger
         value, but proceed with caution.
+
         """
         from arkouda.client import generic_msg, maxTransferBytes
 
@@ -2528,6 +2534,7 @@ class Strings:
         Notes
         -----
         This is essentially shorthand for ak.cast(x, '<dtype>') where x is a pdarray.
+
         """
         from arkouda.numpy import cast as akcast
 
@@ -2540,8 +2547,7 @@ class Strings:
         mode: Literal["truncate", "append"] = "truncate",
         compression: Optional[Literal["snappy", "gzip", "brotli", "zstd", "lz4"]] = None,
     ) -> str:
-        """
-        Save the Strings object to Parquet. The result is a collection of files,
+        """Save the Strings object to Parquet. The result is a collection of files,
         one file per locale of the arkouda server, where each filename starts
         with prefix_path. Each locale saves its chunk of the array to its
         corresponding file.
@@ -2581,6 +2587,7 @@ class Strings:
         dataset with the same name already exists, a ``RuntimeError`` will result.
         - Any file extension can be used.The file I/O does not rely on the extension to
         determine the file format.
+
         """
         from arkouda.client import generic_msg
         from arkouda.pandas.io import _mode_str_to_int
@@ -2609,8 +2616,7 @@ class Strings:
         save_offsets: bool = True,
         file_type: Literal["single", "distribute"] = "distribute",
     ) -> str:
-        """
-        Save the Strings object to HDF5.
+        """Save the Strings object to HDF5.
         The object can be saved to a collection of files or single file.
 
         Parameters
@@ -2663,6 +2669,7 @@ class Strings:
         See Also
         --------
         to_hdf
+
         """
         from arkouda.client import generic_msg
         from arkouda.pandas.io import _file_type_to_int, _mode_str_to_int
@@ -2728,6 +2735,7 @@ class Strings:
         - If file does not contain File_Format attribute to indicate how it was saved,
           the file name is checked for _LOCALE#### to determine if it is distributed.
         - If the dataset provided does not exist, it will be added
+
         """
         from arkouda.client import generic_msg
         from arkouda.pandas.io import (
@@ -2770,6 +2778,7 @@ class Strings:
     ) -> str:
         r"""
         Write Strings to CSV file(s). File will contain a single column with the Strings data.
+
         All CSV Files written by Arkouda include a header denoting data types of the columns.
         Unlike other file formats, CSV files store Strings as their UTF-8 format instead of storing
         bytes as uint(8).
@@ -2811,6 +2820,7 @@ class Strings:
         - The column delimiter is expected to be the same for column names and data
         - Be sure that column delimiters are not found within your data.
         - All CSV files must delimit rows using newline (``\\n``) at this time.
+
         """
         from arkouda.client import generic_msg
 
@@ -2839,6 +2849,7 @@ class Strings:
         -------
         List[str]
             List of all component names
+
         """
         return list(itertools.chain.from_iterable([self.entry._list_component_names()]))
 
@@ -2850,6 +2861,7 @@ class Strings:
         -------
         str
             JSON string containing information about all components of self
+
         """
         return information(self._list_component_names())
 
@@ -2955,6 +2967,7 @@ class Strings:
         ------
         RuntimeError
             Raised if there's a server-side error thrown
+
         """
         from arkouda.numpy.util import is_registered
 
@@ -2964,8 +2977,7 @@ class Strings:
             return np.bool_(is_registered(self.registered_name))
 
     def transfer(self, hostname: str, port: int_scalars) -> Union[str, memoryview]:
-        """
-        Send a Strings object to a different Arkouda server.
+        """Send a Strings object to a different Arkouda server.
 
         Parameters
         ----------
@@ -2997,6 +3009,7 @@ class Strings:
         TypeError
             Raised if other is not a pdarray or the pdarray.dtype is not
             a supported dtype
+
         """
         from arkouda.client import generic_msg
 
@@ -3008,8 +3021,7 @@ class Strings:
 
     @staticmethod
     def concatenate_uniquely(strings: List[Strings]) -> Strings:
-        """
-        Concatenates a list of Strings into a single Strings object
+        """Concatenates a list of Strings into a single Strings object
         containing only unique strings. Order may not be preserved.
 
         Parameters
@@ -3021,6 +3033,7 @@ class Strings:
         -------
         Strings
             A new Strings object containing the unique values.
+
         """
         from arkouda.client import generic_msg
 
@@ -3045,8 +3058,7 @@ class Strings:
         algorithm: SortingAlgorithm = SortingAlgorithm.RadixSortLSD,
         ascending: bool = True,
     ) -> pdarray:
-        """
-        Return the permutation that sorts the Strings.
+        """Return the permutation that sorts the Strings.
 
         Parameters
         ----------

@@ -1,5 +1,4 @@
-"""
-File and directory utility functions for Arkouda's pandas module.
+"""File and directory utility functions for Arkouda's pandas module.
 
 This module provides a set of helper functions for performing common I/O operations
 needed during data processing, configuration, and metadata management. It includes
@@ -53,8 +52,7 @@ __all__ = [
 
 
 def get_directory(path: str) -> Path:
-    """
-    Create the directory if it does not exist and returns the corresponding Path object.
+    """Create the directory if it does not exist and returns the corresponding Path object.
 
     Parameters
     ----------
@@ -81,8 +79,7 @@ def get_directory(path: str) -> Path:
 
 
 def write_line_to_file(path: str, line: str) -> None:
-    """
-    Write a line to the requested file.
+    """Write a line to the requested file.
 
     Note: if the file
     does not exist, the file is created first and then
@@ -107,8 +104,7 @@ def write_line_to_file(path: str, line: str) -> None:
 
 
 def delimited_file_to_dict(path: str, delimiter: str = ",") -> Dict[str, str]:
-    """
-    Return a dictionary populated by lines from a file.
+    """Return a dictionary populated by lines from a file.
 
     Return a dictionary populated by lines from a file where
     the first delimited element of each line is the key and
@@ -151,8 +147,7 @@ def delimited_file_to_dict(path: str, delimiter: str = ",") -> Dict[str, str]:
 
 
 def dict_to_delimited_file(path: str, values: Mapping[Any, Any], delimiter: str = ",") -> None:
-    """
-    Write a dictionary to delimited lines in a file.
+    """Write a dictionary to delimited lines in a file.
 
     Write a dictionary to delimited lines in a file where
     the first delimited element of each line is the dict key
@@ -163,7 +158,7 @@ def dict_to_delimited_file(path: str, values: Mapping[Any, Any], delimiter: str 
     ----------
     path : str
         Path to the file
-    delimiter
+    delimiter : str
         Delimiter separating key and value
 
     Raises
@@ -184,8 +179,7 @@ def dict_to_delimited_file(path: str, values: Mapping[Any, Any], delimiter: str 
 
 
 def delete_directory(dir: str) -> None:
-    """
-    Delete the directory if it exists.
+    """Delete the directory if it exists.
 
     Parameters
     ----------
@@ -206,8 +200,7 @@ def delete_directory(dir: str) -> None:
 
 
 def directory_exists(dir: str) -> bool:
-    """
-    Return True if the directory exists.
+    """Return True if the directory exists.
 
     Parameters
     ----------

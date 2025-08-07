@@ -51,8 +51,7 @@ def assert_almost_equal(
     atol: float = 1.0e-8,
     **kwargs,
 ) -> None:
-    """
-    Check that the left and right objects are approximately equal.
+    """Check that the left and right objects are approximately equal.
 
     By approximately equal, we refer to objects that are numbers or that
     contain numbers which may be equivalent to specific levels of precision.
@@ -1016,8 +1015,7 @@ def assert_frame_equal(
     atol: float = 1.0e-8,
     obj: str = "DataFrame",
 ) -> None:
-    """
-    Check that left and right DataFrame are equal.
+    """Check that left and right DataFrame are equal.
 
     This function is intended to compare two DataFrames and output any
     differences. It is mostly intended for use in unit tests.

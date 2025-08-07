@@ -1,5 +1,4 @@
-"""
-Element-wise function application for Arkouda arrays.
+"""Element-wise function application for Arkouda arrays.
 
 The `arkouda.apply` module provides functionality for applying user-defined Python
 functions to Arkouda `pdarray` objects in an element-wise fashion. This includes support
@@ -77,8 +76,7 @@ def apply(
     func: Union[Callable, str],
     result_dtype: Optional[Union[np.dtype, str]] = None,
 ) -> pdarray:
-    """
-    Apply a python function to a pdarray.
+    """Apply a python function to a pdarray.
 
     The function should take one argument
     and return a new value. The function will then be called on each element in

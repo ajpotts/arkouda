@@ -1,5 +1,4 @@
-"""
-Security and user identity utilities for Arkouda clients.
+"""Security and user identity utilities for Arkouda clients.
 
 The `arkouda.security` module provides functionality for managing access credentials,
 user identity, and secure client-side metadata used in communicating with the Arkouda server.
@@ -80,8 +79,7 @@ username_tokenizer["Darwin"] = lambda x: x.split("/")
 
 @typechecked
 def generate_token(length: int = 32) -> str:
-    """
-    Use the secrets.token_hex() method to generate a hexidecimal token.
+    """Use the secrets.token_hex() method to generate a hexidecimal token.
 
     Parameters
     ----------
@@ -102,8 +100,7 @@ def generate_token(length: int = 32) -> str:
 
 
 def get_home_directory() -> str:
-    """
-    Find a path to the current user's home directory in a platform-independent manner.
+    """Find a path to the current user's home directory in a platform-independent manner.
 
     Returns
     -------
@@ -120,8 +117,7 @@ def get_home_directory() -> str:
 
 
 def get_arkouda_client_directory() -> Path:
-    """
-    Find a path to the current user's .arkouda directory.
+    """Find a path to the current user's .arkouda directory.
 
     Artifacts such as server access tokens are stored in a platform-independent manner
     in the .arkouda directory.
@@ -147,8 +143,7 @@ def get_arkouda_client_directory() -> Path:
 
 
 def get_username() -> str:
-    """
-    Retrieve the current user's username for the host system in a platform-independent manner.
+    """Retrieve the current user's username for the host system in a platform-independent manner.
 
     Returns
     -------
@@ -175,8 +170,7 @@ def get_username() -> str:
 
 @typechecked
 def generate_username_token_json(token: str) -> str:
-    """
-    Generate a JSON object encapsulating the user's username and token.
+    """Generate a JSON object encapsulating the user's username and token.
 
     These credentials are for connecting to an arkouda server with basic
     authentication enabled.

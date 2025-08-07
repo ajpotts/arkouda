@@ -1,5 +1,4 @@
-"""
-Communication diagnostics and instrumentation utilities for Arkouda.
+"""Communication diagnostics and instrumentation utilities for Arkouda.
 
 This module provides tools to collect, reset, and report Chapel communication statistics
 used in Arkouda operations. It is useful for profiling and debugging distributed communication
@@ -123,8 +122,7 @@ __all__ = [
 
 
 def start_comm_diagnostics():
-    """
-    Start counting communication operations across the whole program.
+    """Start counting communication operations across the whole program.
 
     Returns
     -------
@@ -142,8 +140,7 @@ def start_comm_diagnostics():
 
 
 def stop_comm_diagnostics():
-    """
-    Stop counting communication operations across the whole program.
+    """Stop counting communication operations across the whole program.
 
     Returns
     -------
@@ -161,8 +158,7 @@ def stop_comm_diagnostics():
 
 
 def reset_comm_diagnostics():
-    """
-    Reset aggregate communication counts across the whole program.
+    """Reset aggregate communication counts across the whole program.
 
     Returns
     -------
@@ -180,8 +176,7 @@ def reset_comm_diagnostics():
 
 
 def print_comm_diagnostics_table(print_empty_columns=False):
-    """
-    Print the current communication counts in a markdown table.
+    """Print the current communication counts in a markdown table.
 
     Uses a row per locale and a column per operation.
     By default, operations for which all locales have a count of zero are not displayed in the table,
@@ -219,10 +214,9 @@ def print_comm_diagnostics_table(print_empty_columns=False):
 
 
 def start_verbose_comm():
-    """
-    Start on-the-fly reporting of communication initiated on any locale.
+    """Start on-the-fly reporting of communication initiated on any locale.
 
-    Note
+    Note:
     ----
     Reporting will only be printed to the chapel logs.
 
@@ -242,8 +236,7 @@ def start_verbose_comm():
 
 
 def stop_verbose_comm():
-    """
-    Stop on-the-fly reporting of communication initiated on any locale.
+    """Stop on-the-fly reporting of communication initiated on any locale.
 
     Returns
     -------
@@ -261,8 +254,7 @@ def stop_verbose_comm():
 
 
 def get_comm_diagnostics_put():
-    """
-    Return blocking puts, in which initiator waits for completion.
+    """Return blocking puts, in which initiator waits for completion.
 
     Returns
     -------
@@ -281,8 +273,7 @@ def get_comm_diagnostics_put():
 
 
 def get_comm_diagnostics_get():
-    """
-    Return blocking gets, in which initiator waits for completion.
+    """Return blocking gets, in which initiator waits for completion.
 
     Returns
     -------
@@ -301,8 +292,7 @@ def get_comm_diagnostics_get():
 
 
 def get_comm_diagnostics_put_nb():
-    """
-    Return non-blocking puts.
+    """Return non-blocking puts.
 
     Returns
     -------
@@ -321,8 +311,7 @@ def get_comm_diagnostics_put_nb():
 
 
 def get_comm_diagnostics_get_nb():
-    """
-    Return non-blocking gets.
+    """Return non-blocking gets.
 
     Returns
     -------
@@ -341,8 +330,7 @@ def get_comm_diagnostics_get_nb():
 
 
 def get_comm_diagnostics_test_nb():
-    """
-    Return test statistic for non-blocking get/put completions.
+    """Return test statistic for non-blocking get/put completions.
 
     Returns
     -------
@@ -361,8 +349,7 @@ def get_comm_diagnostics_test_nb():
 
 
 def get_comm_diagnostics_wait_nb():
-    """
-    Return blocking waits for non-blocking get/put completions.
+    """Return blocking waits for non-blocking get/put completions.
 
     Returns
     -------
@@ -381,8 +368,7 @@ def get_comm_diagnostics_wait_nb():
 
 
 def get_comm_diagnostics_try_nb():
-    """
-    Return test statistics for non-blocking get/put completions.
+    """Return test statistics for non-blocking get/put completions.
 
     Returns
     -------
@@ -401,8 +387,7 @@ def get_comm_diagnostics_try_nb():
 
 
 def get_comm_diagnostics_amo():
-    """
-    Return atomic memory operations statistic.
+    """Return atomic memory operations statistic.
 
     Returns
     -------
@@ -421,8 +406,7 @@ def get_comm_diagnostics_amo():
 
 
 def get_comm_diagnostics_execute_on():
-    """
-    Return blocking remote executions, in which initiator waits for completion.
+    """Return blocking remote executions, in which initiator waits for completion.
 
     Returns
     -------
@@ -441,8 +425,7 @@ def get_comm_diagnostics_execute_on():
 
 
 def get_comm_diagnostics_execute_on_fast():
-    """
-    Return blocking remote executions performed by the target locale’s Active Message handler.
+    """Return blocking remote executions performed by the target locale’s Active Message handler.
 
     Returns
     -------
@@ -461,8 +444,7 @@ def get_comm_diagnostics_execute_on_fast():
 
 
 def get_comm_diagnostics_execute_on_nb():
-    """
-    Return non-blocking remote executions.
+    """Return non-blocking remote executions.
 
     Returns
     -------
@@ -481,8 +463,7 @@ def get_comm_diagnostics_execute_on_nb():
 
 
 def get_comm_diagnostics_cache_get_hits():
-    """
-    Return number of gets that were handled by the cache.
+    """Return number of gets that were handled by the cache.
 
     Gets counted here did not require the cache to communicate in order to return the result.
 
@@ -503,8 +484,7 @@ def get_comm_diagnostics_cache_get_hits():
 
 
 def get_comm_diagnostics_cache_get_misses():
-    """
-    Return number of gets that were not handled by the cache.
+    """Return number of gets that were not handled by the cache.
 
     Returns
     -------
@@ -523,8 +503,7 @@ def get_comm_diagnostics_cache_get_misses():
 
 
 def get_comm_diagnostics_cache_put_hits():
-    """
-    Return number of puts that were stored in cache pages that already existed.
+    """Return number of puts that were stored in cache pages that already existed.
 
     Returns
     -------
@@ -543,8 +522,7 @@ def get_comm_diagnostics_cache_put_hits():
 
 
 def get_comm_diagnostics_cache_put_misses():
-    """
-    Return number of puts that required the cache to create a new page to store them.
+    """Return number of puts that required the cache to create a new page to store them.
 
     Returns
     -------
@@ -563,8 +541,7 @@ def get_comm_diagnostics_cache_put_misses():
 
 
 def get_comm_diagnostics_cache_num_prefetches():
-    """
-    Return number of prefetches issued to the remote cache at the granularity of cache pages.
+    """Return number of prefetches issued to the remote cache at the granularity of cache pages.
 
     This counter is specifically triggered via calls to chpl_comm_remote_prefetch.
 
@@ -585,8 +562,7 @@ def get_comm_diagnostics_cache_num_prefetches():
 
 
 def get_comm_diagnostics_cache_num_page_readaheads():
-    """
-    Return number of readaheads issued to the remote cache at the granularity of cache pages.
+    """Return number of readaheads issued to the remote cache at the granularity of cache pages.
 
     Returns
     -------
@@ -605,8 +581,7 @@ def get_comm_diagnostics_cache_num_page_readaheads():
 
 
 def get_comm_diagnostics_cache_prefetch_unused():
-    """
-    Return number of cache pages that were prefetched but unused.
+    """Return number of cache pages that were prefetched but unused.
 
     Return number of cache pages that were prefetched but evicted from the cache before being accessed
     (i.e., the prefetches were too early).
@@ -628,8 +603,7 @@ def get_comm_diagnostics_cache_prefetch_unused():
 
 
 def get_comm_diagnostics_cache_prefetch_waited():
-    """
-    Return number of cache pages that were prefetched but waited.
+    """Return number of cache pages that were prefetched but waited.
 
     Number of cache pages that were prefetched but did not arrive in the cache before being accessed
     (i.e., the prefetches were too late).
@@ -651,8 +625,7 @@ def get_comm_diagnostics_cache_prefetch_waited():
 
 
 def get_comm_diagnostics_cache_readahead_unused():
-    """
-    Return number of cache pages that were read ahead but unused.
+    """Return number of cache pages that were read ahead but unused.
 
     The number of cache pages that were read ahead but evicted from the cache before being accessed
     (i.e., the readaheads were too early).
@@ -674,8 +647,7 @@ def get_comm_diagnostics_cache_readahead_unused():
 
 
 def get_comm_diagnostics_cache_readahead_waited():
-    """
-    Return number of cache pages that were read ahead but waited.
+    """Return number of cache pages that were read ahead but waited.
 
     Return number of cache pages that were read ahead
     but did not arrive in the cache before being accessed
@@ -698,8 +670,7 @@ def get_comm_diagnostics_cache_readahead_waited():
 
 
 def get_comm_diagnostics() -> DataFrame:
-    """
-    Return a DataFrame with the communication diagnostics statistics.
+    """Return a DataFrame with the communication diagnostics statistics.
 
     Returns
     -------

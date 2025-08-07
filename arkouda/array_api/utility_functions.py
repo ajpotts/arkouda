@@ -28,8 +28,7 @@ def all(
     axis: Optional[Union[int, Tuple[int, ...]]] = None,
     keepdims: bool = False,
 ) -> Array:
-    """
-    Check whether all elements of an array evaluate to True along a given axis.
+    """Check whether all elements of an array evaluate to True along a given axis.
 
     Parameters
     ----------
@@ -39,6 +38,7 @@ def all(
         The axis or axes along which to check for all True values. If None, check all elements.
     keepdims : bool, optional
         Whether to keep the singleton dimensions along `axis` in the result.
+
     """
     return Array._new(scalar_array(ak.all(x._array)))
 
@@ -50,8 +50,7 @@ def any(
     axis: Optional[Union[int, Tuple[int, ...]]] = None,
     keepdims: bool = False,
 ) -> Array:
-    """
-    Check whether any elements of an array evaluate to True along a given axis.
+    """Check whether any elements of an array evaluate to True along a given axis.
 
     Parameters
     ----------
@@ -61,13 +60,13 @@ def any(
         The axis or axes along which to check for any True values. If None, check all elements.
     keepdims : bool, optional
         Whether to keep the singleton dimensions along `axis` in the result.
+
     """
     return Array._new(scalar_array(ak.any(x._array)))
 
 
 def clip(a: Array, a_min, a_max, /) -> Array:
-    """
-    Clip (limit) the values in an array to a given range.
+    """Clip (limit) the values in an array to a given range.
 
     Parameters
     ----------
@@ -77,6 +76,7 @@ def clip(a: Array, a_min, a_max, /) -> Array:
         The minimum value
     a_max : scalar
         The maximum value
+
     """
     from arkouda.client import generic_msg
 
@@ -98,8 +98,7 @@ def clip(a: Array, a_min, a_max, /) -> Array:
 
 
 def diff(a: Array, /, n: int = 1, axis: int = -1, prepend=None, append=None) -> Array:
-    """
-    Calculate the n-th discrete difference along the given axis.
+    """Calculate the n-th discrete difference along the given axis.
 
     Parameters
     ----------
@@ -163,8 +162,7 @@ def diff(a: Array, /, n: int = 1, axis: int = -1, prepend=None, append=None) -> 
 
 
 def trapz(y: Array, x: Optional[Array] = None, dx: Optional[float] = 1.0, axis: int = -1) -> Array:
-    r"""
-    Integrate along the given axis using the composite trapezoidal rule.
+    r"""Integrate along the given axis using the composite trapezoidal rule.
 
     If `x` is provided, the integration happens in sequence along its
     elements - they are not sorted.
@@ -312,8 +310,7 @@ def pad(
     mode="constant",
     **kwargs,
 ) -> Array:
-    """
-    Pad an array.
+    """Pad an array.
 
     Parameters
     ----------
@@ -326,6 +323,7 @@ def pad(
     mode : str, optional
         Padding mode. Only 'constant' is currently supported. Use the `constant_values` keyword argument
         to specify the padding value or values (in the same format as `pad_width`).
+
     """
     from arkouda.client import generic_msg
 

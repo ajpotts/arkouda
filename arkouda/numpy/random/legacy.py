@@ -66,8 +66,7 @@ def randint(
     dtype=akint64,
     seed: Optional[int_scalars] = None,
 ) -> pdarray:
-    """
-    Generate a pdarray of randomized int, float, or bool values in a
+    """Generate a pdarray of randomized int, float, or bool values in a
     specified range bounded by the low and high parameters.
 
     Parameters
@@ -125,6 +124,7 @@ def randint(
 
     >>> ak.randint(1, 5, 10, dtype=ak.bool, seed=2)
     array([False, True, True, True, True, False, True, True, True, True])
+
     """
     from arkouda.client import generic_msg
 
@@ -209,6 +209,7 @@ def standard_normal(
     >>> import arkouda as ak
     >>> ak.standard_normal(3,1)
     array([-0.68586185091150265, 1.1723810583573375, 0.567584107142031])
+
     """
     from arkouda.client import generic_msg
 
@@ -240,8 +241,7 @@ def uniform(
     high: numeric_scalars = 1.0,
     seed: Union[None, int_scalars] = None,
 ) -> pdarray:
-    """
-    Generate a pdarray with uniformly distributed random float values
+    """Generate a pdarray with uniformly distributed random float values
     in a specified range.
 
     Parameters
@@ -281,5 +281,6 @@ def uniform(
 
     >>> ak.uniform(size=3,low=0,high=5,seed=0)
     array([0.30013431967121934, 0.47383036230759112, 1.0441791878997098])
+
     """
     return randint(low=low, high=high, size=size, dtype="float64", seed=seed)

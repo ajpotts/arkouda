@@ -42,8 +42,7 @@ def _in1d_single(
     pda2: Union[pdarray, Strings, "Categorical"],
     invert: bool = False,
 ) -> pdarray:
-    """
-    Test whether each element of a 1-D array is also present in a second array.
+    """Test whether each element of a 1-D array is also present in a second array.
 
     Return a boolean array the same length as `pda1` that is True
     where an element of `pda1` is in `pda2` and False otherwise.
@@ -96,6 +95,7 @@ def _in1d_single(
 
     >>> ak.in1d(ak.array(['one','two']),ak.array(['two', 'three','four','five']))
     array([False True])
+
     """
     from arkouda.client import generic_msg
     from arkouda.pandas.categorical import Categorical as Categorical_
@@ -149,8 +149,7 @@ def in1d(
     symmetric: bool = False,
     invert: bool = False,
 ) -> groupable:
-    """
-    Test whether each element of a 1-D array is also present in a second array.
+    """Test whether each element of a 1-D array is also present in a second array.
 
     Returns a boolean array the same length as `A` that is True
     where an element of `A` is in `B` and False otherwise.
@@ -210,6 +209,7 @@ def in1d(
     faster and scales to arbitrarily large ``a``.
 
     ak.in1d is not supported for bool or float64 pdarrays
+
     """
     from arkouda.alignment import NonUniqueError
     from arkouda.pandas.categorical import Categorical as Categorical_
@@ -276,16 +276,14 @@ def in1d(
 
 
 def in1dmulti(a, b, assume_unique=False, symmetric=False):
-    """
-    Alias for in1d to maintain backwards compatibility.
+    """Alias for in1d to maintain backwards compatibility.
     Calls in1d.
     """
     return in1d(a, b, assume_unique=assume_unique, symmetric=symmetric)
 
 
 def indexof1d(query: groupable, space: groupable) -> pdarray:
-    """
-    Return indices of query items in a search list of items. Items not found will be excluded.
+    """Return indices of query items in a search list of items. Items not found will be excluded.
     When duplicate terms are present in search space return indices of all occurrences.
 
     Parameters
@@ -328,6 +326,7 @@ def indexof1d(query: groupable, space: groupable) -> pdarray:
         Categorical object
     RuntimeError
         Raised if the dtype of either array is not supported
+
     """
     from arkouda.pandas.categorical import Categorical as Categorical_
 
@@ -350,8 +349,7 @@ def concatenate(
     axis: int = 0,
     ordered: bool = True,
 ) -> Union[pdarray, Strings, Categorical, Sequence[Categorical]]:
-    """
-    Concatenate a list or tuple of ``pdarray`` or ``Strings`` objects into
+    """Concatenate a list or tuple of ``pdarray`` or ``Strings`` objects into
     one ``pdarray`` or ``Strings`` object, respectively.
 
     Parameters
@@ -543,8 +541,7 @@ def union1d(
     A: groupable,
     B: groupable,
 ) -> groupable:
-    """
-    Find the union of two arrays/List of Arrays.
+    """Find the union of two arrays/List of Arrays.
 
     Return the unique, sorted array of values that are in either
     of the two input arrays.
@@ -626,8 +623,7 @@ def union1d(
 # (A & B) Set Intersection: elements have to be in both arrays
 @typechecked
 def intersect1d(A: groupable, B: groupable, assume_unique: bool = False) -> Union[pdarray, groupable]:
-    """
-    Find the intersection of two arrays.
+    """Find the intersection of two arrays.
 
     Return the sorted, unique values that are in both of the input arrays.
 
@@ -739,8 +735,7 @@ def intersect1d(A: groupable, B: groupable, assume_unique: bool = False) -> Unio
 # (A - B) Set Difference: elements have to be in first array but not second
 @typechecked
 def setdiff1d(A: groupable, B: groupable, assume_unique: bool = False) -> Union[pdarray, groupable]:
-    """
-    Find the set difference of two arrays.
+    """Find the set difference of two arrays.
 
     Return the sorted, unique values in `A` that are not in `B`.
 
@@ -790,6 +785,7 @@ def setdiff1d(A: groupable, B: groupable, assume_unique: bool = False) -> Union[
     >>> multib = [b, c, d]
     >>> ak.setdiff1d(multia, multib)
     [array([2 4 5]), array([2 4 5]), array([2 4 5])]
+
     """
     from arkouda.client import generic_msg
     from arkouda.pandas.categorical import Categorical as Categorical_
@@ -853,8 +849,7 @@ def setdiff1d(A: groupable, B: groupable, assume_unique: bool = False) -> Union[
 # (A1 ^ A2) Set Symmetric Difference: elements are not in the intersection
 @typechecked
 def setxor1d(A: groupable, B: groupable, assume_unique: bool = False) -> Union[pdarray, groupable]:
-    """
-    Find the set exclusive-or (symmetric difference) of two arrays.
+    """Find the set exclusive-or (symmetric difference) of two arrays.
 
     Return the sorted, unique values that are in only one (not both) of the
     input arrays.
@@ -898,6 +893,7 @@ def setxor1d(A: groupable, B: groupable, assume_unique: bool = False) -> Union[p
     >>> multib = [b, c, d]
     >>> ak.setxor1d(multia, multib)
     [array([2 2 4 4 5 5]), array([2 5 2 4 4 5]), array([2 4 5 4 2 5])]
+
     """
     from arkouda.client import generic_msg
     from arkouda.pandas.categorical import Categorical as Categorical_
