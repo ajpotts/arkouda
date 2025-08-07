@@ -37,8 +37,7 @@ if TYPE_CHECKING:
 
 
 def astype(x: Array, dtype: Dtype, /, *, copy: bool = True) -> Array:
-    """
-    Cast an array to a specified data type.
+    """Cast an array to a specified data type.
     """
     if not copy and dtype == x.dtype:
         return x
@@ -46,8 +45,7 @@ def astype(x: Array, dtype: Dtype, /, *, copy: bool = True) -> Array:
 
 
 def can_cast(from_: Union[Dtype, Array], to: Dtype, /) -> bool:
-    """
-    Determine whether an array or dtype can be cast to another dtype.
+    """Determine whether an array or dtype can be cast to another dtype.
     """
     if isinstance(from_, Array):
         from_ = from_.dtype
@@ -101,8 +99,7 @@ def iinfo(type, /) -> iinfo_object:
 
 
 def isdtype(dtype: Dtype, kind: Union[Dtype, str, Tuple[Union[Dtype, str], ...]]) -> bool:
-    """
-    Return a boolean indicating whether a provided dtype is of a specified data type ``kind``.
+    """Return a boolean indicating whether a provided dtype is of a specified data type ``kind``.
     """
     if isinstance(kind, tuple):
         # Disallow nested tuples
@@ -137,8 +134,7 @@ def isdtype(dtype: Dtype, kind: Union[Dtype, str, Tuple[Union[Dtype, str], ...]]
 
 @implements_numpy(np.result_type)
 def result_type(*arrays_and_dtypes: Union[Array, Dtype]) -> Dtype:
-    """
-    Compute the result dtype for a group of arrays and/or dtypes.
+    """Compute the result dtype for a group of arrays and/or dtypes.
     """
     A = []
     for a in arrays_and_dtypes:

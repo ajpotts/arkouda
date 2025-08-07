@@ -30,8 +30,7 @@ def argsort(
     algorithm: SortingAlgorithm = SortingAlgorithm.RadixSortLSD,
     axis: int_scalars = 0,
 ) -> pdarray:
-    """
-    Return the permutation that sorts the array.
+    """Return the permutation that sorts the array.
 
     Parameters
     ----------
@@ -77,6 +76,7 @@ def argsort(
 
     >>> ak.argsort(a, ak.sorting.SortingAlgorithm["TwoArrayRadixSort"])
     array([9 3 5 4 2 7 8 0 6 1])
+
     """
     from arkouda.pandas.categorical import Categorical
 
@@ -109,8 +109,7 @@ def coargsort(
     algorithm: SortingAlgorithm = SortingAlgorithm.RadixSortLSD,
     ascending: bool = True,
 ) -> pdarray:
-    """
-    Return the permutation that groups the rows (left-to-right), if the
+    """Return the permutation that groups the rows (left-to-right), if the
     input arrays are treated as columns. The permutation sorts numeric
     columns, but not Strings or Categoricals — those are grouped, not ordered.
 
@@ -237,8 +236,7 @@ def sort(
     algorithm: SortingAlgorithm = SortingAlgorithm.RadixSortLSD,
     axis: int_scalars = -1,
 ) -> pdarray:
-    """
-    Return a sorted copy of the array. Only sorts numeric arrays;
+    """Return a sorted copy of the array. Only sorts numeric arrays;
     for Strings, use argsort.
 
     Parameters
@@ -281,6 +279,7 @@ def sort(
     >>> sorted = ak.sort(a)
     >>> sorted
     array([0 1 1 4 5 5 5 7 8 9])
+
     """
     from arkouda.client import generic_msg
 
@@ -304,8 +303,7 @@ def searchsorted(
     side: Literal["left", "right"] = "left",
     x2_sorted: bool = False,
 ) -> Union[int, pdarray]:
-    """
-    Find indices where elements should be inserted to maintain order.
+    """Find indices where elements should be inserted to maintain order.
 
     Find the indices into a sorted array `a` such that, if the corresponding
     elements in `v` were inserted before the indices, the order of `a` would be preserved.
@@ -352,6 +350,7 @@ def searchsorted(
     >>> v_sorted = ak.array([-10, 12, 13, 20])
     >>> ak.searchsorted(a, v_sorted, x2_sorted=True)
     array([0 1 2 5])
+
     """
     from arkouda.client import generic_msg
 

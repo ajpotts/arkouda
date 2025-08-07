@@ -100,8 +100,7 @@ def aggregation_operators(cls) -> type:
 @aggregation_operators
 @natural_binary_operators
 class Series:
-    """
-    One-dimensional arkouda array with axis labels.
+    """One-dimensional arkouda array with axis labels.
 
     Parameters
     ----------
@@ -230,8 +229,7 @@ class Series:
         self,
         key: Union[Series, pdarray, Strings, Categorical, List, supported_scalars, SegArray],
     ) -> Union[pdarray, Strings, Categorical, supported_scalars, SegArray]:
-        """
-        Validate type requirements for keys when reading or writing the Series.
+        """Validate type requirements for keys when reading or writing the Series.
         Also converts list and tuple arguments into pdarrays.
 
         Parameters
@@ -312,8 +310,7 @@ class Series:
 
     @typechecked
     def __getitem__(self, _key: Union[supported_scalars, pdarray, Strings, List, Series]):
-        """
-        Get values from Series.
+        """Get values from Series.
 
         Parameters
         ----------
@@ -342,8 +339,7 @@ class Series:
     def validate_val(
         self, val: Union[pdarray, Strings, supported_scalars, List]
     ) -> Union[pdarray, Strings, supported_scalars]:
-        """
-        Validate type requirements for values being written into the Series.
+        """Validate type requirements for values being written into the Series.
         Also converts list and tuple arguments into pdarrays.
 
         Parameters
@@ -393,8 +389,7 @@ class Series:
         key: Union[pdarray, Strings, Categorical, Series, List, supported_scalars, SegArray],
         val: Union[pdarray, Strings, List, supported_scalars],
     ) -> None:
-        """
-        Set or adds entries in a Series by label.
+        """Set or adds entries in a Series by label.
 
         Parameters
         ----------
@@ -449,18 +444,18 @@ class Series:
             return
 
     def memory_usage(self, index: bool = True, unit: Literal["B", "KB", "MB", "GB"] = "B") -> int:
-        """
-        Return the memory usage of the Series.
+        """Return the memory usage of the Series.
 
         The memory usage can optionally include the contribution of
         the index.
 
         Parameters
         ----------
-        index : bool, default=True
+        index : bool
             Specifies whether to include the memory usage of the Series index.
-        unit : {"B", "KB", "MB", "GB"}, default = "B"
-            Unit to return. One of {'B', 'KB', 'MB', 'GB'}.
+            Defaults to True.
+        unit : {"B", "KB", "MB", "GB"}
+            Unit to return. One of {'B', 'KB', 'MB', 'GB'}. Defaults to "B".
 
         Returns
         -------
@@ -516,8 +511,7 @@ class Series:
 
     @property
     def loc(self) -> _LocIndexer:
-        """
-        Accesses entries of a Series by label.
+        """Accesses entries of a Series by label.
 
         Returns
         -------
@@ -529,8 +523,7 @@ class Series:
 
     @property
     def at(self) -> _LocIndexer:
-        """
-        Accesses entries of a Series by label.
+        """Accesses entries of a Series by label.
 
         Returns
         -------
@@ -542,8 +535,7 @@ class Series:
 
     @property
     def iloc(self) -> _iLocIndexer:
-        """
-        Accesses entries of a Series by position.
+        """Accesses entries of a Series by position.
 
         Returns
         -------
@@ -555,8 +547,7 @@ class Series:
 
     @property
     def iat(self) -> _iLocIndexer:
-        """
-        Accesses entries of a Series by position.
+        """Accesses entries of a Series by position.
 
         Returns
         -------
@@ -580,8 +571,7 @@ class Series:
 
     @typechecked
     def isin(self, lst: Union[pdarray, Strings, List]) -> Series:
-        """
-        Find Series elements whose values are in the specified list.
+        """Find Series elements whose values are in the specified list.
 
         Parameters
         ----------
@@ -603,8 +593,7 @@ class Series:
 
     @typechecked
     def locate(self, key: Union[int, pdarray, Index, Series, List, Tuple]) -> Series:
-        """
-        Lookup values by index label.
+        """Lookup values by index label.
 
         Parameters
         ----------
@@ -702,8 +691,8 @@ class Series:
 
         Parameters
         ----------
-        n : int, default=10
-            Number of values to return. The default of 10 returns the top 10 values.
+        n : int
+            Number of values to return. Defaults to 10.
 
         Returns
         -------
@@ -731,13 +720,13 @@ class Series:
 
     @typechecked
     def sort_index(self, ascending: bool = True) -> Series:
-        """
-        Sort the Series by its index.
+        """Sort the Series by its index.
 
         Parameters
         ----------
-        ascending : bool, default=True
+        ascending : bool
             Whether to sort the index in ascending (default) or descending order.
+            Defaults to True.
 
         Returns
         -------
@@ -750,13 +739,13 @@ class Series:
 
     @typechecked
     def sort_values(self, ascending: bool = True) -> Series:
-        """
-        Sort the Series by its values.
+        """Sort the Series by its values.
 
         Parameters
         ----------
-        ascending : bool, default=True
+        ascending : bool
             Whether to sort values in ascending (default) or descending order.
+            Defaults to True.
 
         Returns
         -------
@@ -816,8 +805,7 @@ class Series:
             return pd.Series(val, index=idx)
 
     def to_markdown(self, mode="wt", index=True, tablefmt="grid", storage_options=None, **kwargs):
-        r"""
-        Print Series in Markdown-friendly format.
+        r"""Print Series in Markdown-friendly format.
 
         Parameters
         ----------
@@ -893,14 +881,13 @@ class Series:
 
     @typechecked
     def value_counts(self, sort: bool = True) -> Series:
-        """
-        Return a Series containing counts of unique values.
+        """Return a Series containing counts of unique values.
 
         Parameters
         ----------
-        sort : bool, default=True
+        sort : bool
             Whether to sort the result by count in descending order. If False,
-            the order of the results is not guaranteed.
+            the order of the results is not guaranteed. Defaults to True.
 
         Returns
         -------
@@ -921,8 +908,7 @@ class Series:
 
     @typechecked
     def diff(self) -> Series:
-        """
-        Diffs consecutive values of the series.
+        """Diffs consecutive values of the series.
 
         Returns a new series with the same index and length.  First value is set to NaN.
         """
@@ -941,8 +927,7 @@ class Series:
         index_labels: Union[List[builtin_str], None] = None,
         value_label: Union[builtin_str, None] = None,
     ) -> arkouda.pandas.dataframe.DataFrame:
-        """
-        Convert the Series to an Arkouda DataFrame.
+        """Convert the Series to an Arkouda DataFrame.
 
         Parameters
         ----------
@@ -963,14 +948,13 @@ class Series:
 
     @typechecked
     def register(self, user_defined_name: builtin_str):
-        """
-        Register this Series object and underlying components with the Arkouda server
+        """Register this Series object and underlying components with the Arkouda server
 
         Parameters
         ----------
-        user_defined_name : str
-            user defined name the Series is to be registered under,
-            this will be the root name for underlying components
+        user_defined_name : builtin_str
+            User-defined name the Series is to be registered under.
+            This will be the root name for the underlying components.
 
         Returns
         -------
@@ -1059,8 +1043,7 @@ class Series:
         return self
 
     def unregister(self):
-        """
-        Unregister this Series object in the arkouda server which was previously
+        """Unregister this Series object in the arkouda server which was previously
         registered using register() and/or attached to using attach()
 
         Raises
@@ -1088,8 +1071,7 @@ class Series:
 
     @typechecked
     def is_registered(self) -> bool:
-        """
-         Return True iff the object is contained in the registry or is a component of a
+        """Return True iff the object is contained in the registry or is a component of a
          registered object.
 
         Returns
@@ -1124,24 +1106,24 @@ class Series:
     def from_return_msg(cls, repMsg: builtin_str) -> Series:
         """
         Return a Series instance pointing to components created by the arkouda server.
+
         The user should not call this function directly.
 
         Parameters
         ----------
-        repMsg : str
-            + delimited string containing the values and indexes
+        repMsg : builtin_str
+            + delimited string containing the values and indexes.
 
         Returns
         -------
         Series
-            A Series representing a set of pdarray components on the server
+            A Series representing a set of pdarray components on the server.
 
         Raises
         ------
         RuntimeError
             Raised if a server-side error is thrown in the process of creating
-            the Series instance
-
+            the Series instance.
         """
         data = json.loads(repMsg)
         val_comps = data["value"].split("+|+")
@@ -1176,8 +1158,7 @@ class Series:
         value_labels: Union[List[builtin_str], None] = None,
         ordered: bool = False,
     ) -> Union[arkouda.pandas.dataframe.DataFrame, Series]:
-        """
-        Concatenate a list of Arkouda Series or grouped arrays horizontally or vertically.
+        """Concatenate a list of Arkouda Series or grouped arrays horizontally or vertically.
 
         If a list of grouped Arkouda arrays is passed, they are converted to Series. Each grouping
         is a 2-tuple where the first item is the key(s) and the second is the value. If concatenating
@@ -1189,17 +1170,18 @@ class Series:
         ----------
         arrays : List
             A list of Series or groupings (tuples of index and values) to concatenate.
-        axis : int, default=0
+        axis : int
             The axis to concatenate along:
             - 0 = vertical (stack series into one)
             - 1 = horizontal (align by index and produce a DataFrame)
-        index_labels : List of str or None, optional
+            Defaults to 0.
+        index_labels : List[str] or None, optional
             Column name(s) to label the index when axis=1.
-        value_labels : List of str or None, optional
+        value_labels : List[str] or None, optional
             Column names to label the values of each Series.
-        ordered : bool, default=False
+        ordered : bool
             Unused parameter. Reserved for future support of deterministic
-            vs. performance-optimized concatenation.
+            vs. performance-optimized concatenation. Defaults to False.
 
         Returns
         -------
@@ -1254,8 +1236,7 @@ class Series:
             return Series(index=idx.index, data=v)
 
     def map(self, arg: Union[dict, Series]) -> Series:
-        """
-        Map values of Series according to an input mapping.
+        """Map values of Series according to an input mapping.
 
         Parameters
         ----------
@@ -1312,8 +1293,7 @@ class Series:
         return Series(map(self.values, arg), index=self.index)
 
     def isna(self) -> Series:
-        """
-        Detect missing values.
+        """Detect missing values.
 
         Return a boolean same-sized object indicating if the values are NA. NA values,
         such as numpy.NaN, gets mapped to True values.
@@ -1348,8 +1328,7 @@ class Series:
         return Series(isnan(self.values), index=self.index)
 
     def isnull(self) -> Series:
-        """
-        Series.isnull is an alias for Series.isna.
+        """Series.isnull is an alias for Series.isna.
 
         Detect missing values.
 
@@ -1381,8 +1360,7 @@ class Series:
         return self.isna()
 
     def notna(self) -> Series:
-        """
-        Detect existing (non-missing) values.
+        """Detect existing (non-missing) values.
 
         Return a boolean same-sized object indicating if the values are not NA.
         Non-missing values get mapped to True.
@@ -1417,8 +1395,7 @@ class Series:
         return Series(~isnan(self.values), index=self.index)
 
     def notnull(self) -> Series:
-        """
-        Series.notnull is an alias for Series.notna.
+        """Series.notnull is an alias for Series.notna.
 
         Detect existing (non-missing) values.
 
@@ -1450,8 +1427,7 @@ class Series:
         return self.notna()
 
     def hasnans(self) -> bool_scalars:
-        """
-        Return True if there are any NaNs.
+        """Return True if there are any NaNs.
 
         Returns
         -------
@@ -1485,8 +1461,7 @@ class Series:
         return False
 
     def fillna(self, value: Union[supported_scalars, Series, pdarray]) -> Series:
-        """
-        Fill NA/NaN values using the specified method.
+        """Fill NA/NaN values using the specified method.
 
         Parameters
         ----------
@@ -1559,8 +1534,7 @@ class Series:
     def pdconcat(
         arrays: List, axis: int = 0, labels: Union[Strings, None] = None
     ) -> Union[pd.Series, pd.DataFrame]:
-        """
-        Concatenate a list of Arkouda Series or grouped arrays, returning a local pandas object.
+        """Concatenate a list of Arkouda Series or grouped arrays, returning a local pandas object.
 
         If a list of grouped Arkouda arrays is passed, they are converted to Series. Each grouping
         is a 2-tuple with the first item being the key(s) and the second the value.
@@ -1573,10 +1547,11 @@ class Series:
         ----------
         arrays : List
             A list of Series or groupings (tuples of index and values) to concatenate.
-        axis : int, default=0
+        axis : int
             The axis along which to concatenate:
             - 0 = vertical (stack into a Series)
             - 1 = horizontal (align by index into a DataFrame)
+            Defaults to 0.
         labels : Strings or None, optional
             Names to assign to the resulting columns in the DataFrame.
 

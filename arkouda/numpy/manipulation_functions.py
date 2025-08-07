@@ -40,8 +40,7 @@ def flip(
     *,
     axis: Optional[Union[int_scalars, Tuple[int_scalars, ...]]] = None,
 ) -> Union[pdarray, Strings, Categorical]:
-    """
-    Reverse an array's values along a particular axis or axes.
+    """Reverse an array's values along a particular axis or axes.
 
     Parameters
     ----------
@@ -51,6 +50,7 @@ def flip(
         The shape of the array is preserved, but the elements are reordered.
     axis : int or Tuple[int, ...], optional
         The axis or axes along which to flip the array. If None, flip the array along all axes.
+
     Returns
     -------
     pdarray, Strings, or Categorical
@@ -58,6 +58,7 @@ def flip(
     Note
     ----
     This differs from numpy as it actually reverses the data, rather than presenting a view.
+
     """
     from arkouda.client import generic_msg
 
@@ -117,8 +118,7 @@ def repeat(
     repeats: Union[int, Sequence[int], pdarray],
     axis: Union[None, int] = None,
 ) -> pdarray:
-    """
-    Repeat each element of an array after themselves
+    """Repeat each element of an array after themselves
 
     Parameters
     ----------
@@ -148,6 +148,7 @@ def repeat(
     array([array([1 1 1 2 2 2]) array([3 3 3 4 4 4])])
     >>> ak.repeat(x, [1, 2], axis=0)
     array([array([1 2]) array([3 4]) array([3 4])])
+
     """
     from arkouda.client import generic_msg
     from arkouda.pdarrayclass import any as akany
@@ -239,8 +240,7 @@ def repeat(
 def squeeze(
     x: Union[pdarray, numeric_scalars, bool_scalars], /, axis: Union[None, int, Tuple[int, ...]] = None
 ) -> pdarray:
-    """
-    Remove degenerate (size one) dimensions from an array.
+    """Remove degenerate (size one) dimensions from an array.
 
     Parameters
     ----------
@@ -308,8 +308,7 @@ def squeeze(
 
 
 def tile(A: pdarray, /, reps: Union[int, Tuple[int, ...]]) -> pdarray:
-    """
-    Construct an array by repeating A the number of times given by reps.
+    """Construct an array by repeating A the number of times given by reps.
 
     If reps has length ``d``, the result will have dimension of ``max(d, A.ndim)``.
 
@@ -352,6 +351,7 @@ Thus for an A of shape (2, 3, 4, 5), a reps of (2, 2) is treated as (1, 1, 2, 2)
     >>> c = ak.array([1, 2, 3, 4])
     >>> ak.tile(c, (4, 1))
     array([array([1 2 3 4]) array([1 2 3 4]) array([1 2 3 4]) array([1 2 3 4])])
+
     """
     from arkouda.client import generic_msg
 

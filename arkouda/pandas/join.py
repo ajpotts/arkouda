@@ -45,8 +45,7 @@ def join_on_eq_with_dt(
     pred: str,
     result_limit: Union[int, np.int64] = 1000,
 ) -> Tuple[pdarray, pdarray]:
-    """
-    Inner-join on equality between two integer arrays where the time-window predicate is also true.
+    """Inner-join on equality between two integer arrays where the time-window predicate is also true.
 
     Parameters
     ----------
@@ -135,8 +134,7 @@ def join_on_eq_with_dt(
 
 
 def gen_ranges(starts, ends, stride=1, return_lengths=False):
-    """
-    Generate a segmented array of variable-length, contiguous ranges between pairs of
+    """Generate a segmented array of variable-length, contiguous ranges between pairs of
     start- and end-points.
 
     Parameters
@@ -193,8 +191,7 @@ def gen_ranges(starts, ends, stride=1, return_lengths=False):
 
 @typechecked
 def compute_join_size(a: pdarray, b: pdarray) -> Tuple[int, int]:
-    """
-    Compute the internal size of a hypothetical join between a and b. Returns
+    """Compute the internal size of a hypothetical join between a and b. Returns
     both the number of elements and number of bytes required for the join.
     """
     bya = GroupBy(a)
@@ -220,8 +217,7 @@ def inner_join(
         ]
     ] = None,
 ) -> Tuple[pdarray, pdarray]:
-    """
-    Perform inner join on values in <left> and <right>,
+    """Perform inner join on values in <left> and <right>,
     using conditions defined by <wherefunc> evaluated on
     <whereargs>, returning indices of left-right pairs.
 

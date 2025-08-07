@@ -78,8 +78,7 @@ __all__ = [
 
 
 def abs(x: Array, /) -> Array:
-    """
-    Compute the element-wise absolute value of an array.
+    """Compute the element-wise absolute value of an array.
     """
     if x.dtype not in _numeric_dtypes:
         raise TypeError("Only numeric dtypes are allowed in abs")
@@ -88,8 +87,7 @@ def abs(x: Array, /) -> Array:
 
 # Note: the function name is different here
 def acos(x: Array, /) -> Array:
-    """
-    Compute the element-wise arccosine of an array.
+    """Compute the element-wise arccosine of an array.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in acos")
@@ -98,8 +96,7 @@ def acos(x: Array, /) -> Array:
 
 # Note: the function name is different here
 def acosh(x: Array, /) -> Array:
-    """
-    Compute the element-wise hyperbolic arccosine of an array.
+    """Compute the element-wise hyperbolic arccosine of an array.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in acosh")
@@ -107,8 +104,7 @@ def acosh(x: Array, /) -> Array:
 
 
 def add(x1: Array, x2: Array, /) -> Array:
-    """
-    Compute the element-wise sum of two arrays.
+    """Compute the element-wise sum of two arrays.
     """
     if x1.dtype not in _numeric_dtypes or x2.dtype not in _numeric_dtypes:
         raise TypeError("Only numeric dtypes are allowed in add")
@@ -118,8 +114,7 @@ def add(x1: Array, x2: Array, /) -> Array:
 
 
 def asin(x: Array, /) -> Array:
-    """
-    Compute the element-wise arcsine of an array.
+    """Compute the element-wise arcsine of an array.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in asin")
@@ -127,8 +122,7 @@ def asin(x: Array, /) -> Array:
 
 
 def asinh(x: Array, /) -> Array:
-    """
-    Compute the element-wise hyperbolic arcsine of an array.
+    """Compute the element-wise hyperbolic arcsine of an array.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in asinh")
@@ -136,8 +130,7 @@ def asinh(x: Array, /) -> Array:
 
 
 def atan(x: Array, /) -> Array:
-    """
-    Compute the element-wise arctangent of an array.
+    """Compute the element-wise arctangent of an array.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in atan")
@@ -145,8 +138,7 @@ def atan(x: Array, /) -> Array:
 
 
 def atan2(x1: Array, x2: Array, /) -> Array:
-    """
-    Compute the element-wise arctangent of x1/x2.
+    """Compute the element-wise arctangent of x1/x2.
     """
     if x1.dtype not in _real_floating_dtypes or x2.dtype not in _real_floating_dtypes:
         raise TypeError("Only real floating-point dtypes are allowed in atan2")
@@ -156,8 +148,7 @@ def atan2(x1: Array, x2: Array, /) -> Array:
 
 
 def atanh(x: Array, /) -> Array:
-    """
-    Compute the element-wise hyperbolic arctangent of an array.
+    """Compute the element-wise hyperbolic arctangent of an array.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in atanh")
@@ -165,8 +156,7 @@ def atanh(x: Array, /) -> Array:
 
 
 def bitwise_and(x1: Array, x2: Array, /) -> Array:
-    """
-    Compute the element-wise bitwise AND of two arrays.
+    """Compute the element-wise bitwise AND of two arrays.
     """
     if x1.dtype not in _integer_or_boolean_dtypes or x2.dtype not in _integer_or_boolean_dtypes:
         raise TypeError("Only integer or boolean dtypes are allowed in bitwise_and")
@@ -176,8 +166,7 @@ def bitwise_and(x1: Array, x2: Array, /) -> Array:
 
 
 def bitwise_left_shift(x1: Array, x2: Array, /) -> Array:
-    """
-    Compute the element-wise bitwise left shift of x1 by x2.
+    """Compute the element-wise bitwise left shift of x1 by x2.
     """
     if x1.dtype not in _integer_dtypes or x2.dtype not in _integer_dtypes:
         raise TypeError("Only integer dtypes are allowed in bitwise_left_shift")
@@ -190,15 +179,13 @@ def bitwise_left_shift(x1: Array, x2: Array, /) -> Array:
 
 
 def bitwise_invert(x: Array, /) -> Array:
-    """
-    Compute the element-wise bitwise NOT of an array.
+    """Compute the element-wise bitwise NOT of an array.
     """
     raise ValueError("bitwise invert not implemented")
 
 
 def bitwise_or(x1: Array, x2: Array, /) -> Array:
-    """
-    Compute the element-wise bitwise OR of two arrays.
+    """Compute the element-wise bitwise OR of two arrays.
     """
     if x1.dtype not in _integer_or_boolean_dtypes or x2.dtype not in _integer_or_boolean_dtypes:
         raise TypeError("Only integer or boolean dtypes are allowed in bitwise_or")
@@ -208,8 +195,7 @@ def bitwise_or(x1: Array, x2: Array, /) -> Array:
 
 
 def bitwise_right_shift(x1: Array, x2: Array, /) -> Array:
-    """
-    Compute the element-wise bitwise right shift of x1 by x2.
+    """Compute the element-wise bitwise right shift of x1 by x2.
     """
     if x1.dtype not in _integer_dtypes or x2.dtype not in _integer_dtypes:
         raise TypeError("Only integer dtypes are allowed in bitwise_right_shift")
@@ -222,8 +208,7 @@ def bitwise_right_shift(x1: Array, x2: Array, /) -> Array:
 
 
 def bitwise_xor(x1: Array, x2: Array, /) -> Array:
-    """
-    Compute the element-wise bitwise XOR of two arrays.
+    """Compute the element-wise bitwise XOR of two arrays.
     """
     if x1.dtype not in _integer_or_boolean_dtypes or x2.dtype not in _integer_or_boolean_dtypes:
         raise TypeError("Only integer or boolean dtypes are allowed in bitwise_xor")
@@ -233,8 +218,7 @@ def bitwise_xor(x1: Array, x2: Array, /) -> Array:
 
 
 def ceil(x: Array, /) -> Array:
-    """
-    Compute the element-wise ceiling of a floating point array.
+    """Compute the element-wise ceiling of a floating point array.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in ceil")
@@ -242,8 +226,7 @@ def ceil(x: Array, /) -> Array:
 
 
 def conj(x: Array, /) -> Array:
-    """
-    Compute the element-wise complex conjugate of an array.
+    """Compute the element-wise complex conjugate of an array.
 
     WARNING: Not yet implemented.
     """
@@ -251,8 +234,7 @@ def conj(x: Array, /) -> Array:
 
 
 def cos(x: Array, /) -> Array:
-    """
-    Compute the element-wise cosine of an array.
+    """Compute the element-wise cosine of an array.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in cos")
@@ -260,8 +242,7 @@ def cos(x: Array, /) -> Array:
 
 
 def cosh(x: Array, /) -> Array:
-    """
-    Compute the element-wise hyperbolic cosine of an array.
+    """Compute the element-wise hyperbolic cosine of an array.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in cosh")
@@ -269,8 +250,7 @@ def cosh(x: Array, /) -> Array:
 
 
 def divide(x1: Array, x2: Array, /) -> Array:
-    """
-    Compute the element-wise division of x1 by x2.
+    """Compute the element-wise division of x1 by x2.
     """
     if x1.dtype not in _floating_dtypes or x2.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in divide")
@@ -280,8 +260,7 @@ def divide(x1: Array, x2: Array, /) -> Array:
 
 
 def equal(x1: Array, x2: Array, /) -> Array:
-    """
-    Compute the element-wise equality of two arrays.
+    """Compute the element-wise equality of two arrays.
     """
     # Call result type here just to raise on disallowed type combinations
     _result_type(x1.dtype, x2.dtype)
@@ -289,8 +268,7 @@ def equal(x1: Array, x2: Array, /) -> Array:
 
 
 def exp(x: Array, /) -> Array:
-    """
-    Compute the element-wise exponential of an array.
+    """Compute the element-wise exponential of an array.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in exp")
@@ -298,8 +276,7 @@ def exp(x: Array, /) -> Array:
 
 
 def expm1(x: Array, /) -> Array:
-    """
-    Compute the element-wise exponential of x-1.
+    """Compute the element-wise exponential of x-1.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in exp")
@@ -307,8 +284,7 @@ def expm1(x: Array, /) -> Array:
 
 
 def floor(x: Array, /) -> Array:
-    """
-    Compute the element-wise floor of a floating point array.
+    """Compute the element-wise floor of a floating point array.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in floor")
@@ -316,15 +292,13 @@ def floor(x: Array, /) -> Array:
 
 
 def floor_divide(x1: Array, x2: Array, /) -> Array:
-    """
-    Compute the element-wise floor division of x1 by x2.
+    """Compute the element-wise floor division of x1 by x2.
     """
     raise ValueError("exp not implemented")
 
 
 def greater(x1: Array, x2: Array, /) -> Array:
-    """
-    Apply `>` element-wise to two arrays.
+    """Apply `>` element-wise to two arrays.
     """
     if x1.dtype not in _real_numeric_dtypes or x2.dtype not in _real_numeric_dtypes:
         raise TypeError("Only real numeric dtypes are allowed in greater")
@@ -334,8 +308,7 @@ def greater(x1: Array, x2: Array, /) -> Array:
 
 
 def greater_equal(x1: Array, x2: Array, /) -> Array:
-    """
-    Apply `>=` element-wise to two arrays.
+    """Apply `>=` element-wise to two arrays.
     """
     if x1.dtype not in _real_numeric_dtypes or x2.dtype not in _real_numeric_dtypes:
         raise TypeError("Only real numeric dtypes are allowed in greater_equal")
@@ -345,8 +318,7 @@ def greater_equal(x1: Array, x2: Array, /) -> Array:
 
 
 def imag(x: Array, /) -> Array:
-    """
-    Get the element-wise imaginary part of a Complex array.
+    """Get the element-wise imaginary part of a Complex array.
 
     WARNING: Not yet implemented.
     """
@@ -354,8 +326,7 @@ def imag(x: Array, /) -> Array:
 
 
 def isfinite(x: Array, /) -> Array:
-    """
-    Determine if an array's elements are finite.
+    """Determine if an array's elements are finite.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in isfinite")
@@ -363,8 +334,7 @@ def isfinite(x: Array, /) -> Array:
 
 
 def isinf(x: Array, /) -> Array:
-    """
-    Determine if an array's elements are infinite.
+    """Determine if an array's elements are infinite.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in isinf")
@@ -372,8 +342,7 @@ def isinf(x: Array, /) -> Array:
 
 
 def isnan(x: Array, /) -> Array:
-    """
-    Determine if an array's elements are NaN.
+    """Determine if an array's elements are NaN.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in isnan")
@@ -381,8 +350,7 @@ def isnan(x: Array, /) -> Array:
 
 
 def less(x1: Array, x2: Array, /) -> Array:
-    """
-    Apply `<` element-wise to two arrays.
+    """Apply `<` element-wise to two arrays.
     """
     if x1.dtype not in _real_numeric_dtypes or x2.dtype not in _real_numeric_dtypes:
         raise TypeError("Only real numeric dtypes are allowed in less")
@@ -392,8 +360,7 @@ def less(x1: Array, x2: Array, /) -> Array:
 
 
 def less_equal(x1: Array, x2: Array, /) -> Array:
-    """
-    Apply `<=` element-wise to two arrays.
+    """Apply `<=` element-wise to two arrays.
     """
     if x1.dtype not in _real_numeric_dtypes or x2.dtype not in _real_numeric_dtypes:
         raise TypeError("Only real numeric dtypes are allowed in less_equal")
@@ -403,8 +370,7 @@ def less_equal(x1: Array, x2: Array, /) -> Array:
 
 
 def log(x: Array, /) -> Array:
-    """
-    Compute the element-wise natural logarithm of an array.
+    """Compute the element-wise natural logarithm of an array.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in log")
@@ -412,8 +378,7 @@ def log(x: Array, /) -> Array:
 
 
 def log1p(x: Array, /) -> Array:
-    """
-    Compute the element-wise natural logarithm of x+1.
+    """Compute the element-wise natural logarithm of x+1.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in log")
@@ -421,8 +386,7 @@ def log1p(x: Array, /) -> Array:
 
 
 def log2(x: Array, /) -> Array:
-    """
-    Compute the element-wise base-2 logarithm of an array.
+    """Compute the element-wise base-2 logarithm of an array.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in log")
@@ -430,8 +394,7 @@ def log2(x: Array, /) -> Array:
 
 
 def log10(x: Array, /) -> Array:
-    """
-    Compute the element-wise base-10 logarithm of an array.
+    """Compute the element-wise base-10 logarithm of an array.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in log")
@@ -439,8 +402,7 @@ def log10(x: Array, /) -> Array:
 
 
 def logaddexp(x1: Array, x2: Array) -> Array:
-    """
-    Compute the element-wise logarithm of the sum of exponentials of two arrays.
+    """Compute the element-wise logarithm of the sum of exponentials of two arrays.
     (i.e., log(exp(x1) + exp(x2)))
 
     WARNING: Not yet implemented.
@@ -449,8 +411,7 @@ def logaddexp(x1: Array, x2: Array) -> Array:
 
 
 def logical_and(x1: Array, x2: Array, /) -> Array:
-    """
-    Compute the element-wise logical AND of two boolean arrays.
+    """Compute the element-wise logical AND of two boolean arrays.
     """
     if x1.dtype not in _boolean_dtypes or x2.dtype not in _boolean_dtypes:
         raise TypeError("Only boolean dtypes are allowed in logical_and")
@@ -460,15 +421,13 @@ def logical_and(x1: Array, x2: Array, /) -> Array:
 
 
 def logical_not(x: Array, /) -> Array:
-    """
-    Compute the element-wise logical NOT of a boolean array.
+    """Compute the element-wise logical NOT of a boolean array.
     """
     return ~x
 
 
 def logical_or(x1: Array, x2: Array, /) -> Array:
-    """
-    Compute the element-wise logical OR of two boolean arrays.
+    """Compute the element-wise logical OR of two boolean arrays.
     """
     if x1.dtype not in _boolean_dtypes or x2.dtype not in _boolean_dtypes:
         raise TypeError("Only boolean dtypes are allowed in logical_or")
@@ -478,8 +437,7 @@ def logical_or(x1: Array, x2: Array, /) -> Array:
 
 
 def logical_xor(x1: Array, x2: Array, /) -> Array:
-    """
-    Compute the element-wise logical XOR of two boolean arrays.
+    """Compute the element-wise logical XOR of two boolean arrays.
     """
     if x1.dtype not in _boolean_dtypes or x2.dtype not in _boolean_dtypes:
         raise TypeError("Only boolean dtypes are allowed in logical_xor")
@@ -489,8 +447,7 @@ def logical_xor(x1: Array, x2: Array, /) -> Array:
 
 
 def multiply(x1: Array, x2: Array, /) -> Array:
-    """
-    Compute the element-wise product of two arrays.
+    """Compute the element-wise product of two arrays.
     """
     if x1.dtype not in _numeric_dtypes or x2.dtype not in _numeric_dtypes:
         raise TypeError("Only numeric dtypes are allowed in multiply")
@@ -500,8 +457,7 @@ def multiply(x1: Array, x2: Array, /) -> Array:
 
 
 def negative(x: Array, /) -> Array:
-    """
-    Compute the element-wise negation of an array.
+    """Compute the element-wise negation of an array.
     """
     if x.dtype not in _numeric_dtypes:
         raise TypeError("Only numeric dtypes are allowed in negative")
@@ -509,8 +465,7 @@ def negative(x: Array, /) -> Array:
 
 
 def not_equal(x1: Array, x2: Array, /) -> Array:
-    """
-    Array API compatible wrapper for :py:func:`np.not_equal <numpy.not_equal>`.
+    """Array API compatible wrapper for :py:func:`np.not_equal <numpy.not_equal>`.
 
     See its docstring for more information.
     """
@@ -520,8 +475,7 @@ def not_equal(x1: Array, x2: Array, /) -> Array:
 
 
 def positive(x: Array, /) -> Array:
-    """
-    Array API compatible wrapper for :py:func:`np.positive <numpy.positive>`.
+    """Array API compatible wrapper for :py:func:`np.positive <numpy.positive>`.
 
     See its docstring for more information.
     """
@@ -532,8 +486,7 @@ def positive(x: Array, /) -> Array:
 
 # Note: the function name is different here
 def pow(x1: Array, x2: Array, /) -> Array:
-    """
-    Array API compatible wrapper for :py:func:`np.power <numpy.power>`.
+    """Array API compatible wrapper for :py:func:`np.power <numpy.power>`.
 
     See its docstring for more information.
     """
@@ -545,8 +498,7 @@ def pow(x1: Array, x2: Array, /) -> Array:
 
 
 def real(x: Array, /) -> Array:
-    """
-    Get the element-wise real part of a Complex array.
+    """Get the element-wise real part of a Complex array.
 
     WARNING: Not yet implemented.
     """
@@ -554,15 +506,13 @@ def real(x: Array, /) -> Array:
 
 
 def remainder(x1: Array, x2: Array, /) -> Array:
-    """
-    Compute the element-wise remainder of x1 divided by x2.
+    """Compute the element-wise remainder of x1 divided by x2.
     """
     return Array._new(ak.mod(x1._array, x2._array))
 
 
 def round(x: Array, /) -> Array:
-    """
-    Compute the element-wise rounding of an array.
+    """Compute the element-wise rounding of an array.
     """
     if x.dtype not in _numeric_dtypes:
         raise TypeError("Only numeric dtypes are allowed in round")
@@ -570,8 +520,7 @@ def round(x: Array, /) -> Array:
 
 
 def sign(x: Array, /) -> Array:
-    """
-    Compute the element-wise sign of an array.
+    """Compute the element-wise sign of an array.
     """
     if x.dtype not in _numeric_dtypes:
         raise TypeError("Only numeric dtypes are allowed in sign")
@@ -579,8 +528,7 @@ def sign(x: Array, /) -> Array:
 
 
 def sin(x: Array, /) -> Array:
-    """
-    Compute the element-wise sine of an array.
+    """Compute the element-wise sine of an array.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in sin")
@@ -588,8 +536,7 @@ def sin(x: Array, /) -> Array:
 
 
 def sinh(x: Array, /) -> Array:
-    """
-    Compute the element-wise hyperbolic sine of an array.
+    """Compute the element-wise hyperbolic sine of an array.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in sinh")
@@ -597,8 +544,7 @@ def sinh(x: Array, /) -> Array:
 
 
 def square(x: Array, /) -> Array:
-    """
-    Compute the element-wise square of an array.
+    """Compute the element-wise square of an array.
     """
     if x.dtype not in _numeric_dtypes:
         raise TypeError("Only numeric dtypes are allowed in sign")
@@ -606,8 +552,7 @@ def square(x: Array, /) -> Array:
 
 
 def sqrt(x: Array, /) -> Array:
-    """
-    Compute the element-wise square root of an array.
+    """Compute the element-wise square root of an array.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in sqrt")
@@ -615,8 +560,7 @@ def sqrt(x: Array, /) -> Array:
 
 
 def subtract(x1: Array, x2: Array, /) -> Array:
-    """
-    Compute the element-wise difference of two arrays.
+    """Compute the element-wise difference of two arrays.
     """
     if x1.dtype not in _numeric_dtypes or x2.dtype not in _numeric_dtypes:
         raise TypeError("Only numeric dtypes are allowed in subtract")
@@ -626,8 +570,7 @@ def subtract(x1: Array, x2: Array, /) -> Array:
 
 
 def tan(x: Array, /) -> Array:
-    """
-    Compute the element-wise tangent of an array.
+    """Compute the element-wise tangent of an array.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in tan")
@@ -635,8 +578,7 @@ def tan(x: Array, /) -> Array:
 
 
 def tanh(x: Array, /) -> Array:
-    """
-    Compute the element-wise hyperbolic tangent of an array.
+    """Compute the element-wise hyperbolic tangent of an array.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in tanh")
@@ -644,8 +586,7 @@ def tanh(x: Array, /) -> Array:
 
 
 def trunc(x: Array, /) -> Array:
-    """
-    Compute the element-wise truncation of a floating-point array.
+    """Compute the element-wise truncation of a floating-point array.
     """
     if x.dtype not in _floating_dtypes:
         raise TypeError("Only floating-point dtypes are allowed in trunc")

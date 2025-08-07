@@ -10,8 +10,7 @@ __all__ = ["shape"]
 
 
 def shape(a: Union[pdarray, Strings, all_scalars]) -> Tuple:
-    """
-    Return the shape of an array.
+    """Return the shape of an array.
 
     Parameters
     ----------

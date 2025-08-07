@@ -1,5 +1,4 @@
-"""
-Matching utilities for Arkouda arrays.
+"""Matching utilities for Arkouda arrays.
 
 The `arkouda.matcher` module provides functions for efficiently aligning,
 matching, and comparing Arkouda arrays. These tools are used internally to
@@ -56,8 +55,7 @@ else:
 
 
 class Matcher:
-    """
-    Utility class for storing and standardizing information about pattern matches.
+    """Utility class for storing and standardizing information about pattern matches.
 
     The `Matcher` class defines a standard set of location-related fields that can be
     used to represent the results of search or match operations, typically involving
@@ -176,8 +174,7 @@ class Matcher:
         return match
 
     def split(self, maxsplit: int = 0, return_segments: bool = False):
-        """
-        Split string by the occurrences of pattern.
+        """Split string by the occurrences of pattern.
         If maxsplit is nonzero, at most maxsplit splits occur.
         """
         from arkouda.client import generic_msg
@@ -233,8 +230,7 @@ class Matcher:
             return Strings.from_return_msg(repMsg)
 
     def sub(self, repl: str, count: int = 0, return_num_subs: bool = False):
-        """
-        Return the Strings obtained by replacing non-overlapping occurrences of pattern
+        """Return the Strings obtained by replacing non-overlapping occurrences of pattern
         with the replacement repl.
         If count is nonzero, at most count substitutions occur
         If return_num_subs is True, return the number of substitutions that occurred

@@ -107,8 +107,7 @@ def report_mem(pre=""):
 
 @typechecked
 def invert_permutation(perm: pdarray) -> pdarray:
-    """
-    Compute the inverse of a permutation array.
+    """Compute the inverse of a permutation array.
 
     The inverse permutation undoes the effect of the original permutation.
     For a valid permutation array `perm`, this function returns an array `inv`
@@ -147,8 +146,7 @@ def invert_permutation(perm: pdarray) -> pdarray:
 
 
 def convert_if_categorical(values):
-    """
-    Convert a Categorical array to a Strings array for display purposes.
+    """Convert a Categorical array to a Strings array for display purposes.
 
     If the input is a Categorical, it is converted to its string labels
     based on its codes. If not, the input is returned unchanged.
@@ -179,6 +177,7 @@ def convert_if_categorical(values):
     >>> result = convert_if_categorical(values)
     >>> print(result)
     [1 2 3]
+
     """
     if isinstance(values, Categorical):
         values = values.categories[values.codes]
@@ -186,8 +185,7 @@ def convert_if_categorical(values):
 
 
 def register(obj, name):
-    """
-    Register an Arkouda object with a user-specified name.
+    """Register an Arkouda object with a user-specified name.
 
     This function registers the provided Arkouda object (`obj`) under a
     given name (`name`). It is backwards compatible with earlier versions
@@ -226,14 +224,14 @@ def register(obj, name):
     >>> registered_cat = register(cat, "my_cat")
     >>> print(registered_cat)
     ['apple', 'banana', 'cherry']
+
     """
     return obj.register(name)
 
 
 @typechecked
 def attach(name: str):
-    """
-    Attach a previously created Arkouda object by its registered name.
+    """Attach a previously created Arkouda object by its registered name.
 
     This function retrieves an Arkouda object (e.g., `pdarray`, `DataFrame`,
     `Series`, etc.) associated with a given `name`. It returns the corresponding
@@ -267,6 +265,7 @@ def attach(name: str):
     >>> print(arr)
     [1 2 3]
     >>> registered_obj.unregister()
+
     """
     from arkouda.client import generic_msg
     from arkouda.numpy.pdarrayclass import pdarray
@@ -312,8 +311,7 @@ def attach(name: str):
 
 @typechecked
 def unregister(name: str) -> str:
-    """
-    Unregister an Arkouda object by its name.
+    """Unregister an Arkouda object by its name.
 
     This function sends a request to unregister the Arkouda object associated
     with the specified `name`. It returns a response message indicating the
@@ -345,6 +343,7 @@ def unregister(name: str) -> str:
     >>> response = ak.unregister("my_array")
     >>> print(response)
     Unregistered PDARRAY my_array
+
     """
     from arkouda.client import generic_msg
 
@@ -355,8 +354,7 @@ def unregister(name: str) -> str:
 
 @typechecked
 def is_registered(name: str, as_component: bool = False) -> bool:
-    """
-    Determine if the provided name is associated with a registered Arkouda object.
+    """Determine if the provided name is associated with a registered Arkouda object.
 
     This function checks if the `name` is found in the registry of objects,
     and optionally checks if it is registered as a component of a registered object.
@@ -395,13 +393,13 @@ def is_registered(name: str, as_component: bool = False) -> bool:
     >>> result = ak.is_registered("my_component", as_component=True)
     >>> print(result)
     False
+
     """
     return name in list_registry()["Components" if as_component else "Objects"]
 
 
 def register_all(data: dict):
-    """
-    Register all objects in the provided dictionary.
+    """Register all objects in the provided dictionary.
 
     This function iterates through the dictionary `data`, registering each object
     with its corresponding name. It is useful for batch registering multiple
@@ -422,14 +420,14 @@ def register_all(data: dict):
     After calling this function, "array1" and "array2" are registered
     in Arkouda, and can be accessed by their names.
     >>> ak.unregister_all(["array1", "array2"])
+
     """
     for reg_name, obj in data.items():
         register(obj, reg_name)
 
 
 def unregister_all(names: List[str]):
-    """
-    Unregister all Arkouda objects associated with the provided names.
+    """Unregister all Arkouda objects associated with the provided names.
 
     This function iterates through the list of `names`, unregistering each
     corresponding object from the Arkouda server.
@@ -458,8 +456,7 @@ def unregister_all(names: List[str]):
 
 
 def attach_all(names: list):
-    """
-    Attach to all objects registered with the provided names.
+    """Attach to all objects registered with the provided names.
 
     This function returns a dictionary mapping each name in the input list
     to the corresponding Arkouda object retrieved using `attach`.
@@ -487,6 +484,7 @@ def attach_all(names: list):
     >>> print(type(attached_objs["arr2"]))
     <class 'arkouda.numpy.pdarrayclass.pdarray'>
     >>> ak.unregister_all(["arr1", "arr2"])
+
     """
     return {n: attach(n) for n in names}
 
@@ -499,8 +497,7 @@ def sparse_sum_help(
     merge: bool = True,
     percent_transfer_limit: int = 100,
 ) -> Tuple[pdarray, pdarray]:
-    """
-    Sum two sparse matrices together.
+    """Sum two sparse matrices together.
 
     This function returns the result of summing two sparse matrices by combining
     their indices and values. Internally, it performs the equivalent of:
@@ -544,6 +541,7 @@ def sparse_sum_help(
 
     >>> ak.GroupBy(ak.concatenate([idx1, idx2])).sum(ak.concatenate((vals1, vals2)))
     (array([0 1 3 4 6 7 9]), array([10 12 16 4 16 7 28]))
+
     """
     from arkouda.client import generic_msg
 
@@ -563,8 +561,7 @@ def sparse_sum_help(
 
 
 def broadcast_dims(sa: Sequence[int], sb: Sequence[int]) -> Tuple[int, ...]:
-    """
-    Determine the broadcasted shape of two arrays given their shapes.
+    """Determine the broadcasted shape of two arrays given their shapes.
 
     This function implements the broadcasting rules from the Array API standard
     to compute the shape resulting from broadcasting two arrays together.
@@ -597,8 +594,8 @@ def broadcast_dims(sa: Sequence[int], sb: Sequence[int]) -> Tuple[int, ...]:
 
     >>> broadcast_dims((4,), (3, 1))
     (3, 4)
-    """
 
+    """
     Na = len(sa)
     Nb = len(sb)
     N = max(Na, Nb)
@@ -627,8 +624,7 @@ def broadcast_dims(sa: Sequence[int], sb: Sequence[int]) -> Tuple[int, ...]:
 
 
 def convert_bytes(nbytes: int_scalars, unit: Literal["B", "KB", "MB", "GB"] = "B") -> numeric_scalars:
-    """
-    Convert a number of bytes to a larger unit: KB, MB, or GB.
+    """Convert a number of bytes to a larger unit: KB, MB, or GB.
 
     Parameters
     ----------
@@ -677,8 +673,7 @@ def convert_bytes(nbytes: int_scalars, unit: Literal["B", "KB", "MB", "GB"] = "B
 
 
 def is_numeric(arry: Union[pdarray, Strings, Categorical, Series, Index]) -> builtins.bool:
-    """
-    Check if the dtype of the given array-like object is numeric.
+    """Check if the dtype of the given array-like object is numeric.
 
     Parameters
     ----------
@@ -705,6 +700,7 @@ def is_numeric(arry: Union[pdarray, Strings, Categorical, Series, Index]) -> bui
     >>> cat = Categorical(strings)
     >>> ak.util.is_numeric(cat)
     False
+
     """
     from arkouda.pandas.index import Index
     from arkouda.pandas.series import Series
@@ -716,8 +712,7 @@ def is_numeric(arry: Union[pdarray, Strings, Categorical, Series, Index]) -> bui
 
 
 def is_float(arry: Union[pdarray, Strings, Categorical, Series, Index]) -> builtins.bool:
-    """
-    Check if the dtype of the given array-like object is a float type.
+    """Check if the dtype of the given array-like object is a float type.
 
     Parameters
     ----------
@@ -743,6 +738,7 @@ def is_float(arry: Union[pdarray, Strings, Categorical, Series, Index]) -> built
     >>> strings = ak.array(["1.0", "2.0"])
     >>> ak.util.is_float(strings)
     False
+
     """
     from arkouda.pandas.index import Index
     from arkouda.pandas.series import Series
@@ -754,8 +750,7 @@ def is_float(arry: Union[pdarray, Strings, Categorical, Series, Index]) -> built
 
 
 def is_int(arry: Union[pdarray, Strings, Categorical, Series, Index]) -> builtins.bool:
-    """
-    Check if the dtype of the given array-like object is an integer type.
+    """Check if the dtype of the given array-like object is an integer type.
 
     Parameters
     ----------
@@ -781,6 +776,7 @@ def is_int(arry: Union[pdarray, Strings, Categorical, Series, Index]) -> builtin
     >>> strings = ak.array(["1", "2"])
     >>> ak.util.is_int(strings)
     False
+
     """
     from arkouda.pandas.index import Index
     from arkouda.pandas.series import Series
@@ -794,8 +790,7 @@ def is_int(arry: Union[pdarray, Strings, Categorical, Series, Index]) -> builtin
 def map(
     values: Union[pdarray, Strings, Categorical], mapping: Union[dict, Series]
 ) -> Union[pdarray, Strings]:
-    """
-    Map the values of an array according to an input mapping.
+    """Map the values of an array according to an input mapping.
 
     Parameters
     ----------
@@ -831,6 +826,7 @@ def map(
     >>> s = ak.Series(ak.array(["a", "b", "c", "d"]), index=ak.array([4, 2, 1, 3]))
     >>> ak.util.map(a, s)
     array(['b', 'd', 'b', 'd', 'a'])
+
     """
     import numpy as np
 
@@ -873,8 +869,7 @@ def map(
 
 
 def _infer_shape_from_size(size):
-    """
-    Infer the shape, number of dimensions (ndim), and full size from a given size or shape.
+    """Infer the shape, number of dimensions (ndim), and full size from a given size or shape.
 
     This function is used in pdarray creation functions that allow a size (1D) or shape (multi-dim).
     If the input is a tuple, it is treated as a multidimensional shape.
@@ -903,6 +898,7 @@ def _infer_shape_from_size(size):
 
     >>> _infer_shape_from_size((3, 4))
     ((3, 4), 2, 12)
+
     """
     # used in pdarray creation functions that allow a size (1D) or shape (multi-dim)
     shape: Union[int_scalars, Tuple[int_scalars, ...]] = 1
@@ -920,8 +916,7 @@ def _infer_shape_from_size(size):
 
 
 def _generate_test_shape(rank, size):
-    """
-    Generate a shape for a multi-dimensional array that is close to a given size,
+    """Generate a shape for a multi-dimensional array that is close to a given size,
     while ensuring each dimension is at least 2.
 
     The shape will consist of `rank` dimensions, where the product of the dimensions
@@ -951,6 +946,7 @@ def _generate_test_shape(rank, size):
 
     >>> _generate_test_shape(4, 24)
     ((2, 2, 2, 3), 24)
+
     """
     # used to generate shapes of the form (2,2,...n) for testing multi-dim creation
     last_dim = max(2, size // (2 ** (rank - 1)))  # such that 2*2*..*n is close to size,
@@ -962,8 +958,7 @@ def _generate_test_shape(rank, size):
 
 
 def copy(a: Union[Strings, pdarray]) -> Union[Strings, pdarray]:
-    """
-    Return a deep copy of the given Arkouda object.
+    """Return a deep copy of the given Arkouda object.
 
     Parameters
     ----------
@@ -979,6 +974,7 @@ def copy(a: Union[Strings, pdarray]) -> Union[Strings, pdarray]:
     ------
     TypeError
         If the input is not a Strings or pdarray instance.
+
     """
     if isinstance(a, (Strings, pdarray)):
         return a.copy()

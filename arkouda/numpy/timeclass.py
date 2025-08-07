@@ -170,6 +170,7 @@ class _AbstractBaseTime(pdarray):
         -------
         self.__class__
             Values rounded down to nearest frequency
+
         """
         f = _get_factor(freq)
         return self.__class__(self.values // f, unit=freq)
@@ -186,6 +187,7 @@ class _AbstractBaseTime(pdarray):
         -------
         self.__class__
             Values rounded up to nearest frequency
+
         """
         f = _get_factor(freq)
         return self.__class__((self.values + (f - 1)) // f, unit=freq)
@@ -203,6 +205,7 @@ class _AbstractBaseTime(pdarray):
         -------
         self.__class__
             Values rounded to nearest frequency
+
         """
         f = _get_factor(freq)
         offset = self.values + ((f + 1) // 2)
@@ -231,8 +234,7 @@ class _AbstractBaseTime(pdarray):
         mode: str = "truncate",
         file_type: str = "distribute",
     ):
-        """
-        Override of the pdarray to_hdf to store the special dtype
+        """Override of the pdarray to_hdf to store the special dtype
         """
         from typing import cast as typecast
 
@@ -256,8 +258,7 @@ class _AbstractBaseTime(pdarray):
         )
 
     def update_hdf(self, prefix_path: str, dataset: str = "array", repack: bool = True):
-        """
-        Override the pdarray implementation so that the special object type will be used.
+        """Override the pdarray implementation so that the special object type will be used.
         """
         from arkouda.client import generic_msg
         from arkouda.pandas.io import (
@@ -483,6 +484,7 @@ class Datetime(_AbstractBaseTime):
     Notes
     -----
     The ``.values`` attribute is always in nanoseconds with int64 dtype.
+
     """
 
     supported_with_datetime = frozenset(("==", "!=", "<", "<=", ">", ">=", "-"))
@@ -647,6 +649,7 @@ class Datetime(_AbstractBaseTime):
         See Also
         --------
         to_ndarray
+
         """
         return to_datetime(self.to_ndarray())
 
@@ -654,8 +657,7 @@ class Datetime(_AbstractBaseTime):
         raise TypeError("Cannot sum datetime64 values")
 
     def register(self, user_defined_name):
-        """
-        Register this Datetime object and underlying components with the Arkouda server
+        """Register this Datetime object and underlying components with the Arkouda server
 
         Parameters
         ----------
@@ -686,6 +688,7 @@ class Datetime(_AbstractBaseTime):
         -----
         Objects registered with the server are immune to deletion until
         they are unregistered.
+
         """
         from arkouda.client import generic_msg
 
@@ -703,8 +706,7 @@ class Datetime(_AbstractBaseTime):
         return self
 
     def unregister(self):
-        """
-        Unregister this Datetime object in the arkouda server which was previously
+        """Unregister this Datetime object in the arkouda server which was previously
         registered using register() and/or attached to using attach()
 
         Raises
@@ -721,6 +723,7 @@ class Datetime(_AbstractBaseTime):
         -----
         Objects registered with the server are immune to deletion until
         they are unregistered.
+
         """
         from arkouda.numpy.util import unregister
 
@@ -730,8 +733,7 @@ class Datetime(_AbstractBaseTime):
         self.registered_name = None
 
     def is_registered(self) -> np.bool_:
-        """
-         Return True iff the object is contained in the registry or is a component of a
+        """Return True iff the object is contained in the registry or is a component of a
          registered object.
 
         Returns
@@ -752,6 +754,7 @@ class Datetime(_AbstractBaseTime):
         -----
         Objects registered with the server are immune to deletion until
         they are unregistered.
+
         """
         from arkouda.numpy.util import is_registered
 
@@ -790,6 +793,7 @@ class Timedelta(_AbstractBaseTime):
     Notes
     -----
     The ``.values`` attribute is always in nanoseconds with int64 dtype.
+
     """
 
     supported_with_datetime = frozenset(("+"))
@@ -893,6 +897,7 @@ class Timedelta(_AbstractBaseTime):
         See Also
         --------
         to_ndarray
+
         """
         return to_timedelta(self.to_ndarray())
 
@@ -902,8 +907,7 @@ class Timedelta(_AbstractBaseTime):
         axis: Optional[Union[None, int, tuple]] = None,
         keepdims: Optional[bool] = False,
     ):
-        """
-        Returns the standard deviation as a pd.Timedelta object, with args compatible with ak.std
+        """Returns the standard deviation as a pd.Timedelta object, with args compatible with ak.std
         """
         return self._scalar_callback(self.values.std(ddof, axis, keepdims))
 
@@ -919,8 +923,7 @@ class Timedelta(_AbstractBaseTime):
         return self.__class__(akcast(akabs(self.values), "int64"))
 
     def register(self, user_defined_name):
-        """
-        Register this Timedelta object and underlying components with the Arkouda server
+        """Register this Timedelta object and underlying components with the Arkouda server
 
         Parameters
         ----------
@@ -951,6 +954,7 @@ class Timedelta(_AbstractBaseTime):
         -----
         Objects registered with the server are immune to deletion until
         they are unregistered.
+
         """
         from arkouda.client import generic_msg
 
@@ -968,8 +972,7 @@ class Timedelta(_AbstractBaseTime):
         return self
 
     def unregister(self):
-        """
-        Unregister this timedelta object in the arkouda server which was previously
+        """Unregister this timedelta object in the arkouda server which was previously
         registered using register() and/or attached to using attach()
 
         Raises
@@ -986,6 +989,7 @@ class Timedelta(_AbstractBaseTime):
         -----
         Objects registered with the server are immune to deletion until
         they are unregistered.
+
         """
         from arkouda.numpy.util import unregister
 
@@ -995,8 +999,7 @@ class Timedelta(_AbstractBaseTime):
         self.registered_name = None
 
     def is_registered(self) -> np.bool_:
-        """
-         Return True iff the object is contained in the registry or is a component of a
+        """Return True iff the object is contained in the registry or is a component of a
          registered object.
 
         Returns
@@ -1017,6 +1020,7 @@ class Timedelta(_AbstractBaseTime):
         -----
         Objects registered with the server are immune to deletion until
         they are unregistered.
+
         """
         from arkouda.numpy.util import is_registered
 
@@ -1037,8 +1041,7 @@ def date_range(
     inclusive="both",
     **kwargs,
 ):
-    """
-    Create a fixed frequency Datetime range. Alias for
+    """Create a fixed frequency Datetime range. Alias for
     ``ak.Datetime(pd.date_range(args))``. Subject to size limit
     imposed by client.maxTransferBytes.
 
@@ -1082,7 +1085,6 @@ def date_range(
     <https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases>`__.
 
     """
-
     return Datetime(
         pd_date_range(
             start,
@@ -1099,8 +1101,7 @@ def date_range(
 
 
 def timedelta_range(start=None, end=None, periods=None, freq=None, name=None, closed=None, **kwargs):
-    """
-    Return a fixed frequency TimedeltaIndex, with day as the default
+    """Return a fixed frequency TimedeltaIndex, with day as the default
     frequency. Alias for ``ak.Timedelta(pd.timedelta_range(args))``.
     Subject to size limit imposed by client.maxTransferBytes.
 
@@ -1133,5 +1134,6 @@ def timedelta_range(start=None, end=None, periods=None, freq=None, name=None, cl
 
     To learn more about the frequency strings, please see `this link
     <https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases>`__.
+
     """
     return Timedelta(pd_timedelta_range(start, end, periods, freq, name, closed, **kwargs))

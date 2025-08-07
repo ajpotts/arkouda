@@ -1,5 +1,4 @@
-"""
-This file defines the types for type annotations.
+"""This file defines the types for type annotations.
 
 These names aren't part of the module namespace, but they are used in the
 annotations in the function signatures. The functions in the module are only

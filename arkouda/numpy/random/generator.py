@@ -18,8 +18,7 @@ __all__ = [
 
 
 class Generator:
-    """
-    ``Generator`` exposes a number of methods for generating random
+    """``Generator`` exposes a number of methods for generating random
     numbers drawn from a variety of probability distributions. In addition to
     the distribution-specific arguments, each method takes a keyword argument
     `size` that defaults to ``None``. If `size` is ``None``, then a single
@@ -44,6 +43,7 @@ class Generator:
     See Also
     --------
     default_rng : Recommended constructor for `Generator`.
+
     """
 
     def __init__(self, name_dict=None, seed=None, state=1):
@@ -62,8 +62,7 @@ class Generator:
         return _str
 
     def choice(self, a, size=None, replace=True, p=None):
-        """
-        Generate a randomly sample from a.
+        """Generate a randomly sample from a.
 
         Parameters
         ----------
@@ -85,6 +84,7 @@ class Generator:
         -------
         pdarray, numeric_scalar
             A pdarray containing the sampled values or a single random value if size not provided.
+
         """
         from arkouda.client import generic_msg
 
@@ -145,8 +145,7 @@ class Generator:
         return pda if not ret_scalar else pda[0]
 
     def exponential(self, scale=1.0, size=None, method="zig"):
-        r"""
-        Draw samples from an exponential distribution.
+        r"""Draw samples from an exponential distribution.
 
         Its probability density function is
 
@@ -173,6 +172,7 @@ class Generator:
         -------
         pdarray
             Drawn samples from the parameterized exponential distribution.
+
         """
         _, scale = float_array_or_scalar_helper("exponential", "scale", scale, size)
         if (scale < 0).any() if isinstance(scale, pdarray) else scale < 0:
@@ -180,8 +180,7 @@ class Generator:
         return scale * self.standard_exponential(size, method=method)
 
     def standard_exponential(self, size=None, method="zig"):
-        """
-        Draw samples from the standard exponential distribution.
+        """Draw samples from the standard exponential distribution.
 
         `standard_exponential` is identical to the exponential distribution
         with a scale parameter of 1.
@@ -198,6 +197,7 @@ class Generator:
         -------
         pdarray
             Drawn samples from the standard exponential distribution.
+
         """
         from arkouda.client import generic_msg
         from arkouda.numpy.util import _infer_shape_from_size
@@ -224,8 +224,7 @@ class Generator:
         return create_pdarray(rep_msg)
 
     def integers(self, low, high=None, size=None, dtype=akint64, endpoint=False):
-        """
-        Return random integers from low (inclusive) to high (exclusive),
+        """Return random integers from low (inclusive) to high (exclusive),
         or if endpoint=True, low (inclusive) to high (inclusive).
 
         Return random integers from the “discrete uniform” distribution of the specified dtype.
@@ -265,6 +264,7 @@ class Generator:
         array([15, 13, 10, 8, 5, 18, 16, 14, 7, 13])  # random
         >>> rng.integers(5, size=10)
         array([2, 4, 0, 0, 0, 3, 1, 5, 5, 3])  # random
+
         """
         from arkouda.client import generic_msg
         from arkouda.numpy.util import _infer_shape_from_size
@@ -303,8 +303,7 @@ class Generator:
         return create_pdarray(rep_msg)
 
     def logistic(self, loc=0.0, scale=1.0, size=None):
-        r"""
-        Draw samples from a logistic distribution.
+        r"""Draw samples from a logistic distribution.
 
         Samples are drawn from a logistic distribution with specified parameters,
         loc (location or mean, also median), and scale (>0).
@@ -348,6 +347,7 @@ class Generator:
         >>> import arkouda as ak
         >>> ak.random.default_rng(17).logistic(3, 2.5, 3)
         array([1.1319566682702642 -7.1665150633720014 7.7208667145173608])
+
         """
         from arkouda.client import generic_msg
 
@@ -378,8 +378,7 @@ class Generator:
         return create_pdarray(rep_msg)
 
     def lognormal(self, mean=0.0, sigma=1.0, size=None, method="zig"):
-        r"""
-        Draw samples from a log-normal distribution with specified mean,
+        r"""Draw samples from a log-normal distribution with specified mean,
         standard deviation, and array shape.
 
         Note that the mean and standard deviation are not the values for the distribution itself,
@@ -429,6 +428,7 @@ class Generator:
         >>> import arkouda as ak
         >>> ak.random.default_rng(17).lognormal(3, 2.5, 3)
         array([7.3866978126031091 106.20159494048757 4.5424399190667666])
+
         """
         from arkouda.numpy import exp
 
@@ -436,8 +436,7 @@ class Generator:
         return exp(norm_arr) if size is not None else np.exp(norm_arr)
 
     def normal(self, loc=0.0, scale=1.0, size=None, method="zig"):
-        r"""
-        Draw samples from a normal (Gaussian) distribution
+        r"""Draw samples from a normal (Gaussian) distribution
 
         Parameters
         ----------
@@ -479,6 +478,7 @@ class Generator:
         >>> import arkouda as ak
         >>> ak.random.default_rng(17).normal(3, 2.5, 3)
         array([2.3673425816523577 4.0532529435624589 2.0598322696795694])
+
         """
         if size is None:
             # delegate to numpy when return size is 1
@@ -490,8 +490,7 @@ class Generator:
         return loc + scale * self.standard_normal(size=size, method=method)
 
     def random(self, size=None):
-        """
-        Return random floats in the half-open interval [0.0, 1.0).
+        """Return random floats in the half-open interval [0.0, 1.0).
 
         Results are from the uniform distribution over the stated interval.
 
@@ -523,6 +522,7 @@ class Generator:
         0.47108547995356098 # random
         >>> rng.random(3)
         array([0.055256829926011691, 0.62511314008006458, 0.16400145561571539]) # random
+
         """
         if size is None:
             # delegate to numpy when return size is 1
@@ -530,8 +530,7 @@ class Generator:
         return self.uniform(size=size)
 
     def standard_gamma(self, shape, size=None):
-        r"""
-        Draw samples from a standard gamma distribution.
+        r"""Draw samples from a standard gamma distribution.
 
         Samples are drawn from a Gamma distribution with specified parameters,
         shape (sometimes designated “k”) and scale (sometimes designated “theta”),
@@ -564,6 +563,7 @@ class Generator:
         0.8729704388729135 # random
         >>> rng.standard_gamma(1, size=3)
         array([0.4879818539586227 0.6534654349920751 0.40990997253631162]) # random
+
         """  # noqa: W605
         from arkouda.client import generic_msg
         from arkouda.numpy.util import _infer_shape_from_size
@@ -595,8 +595,7 @@ class Generator:
         return create_pdarray(rep_msg)
 
     def standard_normal(self, size=None, method="zig"):
-        r"""
-        Draw samples from a standard Normal distribution (mean=0, stdev=1).
+        r"""Draw samples from a standard Normal distribution (mean=0, stdev=1).
 
         Parameters
         ----------
@@ -631,6 +630,7 @@ class Generator:
         2.1923875335537315 # random
         >>> rng.standard_normal(3)
         array([0.8797352989638163, -0.7085325853376141, 0.021728052940979934])  # random
+
         """
         from arkouda.client import generic_msg
         from arkouda.numpy.util import _infer_shape_from_size
@@ -658,8 +658,7 @@ class Generator:
         return create_pdarray(rep_msg)
 
     def shuffle(self, x, method="FisherYates"):
-        """
-        Randomly shuffle the elements of a `pdarray` in place.
+        """Randomly shuffle the elements of a `pdarray` in place.
 
         This method performs a reproducible in-place shuffle of the array `x`
         using the specified strategy. Two methods are currently available:
@@ -715,7 +714,6 @@ class Generator:
         array([5 9 7 3 0 2 1 6 4 8])
 
         """
-
         from arkouda.client import generic_msg
 
         if not isinstance(x, pdarray):
@@ -736,8 +734,7 @@ class Generator:
         self._state += 1
 
     def permutation(self, x, method="Argsort"):
-        """
-        Randomly permute a sequence, or return a permuted range.
+        """Randomly permute a sequence, or return a permuted range.
 
         Parameters
         ----------
@@ -750,6 +747,7 @@ class Generator:
 
             If 'Argsort' is selected, the permutation will be generated by
             an argsort performed on randomly generated floats.
+
         Returns
         -------
         pdarray
@@ -761,6 +759,7 @@ class Generator:
             Raised if method is not an allowed value.
         TypeError
             Raised if x is not of type int or pdarray.
+
         """
         from arkouda.client import generic_msg
 
@@ -807,8 +806,7 @@ class Generator:
             raise ValueError("method did not match allowed values: Serial, Argsort")
 
     def poisson(self, lam=1.0, size=None):
-        r"""
-        Draw samples from a Poisson distribution.
+        r"""Draw samples from a Poisson distribution.
 
         The Poisson distribution is the limit of the binomial distribution for large N.
 
@@ -842,6 +840,7 @@ class Generator:
         >>> rng = ak.random.default_rng()
         >>> rng.poisson(lam=3, size=5)
         array([5 3 2 2 3])  # random
+
         """
         from arkouda.client import generic_msg
 
@@ -869,8 +868,7 @@ class Generator:
         return create_pdarray(rep_msg)
 
     def uniform(self, low=0.0, high=1.0, size=None):
-        """
-        Draw samples from a uniform distribution.
+        """Draw samples from a uniform distribution.
 
         Samples are uniformly distributed over the half-open interval [low, high).
         In other words, any value within the given interval is equally likely to be drawn by uniform.
@@ -904,6 +902,7 @@ class Generator:
         >>> rng = ak.random.default_rng()
         >>> rng.uniform(-1, 1, 3)
         array([0.030785499755523249, 0.08505865366367038, -0.38552048588998722])  # random
+
         """
         from arkouda.client import generic_msg
         from arkouda.numpy.util import _infer_shape_from_size
@@ -932,8 +931,7 @@ class Generator:
 
 
 def default_rng(seed=None):
-    """
-    Construct a new Generator.
+    """Construct a new Generator.
 
     Right now we only support PCG64, since this is what is available in chapel.
 
@@ -949,6 +947,7 @@ def default_rng(seed=None):
     -------
     Generator
         The initialized generator object.
+
     """
     from arkouda.client import generic_msg
 

@@ -1,5 +1,4 @@
-"""
-Client-side message protocol classes for Arkouda server communication.
+"""Client-side message protocol classes for Arkouda server communication.
 
 The `arkouda.message` module defines the classes and enums used to format,
 serialize, and deserialize messages exchanged between the Arkouda client and server.
@@ -81,8 +80,7 @@ __all__ = [
 
 
 class ParameterObject:
-    """
-    Represents a typed key-value parameter used in Arkouda command messages.
+    """Represents a typed key-value parameter used in Arkouda command messages.
 
     This class is responsible for wrapping Python values, such as pdarrays,
     Strings, SegArrays, and scalars, into a common structure that can be
@@ -116,8 +114,7 @@ class ParameterObject:
 
     @property
     def dict(self):
-        """
-        Return the dictionary representation of the ParameterObject.
+        """Return the dictionary representation of the ParameterObject.
 
         Returns
         -------
@@ -134,8 +131,7 @@ class ParameterObject:
     @staticmethod
     @typechecked
     def _build_pdarray_param(key: str, val) -> ParameterObject:
-        """
-        Create a ParameterObject from a pdarray value.
+        """Create a ParameterObject from a pdarray value.
 
         Parameters
         ----------
@@ -154,8 +150,7 @@ class ParameterObject:
     @staticmethod
     @typechecked
     def _build_sparray_param(key: str, val) -> ParameterObject:
-        """
-        Create a ParameterObject from a sparray value.
+        """Create a ParameterObject from a sparray value.
 
         Parameters
         ----------
@@ -174,8 +169,7 @@ class ParameterObject:
     @staticmethod
     @typechecked
     def _build_strings_param(key: str, val) -> ParameterObject:
-        """
-        Create a ParameterObject from a Strings value.
+        """Create a ParameterObject from a Strings value.
 
         Parameters
         ----------
@@ -196,8 +190,7 @@ class ParameterObject:
     @staticmethod
     @typechecked
     def _build_segarray_param(key: str, val) -> ParameterObject:
-        """
-        Create a ParameterObject from a SegArray value.
+        """Create a ParameterObject from a SegArray value.
 
         Parameters
         ----------
@@ -235,8 +228,7 @@ class ParameterObject:
     @staticmethod
     @typechecked
     def _build_tuple_param(key: str, val: tuple) -> ParameterObject:
-        """
-        Create a ParameterObject from a tuple.
+        """Create a ParameterObject from a tuple.
 
         Parameters
         ----------
@@ -255,8 +247,7 @@ class ParameterObject:
     @staticmethod
     @typechecked
     def _build_list_param(key: str, val: list) -> ParameterObject:
-        """
-        Create a ParameterObject from a list.
+        """Create a ParameterObject from a list.
 
         Parameters
         ----------
@@ -312,8 +303,7 @@ class ParameterObject:
     @staticmethod
     @typechecked
     def _build_gen_param(key: str, val) -> ParameterObject:
-        """
-        Create a ParameterObject from a single value.
+        """Create a ParameterObject from a single value.
 
         Parameters
         ----------
@@ -332,8 +322,7 @@ class ParameterObject:
 
     @staticmethod
     def generate_dispatch() -> Dict:
-        """
-        Build and return the dispatch table used to build parameter object.
+        """Build and return the dispatch table used to build parameter object.
 
         Returns
         -------
@@ -353,8 +342,7 @@ class ParameterObject:
 
     @classmethod
     def factory(cls, key: str, val) -> ParameterObject:
-        """
-        Create a ParameterObject from a key–value pair for server communication.
+        """Create a ParameterObject from a key–value pair for server communication.
 
         This factory method selects the appropriate builder based on the type of
         `val`. It handles `pdarray` and `sparray` specially to avoid duplicate
@@ -405,8 +393,7 @@ class ParameterObject:
 
 
 class MessageFormat(Enum):
-    """
-    Enum representing the format of an Arkouda message.
+    """Enum representing the format of an Arkouda message.
 
     Used to distinguish between STRING and BINARY format messages
     exchanged between client and server.
@@ -416,8 +403,7 @@ class MessageFormat(Enum):
     BINARY = "BINARY"
 
     def __str__(self) -> str:
-        """
-        Return value.
+        """Return value.
 
         Overridden method returns value, which is useful in outputting a MessageFormat object to JSON.
 
@@ -425,8 +411,7 @@ class MessageFormat(Enum):
         return self.value
 
     def __repr__(self) -> str:
-        """
-        Return value.
+        """Return value.
 
         Overridden method returns value, which is useful in outputting a MessageFormat object to JSON.
 
@@ -435,8 +420,7 @@ class MessageFormat(Enum):
 
 
 class MessageType(Enum):
-    """
-    Enum representing the type of server response message.
+    """Enum representing the type of server response message.
 
     Values indicate whether a server message is NORMAL, a WARNING, or an ERROR.
 
@@ -457,8 +441,7 @@ class MessageType(Enum):
 
 @dataclass(frozen=True)
 class RequestMessage:
-    """
-    Encapsulates client-to-server command messages.
+    """Encapsulates client-to-server command messages.
 
     Represents a structured message used to communicate commands from
     the Arkouda Python client to the Chapel server.
@@ -498,8 +481,7 @@ class RequestMessage:
         args: Optional[str] = None,
         size: int = -1,
     ) -> None:
-        """
-        Initiate request message.
+        """Initiate request message.
 
         Overridden __init__ method sets instance attributes to default values
         if the corresponding init params are missing.
@@ -529,8 +511,7 @@ class RequestMessage:
         object.__setattr__(self, "size", size)
 
     def asdict(self) -> Dict:
-        """
-        Return a dictionary encapsulating ReplyMessage state.
+        """Return a dictionary encapsulating ReplyMessage state.
 
         Overridden asdict implementation sets the values of non-required
         fields to an empty space (for Chapel JSON processing) and invokes
@@ -558,8 +539,7 @@ class RequestMessage:
 
 @dataclass(frozen=True)
 class ReplyMessage:
-    """
-    Encapsulates server-to-client reply messages.
+    """Encapsulates server-to-client reply messages.
 
     Represents the result of a command sent to the server, including
     message type and body.
@@ -583,8 +563,7 @@ class ReplyMessage:
 
     @staticmethod
     def fromdict(values: Dict) -> ReplyMessage:
-        """
-        Generate a ReplyMessage from a dictionary.
+        """Generate a ReplyMessage from a dictionary.
 
         Generate a ReplyMessage from a dict encapsulating the data
         and metadata from a reply from the Arkouda server.

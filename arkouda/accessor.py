@@ -1,5 +1,4 @@
-"""
-Accessor utilities for Arkouda Series-like objects.
+"""Accessor utilities for Arkouda Series-like objects.
 
 This module defines infrastructure for namespace-based accessors (e.g., `.str`, `.dt`)
 on Arkouda Series, mimicking the behavior of pandas-style accessors. It supports
@@ -65,8 +64,7 @@ __all__ = [
 
 
 class CachedAccessor:
-    """
-    Descriptor for caching namespace-based accessors.
+    """Descriptor for caching namespace-based accessors.
 
     This custom property-like object enables lazy initialization of accessors
     (e.g., `.str`, `.dt`) on Series-like objects, similar to pandas-style extension
@@ -83,6 +81,7 @@ class CachedAccessor:
     -----
     The `accessor` class's ``__init__`` method must accept a single positional
     argument, which should be one of ``Series``, ``DataFrame``, or ``Index``.
+
     """
 
     def __init__(self, name: str, accessor) -> None:
@@ -90,8 +89,7 @@ class CachedAccessor:
         self._accessor = accessor
 
     def __get__(self, obj, cls):
-        """
-        Retrieve and cache the accessor instance for the calling object.
+        """Retrieve and cache the accessor instance for the calling object.
 
         Parameters
         ----------
@@ -119,8 +117,7 @@ class CachedAccessor:
 
 
 def string_operators(cls):
-    """
-    Add common string operation methods to a StringAccessor class.
+    """Add common string operation methods to a StringAccessor class.
 
     This class decorator dynamically attaches string operations (`contains`,
     `startswith`, `endswith`) to the given class using the `_make_op` helper.
@@ -146,8 +143,7 @@ def string_operators(cls):
 
 
 def date_operators(cls):
-    """
-    Add common datetime operation methods to a DatetimeAccessor class.
+    """Add common datetime operation methods to a DatetimeAccessor class.
 
     This class decorator dynamically attaches datetime operations (`floor`,
     `ceil`, `round`) to the given class using the `_make_op` helper.
@@ -173,8 +169,7 @@ def date_operators(cls):
 
 
 class Properties:
-    """
-    Base class for accessor implementations in Arkouda.
+    """Base class for accessor implementations in Arkouda.
 
     Provides the `_make_op` class method to dynamically generate accessor methods
     that wrap underlying `Strings` or `Datetime` operations and return new Series.
@@ -204,8 +199,7 @@ class Properties:
 
 @date_operators
 class DatetimeAccessor(Properties):
-    """
-    Accessor for datetime-like operations on Arkouda Series.
+    """Accessor for datetime-like operations on Arkouda Series.
 
     Provides datetime methods such as `.floor()`, `.ceil()`, and `.round()`,
     mirroring the `.dt` accessor in pandas.
@@ -244,8 +238,7 @@ class DatetimeAccessor(Properties):
 
 @string_operators
 class StringAccessor(Properties):
-    """
-    Accessor for string operations on Arkouda Series.
+    """Accessor for string operations on Arkouda Series.
 
     Provides string-like methods such as `.contains()`, `.startswith()`, and
     `.endswith()` via the `.str` accessor, similar to pandas.

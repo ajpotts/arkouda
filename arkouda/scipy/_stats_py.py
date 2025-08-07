@@ -13,13 +13,13 @@ __all__ = ["power_divergence", "chisquare", "Power_divergenceResult"]
 
 
 class Power_divergenceResult(namedtuple("Power_divergenceResult", ("statistic", "pvalue"))):
-    """
-    The results of a power divergence statistical test.
+    """The results of a power divergence statistical test.
 
     Attributes
     ----------
     statistic :    float64
     pvalue :    float64
+
     """
 
     statistic: float64
@@ -38,8 +38,7 @@ _power_div_lambda_names = {
 
 
 def power_divergence(f_obs, f_exp=None, ddof=0, lambda_=None):
-    """
-    Computes the power divergence statistic and p-value.
+    """Computes the power divergence statistic and p-value.
 
     Parameters
     ----------
@@ -75,7 +74,6 @@ def power_divergence(f_obs, f_exp=None, ddof=0, lambda_=None):
 
     Examples
     --------
-
     >>> import arkouda as ak
     >>> from arkouda.scipy import power_divergence
     >>> x = ak.array([10, 20, 30, 10])
@@ -88,19 +86,17 @@ def power_divergence(f_obs, f_exp=None, ddof=0, lambda_=None):
         pvalue=np.float64(0.04380595350226197))
 
     See Also
-    -------
+    --------
     scipy.stats.power_divergence
     arkouda.akstats.chisquare
 
     Notes
     -----
-
     This is a modified version of scipy.stats.power_divergence [2]
     in order to scale using arkouda pdarrays.
 
     References
     ----------
-
         [1] "scipy.stats.power_divergence",
         https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.power_divergence.html
 
@@ -175,8 +171,7 @@ def power_divergence(f_obs, f_exp=None, ddof=0, lambda_=None):
 
 
 def chisquare(f_obs, f_exp=None, ddof=0):
-    """
-    Computes the chi square statistic and p-value.
+    """Computes the chi square statistic and p-value.
 
     Parameters
     ----------
@@ -193,7 +188,6 @@ def chisquare(f_obs, f_exp=None, ddof=0):
 
     Examples
     --------
-
     >>> import arkouda as ak
     >>> from arkouda.scipy import chisquare
     >>> chisquare(ak.array([10, 20, 30, 10]), ak.array([10, 30, 20, 10]))
@@ -202,7 +196,7 @@ def chisquare(f_obs, f_exp=None, ddof=0):
 
 
     See Also
-    -------
+    --------
     scipy.stats.chisquare
     arkouda.akstats.power_divergence
 
