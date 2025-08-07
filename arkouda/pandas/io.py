@@ -1,5 +1,4 @@
-"""
-Input/output utilities for Arkouda.
+"""Input/output utilities for Arkouda.
 
 The `arkouda.io` module provides a comprehensive interface for reading from and writing to
 various file formats including HDF5, Parquet, CSV, and Zarr. It supports importing/exporting
@@ -123,8 +122,7 @@ ARKOUDA_HDF5_FILE_METADATA_GROUP = "_arkouda_metadata"
 
 
 def get_filetype(filenames: Union[str, List[str]]) -> str:
-    """
-    Get the type of a file accessible to the server.
+    """Get the type of a file accessible to the server.
 
     Supported file types and possible return strings are 'HDF5' and 'Parquet'.
 
@@ -166,8 +164,7 @@ def get_filetype(filenames: Union[str, List[str]]) -> str:
 
 
 def ls(filename: str, col_delim: str = ",", read_nested: bool = True) -> List[str]:
-    """
-    List the contents of an HDF5 or Parquet file on the Arkouda server.
+    """List the contents of an HDF5 or Parquet file on the Arkouda server.
 
     This function invokes the HDF5 `h5ls` utility on a file visible to the
     Arkouda server, or simulates a similar listing for Parquet files. For CSV
@@ -228,8 +225,7 @@ def ls(filename: str, col_delim: str = ",", read_nested: bool = True) -> List[st
 def get_null_indices(
     filenames: Union[str, List[str]], datasets: Optional[Union[str, List[str]]] = None
 ) -> Union[pdarray, Mapping[str, pdarray]]:
-    """
-    Get null indices of a string column in a Parquet file.
+    """Get null indices of a string column in a Parquet file.
 
     Parameters
     ----------
@@ -279,8 +275,7 @@ def get_null_indices(
 
 @typechecked
 def _file_type_to_int(file_type: str) -> int:
-    """
-    Convert a string to integer representing the format to save the file in.
+    """Convert a string to integer representing the format to save the file in.
 
     Parameters
     ----------
@@ -307,8 +302,7 @@ def _file_type_to_int(file_type: str) -> int:
 
 @typechecked
 def _mode_str_to_int(mode: str) -> int:
-    """
-    Convert string to integer representing the mode to write.
+    """Convert string to integer representing the mode to write.
 
     Parameters
     ----------
@@ -339,8 +333,7 @@ def get_datasets(
     column_delim: str = ",",
     read_nested: bool = True,
 ) -> List[str]:
-    """
-    Get the names of the datasets in the provide files.
+    """Get the names of the datasets in the provide files.
 
     Parameters
     ----------
@@ -398,8 +391,7 @@ def get_datasets(
 
 
 def ls_csv(filename: str, col_delim: str = ",") -> List[str]:
-    """
-    List the datasets within a file when a CSV does not have a header.
+    """List the datasets within a file when a CSV does not have a header.
 
     Parameters
     ----------
@@ -463,8 +455,7 @@ def _prep_datasets(
     allow_errors: bool = False,
     read_nested: bool = True,
 ) -> List[str]:
-    """
-    Prepare a list of datasets to be read.
+    """Prepare a list of datasets to be read.
 
     Parameters
     ----------
@@ -508,8 +499,7 @@ def _prep_datasets(
 
 
 def _parse_errors(rep_msg, allow_errors: bool = False):
-    """
-    Parse error messages from a read operation.
+    """Parse error messages from a read operation.
 
     Parameters
     ----------
@@ -544,8 +534,7 @@ def _parse_obj(
     Index,
     MultiIndex,
 ]:
-    """
-    Create an Arkouda object from read response.
+    """Create an Arkouda object from read response.
 
     Parameters
     ----------
@@ -658,8 +647,7 @@ def _build_objects(
         ],
     ],
 ]:
-    """
-    Create the Arkouda objects from a read operation.
+    """Create the Arkouda objects from a read operation.
 
     Parameters
     ----------
@@ -709,8 +697,7 @@ def read_hdf(
         ],
     ],
 ]:
-    """
-    Read Arkouda objects from HDF5 file/s.
+    """Read Arkouda objects from HDF5 file/s.
 
     Parameters
     ----------
@@ -851,8 +838,7 @@ def read_parquet(
         ],
     ],
 ]:
-    """
-    Read Arkouda objects from Parquet file/s.
+    """Read Arkouda objects from Parquet file/s.
 
     Parameters
     ----------
@@ -1003,8 +989,7 @@ def read_csv(
         ],
     ],
 ]:
-    r"""
-    Read CSV file(s) into Arkouda objects.
+    r"""Read CSV file(s) into Arkouda objects.
 
     If more than one dataset is found, the objects
     will be returned in a dictionary mapping the dataset name to the Arkouda object
@@ -1084,8 +1069,7 @@ def read_csv(
 def import_data(
     read_path: str, write_file: Optional[str] = None, return_obj: bool = True, index: bool = False
 ):
-    """
-    Import data from a file saved by Pandas (HDF5/Parquet).
+    """Import data from a file saved by Pandas (HDF5/Parquet).
 
     Import data from a file saved by Pandas (HDF5/Parquet) to Arkouda object and/or
     a file formatted to be read by Arkouda.
@@ -1170,8 +1154,7 @@ def export(
     return_obj: bool = True,
     index: bool = False,
 ):
-    """
-    Export data from arkouda to pandas.
+    """Export data from arkouda to pandas.
 
     Export data from Arkouda file (Parquet/HDF5)
     to Pandas object or file formatted to be readable by Pandas.
@@ -1280,8 +1263,7 @@ def _bulk_write_prep(
 
 
 def _delete_arkouda_files(prefix_path: str):
-    """
-    Delete files of the pattern prefix_path + LOCALE + <local number>.
+    """Delete files of the pattern prefix_path + LOCALE + <local number>.
 
     Parameters
     ----------
@@ -1313,8 +1295,7 @@ def to_parquet(
     compression: Optional[str] = None,
     convert_categoricals: bool = False,
 ) -> None:
-    """
-    Save multiple named pdarrays to Parquet files.
+    """Save multiple named pdarrays to Parquet files.
 
     Parameters
     ----------
@@ -1421,8 +1402,7 @@ def to_hdf(
     mode: str = "truncate",
     file_type: str = "distribute",
 ) -> None:
-    """
-    Save multiple named pdarrays to HDF5 files.
+    """Save multiple named pdarrays to HDF5 files.
 
     Parameters
     ----------
@@ -1530,8 +1510,7 @@ def update_hdf(
     names: Optional[List[str]] = None,
     repack: bool = True,
 ):
-    """
-    Overwrite the datasets with name appearing in names or keys in columns if columns is a dictionary.
+    """Overwrite the datasets with name appearing in names or keys in columns if columns is a dictionary.
 
     Parameters
     ----------
@@ -1581,8 +1560,7 @@ def to_csv(
     col_delim: str = ",",
     overwrite: bool = False,
 ):
-    r"""
-    Write Arkouda object(s) to CSV file(s).
+    r"""Write Arkouda object(s) to CSV file(s).
 
     All CSV Files written by Arkouda
     include a header denoting data types of the columns.
@@ -1652,8 +1630,7 @@ def to_csv(
 
 
 def to_zarr(store_path: str, arr: pdarray, chunk_shape):
-    """
-    Write a pdarray to disk as a Zarr store.
+    """Write a pdarray to disk as a Zarr store.
 
     Supports multi-dimensional pdarrays of numeric types.
     To use this function, ensure you have installed the blosc dependency (`make install-blosc`)
@@ -1693,8 +1670,7 @@ def to_zarr(store_path: str, arr: pdarray, chunk_shape):
 
 
 def read_zarr(store_path: str, ndim: int, dtype):
-    """
-    Read a Zarr store from disk into a pdarray.
+    """Read a Zarr store from disk into a pdarray.
 
     Supports multi-dimensional pdarrays of numeric types.
     To use this function, ensure you have installed the blosc dependency (`make install-blosc`)
@@ -1745,8 +1721,7 @@ def load(
         ],
     ],
 ]:
-    """
-    Load a pdarray previously saved with ``pdarray.save()``.
+    """Load a pdarray previously saved with ``pdarray.save()``.
 
     Parameters
     ----------
@@ -1845,8 +1820,7 @@ def load_all(
     column_delim: str = ",",
     read_nested: bool = True,
 ) -> Mapping[str, Union[pdarray, Strings, SegArray, Categorical]]:
-    """
-    Load multiple pdarrays, Strings, SegArrays, or Categoricals previously saved with ``save_all()``.
+    """Load multiple pdarrays, Strings, SegArrays, or Categoricals previously saved with ``save_all()``.
 
     Parameters
     ----------
@@ -1960,8 +1934,7 @@ def read(
         ],
     ],
 ]:
-    """
-    Read datasets from files.
+    """Read datasets from files.
 
     File Type is determined automatically.
 
@@ -2084,8 +2057,7 @@ def read(
 
 
 def save_checkpoint(name="", path=".akdata", mode: str = "overwrite"):
-    """
-    Save the server's state.
+    """Save the server's state.
 
     Records some metadata about the server, and saves
     all pdarrays into parquet files.
@@ -2150,8 +2122,7 @@ def save_checkpoint(name="", path=".akdata", mode: str = "overwrite"):
 
 
 def load_checkpoint(name, path=".akdata"):
-    """
-    Load server's state.
+    """Load server's state.
 
     The server metadata must match the current
     configuration (e.g. same number of locales must be used).
@@ -2208,8 +2179,7 @@ def read_tagged_data(
     read_nested: bool = True,
     has_non_float_nulls: bool = False,
 ):
-    """
-    Read datasets from files and tag each record to the file it was read from.
+    """Read datasets from files and tag each record to the file it was read from.
 
     File Type is determined automatically.
 
@@ -2308,8 +2278,7 @@ def read_tagged_data(
 
 
 def snapshot(filename):
-    """
-    Create a snapshot of the current Arkouda namespace.
+    """Create a snapshot of the current Arkouda namespace.
 
     All currently accessible variables containing
     Arkouda objects will be written to an HDF5 file.
@@ -2349,8 +2318,7 @@ def snapshot(filename):
 
 
 def restore(filename):
-    """
-    Return data saved using `ak.snapshot`.
+    """Return data saved using `ak.snapshot`.
 
     Parameters
     ----------
@@ -2372,8 +2340,7 @@ def restore(filename):
 
 
 def receive(hostname: str, port):
-    """
-    Receive a pdarray sent by `pdarray.transfer()`.
+    """Receive a pdarray sent by `pdarray.transfer()`.
 
     Parameters
     ----------
@@ -2414,8 +2381,7 @@ def receive(hostname: str, port):
 
 
 def receive_dataframe(hostname: str, port):
-    """
-    Receive a pdarray sent by `dataframe.transfer()`.
+    """Receive a pdarray sent by `dataframe.transfer()`.
 
     Parameters
     ----------

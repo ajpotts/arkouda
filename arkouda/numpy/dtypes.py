@@ -164,8 +164,7 @@ def _datatype_check(the_dtype, allowed_list, name):
 
 
 def dtype(dtype):
-    """
-    Create a data type object.
+    """Create a data type object.
 
     Parameters
     ----------
@@ -203,8 +202,7 @@ def dtype(dtype):
 
 
 def can_cast(from_, to) -> builtins.bool:
-    """
-    Returns True if cast between data types can occur according to the casting rule.
+    """Returns True if cast between data types can occur according to the casting rule.
 
     Parameters
     ----------
@@ -237,8 +235,7 @@ def can_cast(from_, to) -> builtins.bool:
 
 
 def result_type(*args: Union[pdarray, np.dtype, type]) -> Union[np.dtype, type]:
-    """
-    Determine the promoted result dtype of inputs, including support for Arkouda's bigint.
+    """Determine the promoted result dtype of inputs, including support for Arkouda's bigint.
 
     Determine the result dtype that would be returned by a NumPy-like operation
     on the provided input arguments, accounting for Arkouda's extended types
@@ -262,6 +259,7 @@ def result_type(*args: Union[pdarray, np.dtype, type]) -> Union[np.dtype, type]:
     -----
     This function is meant to be a drop-in replacement for numpy.result_type
     but includes logic to support Arkouda's bigint type.
+
     """
     from numpy.typing import DTypeLike
 
@@ -303,10 +301,9 @@ def result_type(*args: Union[pdarray, np.dtype, type]) -> Union[np.dtype, type]:
 
 
 def _is_dtype_in_union(dtype, union_type) -> builtins.bool:
-    """
-    Check if a given type is in a typing.Union.
+    """Check if a given type is in a typing.Union.
 
-    Args
+    Args:
     ----
         dtype (type): The type to check for.
         union_type (type): The typing.Union type to check against.
@@ -314,6 +311,7 @@ def _is_dtype_in_union(dtype, union_type) -> builtins.bool:
     Returns
     -------
         bool True if the dtype is in the union_type, False otherwise.
+
     """
     return hasattr(union_type, "__args__") and dtype in union_type.__args__
 
@@ -322,7 +320,7 @@ def _val_isinstance_of_union(val, union_type) -> builtins.bool:
     """
     Check if a given val is an instance of one of the types in the typing.Union.
 
-    Args
+    Args:
     ----
         val: The val to do the isinstance check on.
         union_type (type): The typing.Union type to check against.
@@ -331,13 +329,13 @@ def _val_isinstance_of_union(val, union_type) -> builtins.bool:
     -------
         bool: True if the val is an instance of one
             of the types in the union_type, False otherwise.
+
     """
     return hasattr(union_type, "__args__") and isinstance(val, union_type.__args__)
 
 
 class bigint:
-    """
-    Datatype for representing integers of variable size.
+    """Datatype for representing integers of variable size.
 
     May be used for integers that exceed 64 bits.
     """
@@ -437,6 +435,7 @@ class DType(Enum):
         """
         Overridden method returns value, which is useful in outputting
         a DType as a request parameter.
+
         """
         return self.value
 
@@ -444,6 +443,7 @@ class DType(Enum):
         """
         Overridden method returns value, which is useful in outputting
         a DType as a request parameter.
+
         """
         return self.value
 
@@ -515,8 +515,7 @@ ScalarDTypes = frozenset(["bool_", "float64", "int64"])
 
 
 def isSupportedInt(num):
-    """
-    Whether a scalar is an arkouda supported integer dtype.
+    """Whether a scalar is an arkouda supported integer dtype.
 
     Parameters
     ----------
@@ -541,8 +540,7 @@ def isSupportedInt(num):
 
 
 def isSupportedFloat(num):
-    """
-    Whether a scalar is an arkouda supported float dtype.
+    """Whether a scalar is an arkouda supported float dtype.
 
     Parameters
     ----------
@@ -567,8 +565,7 @@ def isSupportedFloat(num):
 
 
 def isSupportedNumber(num):
-    """
-    Whether a scalar is an arkouda supported numeric dtype.
+    """Whether a scalar is an arkouda supported numeric dtype.
 
     Parameters
     ----------
@@ -593,8 +590,7 @@ def isSupportedNumber(num):
 
 
 def isSupportedBool(num):
-    """
-    Whether a scalar is an arkouda supported boolean dtype.
+    """Whether a scalar is an arkouda supported boolean dtype.
 
     Parameters
     ----------
@@ -619,8 +615,7 @@ def isSupportedBool(num):
 
 
 def isSupportedDType(scalar: object) -> builtins.bool:
-    """
-    Whether a scalar is an arkouda supported dtype.
+    """Whether a scalar is an arkouda supported dtype.
 
     Parameters
     ----------
@@ -644,8 +639,7 @@ def isSupportedDType(scalar: object) -> builtins.bool:
 
 
 def resolve_scalar_dtype(val: object) -> str:
-    """
-    Try to infer what dtype arkouda_server should treat val as.
+    """Try to infer what dtype arkouda_server should treat val as.
 
     Parameters
     ----------
@@ -697,8 +691,7 @@ def resolve_scalar_dtype(val: object) -> str:
 
 
 def get_byteorder(dt: np.dtype) -> str:
-    """
-    Get a concrete byteorder (turns '=' into '<' or '>') on the client.
+    """Get a concrete byteorder (turns '=' into '<' or '>') on the client.
 
     Parameters
     ----------
@@ -737,7 +730,7 @@ def get_server_byteorder() -> str:
     """
     Get the server's byteorder.
 
-    Return
+    Return:
     ------
     str
         Returns "little" for little endian and "big" for big endian.

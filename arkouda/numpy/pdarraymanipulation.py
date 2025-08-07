@@ -14,8 +14,7 @@ __all__ = ["hstack", "vstack", "delete", "append"]
 
 
 def _max_bits_list(pda_list: Sequence[pdarray]) -> Tuple[bool, int]:
-    """
-    Finds the minimum `max_bits` when there are bigint arrays in the input.
+    """Finds the minimum `max_bits` when there are bigint arrays in the input.
 
     Determines whether any arrays in the input list use the `bigint` dtype
     and returns the minimum bit width among those that do.
@@ -32,6 +31,7 @@ def _max_bits_list(pda_list: Sequence[pdarray]) -> Tuple[bool, int]:
         int
             An integer representing the smallest `max_bits` value among the
             `bigint` arrays. Returns -1 if no `bigint` arrays are present.
+
     """
     has_bigint = False
     m_bits = -1
@@ -58,8 +58,7 @@ def hstack(
     dtype: Optional[Union[str, type]] = None,
     casting: Literal["no", "equiv", "safe", "same_kind", "unsafe"] = "same_kind",
 ) -> pdarray:
-    """
-    Stack arrays in sequence horizontally (column wise).
+    """Stack arrays in sequence horizontally (column wise).
 
     This is equivalent to concatenation along the second axis, except for 1-D arrays
     where it concatenates along the first axis. Rebuilds arrays divided by ``hsplit``.
@@ -99,6 +98,7 @@ def hstack(
     >>> b = ak.array([[4],[5],[6]])
     >>> ak.hstack((a, b))
     array([array([1 4]) array([2 5]) array([3 6])])
+
     """
     from arkouda.client import generic_msg
 
@@ -168,8 +168,7 @@ def vstack(
     dtype: Optional[Union[str, type]] = None,
     casting: Literal["no", "equiv", "safe", "same_kind", "unsafe"] = "same_kind",
 ) -> pdarray:
-    """
-    Stack arrays in sequence vertically (row wise).
+    """Stack arrays in sequence vertically (row wise).
 
     This is equivalent to concatenation along the first axis after
     1-D arrays of shape `(N,)` have been reshaped to `(1,N)`. Rebuilds arrays divided by ``vsplit``.
@@ -271,8 +270,7 @@ def delete(
     obj: Union[slice, int, Sequence[int], Sequence[bool], pdarray],
     axis: Optional[int] = None,
 ) -> pdarray:
-    """
-    Return a copy of 'arr' with elements along the specified axis removed.
+    """Return a copy of 'arr' with elements along the specified axis removed.
 
     Parameters
     ----------
@@ -303,6 +301,7 @@ def delete(
     array([array([2 4]) array([6 8]) array([10 12])])
     >>> ak.delete(arr, [1, 3, 5], None)
     array([1 3 5 7 8 9 10 11 12])
+
     """
     from arkouda.client import generic_msg
 
@@ -358,8 +357,7 @@ def append(
     values: pdarray,
     axis: Optional[int] = None,
 ) -> pdarray:
-    """
-    Append values to the end of an array.
+    """Append values to the end of an array.
 
     Parameters
     ----------
@@ -393,6 +391,7 @@ def append(
     array([1 2 3 4 5 6 7 8 9])
     >>> ak.append(b, b, axis = 0)
     array([array([4 5 6]) array([7 8 9]) array([4 5 6]) array([7 8 9])])
+
     """
     from arkouda.client import generic_msg
 

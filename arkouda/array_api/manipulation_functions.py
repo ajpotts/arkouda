@@ -29,8 +29,7 @@ __all__ = [
 
 
 def broadcast_arrays(*arrays: Array) -> List[Array]:
-    """
-    Broadcast arrays to a common shape.
+    """Broadcast arrays to a common shape.
 
     Throws a ValueError if a common shape cannot be determined.
     """
@@ -44,8 +43,7 @@ def broadcast_arrays(*arrays: Array) -> List[Array]:
 
 @implements_numpy(np.broadcast_to)
 def broadcast_to(x: Array, /, shape: Tuple[int, ...]) -> Array:
-    """
-    Broadcast the array to the specified shape.
+    """Broadcast the array to the specified shape.
 
     See: https://data-apis.org/array-api/latest/API_specification/broadcasting.html for details.
     """
@@ -71,8 +69,7 @@ def broadcast_to(x: Array, /, shape: Tuple[int, ...]) -> Array:
 
 
 def concat(arrays: Union[Tuple[Array, ...], List[Array]], /, *, axis: Optional[int] = 0) -> Array:
-    """
-    Concatenate arrays along an axis.
+    """Concatenate arrays along an axis.
 
     Parameters
     ----------
@@ -114,8 +111,7 @@ def concat(arrays: Union[Tuple[Array, ...], List[Array]], /, *, axis: Optional[i
 
 
 def expand_dims(x: Array, /, *, axis: int) -> Array:
-    """
-    Create a new array with an additional dimension inserted at the specified axis.
+    """Create a new array with an additional dimension inserted at the specified axis.
 
     Parameters
     ----------
@@ -124,6 +120,7 @@ def expand_dims(x: Array, /, *, axis: int) -> Array:
     axis : int
         The axis at which to insert the new (size one) dimension. Must be in the range
         `[-x.ndim-1, x.ndim]`.
+
     """
     from arkouda.client import generic_msg
 
@@ -147,8 +144,7 @@ def expand_dims(x: Array, /, *, axis: int) -> Array:
 
 
 def flip(x: Array, /, *, axis: Optional[Union[int, Tuple[int, ...]]] = None) -> Array:
-    """
-    Reverse an array's values along a particular axis or axes.
+    """Reverse an array's values along a particular axis or axes.
 
     Parameters
     ----------
@@ -156,6 +152,7 @@ def flip(x: Array, /, *, axis: Optional[Union[int, Tuple[int, ...]]] = None) -> 
         The array to flip
     axis : int or Tuple[int, ...], optional
         The axis or axes along which to flip the array. If None, flip the array along all axes.
+
     """
     from arkouda.client import generic_msg
 
@@ -192,8 +189,7 @@ def moveaxis(
     destination: Union[int, Tuple[int, ...]],
     /,
 ) -> Array:
-    """
-    Move axes of an array to new positions.
+    """Move axes of an array to new positions.
 
     Parameters
     ----------
@@ -205,6 +201,7 @@ def moveaxis(
     destination : int or Tuple[int, ...]
         Destination positions for each of the original axes. Must be the same length as `source`.
         Values must be unique and fall within the range `[-x.ndim, x.ndim)`.
+
     """
     perm = list(range(x.ndim))
     if isinstance(source, tuple):
@@ -222,8 +219,7 @@ def moveaxis(
 
 
 def permute_dims(x: Array, /, axes: Tuple[int, ...]) -> Array:
-    """
-    Permute the dimensions of an array.
+    """Permute the dimensions of an array.
 
     Parameters
     ----------
@@ -231,6 +227,7 @@ def permute_dims(x: Array, /, axes: Tuple[int, ...]) -> Array:
         The array whose dimensions are to be permuted
     axes : Tuple[int, ...]
         The new order of the dimensions. Must be a permutation of the integers from 0 to `x.ndim-1`.
+
     """
     from arkouda.client import generic_msg
 
@@ -254,8 +251,7 @@ def permute_dims(x: Array, /, axes: Tuple[int, ...]) -> Array:
 
 
 def repeat(x: Array, repeats: Union[int, Array], /, *, axis: Optional[int] = None) -> Array:
-    """
-    Repeat elements of an array.
+    """Repeat elements of an array.
 
     Parameters
     ----------
@@ -268,6 +264,7 @@ def repeat(x: Array, repeats: Union[int, Array], /, *, axis: Optional[int] = Non
            number of elements along the specified axis.
     axis : int, optional
         The axis along which to repeat elements. If None, the array is flattened before repeating.
+
     """
     from arkouda.client import generic_msg
 
@@ -296,8 +293,7 @@ def repeat(x: Array, repeats: Union[int, Array], /, *, axis: Optional[int] = Non
 
 
 def reshape(x: Array, /, shape: Tuple[int, ...], *, copy: Optional[bool] = None) -> Array:
-    """
-    Reshape an array to a new shape.
+    """Reshape an array to a new shape.
 
     Parameters
     ----------
@@ -308,6 +304,7 @@ def reshape(x: Array, /, shape: Tuple[int, ...], *, copy: Optional[bool] = None)
     copy : bool, optional
         Whether to create a copy of the array.
         WARNING: currently always creates a copy, ignoring the value of this parameter.
+
     """
     from arkouda.client import generic_msg
 
@@ -338,8 +335,7 @@ def roll(
     *,
     axis: Optional[Union[int, Tuple[int, ...]]] = None,
 ) -> Array:
-    """
-    Roll the values in an array by the specified shift(s) along the specified axis or axes.
+    """Roll the values in an array by the specified shift(s) along the specified axis or axes.
     Elements that roll beyond the last position are re-introduced at the first position.
 
     Parameters
@@ -354,6 +350,7 @@ def roll(
     axis: int or Tuple[int, ...], optional
         The axis or axes along which to roll the array. If None, the array is flattened before
         rolling.
+
     """
     from arkouda.client import generic_msg
 
@@ -387,8 +384,7 @@ def roll(
 
 
 def squeeze(x: Array, /, axis: Union[int, Tuple[int, ...]]) -> Array:
-    """
-    Remove degenerate (size one) dimensions from an array.
+    """Remove degenerate (size one) dimensions from an array.
 
     Parameters
     ----------
@@ -396,6 +392,7 @@ def squeeze(x: Array, /, axis: Union[int, Tuple[int, ...]]) -> Array:
         The array to squeeze
     axis : int or Tuple[int, ...]
         The axis or axes to squeeze (must have a size of one).
+
     """
     from arkouda.numpy import squeeze
 
@@ -403,8 +400,7 @@ def squeeze(x: Array, /, axis: Union[int, Tuple[int, ...]]) -> Array:
 
 
 def stack(arrays: Union[Tuple[Array, ...], List[Array]], /, *, axis: int = 0) -> Array:
-    """
-    Stack arrays along a new axis.
+    """Stack arrays along a new axis.
 
     The resulting array will have one more dimension than the input arrays with a size
     equal to the number of input arrays.
@@ -416,6 +412,7 @@ def stack(arrays: Union[Tuple[Array, ...], List[Array]], /, *, axis: int = 0) ->
     axis : int, optional
         The axis along which to stack the arrays. Must be in the range `[-N, N)`, where N is the number
         of dimensions in the input arrays. The default is 0.
+
     """
     from arkouda.client import generic_msg
 
@@ -445,8 +442,7 @@ def stack(arrays: Union[Tuple[Array, ...], List[Array]], /, *, axis: int = 0) ->
 
 
 def tile(x: Array, repetitions: Tuple[int, ...], /) -> Array:
-    """
-    Tile an array with the specified number of repetitions along each dimension.
+    """Tile an array with the specified number of repetitions along each dimension.
 
     Parameters
     ----------
@@ -457,6 +453,7 @@ def tile(x: Array, repetitions: Tuple[int, ...], /) -> Array:
         dimensions, singleton dimensions are prepended to the array to make it match the number of
         repetitions. If there are more array dimensions than repetitions, ones are prepended to the
         repetitions tuple to make it's length match the number of array dimensions.
+
     """
     from arkouda.client import generic_msg
 
@@ -487,8 +484,7 @@ def tile(x: Array, repetitions: Tuple[int, ...], /) -> Array:
 
 
 def unstack(x: Array, /, *, axis: int = 0) -> Tuple[Array, ...]:
-    """
-    Decompose an array along an axis into multiple arrays of the same shape.
+    """Decompose an array along an axis into multiple arrays of the same shape.
 
     Parameters
     ----------
@@ -496,6 +492,7 @@ def unstack(x: Array, /, *, axis: int = 0) -> Tuple[Array, ...]:
         The array to unstack
     axis : int, optional
         The axis along which to unstack the array. The default is 0.
+
     """
     from arkouda.client import generic_msg
 

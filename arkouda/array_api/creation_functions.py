@@ -50,8 +50,7 @@ def asarray(
     device: Optional[Device] = None,
     copy: Optional[bool] = None,
 ) -> Array:
-    """
-    Create a new Array from one of:
+    """Create a new Array from one of:
     - another Array
     - a scalar value (bool, int, float)
     - a sequence of scalar values (not yet implemented)
@@ -70,6 +69,7 @@ def asarray(
         The device on which to create the Array (not yet implemented)
     copy: Optional[bool]
         Whether to copy the input object (not yet implemented)
+
     """
     from .array_object import Array
 
@@ -142,9 +142,7 @@ def empty(
     dtype: Optional[Dtype] = None,
     device: Optional[Device] = None,
 ) -> Array:
-    """
-    Return a new array of given shape and type, without initializing entries.
-    """
+    """Return a new array of given shape and type, without initializing entries."""
     from .array_object import Array
 
     if device not in ["cpu", None]:
@@ -168,9 +166,7 @@ def empty(
 
 
 def empty_like(x: Array, /, *, dtype: Optional[Dtype] = None, device: Optional[Device] = None) -> Array:
-    """
-    Return a new array whose shape and dtype match the input array, without initializing entries.
-    """
+    """Return a new array whose shape and dtype match the input array, without initializing entries."""
     from .array_object import Array
 
     if device not in ["cpu", None]:
@@ -201,8 +197,7 @@ def eye(
     dtype: Optional[Dtype] = None,
     device: Optional[Device] = None,
 ) -> Array:
-    """
-    Return a 2D array with ones on the diagonal and zeros elsewhere.
+    """Return a 2D array with ones on the diagonal and zeros elsewhere.
 
     Parameters
     ----------
@@ -216,6 +211,7 @@ def eye(
         lower diagonal.
     dtype: Optional[Dtype]
         Data type of the returned array. If None, use float64.
+
     """
     from .array_object import Array
 
@@ -231,8 +227,7 @@ def eye(
 
 
 def from_dlpack(x: object, /) -> Array:
-    """
-    Construct an Array from a DLPack tensor.
+    """Construct an Array from a DLPack tensor.
 
     WARNING: This function is not yet implemented.
     """
@@ -246,9 +241,7 @@ def full(
     dtype: Optional[Dtype] = None,
     device: Optional[Device] = None,
 ) -> Array:
-    """
-    Return a new array of given shape and type, filled with `fill_value`.
-    """
+    """Return a new array of given shape and type, filled with `fill_value`."""
     a = zeros(shape, dtype=dtype, device=device)
     a._array.fill(fill_value)
     return a
@@ -262,9 +255,7 @@ def full_like(
     dtype: Optional[Dtype] = None,
     device: Optional[Device] = None,
 ) -> Array:
-    """
-    Return a new array whose shape and dtype match the input array, filled with `fill_value`.
-    """
+    """Return a new array whose shape and dtype match the input array, filled with `fill_value`."""
     return full(x.shape, fill_value, dtype=dtype, device=device)
 
 
@@ -278,9 +269,7 @@ def linspace(
     device: Optional[Device] = None,
     endpoint: bool = True,
 ) -> Array:
-    """
-    An Array API compliant wrapper for :func:`arkouda.linspace`.
-    """
+    """An Array API compliant wrapper for :func:`arkouda.linspace`."""
     from .array_object import Array
 
     if device not in ["cpu", None]:
@@ -290,8 +279,7 @@ def linspace(
 
 
 def meshgrid(*arrays: Array, indexing: str = "xy") -> List[Array]:
-    """
-    Return coordinate matrices from coordinate vectors.
+    """Return coordinate matrices from coordinate vectors.
 
     WARNING: This function is not yet implemented.
     """
@@ -304,24 +292,19 @@ def ones(
     dtype: Optional[Dtype] = None,
     device: Optional[Device] = None,
 ) -> Array:
-    """
-    Return a new array with the specified shape and type, filled with ones.
-    """
+    """Return a new array with the specified shape and type, filled with ones."""
     a = zeros(shape, dtype=dtype, device=device)
     a._array.fill(1)
     return a
 
 
 def ones_like(x: Array, /, *, dtype: Optional[Dtype] = None, device: Optional[Device] = None) -> Array:
-    """
-    Return a new array whose shape and dtype match the input array, filled with ones.
-    """
+    """Return a new array whose shape and dtype match the input array, filled with ones."""
     return ones(x.shape, dtype=dtype, device=device)
 
 
 def tril(x: Array, /, *, k: int = 0) -> Array:
-    """
-    Create a new array with the values from `x` below the `k`-th diagonal, and
+    """Create a new array with the values from `x` below the `k`-th diagonal, and
     all other elements zero.
     """
     from .array_object import Array
@@ -330,8 +313,7 @@ def tril(x: Array, /, *, k: int = 0) -> Array:
 
 
 def triu(x: Array, /, *, k: int = 0) -> Array:
-    """
-    Create a new array with the values from `x` above the `k`-th diagonal, and
+    """Create a new array with the values from `x` above the `k`-th diagonal, and
     all other elements zero.
     """
     from .array_object import Array
@@ -346,9 +328,7 @@ def zeros(
     dtype: Optional[Dtype] = None,
     device: Optional[Device] = None,
 ) -> Array:
-    """
-    Return a new array with the specified shape and type, filled with zeros.
-    """
+    """Return a new array with the specified shape and type, filled with zeros."""
     from .array_object import Array
 
     if device not in ["cpu", None]:
@@ -362,7 +342,5 @@ def zeros(
 
 
 def zeros_like(x: Array, /, *, dtype: Optional[Dtype] = None, device: Optional[Device] = None) -> Array:
-    """
-    Return a new array whose shape and dtype match the input array, filled with zeros.
-    """
+    """Return a new array whose shape and dtype match the input array, filled with zeros."""
     return zeros(x.shape, dtype=dtype, device=device)

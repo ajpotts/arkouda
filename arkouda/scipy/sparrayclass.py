@@ -19,8 +19,7 @@ __all__ = [
 
 
 class sparray:
-    """
-    The class for sparse arrays. This class contains only the
+    """The class for sparse arrays. This class contains only the
     attributies of the array; the data resides on the arkouda
     server. When a server operation results in a new array, arkouda
     will create a sparray instance that points to the array data on
@@ -45,6 +44,7 @@ class sparray:
         The layout of the array ("CSR" or "CSC" are the only valid values)
     itemsize : int_scalars
         The size in bytes of each element
+
     """
 
     name: str
@@ -166,8 +166,7 @@ class sparray:
 #       server has created pdarray already before this is called
 @typechecked
 def create_sparray(repMsg: str, max_bits=None) -> sparray:
-    """
-    Return a sparray instance pointing to an array created by the arkouda server.
+    """Return a sparray instance pointing to an array created by the arkouda server.
     The user should not call this function directly.
 
     Parameters
@@ -189,6 +188,7 @@ def create_sparray(repMsg: str, max_bits=None) -> sparray:
     RuntimeError
         Raised if a server-side error is thrown in the process of creating
         the pdarray instance
+
     """
     try:
         fields = repMsg.split()

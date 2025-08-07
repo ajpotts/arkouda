@@ -1,5 +1,4 @@
-"""
-Index and MultiIndex classes for Arkouda Series and DataFrames.
+"""Index and MultiIndex classes for Arkouda Series and DataFrames.
 
 This module defines the foundational indexing structures used in Arkouda's
 pandas-like API, supporting labeled indexing, alignment, and grouping operations.
@@ -94,8 +93,7 @@ else:
 
 
 class Index:
-    """
-    Sequence used for indexing and alignment.
+    """Sequence used for indexing and alignment.
 
     The basic object storing axis labels for all DataFrame objects.
 
@@ -136,8 +134,7 @@ class Index:
     objType = "Index"
 
     def _set_dtype(self):
-        """
-        Infer and set the dtype of the Index based on its values.
+        """Infer and set the dtype of the Index based on its values.
 
         This method examines the type of `self.values` and assigns an appropriate
         dtype to `self.dtype`. If the type is not recognized, `self.dtype` is set to None.
@@ -211,8 +208,7 @@ class Index:
             raise TypeError(f"Unable to create Index from type {type(values)}")
 
     def __getitem__(self, key):
-        """
-        Retrieve item(s) from the Index.
+        """Retrieve item(s) from the Index.
 
         Parameters
         ----------
@@ -249,8 +245,7 @@ class Index:
         return Index(self.values[key], allow_list=allow_list)
 
     def __repr__(self):
-        """
-        Return a string representation of the Index.
+        """Return a string representation of the Index.
 
         Returns
         -------
@@ -261,8 +256,7 @@ class Index:
         return f"Index({repr(self.index)}, dtype='{self.dtype}')"
 
     def __len__(self):
-        """
-        Return the number of elements in the Index.
+        """Return the number of elements in the Index.
 
         Returns
         -------
@@ -290,8 +284,7 @@ class Index:
         return values, other_values
 
     def __eq__(self, other):
-        """
-        Compare Index with another Index or array-like object for equality.
+        """Compare Index with another Index or array-like object for equality.
 
         Parameters
         ----------
@@ -308,8 +301,7 @@ class Index:
         return values == other_values
 
     def __ne__(self, other):
-        """
-        Compare Index with another Index or array-like object for inequality.
+        """Compare Index with another Index or array-like object for inequality.
 
         Parameters
         ----------
@@ -341,8 +333,7 @@ class Index:
 
     @property
     def nlevels(self):
-        """
-        Integer number of levels in this Index.
+        """Integer number of levels in this Index.
 
         An Index will always have 1 level.
 
@@ -355,8 +346,7 @@ class Index:
 
     @property
     def ndim(self):
-        """
-        Number of dimensions of the underlying data, by definition 1.
+        """Number of dimensions of the underlying data, by definition 1.
 
         See Also
         --------
@@ -387,8 +377,7 @@ class Index:
 
     @property
     def index(self):
-        """
-        Deprecated alias for `values`.
+        """Deprecated alias for `values`.
 
         This property is maintained for backward compatibility and returns the same
         array as the `values` attribute. It will be removed in a future release;
@@ -415,8 +404,7 @@ class Index:
 
     @property
     def shape(self):
-        """
-        Return the shape of the Index.
+        """Return the shape of the Index.
 
         Returns
         -------
@@ -428,8 +416,7 @@ class Index:
 
     @property
     def is_unique(self):
-        """
-        Property indicating if all values in the index are unique.
+        """Property indicating if all values in the index are unique.
 
         Returns
         -------
@@ -445,8 +432,7 @@ class Index:
 
     @staticmethod
     def factory(index):
-        """
-        Construct an Index or MultiIndex based on the input.
+        """Construct an Index or MultiIndex based on the input.
 
         Parameters
         ----------
@@ -469,8 +455,7 @@ class Index:
 
     @classmethod
     def from_return_msg(cls, rep_msg):
-        """
-        Reconstruct an Index or MultiIndex from a return message.
+        """Reconstruct an Index or MultiIndex from a return message.
 
         Parameters
         ----------
@@ -498,8 +483,7 @@ class Index:
         return cls.factory(idx) if len(idx) > 1 else cls.factory(idx[0])
 
     def equals(self, other: Index) -> bool_scalars:
-        """
-        Whether Indexes are the same size, and all entries are equal.
+        """Whether Indexes are the same size, and all entries are equal.
 
         Parameters
         ----------
@@ -564,8 +548,7 @@ class Index:
         return False
 
     def memory_usage(self, unit="B"):
-        """
-        Return the memory usage of the Index values.
+        """Return the memory usage of the Index values.
 
         Parameters
         ----------
@@ -608,8 +591,7 @@ class Index:
         return pd.Index(data=val, dtype=val.dtype, name=self.name)
 
     def to_ndarray(self):
-        """
-        Convert the Index values to a NumPy ndarray.
+        """Convert the Index values to a NumPy ndarray.
 
         Returns
         -------
@@ -624,8 +606,7 @@ class Index:
             return val.to_ndarray()
 
     def tolist(self):
-        """
-        Convert the Index values to a Python list.
+        """Convert the Index values to a Python list.
 
         Returns
         -------
@@ -639,8 +620,7 @@ class Index:
             return self.to_ndarray().tolist()
 
     def set_dtype(self, dtype):
-        """
-        Change the data type of the index.
+        """Change the data type of the index.
 
         Currently only aku.ip_address and ak.array are supported.
 
@@ -650,8 +630,7 @@ class Index:
         return self
 
     def register(self, user_defined_name):
-        """
-        Register this Index object and underlying components with the Arkouda server.
+        """Register this Index object and underlying components with the Arkouda server.
 
         Parameters
         ----------
@@ -728,8 +707,7 @@ class Index:
         return self
 
     def unregister(self):
-        """
-        Unregister this Index object in the arkouda server.
+        """Unregister this Index object in the arkouda server.
 
         Unregister this Index object in the arkouda server, which was previously
         registered using register() and/or attached to using attach().
@@ -758,8 +736,7 @@ class Index:
         self.registered_name = None
 
     def is_registered(self):
-        """
-        Return whether the object is registered.
+        """Return whether the object is registered.
 
         Return True iff the object is contained in the registry or is a component of a
         registered object.
@@ -802,8 +779,7 @@ class Index:
             return is_registered(self.registered_name)
 
     def to_dict(self, label):
-        """
-        Convert the Index to a dictionary with a specified label.
+        """Convert the Index to a dictionary with a specified label.
 
         Parameters
         ----------
@@ -826,8 +802,7 @@ class Index:
         return data
 
     def _check_types(self, other):
-        """
-        Ensure that the type of the other object matches this Index.
+        """Ensure that the type of the other object matches this Index.
 
         Parameters
         ----------
@@ -844,8 +819,7 @@ class Index:
             raise TypeError("Index Types must match")
 
     def _merge(self, other):
-        """
-        Merge this Index with another, removing duplicates.
+        """Merge this Index with another, removing duplicates.
 
         Parameters
         ----------
@@ -870,8 +844,7 @@ class Index:
         return Index(callback(unique(idx)))
 
     def _merge_all(self, idx_list):
-        """
-        Merge this Index with a list of other Index objects, removing duplicates.
+        """Merge this Index with a list of other Index objects, removing duplicates.
 
         Parameters
         ----------
@@ -899,8 +872,7 @@ class Index:
         return Index(callback(unique(idx)))
 
     def _check_aligned(self, other):
-        """
-        Check whether this Index is aligned with another.
+        """Check whether this Index is aligned with another.
 
         Two indices are considered aligned if they have the same length and all corresponding
         elements are equal.
@@ -926,8 +898,7 @@ class Index:
         return len(other) == length and (self == other.values).sum() == length
 
     def argsort(self, ascending=True):
-        """
-        Return the indices that would sort the Index.
+        """Return the indices that would sort the Index.
 
         Parameters
         ----------
@@ -955,8 +926,7 @@ class Index:
         return i
 
     def map(self, arg: Union[dict, "Series"]) -> "Index":
-        """
-        Map values of Index according to an input mapping.
+        """Map values of Index according to an input mapping.
 
         Parameters
         ----------
@@ -994,8 +964,7 @@ class Index:
         return Index(map(self.values, arg))
 
     def concat(self, other):
-        """
-        Concatenate this Index with another Index.
+        """Concatenate this Index with another Index.
 
         Parameters
         ----------
@@ -1019,8 +988,7 @@ class Index:
         return Index(idx)
 
     def lookup(self, key):
-        """
-        Check for presence of key(s) in the Index.
+        """Check for presence of key(s) in the Index.
 
         Parameters
         ----------
@@ -1055,8 +1023,7 @@ class Index:
         mode: str = "truncate",
         file_type: str = "distribute",
     ) -> str:
-        """
-        Save the Index to HDF5.
+        """Save the Index to HDF5.
 
         The object can be saved to a collection of files or single file.
 
@@ -1157,8 +1124,7 @@ class Index:
         dataset: str = "index",
         repack: bool = True,
     ):
-        """
-        Overwrite the dataset with the name provided with this Index object.
+        """Overwrite the dataset with the name provided with this Index object.
 
         If the dataset does not exist it is added.
 
@@ -1253,8 +1219,7 @@ class Index:
         mode: str = "truncate",
         compression: Optional[str] = None,
     ):
-        """
-        Save the Index to Parquet.
+        """Save the Index to Parquet.
 
         The result is a collection of files,
         one file per locale of the arkouda server, where each filename starts
@@ -1313,8 +1278,7 @@ class Index:
         col_delim: str = ",",
         overwrite: bool = False,
     ):
-        r"""
-        Write Index to CSV file(s).
+        r"""Write Index to CSV file(s).
 
         File will contain a single column with the pdarray data.
         All CSV Files written by Arkouda include a header denoting data types of the columns.
@@ -1365,8 +1329,7 @@ class Index:
 
 
 class MultiIndex(Index):
-    """
-    A multi-level, or hierarchical, index object for Arkouda DataFrames and Series.
+    """A multi-level, or hierarchical, index object for Arkouda DataFrames and Series.
 
     A MultiIndex allows you to represent multiple dimensions of indexing using
     a single object, enabling advanced indexing and grouping operations.
@@ -1446,8 +1409,7 @@ class MultiIndex(Index):
             self._names = [None for _i in range(len(self.levels))]
 
     def __getitem__(self, key):
-        """
-        Retrieve item(s) from the MultiIndex.
+        """Retrieve item(s) from the MultiIndex.
 
         Parameters
         ----------
@@ -1468,8 +1430,7 @@ class MultiIndex(Index):
         return MultiIndex([i[key] for i in self.index])
 
     def __repr__(self):
-        """
-        Return a string representation of the MultiIndex.
+        """Return a string representation of the MultiIndex.
 
         Returns
         -------
@@ -1480,8 +1441,7 @@ class MultiIndex(Index):
         return f"MultiIndex({repr(self.index)})"
 
     def __len__(self):
-        """
-        Return the number of elements in the MultiIndex.
+        """Return the number of elements in the MultiIndex.
 
         Returns
         -------
@@ -1492,8 +1452,7 @@ class MultiIndex(Index):
         return len(self.index)
 
     def __eq__(self, v):
-        """
-        Check element-wise equality between this MultiIndex and another.
+        """Check element-wise equality between this MultiIndex and another.
 
         Parameters
         ----------
@@ -1534,8 +1493,7 @@ class MultiIndex(Index):
 
     @property
     def index(self):
-        """
-        Return the levels of the MultiIndex.
+        """Return the levels of the MultiIndex.
 
         Returns
         -------
@@ -1547,8 +1505,7 @@ class MultiIndex(Index):
 
     @property
     def nlevels(self) -> int:
-        """
-        Integer number of levels in this MultiIndex.
+        """Integer number of levels in this MultiIndex.
 
         See Also
         --------
@@ -1559,8 +1516,7 @@ class MultiIndex(Index):
 
     @property
     def ndim(self):
-        """
-        Number of dimensions of the underlying data, by definition 1.
+        """Number of dimensions of the underlying data, by definition 1.
 
         See Also
         --------
@@ -1571,8 +1527,7 @@ class MultiIndex(Index):
 
     @property
     def inferred_type(self) -> str:
-        """
-        Return the inferred type of the MultiIndex.
+        """Return the inferred type of the MultiIndex.
 
         Returns
         -------
@@ -1588,8 +1543,7 @@ class MultiIndex(Index):
         return npdtype("O")
 
     def get_level_values(self, level: Union[str, int]):
-        """
-        Return the values at a particular level of the MultiIndex.
+        """Return the values at a particular level of the MultiIndex.
 
         Parameters
         ----------
@@ -1643,8 +1597,7 @@ class MultiIndex(Index):
         return True
 
     def memory_usage(self, unit="B"):
-        """
-        Return the memory usage of the MultiIndex levels.
+        """Return the memory usage of the MultiIndex levels.
 
         Parameters
         ----------
@@ -1681,8 +1634,7 @@ class MultiIndex(Index):
         return convert_bytes(nbytes, unit=unit)
 
     def to_pandas(self):
-        """
-        Convert the MultiIndex to a pandas.MultiIndex object.
+        """Convert the MultiIndex to a pandas.MultiIndex object.
 
         Returns
         -------
@@ -1703,8 +1655,7 @@ class MultiIndex(Index):
         return mi
 
     def set_dtype(self, dtype):
-        """
-        Change the data type of the index.
+        """Change the data type of the index.
 
         Currently only aku.ip_address and ak.array are supported.
 
@@ -1714,8 +1665,7 @@ class MultiIndex(Index):
         return self
 
     def to_ndarray(self):
-        """
-        Convert the MultiIndex to a NumPy ndarray of arrays.
+        """Convert the MultiIndex to a NumPy ndarray of arrays.
 
         Returns
         -------
@@ -1727,8 +1677,7 @@ class MultiIndex(Index):
         return ndarray([convert_if_categorical(val).to_ndarray() for val in self.levels])
 
     def tolist(self):
-        """
-        Convert the MultiIndex to a list of lists.
+        """Convert the MultiIndex to a list of lists.
 
         Returns
         -------
@@ -1740,8 +1689,7 @@ class MultiIndex(Index):
         return self.to_ndarray().tolist()
 
     def register(self, user_defined_name):
-        """
-        Register this Index object and underlying components with the Arkouda server.
+        """Register this Index object and underlying components with the Arkouda server.
 
         Parameters
         ----------
@@ -1812,8 +1760,7 @@ class MultiIndex(Index):
         return self
 
     def unregister(self):
-        """
-        Unregister this MultiIndex from the Arkouda server.
+        """Unregister this MultiIndex from the Arkouda server.
 
         Raises
         ------
@@ -1829,8 +1776,7 @@ class MultiIndex(Index):
         self.registered_name = None
 
     def is_registered(self):
-        """
-        Check if the MultiIndex is registered with the Arkouda server.
+        """Check if the MultiIndex is registered with the Arkouda server.
 
         Returns
         -------
@@ -1846,8 +1792,7 @@ class MultiIndex(Index):
         return is_registered(self.registered_name)
 
     def to_dict(self, labels=None):
-        """
-        Convert the MultiIndex to a dictionary representation.
+        """Convert the MultiIndex to a dictionary representation.
 
         Parameters
         ----------
@@ -1869,8 +1814,7 @@ class MultiIndex(Index):
         return data
 
     def _merge(self, other):
-        """
-        Merge this MultiIndex with another MultiIndex, removing duplicates.
+        """Merge this MultiIndex with another MultiIndex, removing duplicates.
 
         Parameters
         ----------
@@ -1893,8 +1837,7 @@ class MultiIndex(Index):
         return MultiIndex(GroupBy(idx).unique_keys)
 
     def _merge_all(self, array):
-        """
-        Merge this MultiIndex with a list of MultiIndex objects, removing duplicates.
+        """Merge this MultiIndex with a list of MultiIndex objects, removing duplicates.
 
         Parameters
         ----------
@@ -1921,8 +1864,7 @@ class MultiIndex(Index):
         return MultiIndex(GroupBy(idx).unique_keys)
 
     def argsort(self, ascending=True):
-        """
-        Return the indices that would sort the MultiIndex.
+        """Return the indices that would sort the MultiIndex.
 
         Parameters
         ----------
@@ -1941,8 +1883,7 @@ class MultiIndex(Index):
         return i
 
     def concat(self, other):
-        """
-        Concatenate this MultiIndex with another, preserving duplicates and order.
+        """Concatenate this MultiIndex with another, preserving duplicates and order.
 
         Parameters
         ----------
@@ -1965,8 +1906,7 @@ class MultiIndex(Index):
         return MultiIndex(idx)
 
     def lookup(self, key):
-        """
-        Perform element-wise lookup on the MultiIndex.
+        """Perform element-wise lookup on the MultiIndex.
 
         Parameters
         ----------
@@ -2003,8 +1943,7 @@ class MultiIndex(Index):
         mode: str = "truncate",
         file_type: str = "distribute",
     ) -> str:
-        """
-        Save the Index to HDF5.
+        """Save the Index to HDF5.
 
         The object can be saved to a collection of files or single file.
 
@@ -2093,8 +2032,7 @@ class MultiIndex(Index):
         dataset: str = "index",
         repack: bool = True,
     ):
-        """
-        Overwrite the dataset with the name provided with this Index object.
+        """Overwrite the dataset with the name provided with this Index object.
 
         If the dataset does not exist it is added.
 

@@ -21,8 +21,7 @@ logger = getArkoudaLogger(name="sparsematrix")
 def random_sparse_matrix(
     size: int, density: float, layout: str, dtype: Union[type, str] = int64
 ) -> sparray:
-    """
-    Create a random sparse matrix with the specified number of rows and columns
+    """Create a random sparse matrix with the specified number of rows and columns
     and the specified density. The density is the fraction of non-zero elements
     in the matrix. The non-zero elements are uniformly distributed random
     numbers in the range [0,1).
@@ -46,6 +45,7 @@ def random_sparse_matrix(
     ------
     ValueError
         Raised if density is not in the range [0,1]
+
     """
     from arkouda.client import generic_msg
 
@@ -68,8 +68,7 @@ def random_sparse_matrix(
 
 @typechecked
 def sparse_matrix_matrix_mult(A, B: sparray) -> sparray:
-    """
-    Multiply two sparse matrices.
+    """Multiply two sparse matrices.
 
     Parameters
     ----------
@@ -82,6 +81,7 @@ def sparse_matrix_matrix_mult(A, B: sparray) -> sparray:
     -------
     sparray
         The product of the two sparse matrices
+
     """
     from arkouda.client import generic_msg
 
@@ -98,8 +98,7 @@ def sparse_matrix_matrix_mult(A, B: sparray) -> sparray:
 
 
 def create_sparse_matrix(size: int, rows: pdarray, cols: pdarray, vals: pdarray, layout: str) -> sparray:
-    """
-    Create a sparse matrix from three pdarrays representing the row indices,
+    """Create a sparse matrix from three pdarrays representing the row indices,
     column indices, and values of the non-zero elements of the matrix.
 
     Parameters

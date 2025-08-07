@@ -68,8 +68,7 @@ __all__ = [
 
 @typechecked
 def from_series(series: pd.Series, dtype: Optional[Union[type, str]] = None) -> Union[pdarray, Strings]:
-    """
-    Converts a Pandas Series to an Arkouda pdarray or Strings object. If
+    """Converts a Pandas Series to an Arkouda pdarray or Strings object. If
     dtype is None, the dtype is inferred from the Pandas Series. Otherwise,
     the dtype parameter is set if the dtype of the Pandas Series is to be
     overridden or is  unknown (for example, in situations where the Series
@@ -139,6 +138,7 @@ def from_series(series: pd.Series, dtype: Optional[Union[type, str]] = None) -> 
 
     A Pandas Series containing strings has a dtype of object. Arkouda assumes the Series
     contains strings and sets the dtype to str
+
     """
     if not dtype:
         dt = series.dtype.name
@@ -178,8 +178,7 @@ def array(
     copy: bool = False,
     max_bits: int = -1,
 ) -> Union[pdarray, Strings]:
-    """
-    Convert a Python, NumPy, or Arkouda array-like into a `pdarray` or `Strings` object,
+    """Convert a Python, NumPy, or Arkouda array-like into a `pdarray` or `Strings` object,
     transferring data to the Arkouda server.
 
     Parameters
@@ -247,6 +246,7 @@ def array(
     >>> strings = ak.array([f'string {i}' for i in range(5)])
     >>> type(strings)
     <class 'arkouda.numpy.strings.Strings'>
+
     """
     from arkouda.client import generic_msg, get_array_ranks
     from arkouda.numpy.numeric import cast as akcast
@@ -400,8 +400,7 @@ def array(
 
 @typechecked
 def promote_to_common_dtype(arrays: List[pdarray]) -> Tuple[Any, List[pdarray]]:
-    """
-    Promote a list of pdarrays to a common dtype.
+    """Promote a list of pdarrays to a common dtype.
 
     Parameters
     ----------
@@ -432,6 +431,7 @@ def promote_to_common_dtype(arrays: List[pdarray]) -> Tuple[Any, List[pdarray]]:
     dtype('float64')
     >>> all(isinstance(p, ak.pdarray) and p.dtype == dtype for p in promoted)
     True
+
     """
     # find the common dtype of the input arrays
     dt = np.common_type(*[np.empty(0, dtype=a.dtype) for a in arrays])
@@ -452,8 +452,7 @@ def _array_memview(a) -> memoryview:
 
 
 def bigint_from_uint_arrays(arrays, max_bits=-1):
-    """
-    Create a bigint pdarray from an iterable of uint pdarrays.
+    """Create a bigint pdarray from an iterable of uint pdarrays.
     The first item in arrays will be the highest 64 bits and
     the last item will be the lowest 64 bits.
 
@@ -496,6 +495,7 @@ def bigint_from_uint_arrays(arrays, max_bits=-1):
 
     >>> all(a[i] == 2**64 + i for i in range(5))
     True
+
     """
     from arkouda.client import generic_msg
 
@@ -544,8 +544,7 @@ def zeros(
     dtype: Union[np.dtype, type, str, bigint] = float64,
     max_bits: Optional[int] = None,
 ) -> pdarray:
-    """
-    Create a pdarray filled with zeros.
+    """Create a pdarray filled with zeros.
 
     Parameters
     ----------
@@ -624,8 +623,7 @@ def ones(
     dtype: Union[np.dtype, type, str, bigint] = float64,
     max_bits: Optional[int] = None,
 ) -> pdarray:
-    """
-    Create a pdarray filled with ones.
+    """Create a pdarray filled with ones.
 
     Parameters
     ----------
@@ -674,6 +672,7 @@ def ones(
     Notes
     -----
     Logic for generating the pdarray is delegated to the ak.full method.
+
     """
     return full(size=size, fill_value=1, dtype=dtype, max_bits=max_bits)
 
@@ -685,8 +684,7 @@ def full(
     dtype: Optional[Union[np.dtype, type, str, bigint]] = None,
     max_bits: Optional[int] = None,
 ) -> Union[pdarray, Strings]:
-    """
-    Create a pdarray filled with fill_value.
+    """Create a pdarray filled with fill_value.
 
     Parameters
     ----------
@@ -732,6 +730,7 @@ def full(
 
     >>> ak.full(5, 5, dtype=ak.bool_)
     array([True True True True True])
+
     """
     from arkouda.client import generic_msg, get_array_ranks
     from arkouda.numpy.dtypes import dtype as ak_dtype
@@ -774,8 +773,7 @@ def full(
 def scalar_array(
     value: numeric_scalars, dtype: Optional[Union[np.dtype, type, str, bigint]] = None
 ) -> pdarray:
-    """
-    Create a pdarray from a single scalar value.
+    """Create a pdarray from a single scalar value.
 
     Parameters
     ----------
@@ -800,6 +798,7 @@ def scalar_array(
     ------
     RuntimeError
         Raised if value cannot be cast as dtype
+
     """
     from arkouda.client import generic_msg
 
@@ -821,8 +820,7 @@ def _full_string(
     size: Union[int_scalars, str],
     fill_value: str,
 ) -> Strings:
-    """
-    Create a Strings object filled with fill_value.
+    """Create a Strings object filled with fill_value.
 
     Parameters
     ----------
@@ -835,6 +833,7 @@ def _full_string(
     -------
     Strings
         array of the requested size and dtype filled with fill_value
+
     """
     from arkouda.client import generic_msg
 
@@ -844,8 +843,7 @@ def _full_string(
 
 @typechecked
 def zeros_like(pda: pdarray) -> pdarray:
-    """
-    Create a zero-filled pdarray of the same size and dtype as an existing
+    """Create a zero-filled pdarray of the same size and dtype as an existing
     pdarray.
 
     Parameters
@@ -879,14 +877,14 @@ def zeros_like(pda: pdarray) -> pdarray:
 
     >>> ak.zeros_like(ak.ones(5,dtype=ak.bool_))
     array([False False False False False])
+
     """
     return zeros(tuple(pda.shape), pda.dtype, pda.max_bits)
 
 
 @typechecked
 def ones_like(pda: pdarray) -> pdarray:
-    """
-    Create a one-filled pdarray of the same size and dtype as an existing
+    """Create a one-filled pdarray of the same size and dtype as an existing
     pdarray.
 
     Parameters
@@ -925,14 +923,14 @@ def ones_like(pda: pdarray) -> pdarray:
 
     >>> ak.ones_like(ak.zeros(5,dtype=ak.bool_))
     array([True True True True True])
+
     """
     return ones(tuple(pda.shape), pda.dtype, pda.max_bits)
 
 
 @typechecked
 def full_like(pda: pdarray, fill_value: numeric_scalars) -> Union[pdarray, Strings]:
-    """
-    Create a pdarray filled with fill_value of the same size and dtype as an existing
+    """Create a pdarray filled with fill_value of the same size and dtype as an existing
     pdarray.
 
     Parameters
@@ -973,6 +971,7 @@ def full_like(pda: pdarray, fill_value: numeric_scalars) -> Union[pdarray, Strin
 
     >>> ak.full_like(ak.full(5,True,dtype=ak.bool_),False)
     array([False False False False False])
+
     """
     return full(tuple(pda.shape), fill_value, pda.dtype, pda.max_bits)
 
@@ -1077,6 +1076,7 @@ def arange(
 
     >>> ak.arange(-5, -10, -1)
     array([-5 -6 -7 -8 -9])
+
     """
     from arkouda.client import generic_msg
     from arkouda.numpy import cast as akcast
@@ -1137,8 +1137,7 @@ def arange(
 
 @typechecked
 def linspace(start: numeric_scalars, stop: numeric_scalars, length: int_scalars) -> pdarray:
-    """
-    Create a pdarray of linearly-spaced floats in a closed interval.
+    """Create a pdarray of linearly-spaced floats in a closed interval.
 
     Parameters
     ----------
@@ -1179,6 +1178,7 @@ def linspace(start: numeric_scalars, stop: numeric_scalars, length: int_scalars)
 
     >>> ak.linspace(start=-5, stop=0, length=5)
     array([-5.00000000000000000 -3.75 -2.5 -1.25 0.00000000000000000])
+
     """
     from arkouda.client import generic_msg
 
@@ -1198,8 +1198,7 @@ def randint(
     dtype=akint64,
     seed: Optional[int_scalars] = None,
 ) -> pdarray:
-    """
-    Generate a pdarray of randomized int, float, or bool values in a
+    """Generate a pdarray of randomized int, float, or bool values in a
     specified range bounded by the low and high parameters.
 
     Parameters
@@ -1248,6 +1247,7 @@ def randint(
 
     >>> ak.randint(0, 1, 5, seed=1701, dtype=ak.bool_)
     array([False True False True False])
+
     """
     from arkouda.numpy.random import randint
 
@@ -1261,8 +1261,7 @@ def uniform(
     high: numeric_scalars = 1.0,
     seed: Union[None, int_scalars] = None,
 ) -> pdarray:
-    """
-    Generate a pdarray with uniformly distributed random float values
+    """Generate a pdarray with uniformly distributed random float values
     in a specified range.
 
     Parameters
@@ -1302,6 +1301,7 @@ def uniform(
 
     >>> ak.uniform(size=3,low=0,high=5,seed=0)
     array([0.30013431967121934 0.47383036230759112 1.0441791878997098])
+
     """
     return randint(low=low, high=high, size=size, dtype="float64", seed=seed)
 
@@ -1345,6 +1345,7 @@ def standard_normal(size: int_scalars, seed: Union[None, int_scalars] = None) ->
     >>> import arkouda as ak
     >>> ak.standard_normal(3,1)
     array([-0.68586185091150265 1.1723810583573377 0.567584107142031])
+
     """
     from arkouda.numpy.random import standard_normal
 
@@ -1359,8 +1360,7 @@ def random_strings_uniform(
     characters: str = "uppercase",
     seed: Union[None, int_scalars] = None,
 ) -> Strings:
-    """
-    Generate random strings with lengths uniformly distributed between
+    """Generate random strings with lengths uniformly distributed between
     minlen and maxlen, and with characters drawn from a specified set.
 
     Parameters
@@ -1399,6 +1399,7 @@ def random_strings_uniform(
     >>> ak.random_strings_uniform(minlen=1, maxlen=5, seed=8675309, size=5,
     ... characters='printable')
     array(['2 .z', 'aom', '2d|', 'o(', 'M'])
+
     """
     from arkouda.client import generic_msg
 
@@ -1476,6 +1477,7 @@ def random_strings_lognormal(
 
     >>> ak.random_strings_lognormal(2, 0.25, 5, seed=1, characters='printable')
     array(['eL96<O', ')o-GOe lR', ')PV yHf(', '._b3Yc&K', ',7Wjef'])
+
     """
     from arkouda.client import generic_msg
 

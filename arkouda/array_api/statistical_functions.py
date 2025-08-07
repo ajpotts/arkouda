@@ -45,8 +45,7 @@ def max(
     axis: Optional[Union[int, Tuple[int, ...]]] = None,
     keepdims: bool = False,
 ) -> Array:
-    """
-    Compute the maximum values of an array along a given axis or axes.
+    """Compute the maximum values of an array along a given axis or axes.
 
     Parameters
     ----------
@@ -83,8 +82,7 @@ def mean(
     axis: Optional[Union[int, Tuple[int, ...]]] = None,
     keepdims: bool = False,
 ) -> Array:
-    """
-    Compute the minimum values of an array along a given axis or axes.
+    """Compute the minimum values of an array along a given axis or axes.
 
     Parameters
     ----------
@@ -95,6 +93,7 @@ def mean(
         computed (returning a scalar-array).
     keepdims : bool, optional
         Whether to keep the singleton dimension(s) along `axis` in the result.
+
     """
     from arkouda.client import generic_msg
 
@@ -132,8 +131,7 @@ def min(
     axis: Optional[Union[int, Tuple[int, ...]]] = None,
     keepdims: bool = False,
 ) -> Array:
-    """
-    Compute the mean of an array along a given axis or axes.
+    """Compute the mean of an array along a given axis or axes.
 
     Parameters
     ----------
@@ -144,6 +142,7 @@ def min(
         array is computed (returning a scalar-array).
     keepdims : bool, optional
         Whether to keep the singleton dimension(s) along `axis` in the result.
+
     """
     if x.dtype not in _real_numeric_dtypes:
         raise TypeError("Only real numeric dtypes are allowed in min")
@@ -161,8 +160,7 @@ def prod(
     dtype: Optional[Dtype] = None,
     keepdims: bool = False,
 ) -> Array:
-    """
-    Compute the product of an array along a given axis or axes.
+    """Compute the product of an array along a given axis or axes.
 
     Parameters
     ----------
@@ -175,6 +173,7 @@ def prod(
         The dtype of the returned array. If None, the dtype of the input array is used.
     keepdims : bool, optional
         Whether to keep the singleton dimension(s) along `axis` in the result.
+
     """
     if x.dtype not in _numeric_dtypes:
         raise TypeError("Only numeric dtypes are allowed in prod")
@@ -201,8 +200,7 @@ def std(
     correction: Union[int, float] = 0.0,
     keepdims: bool = False,
 ) -> Array:
-    """
-    Compute the standard deviation of an array along a given axis or axes.
+    """Compute the standard deviation of an array along a given axis or axes.
 
     Parameters
     ----------
@@ -215,6 +213,7 @@ def std(
         The degrees of freedom correction to apply. The default is 0.
     keepdims : bool, optional
         Whether to keep the singleton dimension(s) along `axis` in the result.
+
     """
     from arkouda.client import generic_msg
 
@@ -256,8 +255,7 @@ def sum(
     dtype: Optional[Dtype] = None,
     keepdims: bool = False,
 ) -> Array:
-    """
-    Compute the sum of an array along a given axis or axes.
+    """Compute the sum of an array along a given axis or axes.
 
     Parameters
     ----------
@@ -270,6 +268,7 @@ def sum(
         The dtype of the returned array. If None, the dtype of the input array is used.
     keepdims : bool, optional
         Whether to keep the singleton dimension(s) along `axis` in the result.
+
     """
     if x.dtype not in _numeric_dtypes:
         raise TypeError("Only numeric dtypes are allowed in sum")
@@ -296,8 +295,7 @@ def var(
     correction: Union[int, float] = 0.0,
     keepdims: bool = False,
 ) -> Array:
-    """
-    Compute the variance of an array along a given axis or axes.
+    """Compute the variance of an array along a given axis or axes.
 
     Parameters
     ----------
@@ -310,6 +308,7 @@ def var(
         The degrees of freedom correction to apply. The default is 0.
     keepdims : bool, optional
         Whether to keep the singleton dimension(s) along `axis` in the result.
+
     """
     from arkouda.client import generic_msg
 
@@ -365,8 +364,7 @@ def cumulative_sum(
     dtype: Optional[Dtype] = None,
     include_initial: bool = False,
 ) -> Array:
-    """
-    Compute the cumulative sum of the elements of an array along a given axis.
+    """Compute the cumulative sum of the elements of an array along a given axis.
 
     Parameters
     ----------
@@ -379,6 +377,7 @@ def cumulative_sum(
         The dtype of the returned array. If None, the dtype of the input array is used.
     include_initial : bool, optional
         Whether to include the initial value as the first element of the output.
+
     """
     from arkouda.client import generic_msg
 

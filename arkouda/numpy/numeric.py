@@ -147,8 +147,7 @@ def cast(
     dt: Union[np.dtype, type, str, bigint],
     errors: ErrorMode = ErrorMode.strict,
 ) -> Union[Union[pdarray, Strings, Categorical], Tuple[pdarray, pdarray]]:  # type: ignore
-    """
-    Cast an array to another dtype.
+    """Cast an array to another dtype.
 
     Parameters
     ----------
@@ -197,6 +196,7 @@ def cast(
 
     >>> ak.cast(ak.linspace(0,4,5), dt=ak.bool_)
     array([False True True True True])
+
     """
     from arkouda.client import generic_msg
     from arkouda.pandas.categorical import Categorical  # type: ignore
@@ -248,8 +248,7 @@ def cast(
 
 @typechecked
 def abs(pda: pdarray) -> pdarray:
-    """
-    Return the element-wise absolute value of the array.
+    """Return the element-wise absolute value of the array.
 
     Parameters
     ----------
@@ -274,6 +273,7 @@ def abs(pda: pdarray) -> pdarray:
     >>> ak.abs(ak.linspace(-5,-1,5))
     array([5.00000000... 4.00000000... 3.00000000...
     2.00000000... 1.00000000...])
+
     """
     from arkouda.client import generic_msg
 
@@ -288,8 +288,7 @@ def abs(pda: pdarray) -> pdarray:
 
 @typechecked
 def ceil(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
-    """
-    Return the element-wise ceiling of the array.
+    """Return the element-wise ceiling of the array.
 
     Parameters
     ----------
@@ -322,8 +321,7 @@ def ceil(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
 
 @typechecked
 def floor(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
-    """
-    Return the element-wise floor of the array.
+    """Return the element-wise floor of the array.
 
     Parameters
     ----------
@@ -349,6 +347,7 @@ def floor(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
     >>> ak.floor(ak.linspace(1.1,5.5,5))
     array([1.00000000... 2.00000000... 3.00000000...
     4.00000000... 5.00000000...])
+
     """
     _datatype_check(pda.dtype, [float], "floor")
     return _general_helper(pda, "floor", where)
@@ -356,8 +355,7 @@ def floor(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
 
 @typechecked
 def round(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
-    """
-    Return the element-wise rounding of the array.
+    """Return the element-wise rounding of the array.
 
     Parameters
     ----------
@@ -382,6 +380,7 @@ def round(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
     >>> import arkouda as ak
     >>> ak.round(ak.array([1.1, 2.5, 3.14159]))
     array([1.00000000... 3.00000000... 3.00000000...])
+
     """
     _datatype_check(pda.dtype, [float], "round")
     return _general_helper(pda, "round", where)
@@ -389,8 +388,7 @@ def round(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
 
 @typechecked
 def trunc(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
-    """
-    Return the element-wise truncation of the array.
+    """Return the element-wise truncation of the array.
 
     Parameters
     ----------
@@ -415,6 +413,7 @@ def trunc(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
     >>> import arkouda as ak
     >>> ak.trunc(ak.array([1.1, 2.5, 3.14159]))
     array([1.00000000... 2.00000000... 3.00000000...])
+
     """
     _datatype_check(pda.dtype, [float], "trunc")
     return _general_helper(pda, "trunc", where)
@@ -426,8 +425,7 @@ def trunc(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
 
 @typechecked
 def sign(pda: pdarray) -> pdarray:
-    """
-    Return the element-wise sign of the array.
+    """Return the element-wise sign of the array.
 
     Parameters
     ----------
@@ -448,6 +446,7 @@ def sign(pda: pdarray) -> pdarray:
     >>> import arkouda as ak
     >>> ak.sign(ak.array([-10, -5, 0, 5, 10]))
     array([-1 -1 0 1 1])
+
     """
     from arkouda.client import generic_msg
 
@@ -463,8 +462,7 @@ def sign(pda: pdarray) -> pdarray:
 
 @typechecked
 def isfinite(pda: pdarray) -> pdarray:
-    """
-    Return the element-wise isfinite check applied to the array.
+    """Return the element-wise isfinite check applied to the array.
 
     Parameters
     ----------
@@ -488,6 +486,7 @@ def isfinite(pda: pdarray) -> pdarray:
     >>> import arkouda as ak
     >>> ak.isfinite(ak.array([1.0, 2.0, ak.inf]))
     array([True True False])
+
     """
     from arkouda.client import generic_msg
 
@@ -502,8 +501,7 @@ def isfinite(pda: pdarray) -> pdarray:
 
 @typechecked
 def isinf(pda: pdarray) -> pdarray:
-    """
-    Return the element-wise isinf check applied to the array.
+    """Return the element-wise isinf check applied to the array.
 
     Parameters
     ----------
@@ -527,6 +525,7 @@ def isinf(pda: pdarray) -> pdarray:
     >>> import arkouda as ak
     >>> ak.isinf(ak.array([1.0, 2.0, ak.inf]))
     array([False False True])
+
     """
     from arkouda.client import generic_msg
 
@@ -541,8 +540,7 @@ def isinf(pda: pdarray) -> pdarray:
 
 @typechecked
 def isnan(pda: pdarray) -> pdarray:
-    """
-    Return the element-wise isnan check applied to the array.
+    """Return the element-wise isnan check applied to the array.
 
     Parameters
     ----------
@@ -566,6 +564,7 @@ def isnan(pda: pdarray) -> pdarray:
     >>> import arkouda as ak
     >>> ak.isnan(ak.array([1.0, 2.0, np.log(-1)]))
     array([False False True])
+
     """
     from arkouda.client import generic_msg
     from arkouda.numpy.util import is_float, is_numeric
@@ -588,8 +587,7 @@ def isnan(pda: pdarray) -> pdarray:
 
 @typechecked
 def log(pda: pdarray) -> pdarray:
-    """
-    Return the element-wise natural log of the array.
+    """Return the element-wise natural log of the array.
 
     Parameters
     ----------
@@ -626,6 +624,7 @@ def log(pda: pdarray) -> pdarray:
     Log base 2
     >>> ak.log(A) / np.log(2)
     array([0.00000000... 3.32192809... 6.64385618...])
+
     """
     from arkouda.client import generic_msg
 
@@ -640,8 +639,7 @@ def log(pda: pdarray) -> pdarray:
 
 @typechecked
 def log10(pda: pdarray) -> pdarray:
-    """
-    Return the element-wise base 10 log of the array.
+    """Return the element-wise base 10 log of the array.
 
     Parameters
     ----------
@@ -659,6 +657,7 @@ def log10(pda: pdarray) -> pdarray:
     >>> a = ak.arange(1,5)
     >>> ak.log10(a)
     array([0.00000000... 0.30102999... 0.47712125... 0.60205999...])
+
     """
     from arkouda.client import generic_msg
 
@@ -673,8 +672,7 @@ def log10(pda: pdarray) -> pdarray:
 
 @typechecked
 def log2(pda: pdarray) -> pdarray:
-    """
-    Return the element-wise base 2 log of the array.
+    """Return the element-wise base 2 log of the array.
 
     Parameters
     ----------
@@ -692,6 +690,7 @@ def log2(pda: pdarray) -> pdarray:
     >>> a = ak.arange(1,5)
     >>> ak.log2(a)
     array([0.00000000... 1.00000000... 1.58496250... 2.00000000...])
+
     """
     from arkouda.client import generic_msg
 
@@ -706,8 +705,7 @@ def log2(pda: pdarray) -> pdarray:
 
 @typechecked
 def log1p(pda: pdarray) -> pdarray:
-    """
-    Return the element-wise natural log of one plus the array.
+    """Return the element-wise natural log of one plus the array.
 
     Parameters
     ----------
@@ -725,6 +723,7 @@ def log1p(pda: pdarray) -> pdarray:
     >>> import arkouda as ak
     >>> ak.log1p(ak.arange(1,5))
     array([0.69314718... 1.09861228... 1.38629436... 1.60943791...])
+
     """
     from arkouda.client import generic_msg
 
@@ -741,8 +740,7 @@ def log1p(pda: pdarray) -> pdarray:
 def nextafter(
     x1: Union[pdarray, numeric_scalars, bigint], x2: Union[pdarray, numeric_scalars, bigint]
 ) -> Union[pdarray, float]:
-    """
-    Return the next floating-point value after `x1` towards `x2`, element-wise.
+    """Return the next floating-point value after `x1` towards `x2`, element-wise.
     Accuracy only guaranteed for 64 bit values.
 
     Parameters
@@ -770,6 +768,7 @@ def nextafter(
     >>> b = ak.array([2, 1])
     >>> ak.nextafter(a, b) == ak.array([eps + 1, 2 - eps])
     array([True True])
+
     """
     from arkouda.client import generic_msg
 
@@ -810,8 +809,7 @@ def nextafter(
 
 @typechecked
 def exp(pda: pdarray) -> pdarray:
-    """
-    Return the element-wise exponential of the array.
+    """Return the element-wise exponential of the array.
 
     Parameters
     ----------
@@ -851,8 +849,7 @@ def exp(pda: pdarray) -> pdarray:
 
 @typechecked
 def expm1(pda: pdarray) -> pdarray:
-    """
-    Return the element-wise exponential of the array minus one.
+    """Return the element-wise exponential of the array minus one.
 
     Parameters
     ----------
@@ -878,6 +875,7 @@ def expm1(pda: pdarray) -> pdarray:
     >>> ak.expm1(ak.uniform(5,1.0,5.0, seed=1))
     array([62.3448620... 2.80794671... 53.7254287...
         35.2344168... 41.1929399...])
+
     """
     from arkouda.client import generic_msg
 
@@ -892,8 +890,7 @@ def expm1(pda: pdarray) -> pdarray:
 
 @typechecked
 def square(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
-    """
-    Return the element-wise square of the array.
+    """Return the element-wise square of the array.
 
     Parameters
     ----------
@@ -919,6 +916,7 @@ def square(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
     >>> import arkouda as ak
     >>> ak.square(ak.arange(1,5))
     array([1 4 9 16])
+
     """
     _datatype_check(pda.dtype, NUMERIC_TYPES, "floor")
     return _general_helper(pda, "square", where)
@@ -926,8 +924,7 @@ def square(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
 
 @typechecked
 def cumsum(pda: pdarray) -> pdarray:
-    """
-    Return the cumulative sum over the array.
+    """Return the cumulative sum over the array.
 
     The sum is inclusive, such that the ``i`` th element of the
     result is the sum of elements up to and including ``i``.
@@ -958,6 +955,7 @@ def cumsum(pda: pdarray) -> pdarray:
 
     >>> ak.cumsum(ak.randint(0, 1, 5, dtype=ak.bool_, seed=1))
     array([1 1 2 3 4])
+
     """
     from arkouda.client import generic_msg
 
@@ -973,8 +971,7 @@ def cumsum(pda: pdarray) -> pdarray:
 
 @typechecked
 def cumprod(pda: pdarray) -> pdarray:
-    """
-    Return the cumulative product over the array.
+    """Return the cumulative product over the array.
 
     The product is inclusive, such that the ``i`` th element of the
     result is the product of elements up to and including ``i``.
@@ -1003,6 +1000,7 @@ def cumprod(pda: pdarray) -> pdarray:
     >>> ak.cumprod(ak.uniform(5,1.0,5.0, seed=1))
     array([4.14859379... 5.54704379... 22.2010913...
         79.7021268... 298.265515...])
+
     """
     from arkouda.client import generic_msg
 
@@ -1018,8 +1016,7 @@ def cumprod(pda: pdarray) -> pdarray:
 
 @typechecked
 def sin(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
-    """
-    Return the element-wise sine of the array.
+    """Return the element-wise sine of the array.
 
     Parameters
     ----------
@@ -1046,14 +1043,14 @@ def sin(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
     >>> a = ak.linspace(-1.5,0.75,4)
     >>> ak.sin(a)
     array([-0.99749498... -0.68163876... 0.00000000... 0.68163876...])
+
     """
     return _general_helper(pda, "sin", where)
 
 
 @typechecked
 def cos(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
-    """
-    Return the element-wise cosine of the array.
+    """Return the element-wise cosine of the array.
 
     Parameters
     ----------
@@ -1080,14 +1077,14 @@ def cos(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
     >>> a = ak.linspace(-1.5,0.75,4)
     >>> ak.cos(a)
     array([0.07073720... 0.73168886... 1.00000000... 0.73168886...])
+
     """
     return _general_helper(pda, "cos", where)
 
 
 @typechecked
 def tan(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
-    """
-    Return the element-wise tangent of the array.
+    """Return the element-wise tangent of the array.
 
     Parameters
     ----------
@@ -1114,14 +1111,14 @@ def tan(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
     >>> a = ak.linspace(-1.5,0.75,4)
     >>> ak.tan(a)
     array([-14.1014199... -0.93159645... 0.00000000... 0.93159645...])
+
     """
     return _general_helper(pda, "tan", where)
 
 
 @typechecked
 def arcsin(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
-    """
-    Return the element-wise inverse sine of the array. The result is between -pi/2 and pi/2.
+    """Return the element-wise inverse sine of the array. The result is between -pi/2 and pi/2.
 
     Parameters
     ----------
@@ -1148,14 +1145,14 @@ def arcsin(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
     >>> a = ak.linspace(-0.7,0.5,4)
     >>> ak.arcsin(a)
     array([-0.77539749... -0.30469265... 0.10016742... 0.52359877...])
+
     """
     return _general_helper(pda, "arcsin", where)
 
 
 @typechecked
 def arccos(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
-    """
-    Return the element-wise inverse cosine of the array. The result is between 0 and pi.
+    """Return the element-wise inverse cosine of the array. The result is between 0 and pi.
 
     Parameters
     ----------
@@ -1182,14 +1179,14 @@ def arccos(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
     >>> a = ak.linspace(-0.7,0.5,4)
     >>> ak.arccos(a)
     array([2.34619382... 1.87548898... 1.47062890... 1.04719755...])
+
     """
     return _general_helper(pda, "arccos", where)
 
 
 @typechecked
 def arctan(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
-    """
-    Return the element-wise inverse tangent of the array. The result is between -pi/2 and pi/2.
+    """Return the element-wise inverse tangent of the array. The result is between -pi/2 and pi/2.
 
     Parameters
     ----------
@@ -1216,6 +1213,7 @@ def arctan(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
     >>> a = ak.linspace(-10.7,10.5,4)
     >>> ak.arctan(a)
     array([-1.47760906... -1.30221689... 1.28737507... 1.47584462...])
+
     """
     return _general_helper(pda, "arctan", where)
 
@@ -1226,8 +1224,7 @@ def arctan2(
     denom: Union[pdarray, numeric_scalars],
     where: Union[bool, pdarray] = True,
 ) -> pdarray:
-    """
-    Return the element-wise inverse tangent of the array pair. The result chosen is the
+    """Return the element-wise inverse tangent of the array pair. The result chosen is the
     signed angle in radians between the ray ending at the origin and passing through the
     point (1,0), and the ray ending at the origin and passing through the point (denom, num).
     The result is between -pi and pi.
@@ -1265,6 +1262,7 @@ def arctan2(
     >>> y = ak.array([1,1,-1,-1])
     >>> ak.arctan2(y,x)
     array([0.78539816... 2.35619449... -2.35619449... -0.78539816...])
+
     """
     from arkouda.client import generic_msg
 
@@ -1339,8 +1337,7 @@ def arctan2(
 
 @typechecked
 def sinh(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
-    """
-    Return the element-wise hyperbolic sine of the array.
+    """Return the element-wise hyperbolic sine of the array.
 
     Parameters
     ----------
@@ -1367,14 +1364,14 @@ def sinh(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
     >>> a = ak.linspace(-0.9,0.7,4)
     >>> ak.sinh(a)
     array([-1.02651672... -0.37493812... 0.16743934... 0.75858370...])
+
     """
     return _general_helper(pda, "sinh", where)
 
 
 @typechecked
 def cosh(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
-    """
-    Return the element-wise hyperbolic cosine of the array.
+    """Return the element-wise hyperbolic cosine of the array.
 
     Parameters
     ----------
@@ -1401,14 +1398,14 @@ def cosh(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
     >>> a = ak.linspace(-0.9,0.7,4)
     >>> ak.cosh(a)
     array([1.43308638... 1.06797874... 1.01392106... 1.25516900...])
+
     """
     return _general_helper(pda, "cosh", where)
 
 
 @typechecked
 def tanh(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
-    """
-    Return the element-wise hyperbolic tangent of the array.
+    """Return the element-wise hyperbolic tangent of the array.
 
     Parameters
     ----------
@@ -1435,14 +1432,14 @@ def tanh(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
     >>> a = ak.linspace(-0.9,0.7,4)
     >>> ak.tanh(a)
     array([-0.71629787... -0.35107264... 0.16514041... 0.60436777...])
+
     """
     return _general_helper(pda, "tanh", where)
 
 
 @typechecked
 def arcsinh(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
-    """
-    Return the element-wise inverse hyperbolic sine of the array.
+    """Return the element-wise inverse hyperbolic sine of the array.
 
     Parameters
     ----------
@@ -1469,14 +1466,14 @@ def arcsinh(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
     >>> a = ak.linspace(-500,500,4)
     >>> ak.arcsinh(a)
     array([-6.90775627... -5.80915199... 5.80915199... 6.90775627...])
+
     """
     return _general_helper(pda, "arcsinh", where)
 
 
 @typechecked
 def arccosh(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
-    """
-    Return the element-wise inverse hyperbolic cosine of the array.
+    """Return the element-wise inverse hyperbolic cosine of the array.
 
     Parameters
     ----------
@@ -1503,14 +1500,14 @@ def arccosh(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
     >>> a = ak.linspace(1,500,4)
     >>> ak.arccosh(a)
     array([0.00000000... 5.81312608... 6.50328742... 6.90775427...])
+
     """
     return _general_helper(pda, "arccosh", where)
 
 
 @typechecked
 def arctanh(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
-    """
-    Return the element-wise inverse hyperbolic tangent of the array.
+    """Return the element-wise inverse hyperbolic tangent of the array.
 
     Parameters
     ----------
@@ -1537,13 +1534,13 @@ def arctanh(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
     >>> a = ak.linspace(-.999,.999,4)
     >>> ak.arctanh(a)
     array([-3.80020116... -0.34619863... 0.34619863... 3.80020116...])
+
     """
     return _general_helper(pda, "arctanh", where)
 
 
 def _general_helper(pda: pdarray, func: str, where: Union[bool, pdarray] = True) -> pdarray:
-    """
-    Returns the result of the input function acting element-wise on the array.
+    """Returns the result of the input function acting element-wise on the array.
     This is used for functions that allow a "where" parameter in their arguments.
 
     Parameters
@@ -1565,6 +1562,7 @@ def _general_helper(pda: pdarray, func: str, where: Union[bool, pdarray] = True)
     ------
     TypeError
         Raised if pda is not a pdarray or if is not real or int or uint, or if where is not Boolean
+
     """
     from arkouda.client import generic_msg
 
@@ -1599,8 +1597,7 @@ def _general_helper(pda: pdarray, func: str, where: Union[bool, pdarray] = True)
 
 @typechecked
 def rad2deg(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
-    """
-    Converts angles element-wise from radians to degrees.
+    """Converts angles element-wise from radians to degrees.
 
     Parameters
     ----------
@@ -1627,6 +1624,7 @@ def rad2deg(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
     >>> a = ak.linspace(0,6.28,4)
     >>> ak.rad2deg(a)
     array([0.00000000... 119.939165... 239.878330... 359.817495...])
+
     """
     if where is True:
         return 180 * (pda / np.pi)
@@ -1638,8 +1636,7 @@ def rad2deg(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
 
 @typechecked
 def deg2rad(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
-    """
-    Converts angles element-wise from degrees to radians.
+    """Converts angles element-wise from degrees to radians.
 
     Parameters
     ----------
@@ -1666,6 +1663,7 @@ def deg2rad(pda: pdarray, where: Union[bool, pdarray] = True) -> pdarray:
     >>> a = ak.linspace(0,359,4)
     >>> ak.deg2rad(a)
     array([0.00000000... 2.08857733... 4.17715467... 6.26573201...])
+
     """
     if where is True:
         return np.pi * pda / 180
@@ -1703,8 +1701,7 @@ def hash(
     ],
     full: bool = True,
 ) -> Union[Tuple[pdarray, pdarray], pdarray]:
-    """
-    Return an element-wise hash of the array or list of arrays.
+    """Return an element-wise hash of the array or list of arrays.
 
     Parameters
     ----------
@@ -1761,6 +1758,7 @@ def hash(
     array since hashes of subsequent arrays cannot be simply XORed
     because equivalent values will cancel each other out, hence we
     do a rotation by the ordinal of the array.
+
     """
     from arkouda import Categorical as Categorical_
     from arkouda import SegArray as SegArray_
@@ -1908,8 +1906,7 @@ def where(
     A: Union[str, numeric_scalars, pdarray, Strings, Categorical],  # type: ignore
     B: Union[str, numeric_scalars, pdarray, Strings, Categorical],  # type: ignore
 ) -> Union[pdarray, Strings, Categorical]:  # type: ignore
-    """
-    Return an array with elements chosen from A and B based upon a
+    """Return an array with elements chosen from A and B based upon a
     conditioning array. As is the case with numpy.where, the return array
     consists of values from the first array (A) where the conditioning array
     elements are True and from the second array (B) where the conditioning
@@ -1980,6 +1977,7 @@ def where(
     A and B must have the same dtype and only one conditional clause
     is supported e.g., n < 5, n > 1, which is supported in numpy
     is not currently supported in Arkouda
+
     """
     from arkouda.client import generic_msg
 
@@ -2065,8 +2063,7 @@ def histogram(
     bins: int_scalars = 10,
     range: Optional[Tuple[numeric_scalars, numeric_scalars]] = None,
 ) -> Tuple[pdarray, pdarray]:
-    """
-    Compute a histogram of evenly spaced bins over the range of an array.
+    """Compute a histogram of evenly spaced bins over the range of an array.
 
     Parameters
     ----------
@@ -2124,6 +2121,7 @@ def histogram(
     >>> plt.bar(b_np[:-1], h.to_ndarray(), width=b_widths, align='edge', edgecolor='black')
     <BarContainer object of 3 artists>
     >>> plt.show() # doctest: +SKIP
+
     """
     from arkouda.client import generic_msg
 
@@ -2151,6 +2149,7 @@ def histogram2d(
 ) -> Tuple[pdarray, pdarray, pdarray]:
     """
     Compute the bi-dimensional histogram of two data samples with evenly spaced bins.
+
 
     Parameters
     ----------
@@ -2222,6 +2221,7 @@ def histogram2d(
     array([0.00000000... 3.00000000... 6.00000000... 9.00000000...])
     >>> y_edges
     array([0.00000000... 3.00000000... 6.00000000... 9.00000000...])
+
     """
     from arkouda.client import generic_msg
 
@@ -2265,8 +2265,7 @@ def histogramdd(
     bins: Union[int_scalars, Sequence[int_scalars]] = 10,
     range: Optional[Sequence[Optional[Tuple[numeric_scalars, numeric_scalars]]]] = None,
 ) -> Tuple[pdarray, Sequence[pdarray]]:
-    """
-    Compute the multidimensional histogram of data in sample with evenly spaced bins.
+    """Compute the multidimensional histogram of data in sample with evenly spaced bins.
 
     Parameters
     ----------
@@ -2329,6 +2328,7 @@ def histogramdd(
     [array([0.00000000... 4.5 9.00000000...]),
         array([0.00000000... 4.5 9.00000000...]),
         array([0.00000000... 2.66666666... 5.33333333... 8.00000000...])]
+
     """
     from arkouda.client import generic_msg
 
@@ -2377,8 +2377,7 @@ def histogramdd(
 def value_counts(
     pda: pdarray,
 ) -> tuple[groupable, pdarray]:
-    """
-    Count the occurrences of the unique values of an array.
+    """Count the occurrences of the unique values of an array.
 
     Parameters
     ----------
@@ -2415,6 +2414,7 @@ def value_counts(
     >>> A = ak.array([2, 0, 2, 4, 0, 0])
     >>> ak.value_counts(A)
     (array([0 2 4]), array([3 2 1]))
+
     """
     return GroupBy(pda).size()
 
@@ -2519,8 +2519,7 @@ def clip(
 
 
 def median(pda: pdarray) -> np.float64:
-    """
-    Compute the median of a given array.  1d case only, for now.
+    """Compute the median of a given array.  1d case only, for now.
 
     Parameters
     ----------
@@ -2561,8 +2560,7 @@ def median(pda: pdarray) -> np.float64:
 
 
 def count_nonzero(pda: pdarray) -> np.int64:
-    """
-    Compute the nonzero count of a given array. 1D case only, for now.
+    """Compute the nonzero count of a given array. 1D case only, for now.
 
     Parameters
     ----------
@@ -2622,8 +2620,7 @@ def count_nonzero(pda: pdarray) -> np.int64:
 
 
 def array_equal(pda_a: pdarray, pda_b: pdarray, equal_nan: bool = False) -> bool:
-    """
-    Compares two pdarrays for equality.
+    """Compares two pdarrays for equality.
     If neither array has any nan elements, then if all elements are pairwise equal,
     it returns True.
     If equal_Nan is False, then any nan element in either array gives a False return.
@@ -2664,6 +2661,7 @@ def array_equal(pda_a: pdarray, pda_b: pdarray, equal_nan: bool = False) -> bool
     False
     >>> ak.array_equal(a,b,True)
     True
+
     """
     if (pda_a.shape != pda_b.shape) or ((pda_a.dtype == akstr_) ^ (pda_b.dtype == akstr_)):
         return False
@@ -2676,8 +2674,7 @@ def array_equal(pda_a: pdarray, pda_b: pdarray, equal_nan: bool = False) -> bool
 def putmask(
     A: pdarray, mask: pdarray, Values: pdarray
 ) -> None:  # doesn't return anything, as A is overwritten in place
-    """
-    Overwrite elements of A with elements from B based upon a mask array.
+    """Overwrite elements of A with elements from B based upon a mask array.
     Similar to numpy.putmask, where mask = False, A retains its original value,
     but where mask = True, A is overwritten with the corresponding entry from Values.
 
@@ -2725,6 +2722,7 @@ def putmask(
     Only one conditional clause is supported e.g., n < 5, n > 1.
 
     multi-dim pdarrays are now implemented.
+
     """
     from arkouda.client import generic_msg
 
@@ -2756,8 +2754,7 @@ def putmask(
 
 
 def eye(N: int_scalars, M: int_scalars, k: int_scalars = 0, dt: type = ak_float64) -> pdarray:
-    """
-    Return a pdarray with zeros everywhere except along a diagonal, which is all ones.
+    """Return a pdarray with zeros everywhere except along a diagonal, which is all ones.
     The matrix need not be square.
 
     Parameters
@@ -2929,8 +2926,7 @@ def tril(pda: pdarray, diag: int_scalars = 0) -> pdarray:
 
 @typechecked
 def transpose(pda: pdarray, axes: Optional[Tuple[int, ...]] = None) -> pdarray:
-    """
-    Compute the transpose of a matrix.
+    """Compute the transpose of a matrix.
 
     Parameters
     ----------
@@ -2964,6 +2960,7 @@ def transpose(pda: pdarray, axes: Optional[Tuple[int, ...]] = None) -> pdarray:
         Raised if axes is not a legitimate permutation of the axes of pda
     TypeError
         Raised if pda is not a pdarray, or if axes is neither a tuple nor None
+
     """
     from arkouda.client import generic_msg
 
@@ -2986,8 +2983,7 @@ def transpose(pda: pdarray, axes: Optional[Tuple[int, ...]] = None) -> pdarray:
 
 
 def matmul(pdaLeft: pdarray, pdaRight: pdarray) -> pdarray:
-    """
-    Compute the product of two matrices.
+    """Compute the product of two matrices.
 
     Parameters
     ----------
@@ -3040,8 +3036,7 @@ def matmul(pdaLeft: pdarray, pdaRight: pdarray) -> pdarray:
 def vecdot(
     x1: pdarray, x2: pdarray, axis: Optional[Union[int, None]] = None
 ) -> Union[numeric_scalars, pdarray]:
-    """
-    Computes the numpy-style vecdot product of two matrices.  This differs from the
+    """Computes the numpy-style vecdot product of two matrices.  This differs from the
     vecdot function above.  See https://numpy.org/doc/stable/reference/index.html.
 
     Parameters
@@ -3112,8 +3107,7 @@ def quantile(
     method: Optional[str] = "linear",
     keepdims: bool = False,
 ) -> Union[numeric_scalars, pdarray]:  # type : ignore
-    """
-    Compute the q-th quantile of the data along the specified axis.
+    """Compute the q-th quantile of the data along the specified axis.
 
     Parameters
     ----------
@@ -3287,8 +3281,7 @@ def percentile(
     method: Optional[str] = "linear",
     keepdims: bool = False,
 ) -> Union[numeric_scalars, pdarray]:  # type : ignore
-    """
-    Compute the q-th percentile of the data along the specified axis.
+    """Compute the q-th percentile of the data along the specified axis.
 
     Parameters
     ----------
@@ -3365,8 +3358,7 @@ def percentile(
 
 
 def take(a: pdarray, indices: Union[numeric_scalars, pdarray], axis: Optional[int] = None) -> pdarray:
-    """
-    Take elements from an array along an axis.
+    """Take elements from an array along an axis.
 
     When axis is not None, this function does the same thing as “fancy” indexing (indexing arrays
     using arrays); however, it can be easier to use if you need elements along a given axis.

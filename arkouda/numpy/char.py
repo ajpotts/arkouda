@@ -6,8 +6,7 @@ __all__ = ["bool_", "character", "int_", "integer", "object_", "str_", "isnumeri
 
 
 def isnumeric(pda) -> pdarray:
-    """
-    Return a boolean pdarray where index i indicates whether string i of the
+    """Return a boolean pdarray where index i indicates whether string i of the
     Strings has all numeric characters. There are 1922 unicode characters that
     qualify as numeric, including the digits 0 through 9, superscripts and
     subscripted digits, special characters with the digits encircled or
@@ -47,6 +46,7 @@ def isnumeric(pda) -> pdarray:
     array(['3.14', '0', '²', '2³₇', '2³x₇'])
     >>> ak.isnumeric(special_strings)
     array([False True True True False])
+
     """
     from arkouda.numpy.strings import Strings
 

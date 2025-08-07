@@ -13,13 +13,13 @@ __all__ = ["power_divergence", "chisquare", "Power_divergenceResult"]
 
 
 class Power_divergenceResult(namedtuple("Power_divergenceResult", ("statistic", "pvalue"))):
-    """
-    The results of a power divergence statistical test.
+    """The results of a power divergence statistical test.
 
     Attributes
     ----------
     statistic :    float64
     pvalue :    float64
+
     """
 
     statistic: float64
@@ -38,8 +38,7 @@ _power_div_lambda_names = {
 
 
 def power_divergence(f_obs, f_exp=None, ddof=0, lambda_=None):
-    """
-    Computes the power divergence statistic and p-value.
+    """Computes the power divergence statistic and p-value.
 
     Parameters
     ----------
@@ -172,8 +171,7 @@ def power_divergence(f_obs, f_exp=None, ddof=0, lambda_=None):
 
 
 def chisquare(f_obs, f_exp=None, ddof=0):
-    """
-    Computes the chi square statistic and p-value.
+    """Computes the chi square statistic and p-value.
 
     Parameters
     ----------
