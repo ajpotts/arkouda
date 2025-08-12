@@ -123,6 +123,21 @@ def _normalize_to_ea(obj):
     # Python/NumPy iterables – leave them alone, Pandas will handle
     return obj
 
+def _index_to_ea_index(index_like):
+    """Return a pandas Index backed by Arkouda ExtensionArrays (no to_ndarray)."""
+    if isinstance(index_like, pdarray):
+        ea = ArkoudaArray(index_like)
+        return pd.Index(ea)
+    if isinstance(index_like, Strings):
+        ea = ArkoudaStringArray(index_like)
+        return pd.Index(ea)
+    if isinstance(index_like, Categorical):
+        # Keep it categorical on server; EA for categories
+        ea = ArkoudaCategoricalArray(index_like)
+        return pd.Index(ea)
+    # Already a pandas/NumPy/index-like → return as-is
+    return index_like
+
 @unary_operators
 @aggregation_operators
 @natural_binary_operators
@@ -182,32 +197,36 @@ class Series(pd_Series):
         def _constructor(self):
             return Series
 
-        def __new__(
-                cls,
-                data=None,
-                index=None,
-                dtype=None,
-                name=None,
-                copy: bool | None = None,
-                fastpath: bool = False,
-        ):
-            data = _normalize_to_ea(data)
+        def __new__(cls, data=None, index=None, dtype=None, name=None, copy=False, fastpath=False):
+            # If index is Arkouda, turn it into an EA-backed Index (no materialization)
+            if index is not None:
+                index = _index_to_ea_index(index)
 
-            # IMPORTANT: call pandas' constructor directly, not super()
-            obj = pd_Series.__new__(
-                cls,
-                data=data,
-                index=index,
-                dtype=dtype,
-                name=name,
-                copy=copy,
-                fastpath=fastpath,
-            )
-            return obj
+            # If data is raw Arkouda arrays, normalize to the right EA too
+            if isinstance(data, pdarray):
+                data = ArkoudaArray(data)
+            elif isinstance(data, Strings):
+                data = ArkoudaStringArray(data)
+            elif isinstance(data, Categorical):
+                data = ArkoudaCategoricalArray(data)
+
+            return super().__new__(cls, data=data, index=index, dtype=dtype, name=name, copy=copy, fastpath=fastpath)
 
         @classmethod
         def from_arkouda(cls, a, *, index=None, name=None):
-            return cls(_normalize_to_ea(a), index=index, name=name)
+            # Choose the correct EA wrapper
+            if isinstance(a, pdarray):
+                ea = ArkoudaArray(a)
+            elif isinstance(a, Strings):
+                ea = ArkoudaStringArray(a)
+            elif isinstance(a, Categorical):
+                ea = ArkoudaCategoricalArray(a)
+            else:
+                raise TypeError("Unsupported arkouda type for from_arkouda")
+
+            if index is not None:
+                index = _index_to_ea_index(index)
+            return cls(ea, index=index, name=name)
 
 
     # --- Convenience helpers (optional) ---

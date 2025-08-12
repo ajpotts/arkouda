@@ -246,3 +246,11 @@ class ArkoudaBaseArray(ExtensionArray):
         return self._rbinary_op(other, _op.pow)
 
     # (You can add bitwise ops similarly if you need them.)
+
+def astype(self, dtype, copy: bool = False):
+    # If pandas asks for object, we materialize as a last resort.
+    if dtype == object or str(dtype) == "object":
+        return self._data.to_ndarray().astype(object, copy=False)
+    # If dtype is a regular numeric/str dtype we can cast on server:
+    from arkouda.numpy.numeric import cast as akcast
+    return type(self)(akcast(self._data, dtype))

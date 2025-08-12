@@ -93,1286 +93,1391 @@ else:
     akcast = TypeVar("akcast")
     Categorical = TypeVar("Categorical")
 
+from pandas import Index as pd_Index
+from arkouda.pandas.extension import (
+    ArkoudaArray,
+    ArkoudaStringArray,
+    ArkoudaCategoricalArray,
+)
 
-class Index:
-    """
-    Sequence used for indexing and alignment.
+# ---- helpers ---------------------------------------------------------------
 
-    The basic object storing axis labels for all DataFrame objects.
+def _as_ea(obj):
+    """Normalize raw Arkouda objects / EAs to one of your EAs."""
+    # Already an EA?
+    if isinstance(obj, (ArkoudaArray, ArkoudaStringArray, ArkoudaCategoricalArray)):
+        return obj
+    # arkouda primitives -> EA
+    try:
+        import arkouda as ak
+        from arkouda.numpy.strings import Strings
+        from arkouda.numpy.pdarrayclass import pdarray
 
-    Parameters
-    ----------
-    values: List, pdarray, Strings, Categorical, pandas.Categorical, pandas.Index, or Index
-    name : str, default=None
-        Name to be stored in the index.
-    allow_list = False,
-        If False, list values will be converted to a pdarray.
-        If True, list values will remain as a list, provided the data length is less than max_list_size.
-    max_list_size = 1000
-        This is the maximum allowed data length for the values to be stored as a list object.
+        if isinstance(obj, pdarray):
+            return ArkoudaArray(obj)
+        if isinstance(obj, Strings):
+            return ArkoudaStringArray(obj)
+        if isinstance(obj, ak.Categorical):
+            return ArkoudaCategoricalArray(obj)
+    except Exception:
+        pass
 
-    Raises
-    ------
-    ValueError
-        Raised if allow_list=True and the size of values is > max_list_size.
+    # Python/NumPy fallback: let Pandas handle (will live on client)
+    arr = np.asarray(obj)
+    # try to keep dtype-ish behavior similar
+    if arr.dtype.kind in "iu":
+        return ArkoudaArray.from_numpy(arr)  # optional convenience ctor
+    elif arr.dtype.kind in "UO":
+        return ArkoudaStringArray.from_numpy(arr)
+    return ArkoudaArray.from_numpy(arr)
 
-    See Also
-    --------
-    MultiIndex
+def _ea_to_numpy_object(ea):
+    """What Pandas' index engine needs as a last resort (stable semantics)."""
+    # object dtype avoids coercion surprises in pandas' engine
+    return np.asarray(ea.to_numpy(), dtype=object)
 
-    Examples
-    --------
-    >>> import arkouda as ak
-    >>> ak.Index([1, 2, 3])
-    Index(array([1 2 3]), dtype='int64')
+def _ea_like(ea, ak_like):
+    """Build a same-kind EA from an Arkouda-like (pdarray/Strings/Categorical)."""
+    if isinstance(ea, ArkoudaStringArray):
+        return ArkoudaStringArray(ak_like)
+    if isinstance(ea, ArkoudaCategoricalArray):
+        return ArkoudaCategoricalArray(ak_like if hasattr(ak_like, "codes") else ak_like.categories())  # minimal
+    return ArkoudaArray(ak_like)
 
-    >>> ak.Index(list('abc'))
-    Index(array(['a', 'b', 'c']), dtype='<U0')
+# ---- Index -----------------------------------------------------------------
 
-    >>> ak.Index([1, 2, 3], allow_list=True)
-    Index([1, 2, 3], dtype='int64')
 
-    """
-
-    objType = "Index"
-
-    def _set_dtype(self):
-        """
-        Infer and set the dtype of the Index based on its values.
-
-        This method examines the type of `self.values` and assigns an appropriate
-        dtype to `self.dtype`. If the type is not recognized, `self.dtype` is set to None.
-
-        """
-        from arkouda.numpy.dtypes import dtype as ak_dtype
-        from arkouda.pandas.categorical import Categorical
-
-        if isinstance(self.values, List):
-            # Infer dtype from first element
-            self.dtype = self[0].dtype
-        elif isinstance(self.values, Strings):
-            self.dtype = ak_dtype(str)
-        elif isinstance(self.values, (pdarray, Categorical, pd.Index)):
-            self.dtype = self.values.dtype
+class Index(pd_Index):
+    def __new__(cls, data=None, dtype=None, copy=None, name=None, **kwargs):
+        # Intercept Arkouda objects *before* calling pandas.Index.__new__
+        if isinstance(data, (ArkoudaArray, ArkoudaStringArray, ArkoudaCategoricalArray)):
+            ea = data
         else:
-            self.dtype = None
-
-    @typechecked
-    def __init__(
-        self,
-        values: Union[List, pdarray, Strings, Categorical, pd.Index, "Index", pd.Categorical],
-        name: Optional[str] = None,
-        allow_list=False,
-        max_list_size=1000,
-    ):
-        from arkouda.pandas.categorical import Categorical
-
-        self.max_list_size = max_list_size
-        self.registered_name: Optional[str] = None
-
-        if isinstance(values, pd.Categorical):
-            values = Categorical(values)
-
-        if isinstance(values, Index):
-            self.values = values.values
-            self.size = values.size
-            self._set_dtype()
-            self.name = name if name else values.name
-        elif isinstance(values, pd.Index):
-            if isinstance(values.values, pd.Categorical):
-                self.values = Categorical(values.values)
-            else:
-                self.values = array(values.values)
-            self.size = values.size
-            self._set_dtype()
-            self.name = name if name else values.name
-        elif isinstance(values, List):
-            if allow_list is True:
-                if len(values) <= max_list_size:
-                    self.values = values
-                    self.size = len(values)
-                    if len(values) > 0:
-                        self.dtype = self._dtype_of_list_values(values)
-                    else:
-                        self.dtype = None
-                else:
-                    raise ValueError(
-                        f"Cannot create Index because list size {len(values)} "
-                        f"exceeds max_list_size {self.max_list_size}."
-                    )
-            else:
-                values = array(values)
-                self.values = values
-                self.size = self.values.size
-                self._set_dtype()
-            self.name = name
-        elif isinstance(values, (pdarray, Strings, Categorical)):
-            self.values = values
-            self.size = self.values.size
-            self._set_dtype()
-            self.name = name
-        else:
-            raise TypeError(f"Unable to create Index from type {type(values)}")
-
-    def __getitem__(self, key):
-        """
-        Retrieve item(s) from the Index.
-
-        Parameters
-        ----------
-        key : int, list, slice, or Series
-            The location(s) of the element(s) to retrieve.
-
-        Returns
-        -------
-        Index or scalar
-            Subset of the Index or a single value, depending on the key.
-
-        """
-        from arkouda.pandas.series import Series
-
-        allow_list = False
-        if isinstance(self.values, list):
-            allow_list = True
-
-        if isinstance(key, Series):
-            key = key.values
-
-        if isinstance(key, int):
-            return self.values[key]
-
-        if isinstance(key, list):
-            if len(key) < self.max_list_size:
-                return Index([self.values[k] for k in key], allow_list=allow_list)
-            else:
-                raise ValueError(
-                    f"Unable to get list of size greater than "
-                    f"Index.max_list_size ({self.max_list_size})."
-                )
-
-        return Index(self.values[key], allow_list=allow_list)
-
-    def __repr__(self):
-        """
-        Return a string representation of the Index.
-
-        Returns
-        -------
-        str
-            Printable representation of the Index object.
-
-        """
-        return f"Index({repr(self.index)}, dtype='{self.dtype}')"
-
-    def __len__(self):
-        """
-        Return the number of elements in the Index.
-
-        Returns
-        -------
-        int
-            Number of elements in the Index.
-
-        """
-        return len(self.index)
-
-    def _get_arrays_for_comparison(
-        self, other
-    ) -> Tuple[Union[pdarray, Strings, Categorical], Union[pdarray, Strings, Categorical]]:
-        if isinstance(self.values, list):
-            values = array(self.values)
-        else:
-            values = self.values
-
-        if isinstance(other, Index):
-            other_values = other.values
-        else:
-            other_values = other
-
-        if isinstance(other_values, list):
-            other_values = array(other_values)
-        return values, other_values
-
-    def __eq__(self, other):
-        """
-        Compare Index with another Index or array-like object for equality.
-
-        Parameters
-        ----------
-        other : Index or array-like
-            The object to compare against.
-
-        Returns
-        -------
-        pdarray or bool
-            Boolean array indicating element-wise equality.
-
-        """
-        values, other_values = self._get_arrays_for_comparison(other)
-        return values == other_values
-
-    def __ne__(self, other):
-        """
-        Compare Index with another Index or array-like object for inequality.
-
-        Parameters
-        ----------
-        other : Index or array-like
-            The object to compare against.
-
-        Returns
-        -------
-        pdarray or bool
-            Boolean array indicating element-wise inequality.
-
-        """
-        values, other_values = self._get_arrays_for_comparison(other)
-        return values != other_values
-
-    def _dtype_of_list_values(self, lst):
-        from arkouda.numpy.dtypes import dtype
-
-        if isinstance(lst, list):
-            d = dtype(type(lst[0]))
-            for item in lst:
-                assert dtype(type(item)) == d, (
-                    f"Values of Index must all be same type.  "
-                    f"Types {d} and {dtype(type(item))} do not match."
-                )
-            return d
-        else:
-            raise TypeError("Index Types must match")
-
-    @property
-    def nlevels(self):
-        """
-        Integer number of levels in this Index.
-
-        An Index will always have 1 level.
-
-        See Also
-        --------
-        MultiIndex.nlevels
-
-        """
-        return 1
-
-    @property
-    def ndim(self):
-        """
-        Number of dimensions of the underlying data, by definition 1.
-
-        See Also
-        --------
-        MultiIndex.ndim
-
-        """
-        return 1
-
-    @property
-    def inferred_type(self) -> str:
-        """Return a string of the type inferred from the values."""
-        if isinstance(self.values, list):
-            from arkouda.numpy.dtypes import float_scalars, int_scalars
-            from arkouda.numpy.util import _is_dtype_in_union
-
-            if _is_dtype_in_union(self.dtype, int_scalars):
-                return "integer"
-            elif _is_dtype_in_union(self.dtype, float_scalars):
-                return "floating"
-            elif self.dtype == "<U":
-                return "string"
-        return self.values.inferred_type
-
-    @property
-    def names(self):
-        """Return Index or MultiIndex names."""
-        return [self.name]
-
-    @property
-    def index(self):
-        """
-        Deprecated alias for `values`.
-
-        This property is maintained for backward compatibility and returns the same
-        array as the `values` attribute. It will be removed in a future release;
-        use `values` directly instead.
-
-        Returns
-        -------
-        arkouda.numpy.pdarray
-            The underlying values of this object (same as `values`).
-
-        Deprecated
-        ----------
-        Use the `values` attribute directly. This alias will be removed in a future release.
-
-        Examples
-        --------
-        >>> import arkouda as ak
-        >>> idx = ak.Index(ak.array([1, 2, 3]))
-        >>> idx.index
-        array([1 2 3])
-
-        """
-        return self.values
-
-    @property
-    def shape(self):
-        """
-        Return the shape of the Index.
-
-        Returns
-        -------
-        tuple
-            A tuple representing the shape of the Index (size,).
-
-        """
-        return (self.size,)
-
-    @property
-    def is_unique(self):
-        """
-        Property indicating if all values in the index are unique.
-
-        Returns
-        -------
-            bool - True if all values are unique, False otherwise.
-
-        """
-        if isinstance(self.values, list):
-            return len(set(self.values)) == self.size
-        else:
-            g = GroupBy(self.values)
-            key, ct = g.size()
-            return (ct == 1).all()
-
-    @staticmethod
-    def factory(index):
-        """
-        Construct an Index or MultiIndex based on the input.
-
-        Parameters
-        ----------
-        index : array-like or tuple of array-like
-            If a single array-like, returns an Index.
-            If a tuple of array-like objects, returns a MultiIndex.
-
-        Returns
-        -------
-        Index or MultiIndex
-            An Index if input is a single array-like, or a MultiIndex otherwise.
-
-        """
-        if isinstance(index, Index):
-            return index
-        elif not isinstance(index, List) and not isinstance(index, Tuple):
-            return Index(index)
-        else:
-            return MultiIndex(index)
-
-    @classmethod
-    def from_return_msg(cls, rep_msg):
-        """
-        Reconstruct an Index or MultiIndex from a return message.
-
-        Parameters
-        ----------
-        rep_msg : str
-            A string return message containing encoded index information.
-
-        Returns
-        -------
-        Index or MultiIndex
-            The reconstructed Index or MultiIndex instance.
-
-        """
-        from arkouda.pandas.categorical import Categorical
-
-        data = json.loads(rep_msg)
-
-        idx = []
-        for d in data:
-            i_comps = d.split("+|+")
-            if i_comps[0].lower() == pdarray.objType.lower():
-                idx.append(create_pdarray(i_comps[1]))
-            elif i_comps[0].lower() == Strings.objType.lower():
-                idx.append(Strings.from_return_msg(i_comps[1]))
-            elif i_comps[0].lower() == Categorical.objType.lower():
-                idx.append(Categorical.from_return_msg(i_comps[1]))
-
-        return cls.factory(idx) if len(idx) > 1 else cls.factory(idx[0])
-
-    def equals(self, other: Index) -> bool_scalars:
-        """
-        Whether Indexes are the same size, and all entries are equal.
-
-        Parameters
-        ----------
-        other : object
-            object to compare.
-
-        Returns
-        -------
-        bool_scalars
-            True if the Indexes are the same, o.w. False.
-
-        Examples
-        --------
-        >>> import arkouda as ak
-        >>> i = ak.Index([1, 2, 3])
-        >>> i_cpy = ak.Index([1, 2, 3])
-        >>> i.equals(i_cpy)
-        np.True_
-        >>> i2 = ak.Index([1, 2, 4])
-        >>> i.equals(i2)
-        np.False_
-
-        MultiIndex case:
-
-        >>> arrays = [ak.array([1, 1, 2, 2]), ak.array(["red", "blue", "red", "blue"])]
-        >>> m = ak.MultiIndex(arrays, names=["numbers2", "colors2"])
-        >>> m.equals(m)
-        True
-        >>> arrays2 = [ak.array([1, 1, 2, 2]), ak.array(["red", "blue", "red", "green"])]
-        >>> m2 = ak.MultiIndex(arrays2, names=["numbers2", "colors2"])
-        >>> m.equals(m2)
-        False
-
-        """
-        if self is other:
-            return True
-
-        if not isinstance(other, Index):
-            raise TypeError("other must be of type Index.")
-
-        if type(self) is not type(other):
-            return False
-
-        if len(self) != len(other):
-            return False
-
-        from arkouda.numpy.pdarrayclass import all as akall
-
-        if isinstance(self, MultiIndex) and isinstance(other, MultiIndex):
-            if self.nlevels != other.nlevels:
-                return False
-
-            for i in range(self.nlevels):
-                if not self.levels[i].equals(other.levels[i]):
-                    return False
-
-            return True
-        else:
-            result = akall(self == other)
-            if isinstance(result, (bool, np.bool_)):
-                return result
-        return False
-
-    def memory_usage(self, unit="B"):
-        """
-        Return the memory usage of the Index values.
-
-        Parameters
-        ----------
-        unit : str, default = "B"
-            Unit to return. One of {'B', 'KB', 'MB', 'GB'}.
-
-        Returns
-        -------
-        int
-            Bytes of memory consumed.
-
-        See Also
-        --------
-        arkouda.numpy.pdarrayclass.nbytes
-        arkouda.index.MultiIndex.memory_usage
-        arkouda.pandas.series.Series.memory_usage
-        arkouda.pandas.dataframe.DataFrame.memory_usage
-
-        Examples
-        --------
-        >>> import arkouda as ak
-        >>> idx = Index(ak.array([1, 2, 3]))
-        >>> idx.memory_usage()
-        24
-
-        """
-        from arkouda.numpy.util import convert_bytes
-
-        return convert_bytes(self.values.nbytes, unit=unit)
-
-    def to_pandas(self):
-        """Return the equivalent Pandas Index."""
-        from arkouda.pandas.categorical import Categorical
-
-        if isinstance(self.values, list):
-            val = ndarray(self.values)
-        elif isinstance(self.values, Categorical):
-            val = self.values.to_pandas()
-            return pd.CategoricalIndex(data=val, dtype=val.dtype, name=self.name)
-        else:
-            val = self.values.to_ndarray()
-        return pd.Index(data=val, dtype=val.dtype, name=self.name)
-
-    def to_ndarray(self):
-        """
-        Convert the Index values to a NumPy ndarray.
-
-        Returns
-        -------
-        numpy.ndarray
-            A NumPy array representation of the Index values.
-
-        """
-        if isinstance(self.values, list):
-            return ndarray(self.values)
-        else:
-            val = convert_if_categorical(self.values)
-            return val.to_ndarray()
-
-    def tolist(self):
-        """
-        Convert the Index values to a Python list.
-
-        Returns
-        -------
-        list
-            A list containing the Index values.
-
-        """
-        if isinstance(self.values, list):
-            return self.values
-        else:
-            return self.to_ndarray().tolist()
-
-    def set_dtype(self, dtype):
-        """
-        Change the data type of the index.
-
-        Currently only aku.ip_address and ak.array are supported.
-
-        """
-        new_idx = dtype(self.values)
-        self.values = new_idx
-        return self
-
-    def register(self, user_defined_name):
-        """
-        Register this Index object and underlying components with the Arkouda server.
-
-        Parameters
-        ----------
-        user_defined_name : str
-            user defined name the Index is to be registered under,
-            this will be the root name for underlying components
-
-        Returns
-        -------
-        Index
-            The same Index which is now registered with the arkouda server and has an updated name.
-            This is an in-place modification, the original is returned to support
-            a fluid programming style.
-            Please note you cannot register two different Indexes with the same name.
-
-        Raises
-        ------
-        TypeError
-            Raised if user_defined_name is not a str
-        RegistrationError
-            If the server was unable to register the Index with the user_defined_name
-
-        See Also
-        --------
-        unregister, attach, is_registered
-
-        Notes
-        -----
-        Objects registered with the server are immune to deletion until
-        they are unregistered.
-
-        """
-        from arkouda.pandas.categorical import Categorical
-
-        if isinstance(self.values, list):
-            raise TypeError("Index cannot be registered when values are list type.")
-
-        from arkouda.client import generic_msg
-
-        if self.registered_name is not None and self.is_registered():
-            raise RegistrationError(f"This object is already registered as {self.registered_name}")
-
-        generic_msg(
-            cmd="register",
-            args={
-                "name": user_defined_name,
-                "objType": self.objType,
-                "num_idxs": 1,
-                "idx_names": [
-                    (
-                        json.dumps(
-                            {
-                                "codes": self.values.codes.name,
-                                "categories": self.values.categories.name,
-                                "NA_codes": self.values._akNAcode.name,
-                                **(
-                                    {"permutation": self.values.permutation.name}
-                                    if self.values.permutation is not None
-                                    else {}
-                                ),
-                                **(
-                                    {"segments": self.values.segments.name}
-                                    if self.values.segments is not None
-                                    else {}
-                                ),
-                            }
-                        )
-                        if isinstance(self.values, Categorical)
-                        else self.values.name
-                    )
-                ],
-                "idx_types": [self.values.objType],
-            },
-        )
-        self.registered_name = user_defined_name
-        return self
-
-    def unregister(self):
-        """
-        Unregister this Index object in the arkouda server.
-
-        Unregister this Index object in the arkouda server, which was previously
-        registered using register() and/or attached to using attach().
-
-        Raises
-        ------
-        RegistrationError
-            If the object is already unregistered or if there is a server error
-            when attempting to unregister
-
-        See Also
-        --------
-        register, attach, is_registered
-
-        Notes
-        -----
-        Objects registered with the server are immune to deletion until
-        they are unregistered.
-
-        """
-        from arkouda.numpy.util import unregister
-
-        if not self.registered_name:
-            raise RegistrationError("This object is not registered")
-        unregister(self.registered_name)
-        self.registered_name = None
-
-    def is_registered(self):
-        """
-        Return whether the object is registered.
-
-        Return True iff the object is contained in the registry or is a component of a
-        registered object.
-
-        Returns
-        -------
-        numpy.bool
-            Indicates if the object is contained in the registry
-
-        Raises
-        ------
-        RegistrationError
-            Raised if there's a server-side error or a mis-match of registered components
-
-        See Also
-        --------
-        register, attach, unregister
-
-        Notes
-        -----
-        Objects registered with the server are immune to deletion until
-        they are unregistered.
-
-        """
-        from arkouda.numpy.util import is_registered
-        from arkouda.pandas.categorical import Categorical
-
-        if self.registered_name is None:
-            if not isinstance(self.values, Categorical):
-                return is_registered(self.values.name, as_component=True)
-            else:
-                result = True
-                result &= is_registered(self.values.codes.name, as_component=True)
-                result &= is_registered(self.values.categories.name, as_component=True)
-                result &= is_registered(self.values._akNAcode.name, as_component=True)
-                if self.values.permutation is not None and self.values.segments is not None:
-                    result &= is_registered(self.values.permutation.name, as_component=True)
-                    result &= is_registered(self.values.segments.name, as_component=True)
-                return result
-        else:
-            return is_registered(self.registered_name)
-
-    def to_dict(self, label):
-        """
-        Convert the Index to a dictionary with a specified label.
-
-        Parameters
-        ----------
-        label : str or list of str
-            The key to use in the resulting dictionary. If a list is provided,
-            only the first element is used. If None, defaults to "idx".
-
-        Returns
-        -------
-        dict
-            A dictionary with the label as the key and the Index as the value.
-
-        """
-        data = {}
-        if label is None:
-            label = "idx"
-        elif isinstance(label, list):
-            label = label[0]
-        data[label] = self.index
-        return data
-
-    def _check_types(self, other):
-        """
-        Ensure that the type of the other object matches this Index.
-
-        Parameters
-        ----------
-        other : Index
-            The object to compare against.
-
-        Raises
-        ------
-        TypeError
-            If the types of the two objects do not match.
-
-        """
-        if type(self) is not type(other):
-            raise TypeError("Index Types must match")
-
-    def _merge(self, other):
-        """
-        Merge this Index with another, removing duplicates.
-
-        Parameters
-        ----------
-        other : Index
-            The Index to merge with this one.
-
-        Returns
-        -------
-        Index
-            A new Index containing the unique values from both indices.
-
-        Raises
-        ------
-        TypeError
-            If the types of the two Index objects do not match.
-
-        """
-        self._check_types(other)
-
-        callback = get_callback(self.values)
-        idx = generic_concat([self.values, other.values], ordered=False)
-        return Index(callback(unique(idx)))
-
-    def _merge_all(self, idx_list):
-        """
-        Merge this Index with a list of other Index objects, removing duplicates.
-
-        Parameters
-        ----------
-        idx_list : list of Index
-            A list of Index objects to merge with this one.
-
-        Returns
-        -------
-        Index
-            A new Index containing the unique values from all merged indices.
-
-        Raises
-        ------
-        TypeError
-            If any object in the list is not the same type as this Index.
-
-        """
-        idx = self.values
-        callback = get_callback(idx)
-
-        for other in idx_list:
-            self._check_types(other)
-            idx = generic_concat([idx, other.values], ordered=False)
-
-        return Index(callback(unique(idx)))
-
-    def _check_aligned(self, other):
-        """
-        Check whether this Index is aligned with another.
-
-        Two indices are considered aligned if they have the same length and all corresponding
-        elements are equal.
-
-        Parameters
-        ----------
-        other : Index
-            The Index to compare against.
-
-        Returns
-        -------
-        bool
-            True if the indices are aligned, False otherwise.
-
-        Raises
-        ------
-        TypeError
-            If the types of the two Index objects do not match.
-
-        """
-        self._check_types(other)
-        length = len(self)
-        return len(other) == length and (self == other.values).sum() == length
-
-    def argsort(self, ascending=True):
-        """
-        Return the indices that would sort the Index.
-
-        Parameters
-        ----------
-        ascending : bool, optional
-            If True (default), sort in ascending order.
-            If False, sort in descending order.
-
-        Returns
-        -------
-        array-like
-            The indices that would sort the Index.
-
-        """
-        if isinstance(self.values, list):
-            reverse = not ascending
-            return sorted(range(self.size), key=self.values.__getitem__, reverse=reverse)
-
-        if not ascending:
-            if isinstance(self.values, pdarray) and self.dtype in (akint64, akfloat64):
-                i = argsort(-self.values)
-            else:
-                i = argsort(self.values)[arange(self.size - 1, -1, -1)]
-        else:
-            i = argsort(self.values)
-        return i
-
-    def map(self, arg: Union[dict, "Series"]) -> "Index":
-        """
-        Map values of Index according to an input mapping.
-
-        Parameters
-        ----------
-        arg : dict or Series
-            The mapping correspondence.
-
-        Returns
-        -------
-        arkouda.index.Index
-            A new index with the values transformed by the mapping correspondence.
-
-        Raises
-        ------
-        TypeError
-            Raised if arg is not of type dict or arkouda.pandas.Series.
-            Raised if index values not of type pdarray, Categorical, or Strings.
-
-        Examples
-        --------
-        >>> import arkouda as ak
-        >>> ak.connect()
-        >>> idx = ak.Index(ak.array([2, 3, 2, 3, 4]))
-        >>> idx
-        Index(array([2 3 2 3 4]), dtype='int64')
-        >>> idx.map({4: 25.0, 2: 30.0, 1: 7.0, 3: 5.0})
-        Index(array([30.00000000000000000 5.00000000000000000 30.00000000000000000
-        5.00000000000000000 25.00000000000000000]), dtype='float64')
-        >>> s2 = ak.Series(ak.array(["a","b","c","d"]), index = ak.array([4,2,1,3]))
-        >>> idx.map(s2)
-        Index(array(['b', 'd', 'b', 'd', 'a']), dtype='<U0')
-
-        """
-        from arkouda.numpy.util import map
-
-        return Index(map(self.values, arg))
-
-    def concat(self, other):
-        """
-        Concatenate this Index with another Index.
-
-        Parameters
-        ----------
-        other : Index
-            The Index to concatenate with this one.
-
-        Returns
-        -------
-        Index
-            A new Index with values from both indices.
-
-        Raises
-        ------
-        TypeError
-            If the types of the two Index objects do not match.
-
-        """
-        self._check_types(other)
-
-        idx = generic_concat([self.values, other.values], ordered=True)
-        return Index(idx)
-
-    def lookup(self, key):
-        """
-        Check for presence of key(s) in the Index.
-
-        Parameters
-        ----------
-        key : pdarray or scalar
-            The value(s) to look up in the Index. If a scalar is provided, it will
-            be converted to a one-element array.
-
-        Returns
-        -------
-        pdarray
-            A boolean array indicating which elements of `key` are present in the Index.
-
-        Raises
-        ------
-        TypeError
-            If `key` is not a scalar or a pdarray.
-
-        """
-        if not isinstance(key, pdarray):
-            # try to handle single value
             try:
-                key = array([key])
+                import arkouda as ak
+                from arkouda.numpy.strings import Strings
+                from arkouda.numpy.pdarrayclass import pdarray
+                if isinstance(data, pdarray):
+                    ea = ArkoudaArray(data)
+                elif isinstance(data, Strings):
+                    ea = ArkoudaStringArray(data)
+                elif isinstance(data, ak.Categorical):
+                    ea = ArkoudaCategoricalArray(data)
+                else:
+                    ea = _as_ea(data)
             except Exception:
-                raise TypeError("Lookup must be on an arkouda array")
+                ea = _as_ea(data)
 
-        return in1d(self.values, key)
+        # Now bypass the truthiness check by wrapping EA in a list/np array
+        # Pandas will see it's not "truthy" iterable until after construction.
+        return pd_Index.__new__(cls, data=ea, dtype=None, copy=False, name=name)
 
-    def to_hdf(
-        self,
-        prefix_path: str,
-        dataset: str = "index",
-        mode: str = "truncate",
-        file_type: str = "distribute",
-    ) -> str:
+    # nice to have, makes intent clear
+    @property
+    def _data(self):
+        return self._ea
+
+    # Pandas uses this to build the C-engine target; give it object-ndarray
+    def _get_engine_target(self):
+        return _ea_to_numpy_object(self._ea)
+
+    # keep “values” exposing the EA (like Series.values for EA-backed)
+    @property
+    def values(self):
+        return self._ea
+
+    # ---- equality / repr niceties -----------------------------------------
+
+    def equals(self, other) -> bool:
+        if not isinstance(other, pd_Index):
+            return False
+        # If both EA-backed and same kind, compare on server, else fallback
+        try:
+            if isinstance(getattr(other, "values", None), type(self._ea)):
+                eq = (self._ea == other.values)
+                # Arkouda boolean reductions can differ; to be safe:
+                return bool(np.all(np.asarray(eq)))
+        except Exception:
+            pass
+        return pd_Index.equals(self, other)
+
+    # ---- lookups -----------------------------------------------------------
+
+    def get_indexer(self, target, method=None, limit=None, tolerance=None):
         """
-        Save the Index to HDF5.
-
-        The object can be saved to a collection of files or single file.
-
-        Parameters
-        ----------
-        prefix_path : str
-            Directory and filename prefix that all output files share
-        dataset : str
-            Name of the dataset to create in files (must not already exist)
-        mode : str {'truncate' | 'append'}
-            By default, truncate (overwrite) output files, if they exist.
-            If 'append', attempt to create new dataset in existing files.
-        file_type: str ("single" | "distribute")
-            Default: "distribute"
-            When set to single, dataset is written to a single file.
-            When distribute, dataset is written on a file per locale.
-            This is only supported by HDF5 files and will have no impact of Parquet Files.
-
-        Returns
-        -------
-        string message indicating result of save operation
-
-        Raises
-        ------
-        RuntimeError
-            Raised if a server-side error is thrown saving the pdarray
-        TypeError
-            Raised if the Index values are a list.
-
-        Notes
-        -----
-        - The prefix_path must be visible to the arkouda server and the user must
-        have write permission.
-        - Output files have names of the form ``<prefix_path>_LOCALE<i>``, where ``<i>``
-        ranges from 0 to ``numLocales`` for `file_type='distribute'`. Otherwise,
-        the file name will be `prefix_path`.
-        - If any of the output files already exist and
-        the mode is 'truncate', they will be overwritten. If the mode is 'append'
-        and the number of output files is less than the number of locales or a
-        dataset with the same name already exists, a ``RuntimeError`` will result.
-        - Any file extension can be used.The file I/O does not rely on the extension to
-        determine the file format.
-
+        Exact-match indexer. For now, use NumPy fallback to satisfy Pandas.
+        TODO: replace with Arkouda-side hashmap/groupby for server-only path.
         """
-        from typing import cast as typecast
-
-        from arkouda.client import generic_msg
-        from arkouda.pandas.categorical import Categorical as Categorical_
-        from arkouda.pandas.io import _file_type_to_int, _mode_str_to_int
-
-        if isinstance(self.values, list):
-            raise TypeError("Unable to write Index to hdf when values are a list.")
-
-        index_data = [
-            (
-                self.values.name
-                if not isinstance(self.values, (Categorical_))
-                else json.dumps(
-                    {
-                        "codes": self.values.codes.name,
-                        "categories": self.values.categories.name,
-                        "NA_codes": self.values._akNAcode.name,
-                        **(
-                            {"permutation": self.values.permutation.name}
-                            if self.values.permutation is not None
-                            else {}
-                        ),
-                        **(
-                            {"segments": self.values.segments.name}
-                            if self.values.segments is not None
-                            else {}
-                        ),
-                    }
-                )
+        # normalize target to something Index understands
+        tgt = target.values if isinstance(target, Index) else (
+            getattr(target, "values", target)
+        )
+        try:
+            return pd_Index(_ea_to_numpy_object(self._ea)).get_indexer(
+                _ea_to_numpy_object(_as_ea(tgt)), method=method, limit=limit, tolerance=tolerance
             )
-        ]
-        return typecast(
-            str,
-            generic_msg(
-                cmd="tohdf",
-                args={
-                    "filename": prefix_path,
-                    "dset": dataset,
-                    "file_format": _file_type_to_int(file_type),
-                    "write_mode": _mode_str_to_int(mode),
-                    "objType": self.objType,
-                    "num_idx": 1,
-                    "idx": index_data,
-                    "idx_objTypes": [self.values.objType],  # this will be pdarray, strings, or cat
-                    "idx_dtypes": [str(self.values.dtype)],
-                },
-            ),
-        )
-
-    def update_hdf(
-        self,
-        prefix_path: str,
-        dataset: str = "index",
-        repack: bool = True,
-    ):
-        """
-        Overwrite the dataset with the name provided with this Index object.
-
-        If the dataset does not exist it is added.
-
-        Parameters
-        ----------
-        prefix_path : str
-            Directory and filename prefix that all output files share
-        dataset : str
-            Name of the dataset to create in files
-        repack: bool
-            Default: True
-            HDF5 does not release memory on delete. When True, the inaccessible
-            data (that was overwritten) is removed. When False, the data remains, but is
-            inaccessible. Setting to false will yield better performance, but will cause
-            file sizes to expand.
-
-        Raises
-        ------
-        RuntimeError
-            Raised if a server-side error is thrown saving the index
-
-        Notes
-        -----
-        - If file does not contain File_Format attribute to indicate how it was saved,
-          the file name is checked for _LOCALE#### to determine if it is distributed.
-        - If the dataset provided does not exist, it will be added
-        - Because HDF5 deletes do not release memory, this will create a copy of the
-          file with the new data
-
-        """
-        from arkouda.client import generic_msg
-        from arkouda.pandas.categorical import Categorical as Categorical_
-        from arkouda.pandas.io import (
-            _file_type_to_int,
-            _get_hdf_filetype,
-            _mode_str_to_int,
-            _repack_hdf,
-        )
-
-        # determine the format (single/distribute) that the file was saved in
-        file_type = _get_hdf_filetype(prefix_path + "*")
-
-        index_data = [
-            (
-                self.values.name
-                if not isinstance(self.values, (Categorical_))
-                else json.dumps(
-                    {
-                        "codes": self.values.codes.name,
-                        "categories": self.values.categories.name,
-                        "NA_codes": self.values._akNAcode.name,
-                        **(
-                            {"permutation": self.values.permutation.name}
-                            if self.values.permutation is not None
-                            else {}
-                        ),
-                        **(
-                            {"segments": self.values.segments.name}
-                            if self.values.segments is not None
-                            else {}
-                        ),
-                    }
-                )
+        except Exception:
+            return pd_Index(_ea_to_numpy_object(self._ea)).get_indexer(
+                np.asarray(tgt, dtype=object), method=method, limit=limit, tolerance=tolerance
             )
-        ]
 
-        (
-            generic_msg(
-                cmd="tohdf",
-                args={
-                    "filename": prefix_path,
-                    "dset": dataset,
-                    "file_format": _file_type_to_int(file_type),
-                    "write_mode": _mode_str_to_int("append"),
-                    "objType": self.objType,
-                    "num_idx": 1,
-                    "idx": index_data,
-                    "idx_objTypes": [self.values.objType],  # this will be pdarray, strings, or cat
-                    "idx_dtypes": [str(self.values.dtype)],
-                    "overwrite": True,
-                },
-            ),
+    def get_indexer_for(self, target):
+        return self.get_indexer(target)
+
+    # ---- set ops -----------------------------------------------------------
+
+    def intersection(self, other, sort=False):
+        """
+        Return the intersection as an Arkouda-aware Index.
+        TODO: use arkouda.numpy.pdarraysetops.intersect1d for server path.
+        """
+        # fallback via pandas (client-side)
+        out = pd_Index(_ea_to_numpy_object(self._ea)).intersection(
+            pd_Index(_ea_to_numpy_object(getattr(other, "values", other))), sort=sort
         )
+        # rebuild EA from numpy result
+        return Index(_ea_like(self._ea, _as_ea(out.to_numpy())))
 
-        if repack:
-            _repack_hdf(prefix_path)
-
-    def to_parquet(
-        self,
-        prefix_path: str,
-        dataset: str = "index",
-        mode: str = "truncate",
-        compression: Optional[str] = None,
-    ):
+    def union(self, other, sort=None):
         """
-        Save the Index to Parquet.
-
-        The result is a collection of files,
-        one file per locale of the arkouda server, where each filename starts
-        with prefix_path. Each locale saves its chunk of the array to its
-        corresponding file.
-
-        Parameters
-        ----------
-        prefix_path : str
-            Directory and filename prefix that all output files share
-        dataset : str
-            Name of the dataset to create in files (must not already exist)
-        mode : str {'truncate' | 'append'}
-            By default, truncate (overwrite) output files, if they exist.
-            If 'append', attempt to create new dataset in existing files.
-        compression : str (Optional)
-            (None | "snappy" | "gzip" | "brotli" | "zstd" | "lz4")
-            Sets the compression type used with Parquet files
-
-        Returns
-        -------
-        string message indicating result of save operation
-
-        Raises
-        ------
-        RuntimeError
-            Raised if a server-side error is thrown saving the pdarray
-        TypeError
-            Raised if the Index values are a list.
-
-        Notes
-        -----
-        - The prefix_path must be visible to the arkouda server and the user must
-        have write permission.
-        - Output files have names of the form ``<prefix_path>_LOCALE<i>``, where ``<i>``
-        ranges from 0 to ``numLocales`` for `file_type='distribute'`.
-        - 'append' write mode is supported, but is not efficient.
-        - If any of the output files already exist and
-        the mode is 'truncate', they will be overwritten. If the mode is 'append'
-        and the number of output files is less than the number of locales or a
-        dataset with the same name already exists, a ``RuntimeError`` will result.
-        - Any file extension can be used.The file I/O does not rely on the extension to
-        determine the file format.
-
+        Return the union as an Arkouda-aware Index.
+        TODO: use arkouda setops (unique/union1d) for server path.
         """
-        if isinstance(self.values, list):
-            raise TypeError("Unable to write Index to parquet when values are a list.")
+        out = pd_Index(_ea_to_numpy_object(self._ea)).union(
+            pd_Index(_ea_to_numpy_object(getattr(other, "values", other))), sort=sort
+        )
+        return Index(_ea_like(self._ea, _as_ea(out.to_numpy())))
 
-        return self.values.to_parquet(prefix_path, dataset=dataset, mode=mode, compression=compression)
+    # ---- monotonicity flags (fallback) -------------------------------------
 
-    @typechecked
-    def to_csv(
-        self,
-        prefix_path: str,
-        dataset: str = "index",
-        col_delim: str = ",",
-        overwrite: bool = False,
-    ):
-        r"""
-        Write Index to CSV file(s).
+    @property
+    def _engine(self):  # let pandas cache its engine off the numpy target
+        return super()._engine
 
-        File will contain a single column with the pdarray data.
-        All CSV Files written by Arkouda include a header denoting data types of the columns.
+    @property
+    def is_monotonic_increasing(self):
+        return pd_Index(_ea_to_numpy_object(self._ea)).is_monotonic_increasing
 
-        Parameters
-        ----------
-        prefix_path: str
-            The filename prefix to be used for saving files. Files will have _LOCALE#### appended
-            when they are written to disk.
-        dataset: str
-            Column name to save the pdarray under. Defaults to "array".
-        col_delim: str
-            Defaults to ",". Value to be used to separate columns within the file.
-            Please be sure that the value used DOES NOT appear in your dataset.
-        overwrite: bool
-            Defaults to False. If True, any existing files matching your provided prefix_path will
-            be overwritten. If False, an error will be returned if existing files are found.
+    @property
+    def is_monotonic_decreasing(self):
+        return pd_Index(_ea_to_numpy_object(self._ea)).is_monotonic_decreasing
 
-        Returns
-        -------
-        str reponse message
-
-        Raises
-        ------
-        ValueError
-            Raised if all datasets are not present in all parquet files or if one or
-            more of the specified files do not exist.
-        RuntimeError
-            Raised if one or more of the specified files cannot be opened.
-            If `allow_errors` is true this may be raised if no values are returned
-            from the server.
-        TypeError
-            Raised if we receive an unknown arkouda_type returned from the server.
-            Raised if the Index values are a list.
-
-        Notes
-        -----
-        - CSV format is not currently supported by load/load_all operations
-        - The column delimiter is expected to be the same for column names and data
-        - Be sure that column delimiters are not found within your data.
-        - All CSV files must delimit rows using newline (`\n`) at this time.
-
-        """
-        if isinstance(self.values, list):
-            raise TypeError("Unable to write Index to csv when values are a list.")
-
-        return self.values.to_csv(prefix_path, dataset=dataset, col_delim=col_delim, overwrite=overwrite)
+    # @typechecked
+    # def __init__(
+    #     self,
+    #     values: Union[List, pdarray, Strings, Categorical, pd.Index, "Index", pd.Categorical],
+    #     name: Optional[str] = None,
+    #     allow_list=False,
+    #     max_list_size=1000,
+    # ):
+    #     from arkouda.pandas.categorical import Categorical
+    #
+    #     self.max_list_size = max_list_size
+    #     self.registered_name: Optional[str] = None
+    #
+    #     if isinstance(values, pd.Categorical):
+    #         values = Categorical(values)
+    #
+    #     if isinstance(values, Index):
+    #         self.values = values.values
+    #         self.size = values.size
+    #         self._set_dtype()
+    #         self.name = name if name else values.name
+    #     elif isinstance(values, pd.Index):
+    #         if isinstance(values.values, pd.Categorical):
+    #             self.values = Categorical(values.values)
+    #         else:
+    #             self.values = array(values.values)
+    #         self.size = values.size
+    #         self._set_dtype()
+    #         self.name = name if name else values.name
+    #     elif isinstance(values, List):
+    #         if allow_list is True:
+    #             if len(values) <= max_list_size:
+    #                 self.values = values
+    #                 self.size = len(values)
+    #                 if len(values) > 0:
+    #                     self.dtype = self._dtype_of_list_values(values)
+    #                 else:
+    #                     self.dtype = None
+    #             else:
+    #                 raise ValueError(
+    #                     f"Cannot create Index because list size {len(values)} "
+    #                     f"exceeds max_list_size {self.max_list_size}."
+    #                 )
+    #         else:
+    #             values = array(values)
+    #             self.values = values
+    #             self.size = self.values.size
+    #             self._set_dtype()
+    #         self.name = name
+    #     elif isinstance(values, (pdarray, Strings, Categorical)):
+    #         self.values = values
+    #         self.size = self.values.size
+    #         self._set_dtype()
+    #         self.name = name
+    #     else:
+    #         raise TypeError(f"Unable to create Index from type {type(values)}")
+    #
+    # def __getitem__(self, key):
+    #     """
+    #     Retrieve item(s) from the Index.
+    #
+    #     Parameters
+    #     ----------
+    #     key : int, list, slice, or Series
+    #         The location(s) of the element(s) to retrieve.
+    #
+    #     Returns
+    #     -------
+    #     Index or scalar
+    #         Subset of the Index or a single value, depending on the key.
+    #
+    #     """
+    #     from arkouda.pandas.series import Series
+    #
+    #     allow_list = False
+    #     if isinstance(self.values, list):
+    #         allow_list = True
+    #
+    #     if isinstance(key, Series):
+    #         key = key.values
+    #
+    #     if isinstance(key, int):
+    #         return self.values[key]
+    #
+    #     if isinstance(key, list):
+    #         if len(key) < self.max_list_size:
+    #             return Index([self.values[k] for k in key], allow_list=allow_list)
+    #         else:
+    #             raise ValueError(
+    #                 f"Unable to get list of size greater than "
+    #                 f"Index.max_list_size ({self.max_list_size})."
+    #             )
+    #
+    #     return Index(self.values[key], allow_list=allow_list)
+    #
+    # def __repr__(self):
+    #     """
+    #     Return a string representation of the Index.
+    #
+    #     Returns
+    #     -------
+    #     str
+    #         Printable representation of the Index object.
+    #
+    #     """
+    #     return f"Index({repr(self.index)}, dtype='{self.dtype}')"
+    #
+    # def __len__(self):
+    #     """
+    #     Return the number of elements in the Index.
+    #
+    #     Returns
+    #     -------
+    #     int
+    #         Number of elements in the Index.
+    #
+    #     """
+    #     return len(self.index)
+    #
+    # def _get_arrays_for_comparison(
+    #     self, other
+    # ) -> Tuple[Union[pdarray, Strings, Categorical], Union[pdarray, Strings, Categorical]]:
+    #     if isinstance(self.values, list):
+    #         values = array(self.values)
+    #     else:
+    #         values = self.values
+    #
+    #     if isinstance(other, Index):
+    #         other_values = other.values
+    #     else:
+    #         other_values = other
+    #
+    #     if isinstance(other_values, list):
+    #         other_values = array(other_values)
+    #     return values, other_values
+    #
+    # def __eq__(self, other):
+    #     """
+    #     Compare Index with another Index or array-like object for equality.
+    #
+    #     Parameters
+    #     ----------
+    #     other : Index or array-like
+    #         The object to compare against.
+    #
+    #     Returns
+    #     -------
+    #     pdarray or bool
+    #         Boolean array indicating element-wise equality.
+    #
+    #     """
+    #     values, other_values = self._get_arrays_for_comparison(other)
+    #     return values == other_values
+    #
+    # def __ne__(self, other):
+    #     """
+    #     Compare Index with another Index or array-like object for inequality.
+    #
+    #     Parameters
+    #     ----------
+    #     other : Index or array-like
+    #         The object to compare against.
+    #
+    #     Returns
+    #     -------
+    #     pdarray or bool
+    #         Boolean array indicating element-wise inequality.
+    #
+    #     """
+    #     values, other_values = self._get_arrays_for_comparison(other)
+    #     return values != other_values
+    #
+    # def _dtype_of_list_values(self, lst):
+    #     from arkouda.numpy.dtypes import dtype
+    #
+    #     if isinstance(lst, list):
+    #         d = dtype(type(lst[0]))
+    #         for item in lst:
+    #             assert dtype(type(item)) == d, (
+    #                 f"Values of Index must all be same type.  "
+    #                 f"Types {d} and {dtype(type(item))} do not match."
+    #             )
+    #         return d
+    #     else:
+    #         raise TypeError("Index Types must match")
+    #
+    # @property
+    # def nlevels(self):
+    #     """
+    #     Integer number of levels in this Index.
+    #
+    #     An Index will always have 1 level.
+    #
+    #     See Also
+    #     --------
+    #     MultiIndex.nlevels
+    #
+    #     """
+    #     return 1
+    #
+    # @property
+    # def ndim(self):
+    #     """
+    #     Number of dimensions of the underlying data, by definition 1.
+    #
+    #     See Also
+    #     --------
+    #     MultiIndex.ndim
+    #
+    #     """
+    #     return 1
+    #
+    # @property
+    # def inferred_type(self) -> str:
+    #     """Return a string of the type inferred from the values."""
+    #     if isinstance(self.values, list):
+    #         from arkouda.numpy.dtypes import float_scalars, int_scalars
+    #         from arkouda.numpy.util import _is_dtype_in_union
+    #
+    #         if _is_dtype_in_union(self.dtype, int_scalars):
+    #             return "integer"
+    #         elif _is_dtype_in_union(self.dtype, float_scalars):
+    #             return "floating"
+    #         elif self.dtype == "<U":
+    #             return "string"
+    #     return self.values.inferred_type
+    #
+    # @property
+    # def names(self):
+    #     """Return Index or MultiIndex names."""
+    #     return [self.name]
+    #
+    # @property
+    # def index(self):
+    #     """
+    #     Deprecated alias for `values`.
+    #
+    #     This property is maintained for backward compatibility and returns the same
+    #     array as the `values` attribute. It will be removed in a future release;
+    #     use `values` directly instead.
+    #
+    #     Returns
+    #     -------
+    #     arkouda.numpy.pdarray
+    #         The underlying values of this object (same as `values`).
+    #
+    #     Deprecated
+    #     ----------
+    #     Use the `values` attribute directly. This alias will be removed in a future release.
+    #
+    #     Examples
+    #     --------
+    #     >>> import arkouda as ak
+    #     >>> idx = ak.Index(ak.array([1, 2, 3]))
+    #     >>> idx.index
+    #     array([1 2 3])
+    #
+    #     """
+    #     return self.values
+    #
+    # @property
+    # def shape(self):
+    #     """
+    #     Return the shape of the Index.
+    #
+    #     Returns
+    #     -------
+    #     tuple
+    #         A tuple representing the shape of the Index (size,).
+    #
+    #     """
+    #     return (self.size,)
+    #
+    # @property
+    # def is_unique(self):
+    #     """
+    #     Property indicating if all values in the index are unique.
+    #
+    #     Returns
+    #     -------
+    #         bool - True if all values are unique, False otherwise.
+    #
+    #     """
+    #     if isinstance(self.values, list):
+    #         return len(set(self.values)) == self.size
+    #     else:
+    #         g = GroupBy(self.values)
+    #         key, ct = g.size()
+    #         return (ct == 1).all()
+    #
+    # @staticmethod
+    # def factory(index):
+    #     """
+    #     Construct an Index or MultiIndex based on the input.
+    #
+    #     Parameters
+    #     ----------
+    #     index : array-like or tuple of array-like
+    #         If a single array-like, returns an Index.
+    #         If a tuple of array-like objects, returns a MultiIndex.
+    #
+    #     Returns
+    #     -------
+    #     Index or MultiIndex
+    #         An Index if input is a single array-like, or a MultiIndex otherwise.
+    #
+    #     """
+    #     if isinstance(index, Index):
+    #         return index
+    #     elif not isinstance(index, List) and not isinstance(index, Tuple):
+    #         return Index(index)
+    #     else:
+    #         return MultiIndex(index)
+    #
+    # @classmethod
+    # def from_return_msg(cls, rep_msg):
+    #     """
+    #     Reconstruct an Index or MultiIndex from a return message.
+    #
+    #     Parameters
+    #     ----------
+    #     rep_msg : str
+    #         A string return message containing encoded index information.
+    #
+    #     Returns
+    #     -------
+    #     Index or MultiIndex
+    #         The reconstructed Index or MultiIndex instance.
+    #
+    #     """
+    #     from arkouda.pandas.categorical import Categorical
+    #
+    #     data = json.loads(rep_msg)
+    #
+    #     idx = []
+    #     for d in data:
+    #         i_comps = d.split("+|+")
+    #         if i_comps[0].lower() == pdarray.objType.lower():
+    #             idx.append(create_pdarray(i_comps[1]))
+    #         elif i_comps[0].lower() == Strings.objType.lower():
+    #             idx.append(Strings.from_return_msg(i_comps[1]))
+    #         elif i_comps[0].lower() == Categorical.objType.lower():
+    #             idx.append(Categorical.from_return_msg(i_comps[1]))
+    #
+    #     return cls.factory(idx) if len(idx) > 1 else cls.factory(idx[0])
+    #
+    # def equals(self, other: Index) -> bool_scalars:
+    #     """
+    #     Whether Indexes are the same size, and all entries are equal.
+    #
+    #     Parameters
+    #     ----------
+    #     other : object
+    #         object to compare.
+    #
+    #     Returns
+    #     -------
+    #     bool_scalars
+    #         True if the Indexes are the same, o.w. False.
+    #
+    #     Examples
+    #     --------
+    #     >>> import arkouda as ak
+    #     >>> i = ak.Index([1, 2, 3])
+    #     >>> i_cpy = ak.Index([1, 2, 3])
+    #     >>> i.equals(i_cpy)
+    #     np.True_
+    #     >>> i2 = ak.Index([1, 2, 4])
+    #     >>> i.equals(i2)
+    #     np.False_
+    #
+    #     MultiIndex case:
+    #
+    #     >>> arrays = [ak.array([1, 1, 2, 2]), ak.array(["red", "blue", "red", "blue"])]
+    #     >>> m = ak.MultiIndex(arrays, names=["numbers2", "colors2"])
+    #     >>> m.equals(m)
+    #     True
+    #     >>> arrays2 = [ak.array([1, 1, 2, 2]), ak.array(["red", "blue", "red", "green"])]
+    #     >>> m2 = ak.MultiIndex(arrays2, names=["numbers2", "colors2"])
+    #     >>> m.equals(m2)
+    #     False
+    #
+    #     """
+    #     if self is other:
+    #         return True
+    #
+    #     if not isinstance(other, Index):
+    #         raise TypeError("other must be of type Index.")
+    #
+    #     if type(self) is not type(other):
+    #         return False
+    #
+    #     if len(self) != len(other):
+    #         return False
+    #
+    #     from arkouda.numpy.pdarrayclass import all as akall
+    #
+    #     if isinstance(self, MultiIndex) and isinstance(other, MultiIndex):
+    #         if self.nlevels != other.nlevels:
+    #             return False
+    #
+    #         for i in range(self.nlevels):
+    #             if not self.levels[i].equals(other.levels[i]):
+    #                 return False
+    #
+    #         return True
+    #     else:
+    #         result = akall(self == other)
+    #         if isinstance(result, (bool, np.bool_)):
+    #             return result
+    #     return False
+    #
+    # def memory_usage(self, unit="B"):
+    #     """
+    #     Return the memory usage of the Index values.
+    #
+    #     Parameters
+    #     ----------
+    #     unit : str, default = "B"
+    #         Unit to return. One of {'B', 'KB', 'MB', 'GB'}.
+    #
+    #     Returns
+    #     -------
+    #     int
+    #         Bytes of memory consumed.
+    #
+    #     See Also
+    #     --------
+    #     arkouda.numpy.pdarrayclass.nbytes
+    #     arkouda.index.MultiIndex.memory_usage
+    #     arkouda.pandas.series.Series.memory_usage
+    #     arkouda.pandas.dataframe.DataFrame.memory_usage
+    #
+    #     Examples
+    #     --------
+    #     >>> import arkouda as ak
+    #     >>> idx = Index(ak.array([1, 2, 3]))
+    #     >>> idx.memory_usage()
+    #     24
+    #
+    #     """
+    #     from arkouda.numpy.util import convert_bytes
+    #
+    #     return convert_bytes(self.values.nbytes, unit=unit)
+    #
+    # def to_pandas(self):
+    #     """Return the equivalent Pandas Index."""
+    #     from arkouda.pandas.categorical import Categorical
+    #
+    #     if isinstance(self.values, list):
+    #         val = ndarray(self.values)
+    #     elif isinstance(self.values, Categorical):
+    #         val = self.values.to_pandas()
+    #         return pd.CategoricalIndex(data=val, dtype=val.dtype, name=self.name)
+    #     else:
+    #         val = self.values.to_ndarray()
+    #     return pd.Index(data=val, dtype=val.dtype, name=self.name)
+    #
+    # def to_ndarray(self):
+    #     """
+    #     Convert the Index values to a NumPy ndarray.
+    #
+    #     Returns
+    #     -------
+    #     numpy.ndarray
+    #         A NumPy array representation of the Index values.
+    #
+    #     """
+    #     if isinstance(self.values, list):
+    #         return ndarray(self.values)
+    #     else:
+    #         val = convert_if_categorical(self.values)
+    #         return val.to_ndarray()
+    #
+    # def tolist(self):
+    #     """
+    #     Convert the Index values to a Python list.
+    #
+    #     Returns
+    #     -------
+    #     list
+    #         A list containing the Index values.
+    #
+    #     """
+    #     if isinstance(self.values, list):
+    #         return self.values
+    #     else:
+    #         return self.to_ndarray().tolist()
+    #
+    # def set_dtype(self, dtype):
+    #     """
+    #     Change the data type of the index.
+    #
+    #     Currently only aku.ip_address and ak.array are supported.
+    #
+    #     """
+    #     new_idx = dtype(self.values)
+    #     self.values = new_idx
+    #     return self
+    #
+    # def register(self, user_defined_name):
+    #     """
+    #     Register this Index object and underlying components with the Arkouda server.
+    #
+    #     Parameters
+    #     ----------
+    #     user_defined_name : str
+    #         user defined name the Index is to be registered under,
+    #         this will be the root name for underlying components
+    #
+    #     Returns
+    #     -------
+    #     Index
+    #         The same Index which is now registered with the arkouda server and has an updated name.
+    #         This is an in-place modification, the original is returned to support
+    #         a fluid programming style.
+    #         Please note you cannot register two different Indexes with the same name.
+    #
+    #     Raises
+    #     ------
+    #     TypeError
+    #         Raised if user_defined_name is not a str
+    #     RegistrationError
+    #         If the server was unable to register the Index with the user_defined_name
+    #
+    #     See Also
+    #     --------
+    #     unregister, attach, is_registered
+    #
+    #     Notes
+    #     -----
+    #     Objects registered with the server are immune to deletion until
+    #     they are unregistered.
+    #
+    #     """
+    #     from arkouda.pandas.categorical import Categorical
+    #
+    #     if isinstance(self.values, list):
+    #         raise TypeError("Index cannot be registered when values are list type.")
+    #
+    #     from arkouda.client import generic_msg
+    #
+    #     if self.registered_name is not None and self.is_registered():
+    #         raise RegistrationError(f"This object is already registered as {self.registered_name}")
+    #
+    #     generic_msg(
+    #         cmd="register",
+    #         args={
+    #             "name": user_defined_name,
+    #             "objType": self.objType,
+    #             "num_idxs": 1,
+    #             "idx_names": [
+    #                 (
+    #                     json.dumps(
+    #                         {
+    #                             "codes": self.values.codes.name,
+    #                             "categories": self.values.categories.name,
+    #                             "NA_codes": self.values._akNAcode.name,
+    #                             **(
+    #                                 {"permutation": self.values.permutation.name}
+    #                                 if self.values.permutation is not None
+    #                                 else {}
+    #                             ),
+    #                             **(
+    #                                 {"segments": self.values.segments.name}
+    #                                 if self.values.segments is not None
+    #                                 else {}
+    #                             ),
+    #                         }
+    #                     )
+    #                     if isinstance(self.values, Categorical)
+    #                     else self.values.name
+    #                 )
+    #             ],
+    #             "idx_types": [self.values.objType],
+    #         },
+    #     )
+    #     self.registered_name = user_defined_name
+    #     return self
+    #
+    # def unregister(self):
+    #     """
+    #     Unregister this Index object in the arkouda server.
+    #
+    #     Unregister this Index object in the arkouda server, which was previously
+    #     registered using register() and/or attached to using attach().
+    #
+    #     Raises
+    #     ------
+    #     RegistrationError
+    #         If the object is already unregistered or if there is a server error
+    #         when attempting to unregister
+    #
+    #     See Also
+    #     --------
+    #     register, attach, is_registered
+    #
+    #     Notes
+    #     -----
+    #     Objects registered with the server are immune to deletion until
+    #     they are unregistered.
+    #
+    #     """
+    #     from arkouda.numpy.util import unregister
+    #
+    #     if not self.registered_name:
+    #         raise RegistrationError("This object is not registered")
+    #     unregister(self.registered_name)
+    #     self.registered_name = None
+    #
+    # def is_registered(self):
+    #     """
+    #     Return whether the object is registered.
+    #
+    #     Return True iff the object is contained in the registry or is a component of a
+    #     registered object.
+    #
+    #     Returns
+    #     -------
+    #     numpy.bool
+    #         Indicates if the object is contained in the registry
+    #
+    #     Raises
+    #     ------
+    #     RegistrationError
+    #         Raised if there's a server-side error or a mis-match of registered components
+    #
+    #     See Also
+    #     --------
+    #     register, attach, unregister
+    #
+    #     Notes
+    #     -----
+    #     Objects registered with the server are immune to deletion until
+    #     they are unregistered.
+    #
+    #     """
+    #     from arkouda.numpy.util import is_registered
+    #     from arkouda.pandas.categorical import Categorical
+    #
+    #     if self.registered_name is None:
+    #         if not isinstance(self.values, Categorical):
+    #             return is_registered(self.values.name, as_component=True)
+    #         else:
+    #             result = True
+    #             result &= is_registered(self.values.codes.name, as_component=True)
+    #             result &= is_registered(self.values.categories.name, as_component=True)
+    #             result &= is_registered(self.values._akNAcode.name, as_component=True)
+    #             if self.values.permutation is not None and self.values.segments is not None:
+    #                 result &= is_registered(self.values.permutation.name, as_component=True)
+    #                 result &= is_registered(self.values.segments.name, as_component=True)
+    #             return result
+    #     else:
+    #         return is_registered(self.registered_name)
+    #
+    # def to_dict(self, label):
+    #     """
+    #     Convert the Index to a dictionary with a specified label.
+    #
+    #     Parameters
+    #     ----------
+    #     label : str or list of str
+    #         The key to use in the resulting dictionary. If a list is provided,
+    #         only the first element is used. If None, defaults to "idx".
+    #
+    #     Returns
+    #     -------
+    #     dict
+    #         A dictionary with the label as the key and the Index as the value.
+    #
+    #     """
+    #     data = {}
+    #     if label is None:
+    #         label = "idx"
+    #     elif isinstance(label, list):
+    #         label = label[0]
+    #     data[label] = self.index
+    #     return data
+    #
+    # def _check_types(self, other):
+    #     """
+    #     Ensure that the type of the other object matches this Index.
+    #
+    #     Parameters
+    #     ----------
+    #     other : Index
+    #         The object to compare against.
+    #
+    #     Raises
+    #     ------
+    #     TypeError
+    #         If the types of the two objects do not match.
+    #
+    #     """
+    #     if type(self) is not type(other):
+    #         raise TypeError("Index Types must match")
+    #
+    # def _merge(self, other):
+    #     """
+    #     Merge this Index with another, removing duplicates.
+    #
+    #     Parameters
+    #     ----------
+    #     other : Index
+    #         The Index to merge with this one.
+    #
+    #     Returns
+    #     -------
+    #     Index
+    #         A new Index containing the unique values from both indices.
+    #
+    #     Raises
+    #     ------
+    #     TypeError
+    #         If the types of the two Index objects do not match.
+    #
+    #     """
+    #     self._check_types(other)
+    #
+    #     callback = get_callback(self.values)
+    #     idx = generic_concat([self.values, other.values], ordered=False)
+    #     return Index(callback(unique(idx)))
+    #
+    # def _merge_all(self, idx_list):
+    #     """
+    #     Merge this Index with a list of other Index objects, removing duplicates.
+    #
+    #     Parameters
+    #     ----------
+    #     idx_list : list of Index
+    #         A list of Index objects to merge with this one.
+    #
+    #     Returns
+    #     -------
+    #     Index
+    #         A new Index containing the unique values from all merged indices.
+    #
+    #     Raises
+    #     ------
+    #     TypeError
+    #         If any object in the list is not the same type as this Index.
+    #
+    #     """
+    #     idx = self.values
+    #     callback = get_callback(idx)
+    #
+    #     for other in idx_list:
+    #         self._check_types(other)
+    #         idx = generic_concat([idx, other.values], ordered=False)
+    #
+    #     return Index(callback(unique(idx)))
+    #
+    # def _check_aligned(self, other):
+    #     """
+    #     Check whether this Index is aligned with another.
+    #
+    #     Two indices are considered aligned if they have the same length and all corresponding
+    #     elements are equal.
+    #
+    #     Parameters
+    #     ----------
+    #     other : Index
+    #         The Index to compare against.
+    #
+    #     Returns
+    #     -------
+    #     bool
+    #         True if the indices are aligned, False otherwise.
+    #
+    #     Raises
+    #     ------
+    #     TypeError
+    #         If the types of the two Index objects do not match.
+    #
+    #     """
+    #     self._check_types(other)
+    #     length = len(self)
+    #     return len(other) == length and (self == other.values).sum() == length
+    #
+    # def argsort(self, ascending=True):
+    #     """
+    #     Return the indices that would sort the Index.
+    #
+    #     Parameters
+    #     ----------
+    #     ascending : bool, optional
+    #         If True (default), sort in ascending order.
+    #         If False, sort in descending order.
+    #
+    #     Returns
+    #     -------
+    #     array-like
+    #         The indices that would sort the Index.
+    #
+    #     """
+    #     if isinstance(self.values, list):
+    #         reverse = not ascending
+    #         return sorted(range(self.size), key=self.values.__getitem__, reverse=reverse)
+    #
+    #     if not ascending:
+    #         if isinstance(self.values, pdarray) and self.dtype in (akint64, akfloat64):
+    #             i = argsort(-self.values)
+    #         else:
+    #             i = argsort(self.values)[arange(self.size - 1, -1, -1)]
+    #     else:
+    #         i = argsort(self.values)
+    #     return i
+    #
+    # def map(self, arg: Union[dict, "Series"]) -> "Index":
+    #     """
+    #     Map values of Index according to an input mapping.
+    #
+    #     Parameters
+    #     ----------
+    #     arg : dict or Series
+    #         The mapping correspondence.
+    #
+    #     Returns
+    #     -------
+    #     arkouda.index.Index
+    #         A new index with the values transformed by the mapping correspondence.
+    #
+    #     Raises
+    #     ------
+    #     TypeError
+    #         Raised if arg is not of type dict or arkouda.pandas.Series.
+    #         Raised if index values not of type pdarray, Categorical, or Strings.
+    #
+    #     Examples
+    #     --------
+    #     >>> import arkouda as ak
+    #     >>> ak.connect()
+    #     >>> idx = ak.Index(ak.array([2, 3, 2, 3, 4]))
+    #     >>> idx
+    #     Index(array([2 3 2 3 4]), dtype='int64')
+    #     >>> idx.map({4: 25.0, 2: 30.0, 1: 7.0, 3: 5.0})
+    #     Index(array([30.00000000000000000 5.00000000000000000 30.00000000000000000
+    #     5.00000000000000000 25.00000000000000000]), dtype='float64')
+    #     >>> s2 = ak.Series(ak.array(["a","b","c","d"]), index = ak.array([4,2,1,3]))
+    #     >>> idx.map(s2)
+    #     Index(array(['b', 'd', 'b', 'd', 'a']), dtype='<U0')
+    #
+    #     """
+    #     from arkouda.numpy.util import map
+    #
+    #     return Index(map(self.values, arg))
+    #
+    # def concat(self, other):
+    #     """
+    #     Concatenate this Index with another Index.
+    #
+    #     Parameters
+    #     ----------
+    #     other : Index
+    #         The Index to concatenate with this one.
+    #
+    #     Returns
+    #     -------
+    #     Index
+    #         A new Index with values from both indices.
+    #
+    #     Raises
+    #     ------
+    #     TypeError
+    #         If the types of the two Index objects do not match.
+    #
+    #     """
+    #     self._check_types(other)
+    #
+    #     idx = generic_concat([self.values, other.values], ordered=True)
+    #     return Index(idx)
+    #
+    # def lookup(self, key):
+    #     """
+    #     Check for presence of key(s) in the Index.
+    #
+    #     Parameters
+    #     ----------
+    #     key : pdarray or scalar
+    #         The value(s) to look up in the Index. If a scalar is provided, it will
+    #         be converted to a one-element array.
+    #
+    #     Returns
+    #     -------
+    #     pdarray
+    #         A boolean array indicating which elements of `key` are present in the Index.
+    #
+    #     Raises
+    #     ------
+    #     TypeError
+    #         If `key` is not a scalar or a pdarray.
+    #
+    #     """
+    #     if not isinstance(key, pdarray):
+    #         # try to handle single value
+    #         try:
+    #             key = array([key])
+    #         except Exception:
+    #             raise TypeError("Lookup must be on an arkouda array")
+    #
+    #     return in1d(self.values, key)
+    #
+    # def to_hdf(
+    #     self,
+    #     prefix_path: str,
+    #     dataset: str = "index",
+    #     mode: str = "truncate",
+    #     file_type: str = "distribute",
+    # ) -> str:
+    #     """
+    #     Save the Index to HDF5.
+    #
+    #     The object can be saved to a collection of files or single file.
+    #
+    #     Parameters
+    #     ----------
+    #     prefix_path : str
+    #         Directory and filename prefix that all output files share
+    #     dataset : str
+    #         Name of the dataset to create in files (must not already exist)
+    #     mode : str {'truncate' | 'append'}
+    #         By default, truncate (overwrite) output files, if they exist.
+    #         If 'append', attempt to create new dataset in existing files.
+    #     file_type: str ("single" | "distribute")
+    #         Default: "distribute"
+    #         When set to single, dataset is written to a single file.
+    #         When distribute, dataset is written on a file per locale.
+    #         This is only supported by HDF5 files and will have no impact of Parquet Files.
+    #
+    #     Returns
+    #     -------
+    #     string message indicating result of save operation
+    #
+    #     Raises
+    #     ------
+    #     RuntimeError
+    #         Raised if a server-side error is thrown saving the pdarray
+    #     TypeError
+    #         Raised if the Index values are a list.
+    #
+    #     Notes
+    #     -----
+    #     - The prefix_path must be visible to the arkouda server and the user must
+    #     have write permission.
+    #     - Output files have names of the form ``<prefix_path>_LOCALE<i>``, where ``<i>``
+    #     ranges from 0 to ``numLocales`` for `file_type='distribute'`. Otherwise,
+    #     the file name will be `prefix_path`.
+    #     - If any of the output files already exist and
+    #     the mode is 'truncate', they will be overwritten. If the mode is 'append'
+    #     and the number of output files is less than the number of locales or a
+    #     dataset with the same name already exists, a ``RuntimeError`` will result.
+    #     - Any file extension can be used.The file I/O does not rely on the extension to
+    #     determine the file format.
+    #
+    #     """
+    #     from typing import cast as typecast
+    #
+    #     from arkouda.client import generic_msg
+    #     from arkouda.pandas.categorical import Categorical as Categorical_
+    #     from arkouda.pandas.io import _file_type_to_int, _mode_str_to_int
+    #
+    #     if isinstance(self.values, list):
+    #         raise TypeError("Unable to write Index to hdf when values are a list.")
+    #
+    #     index_data = [
+    #         (
+    #             self.values.name
+    #             if not isinstance(self.values, (Categorical_))
+    #             else json.dumps(
+    #                 {
+    #                     "codes": self.values.codes.name,
+    #                     "categories": self.values.categories.name,
+    #                     "NA_codes": self.values._akNAcode.name,
+    #                     **(
+    #                         {"permutation": self.values.permutation.name}
+    #                         if self.values.permutation is not None
+    #                         else {}
+    #                     ),
+    #                     **(
+    #                         {"segments": self.values.segments.name}
+    #                         if self.values.segments is not None
+    #                         else {}
+    #                     ),
+    #                 }
+    #             )
+    #         )
+    #     ]
+    #     return typecast(
+    #         str,
+    #         generic_msg(
+    #             cmd="tohdf",
+    #             args={
+    #                 "filename": prefix_path,
+    #                 "dset": dataset,
+    #                 "file_format": _file_type_to_int(file_type),
+    #                 "write_mode": _mode_str_to_int(mode),
+    #                 "objType": self.objType,
+    #                 "num_idx": 1,
+    #                 "idx": index_data,
+    #                 "idx_objTypes": [self.values.objType],  # this will be pdarray, strings, or cat
+    #                 "idx_dtypes": [str(self.values.dtype)],
+    #             },
+    #         ),
+    #     )
+    #
+    # def update_hdf(
+    #     self,
+    #     prefix_path: str,
+    #     dataset: str = "index",
+    #     repack: bool = True,
+    # ):
+    #     """
+    #     Overwrite the dataset with the name provided with this Index object.
+    #
+    #     If the dataset does not exist it is added.
+    #
+    #     Parameters
+    #     ----------
+    #     prefix_path : str
+    #         Directory and filename prefix that all output files share
+    #     dataset : str
+    #         Name of the dataset to create in files
+    #     repack: bool
+    #         Default: True
+    #         HDF5 does not release memory on delete. When True, the inaccessible
+    #         data (that was overwritten) is removed. When False, the data remains, but is
+    #         inaccessible. Setting to false will yield better performance, but will cause
+    #         file sizes to expand.
+    #
+    #     Raises
+    #     ------
+    #     RuntimeError
+    #         Raised if a server-side error is thrown saving the index
+    #
+    #     Notes
+    #     -----
+    #     - If file does not contain File_Format attribute to indicate how it was saved,
+    #       the file name is checked for _LOCALE#### to determine if it is distributed.
+    #     - If the dataset provided does not exist, it will be added
+    #     - Because HDF5 deletes do not release memory, this will create a copy of the
+    #       file with the new data
+    #
+    #     """
+    #     from arkouda.client import generic_msg
+    #     from arkouda.pandas.categorical import Categorical as Categorical_
+    #     from arkouda.pandas.io import (
+    #         _file_type_to_int,
+    #         _get_hdf_filetype,
+    #         _mode_str_to_int,
+    #         _repack_hdf,
+    #     )
+    #
+    #     # determine the format (single/distribute) that the file was saved in
+    #     file_type = _get_hdf_filetype(prefix_path + "*")
+    #
+    #     index_data = [
+    #         (
+    #             self.values.name
+    #             if not isinstance(self.values, (Categorical_))
+    #             else json.dumps(
+    #                 {
+    #                     "codes": self.values.codes.name,
+    #                     "categories": self.values.categories.name,
+    #                     "NA_codes": self.values._akNAcode.name,
+    #                     **(
+    #                         {"permutation": self.values.permutation.name}
+    #                         if self.values.permutation is not None
+    #                         else {}
+    #                     ),
+    #                     **(
+    #                         {"segments": self.values.segments.name}
+    #                         if self.values.segments is not None
+    #                         else {}
+    #                     ),
+    #                 }
+    #             )
+    #         )
+    #     ]
+    #
+    #     (
+    #         generic_msg(
+    #             cmd="tohdf",
+    #             args={
+    #                 "filename": prefix_path,
+    #                 "dset": dataset,
+    #                 "file_format": _file_type_to_int(file_type),
+    #                 "write_mode": _mode_str_to_int("append"),
+    #                 "objType": self.objType,
+    #                 "num_idx": 1,
+    #                 "idx": index_data,
+    #                 "idx_objTypes": [self.values.objType],  # this will be pdarray, strings, or cat
+    #                 "idx_dtypes": [str(self.values.dtype)],
+    #                 "overwrite": True,
+    #             },
+    #         ),
+    #     )
+    #
+    #     if repack:
+    #         _repack_hdf(prefix_path)
+    #
+    # def to_parquet(
+    #     self,
+    #     prefix_path: str,
+    #     dataset: str = "index",
+    #     mode: str = "truncate",
+    #     compression: Optional[str] = None,
+    # ):
+    #     """
+    #     Save the Index to Parquet.
+    #
+    #     The result is a collection of files,
+    #     one file per locale of the arkouda server, where each filename starts
+    #     with prefix_path. Each locale saves its chunk of the array to its
+    #     corresponding file.
+    #
+    #     Parameters
+    #     ----------
+    #     prefix_path : str
+    #         Directory and filename prefix that all output files share
+    #     dataset : str
+    #         Name of the dataset to create in files (must not already exist)
+    #     mode : str {'truncate' | 'append'}
+    #         By default, truncate (overwrite) output files, if they exist.
+    #         If 'append', attempt to create new dataset in existing files.
+    #     compression : str (Optional)
+    #         (None | "snappy" | "gzip" | "brotli" | "zstd" | "lz4")
+    #         Sets the compression type used with Parquet files
+    #
+    #     Returns
+    #     -------
+    #     string message indicating result of save operation
+    #
+    #     Raises
+    #     ------
+    #     RuntimeError
+    #         Raised if a server-side error is thrown saving the pdarray
+    #     TypeError
+    #         Raised if the Index values are a list.
+    #
+    #     Notes
+    #     -----
+    #     - The prefix_path must be visible to the arkouda server and the user must
+    #     have write permission.
+    #     - Output files have names of the form ``<prefix_path>_LOCALE<i>``, where ``<i>``
+    #     ranges from 0 to ``numLocales`` for `file_type='distribute'`.
+    #     - 'append' write mode is supported, but is not efficient.
+    #     - If any of the output files already exist and
+    #     the mode is 'truncate', they will be overwritten. If the mode is 'append'
+    #     and the number of output files is less than the number of locales or a
+    #     dataset with the same name already exists, a ``RuntimeError`` will result.
+    #     - Any file extension can be used.The file I/O does not rely on the extension to
+    #     determine the file format.
+    #
+    #     """
+    #     if isinstance(self.values, list):
+    #         raise TypeError("Unable to write Index to parquet when values are a list.")
+    #
+    #     return self.values.to_parquet(prefix_path, dataset=dataset, mode=mode, compression=compression)
+    #
+    # @typechecked
+    # def to_csv(
+    #     self,
+    #     prefix_path: str,
+    #     dataset: str = "index",
+    #     col_delim: str = ",",
+    #     overwrite: bool = False,
+    # ):
+    #     r"""
+    #     Write Index to CSV file(s).
+    #
+    #     File will contain a single column with the pdarray data.
+    #     All CSV Files written by Arkouda include a header denoting data types of the columns.
+    #
+    #     Parameters
+    #     ----------
+    #     prefix_path: str
+    #         The filename prefix to be used for saving files. Files will have _LOCALE#### appended
+    #         when they are written to disk.
+    #     dataset: str
+    #         Column name to save the pdarray under. Defaults to "array".
+    #     col_delim: str
+    #         Defaults to ",". Value to be used to separate columns within the file.
+    #         Please be sure that the value used DOES NOT appear in your dataset.
+    #     overwrite: bool
+    #         Defaults to False. If True, any existing files matching your provided prefix_path will
+    #         be overwritten. If False, an error will be returned if existing files are found.
+    #
+    #     Returns
+    #     -------
+    #     str reponse message
+    #
+    #     Raises
+    #     ------
+    #     ValueError
+    #         Raised if all datasets are not present in all parquet files or if one or
+    #         more of the specified files do not exist.
+    #     RuntimeError
+    #         Raised if one or more of the specified files cannot be opened.
+    #         If `allow_errors` is true this may be raised if no values are returned
+    #         from the server.
+    #     TypeError
+    #         Raised if we receive an unknown arkouda_type returned from the server.
+    #         Raised if the Index values are a list.
+    #
+    #     Notes
+    #     -----
+    #     - CSV format is not currently supported by load/load_all operations
+    #     - The column delimiter is expected to be the same for column names and data
+    #     - Be sure that column delimiters are not found within your data.
+    #     - All CSV files must delimit rows using newline (`\n`) at this time.
+    #
+    #     """
+    #     if isinstance(self.values, list):
+    #         raise TypeError("Unable to write Index to csv when values are a list.")
+    #
+    #     return self.values.to_csv(prefix_path, dataset=dataset, col_delim=col_delim, overwrite=overwrite)
 
 
 class MultiIndex(Index):
