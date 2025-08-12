@@ -97,137 +97,234 @@ def aggregation_operators(cls) -> type:
     return cls
 
 
+from pandas import Series as pd_Series
+from .extension._arkouda_categorical_array import ArkoudaCategoricalArray,ArkoudaCategoricalDtype
+from .extension._arkouda_array import ArkoudaArray, ArkoudaDtype
+from .extension._arkouda_string_array import ArkoudaStringArray, ArkoudaStringDtype
+from .categorical import Categorical
+
+def _normalize_to_ea(obj):
+    """
+    Coerce Arkouda raw arrays into the corresponding ExtensionArray.
+    No-op for already-correct objects or for normal Python/NumPy.
+    """
+    # Already one of our EAs
+    if isinstance(obj, (ArkoudaArray, ArkoudaStringArray, ArkoudaCategoricalArray)):
+        return obj
+
+    # Raw Arkouda arrays -> EA
+    if isinstance(obj, pdarray):
+        return ArkoudaArray(obj)
+    if isinstance(obj, Strings):
+        return ArkoudaStringArray(obj)
+    if isinstance(obj, Categorical):
+        return ArkoudaCategoricalArray(obj)
+
+    # Python/NumPy iterables – leave them alone, Pandas will handle
+    return obj
+
 @unary_operators
 @aggregation_operators
 @natural_binary_operators
-class Series:
+class Series(pd_Series):
     """
-    One-dimensional arkouda array with axis labels.
+    Pandas Series subclass that understands Arkouda inputs.
 
-    Parameters
-    ----------
-    index : pdarray, Strings
-        an array of indices associated with the data array.
-        If empty, it will default to a range of ints whose size match the size of the data.
-        optional
-    data : Tuple, List, groupable_element_type, Series, SegArray
-        a 1D array. Must not be None.
+    Construction rules:
+      - If `data` is an Arkouda raw array (pdarray/Strings/Categorical),
+        it’s wrapped into the matching Arkouda ExtensionArray.
+      - If `data` is already an Arkouda ExtensionArray, it’s used as-is.
+      - Otherwise, we defer to normal Pandas behavior.
 
-    Raises
-    ------
-    TypeError
-        Raised if index is not a pdarray or Strings object
-        Raised if data is not a pdarray, Strings, or Categorical object
-    ValueError
-        Raised if the index size does not match data size
-
-    Notes
-    -----
-    The Series class accepts either positional arguments or keyword arguments.
-    If entering positional arguments,
-        2 arguments entered:
-            argument 1 - data
-            argument 2 - index
-        1 argument entered:
-            argument 1 - data
-    If entering 1 positional argument, it is assumed that this is the data argument.
-    If only 'data' argument is passed in, Index will automatically be generated.
-    If entering keywords,
-        'data' (see Parameters)
-        'index' (optional) must match size of 'data'
-
+    You get full Series semantics, but joins/groupbys/etc. will use
+    Arkouda’s server-backed EAs when present.
     """
+
+    # Make Pandas return our subclass from Series ops
+    @property
+    def _constructor(self):
+        return Series
+
+    # If you also subclass DataFrame, point this to that class; otherwise fallback
+    @property
+    def _constructor_expanddim(self):
+        from arkouda.pandas.dataframe import DataFrame  # if you have one
+        return DataFrame
+
+    # arkouda/pandas/series.py
+    import pandas as pd
+    from pandas import Series as pd_Series
+
+    from arkouda.numpy.pdarrayclass import pdarray
+    from arkouda.numpy.strings import Strings
+    import arkouda as ak
+
+    # your EAs
+    from arkouda.pandas.extension import (
+        ArkoudaArray,
+        ArkoudaStringArray,
+        ArkoudaCategoricalArray,
+    )
+
+    def _normalize_to_ea(data):
+        if isinstance(data, (ArkoudaArray, ArkoudaStringArray, ArkoudaCategoricalArray)):
+            return data
+        if isinstance(data, pdarray):
+            return ArkoudaArray(data)
+        if isinstance(data, Strings):
+            return ArkoudaStringArray(data)
+        if isinstance(data, ak.Categorical):
+            return ArkoudaCategoricalArray(data)
+        return data
+
+    class Series(pd_Series):
+        @property
+        def _constructor(self):
+            return Series
+
+        def __new__(
+                cls,
+                data=None,
+                index=None,
+                dtype=None,
+                name=None,
+                copy: bool | None = None,
+                fastpath: bool = False,
+        ):
+            data = _normalize_to_ea(data)
+
+            # IMPORTANT: call pandas' constructor directly, not super()
+            obj = pd_Series.__new__(
+                cls,
+                data=data,
+                index=index,
+                dtype=dtype,
+                name=name,
+                copy=copy,
+                fastpath=fastpath,
+            )
+            return obj
+
+        @classmethod
+        def from_arkouda(cls, a, *, index=None, name=None):
+            return cls(_normalize_to_ea(a), index=index, name=name)
+
+
+    # --- Convenience helpers (optional) ---
+
+    @classmethod
+    def from_arkouda(cls, a, *, index=None, name=None):
+        """
+        Build a Series from a raw Arkouda array, choosing the right EA automatically.
+        """
+        return cls(_normalize_to_ea(a), index=index, name=name)
+
+    def to_arkouda(self):
+        """
+        Return the underlying Arkouda object if this is Arkouda-backed,
+        otherwise raise or return a NumPy array for non-Arkouda Series.
+        """
+        vals = self._values  # this is an array-like (EA or ndarray)
+        if isinstance(vals, (ArkoudaArray, ArkoudaStringArray, ArkoudaCategoricalArray)):
+            return vals._data
+        raise TypeError("Series is not Arkouda-backed")
+
+    # If you need to nudge NumPy ufuncs away from pulling data to host:
+    # def __array_priority__(self): return 1000
+    # def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+    #     # Optionally dispatch to Arkouda ops when all inputs are Arkouda-backed
+    #     return NotImplemented
 
     objType = "Series"
-
-    @typechecked
-    def __init__(
-        self,
-        data: Union[
-            Tuple,
-            List,
-            groupable_element_type,
-            Series,
-            SegArray,
-            pd.Series,
-            pd.Categorical,
-        ],
-        name=None,
-        index: Optional[Union[pdarray, Strings, Tuple, List, Index]] = None,
-    ):
-        from arkouda.pandas.categorical import Categorical
-
-        if isinstance(data, pd.Categorical):
-            data = Categorical(data)
-
-        self.registered_name: Optional[str] = None
-
-        if index is None and isinstance(data, (tuple, list)) and len(data) == 2:
-            # handles the previous `ar_tuple` case
-            if not isinstance(data[0], (pdarray, Index, Strings, Categorical, list, tuple)):
-                raise TypeError("indices must be a pdarray, Strings, Categorical, List, or Tuple")
-            if not isinstance(data[1], (pdarray, Strings, Categorical, Series, SegArray)):
-                raise TypeError("values must be a pdarray, Strings, SegArray, or Categorical")
-            self.values = data[1] if not isinstance(data[1], Series) else data[1].values
-            self.index = Index.factory(index) if index else Index.factory(data[0])
-        elif isinstance(data, pd.Series):
-            if isinstance(data.values, pd.Categorical):
-                self.values = Categorical(data.values)
-            else:
-                self.values = array(data.values)
-            self.index = Index(data.index)
-            self.name = data.name
-        elif isinstance(data, tuple) and len(data) != 2:
-            raise TypeError("Series initialization requries a tuple of (index, values)")
-        else:
-            # When only 1 positional argument it will be treated as data and not index
-            if isinstance(data, Series):
-                self.values = data.values
-            elif isinstance(data, List):
-                self.values = array(data)
-            else:
-                self.values = data
-            self.index = Index.factory(index) if index is not None else Index(arange(self.values.size))
-
-        if self.index.size != self.values.size:
-            raise ValueError(
-                "Index size does not match data size: {} != {}".format(self.index.size, self.values.size)
-            )
-        if name is None and isinstance(data, (Series, pd.Series)):
-            self.name = data.name
-        else:
-            self.name = name
-        self.size = self.index.size
-
-    def __len__(self):
-        return self.values.size
-
-    def __repr__(self):
-        """Return ascii-formatted version of the series."""
-        if len(self) == 0:
-            return "Series([ -- ][ 0 values : 0 B])"
-
-        maxrows = pd.get_option("display.max_rows")
-        if len(self) <= maxrows:
-            prt = self.to_pandas()
-            length_str = ""
-        else:
-            prt = pd.concat(
-                [
-                    self.head(maxrows // 2 + 2).to_pandas(),
-                    self.tail(maxrows // 2).to_pandas(),
-                ]
-            )
-            length_str = f"\nLength {len(self)}"
-        return (
-            prt.to_string(
-                dtype=prt.dtype,
-                min_rows=get_option("display.min_rows"),
-                max_rows=maxrows,
-                length=False,
-            )
-            + length_str
-        )
+    #
+    # @typechecked
+    # def __init__(
+    #     self,
+    #     data: Union[
+    #         Tuple,
+    #         List,
+    #         groupable_element_type,
+    #         Series,
+    #         SegArray,
+    #         pd.Series,
+    #         pd.Categorical,
+    #     ],
+    #     name=None,
+    #     index: Optional[Union[pdarray, Strings, Tuple, List, Index]] = None,
+    # ):
+    #     from arkouda.pandas.categorical import Categorical
+    #
+    #     if isinstance(data, pd.Categorical):
+    #         data = Categorical(data)
+    #
+    #     self.registered_name: Optional[str] = None
+    #
+    #     if index is None and isinstance(data, (tuple, list)) and len(data) == 2:
+    #         # handles the previous `ar_tuple` case
+    #         if not isinstance(data[0], (pdarray, Index, Strings, Categorical, list, tuple)):
+    #             raise TypeError("indices must be a pdarray, Strings, Categorical, List, or Tuple")
+    #         if not isinstance(data[1], (pdarray, Strings, Categorical, Series, SegArray)):
+    #             raise TypeError("values must be a pdarray, Strings, SegArray, or Categorical")
+    #         self.values = data[1] if not isinstance(data[1], Series) else data[1].values
+    #         self.index = Index.factory(index) if index else Index.factory(data[0])
+    #     elif isinstance(data, pd.Series):
+    #         if isinstance(data.values, pd.Categorical):
+    #             self.values = Categorical(data.values)
+    #         else:
+    #             self.values = array(data.values)
+    #         self.index = Index(data.index)
+    #         self.name = data.name
+    #     elif isinstance(data, tuple) and len(data) != 2:
+    #         raise TypeError("Series initialization requries a tuple of (index, values)")
+    #     else:
+    #         # When only 1 positional argument it will be treated as data and not index
+    #         if isinstance(data, Series):
+    #             self.values = data.values
+    #         elif isinstance(data, List):
+    #             self.values = array(data)
+    #         else:
+    #             self.values = data
+    #         self.index = Index.factory(index) if index is not None else Index(arange(self.values.size))
+    #
+    #     if self.index.size != self.values.size:
+    #         raise ValueError(
+    #             "Index size does not match data size: {} != {}".format(self.index.size, self.values.size)
+    #         )
+    #     if name is None and isinstance(data, (Series, pd.Series)):
+    #         self.name = data.name
+    #     else:
+    #         self.name = name
+    #     self.size = self.index.size
+    #
+    # def __len__(self):
+    #     return self.values.size
+    #
+    # def __repr__(self):
+    #     """Return ascii-formatted version of the series."""
+    #     if len(self) == 0:
+    #         return "Series([ -- ][ 0 values : 0 B])"
+    #
+    #     maxrows = pd.get_option("display.max_rows")
+    #     if len(self) <= maxrows:
+    #         prt = self.to_pandas()
+    #         length_str = ""
+    #     else:
+    #         prt = pd.concat(
+    #             [
+    #                 self.head(maxrows // 2 + 2).to_pandas(),
+    #                 self.tail(maxrows // 2).to_pandas(),
+    #             ]
+    #         )
+    #         length_str = f"\nLength {len(self)}"
+    #     return (
+    #         prt.to_string(
+    #             dtype=prt.dtype,
+    #             min_rows=get_option("display.min_rows"),
+    #             max_rows=maxrows,
+    #             length=False,
+    #         )
+    #         + length_str
+    #     )
 
     def validate_key(
         self,

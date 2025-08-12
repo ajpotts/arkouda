@@ -53,7 +53,7 @@ from arkouda.numpy.pdarrayclass import pdarray
 from arkouda.numpy.pdarraycreation import array as ak_array
 from arkouda.numpy.pdarraysetops import concatenate as ak_concat
 from arkouda.numpy.strings import Strings
-
+import operator as _op
 __all__ = ["_ensure_numpy", "ArkoudaBaseArray"]
 
 
@@ -178,3 +178,71 @@ class ArkoudaBaseArray(ExtensionArray):
 
     def to_ndarray(self):
         return self._data.to_ndarray()
+
+    __array_priority__ = 1000  # ensure our ops win over numpy’s
+
+    def _coerce_other_for_binop(self, other):
+        # unwrap other EA -> raw arkouda array
+        from arkouda.numpy.pdarrayclass import pdarray
+        from arkouda.numpy.strings import Strings
+        if isinstance(other, ArkoudaBaseArray):
+            return other._data
+        if isinstance(other, (pdarray, Strings)):
+            return other
+        # leave numpy/python scalars as-is; Arkouda supports scalar ops
+        return other
+
+    def _binary_op(self, other, op):
+        other_ak = self._coerce_other_for_binop(other)
+        result = op(self._data, other_ak)
+        return type(self)(result)
+
+    def _rbinary_op(self, other, op):
+        other_ak = self._coerce_other_for_binop(other)
+        result = op(other_ak, self._data)
+        return type(self)(result)
+
+    # --- arithmetic ---
+    def __add__(self, other):
+        return self._binary_op(other, _op.add)
+
+    def __radd__(self, other):
+        return self._rbinary_op(other, _op.add)
+
+    def __sub__(self, other):
+        return self._binary_op(other, _op.sub)
+
+    def __rsub__(self, other):
+        return self._rbinary_op(other, _op.sub)
+
+    def __mul__(self, other):
+        return self._binary_op(other, _op.mul)
+
+    def __rmul__(self, other):
+        return self._rbinary_op(other, _op.mul)
+
+    def __truediv__(self, other):
+        return self._binary_op(other, _op.truediv)
+
+    def __rtruediv__(self, other):
+        return self._rbinary_op(other, _op.truediv)
+
+    def __floordiv__(self, other):
+        return self._binary_op(other, _op.floordiv)
+
+    def __rfloordiv__(self, other):
+        return self._rbinary_op(other, _op.floordiv)
+
+    def __mod__(self, other):
+        return self._binary_op(other, _op.mod)
+
+    def __rmod__(self, other):
+        return self._rbinary_op(other, _op.mod)
+
+    def __pow__(self, other):
+        return self._binary_op(other, _op.pow)
+
+    def __rpow__(self, other):
+        return self._rbinary_op(other, _op.pow)
+
+    # (You can add bitwise ops similarly if you need them.)
