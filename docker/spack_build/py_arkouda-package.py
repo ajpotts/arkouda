@@ -2,9 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)s
 
-from spack_repo.builtin.build_systems.python import PythonPackage
-
 from spack.package import *
+from spack_repo.builtin.build_systems.python import PythonPackage
 
 
 class PyArkouda(PythonPackage):
@@ -38,10 +37,10 @@ class PyArkouda(PythonPackage):
 
     depends_on("python@3.8:", type=("build", "run"), when="@:2024.06.21")
     depends_on("python@3.9:3.12.3", type=("build", "run"), when="@2024.10.02:")
-    depends_on("python@3.9:3.13.0", type=("build", "run"), when="@2025.08.20:")    
-    
+    depends_on("python@3.9:3.13.0", type=("build", "run"), when="@2025.08.20:")
+
     depends_on("py-setuptools", type="build")
-    
+
     # NumPy requirements split by py-arkouda version:
     depends_on("py-numpy@1", when="@:2025.07.02", type=("build", "run"))
     depends_on("py-numpy@2", when="@2025.07.03:", type=("build", "run"))
@@ -61,4 +60,3 @@ class PyArkouda(PythonPackage):
     depends_on("py-typeguard@2.10:2.12", type=("build", "run"))
     depends_on("py-tabulate", type=("build", "run"))
     depends_on("py-pytest@6.0:", type=("build", "run"), when="@2024.10.02")
-
