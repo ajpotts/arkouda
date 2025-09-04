@@ -183,6 +183,22 @@ RUN git clone https://github.com/Bears-R-Us/arkouda.git
 
 WORKDIR /opt/arkouda
 
+RUN if [ "$RELEASE_VERSION" = "2025.08.20" ]; then \
+        cd /opt/arkouda && git checkout 3e305930905397ff3a7a28a5d8cc2c9adca4194ca7f6ee51f749f427a2dea92c ; \
+    elif [ "$RELEASE_VERSION" = "2025.07.03" ]; then \
+        cd /opt/arkouda && git checkout eb888fac7b0eec6b4f3bfa0bfe14e5c8f15b449286e84c45ba95c44d8cd3917a ; \
+    elif [ "$RELEASE_VERSION" = "2025.01.13" ]; then \
+        cd /opt/arkouda && git checkout bb53bab92fedf43a47aadd9195eeedebe5f806d85887fa508fb5c69f2a4544ea ; \
+    elif [ "$RELEASE_VERSION" = "2024.12.06" ]; then \
+        cd /opt/arkouda && git checkout 92ca11319a9fdeeb8879afbd1e0c9c1b1d14aa2496781c1481598963d3c37b46 ; \
+    elif [ "$RELEASE_VERSION" = "2024.10.02" ]; then \
+        cd /opt/arkouda && git checkout 00671a89a08be57ff90a94052f69bfc6fe793f7b50cf9195dd7ee794d6d13f23 ; \
+    elif [ "$RELEASE_VERSION" = "2024.06.21" ]; then \
+        cd /opt/arkouda && git checkout ab7f753befb3a0b8e27a3d28f3c83332d2c6ae49678877a7456f0fcfe42df51c ; \
+    else \
+        git checkout main ; \
+    fi
+
 RUN source /opt/spack-develop/share/spack/setup-env.sh && spack load chapel arkouda && ln -s $(spack location -i arkouda)/bin/arkouda_server arkouda_server
 RUN python3 -m pip install .[dev]
 

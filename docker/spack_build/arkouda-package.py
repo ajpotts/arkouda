@@ -43,7 +43,7 @@ class Arkouda(MakefilePackage):
     # For Arkouda releases before August 2025, support up to Chapel 2.4.x
     depends_on(
         "chapel@2.0.0:2.4 +hdf5 +zmq",
-        when="@2025.01.13:@2025.08",
+        when="@2025.01.13:2025.08.20",
         type=("build", "link", "run", "test"),
     )
 
