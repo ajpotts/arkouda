@@ -43,7 +43,7 @@ echo "This script is intended to be run from the arkouda project directory."
 
 IMAGE_NAME="arkouda_spack_build_test"
 
-docker build -t "--build-arg RELEASE_VERSION=$VERSION" "$IMAGE_NAME:$VERSION" "."
+docker build --build-arg RELEASE_VERSION="$VERSION" -t "$IMAGE_NAME:$VERSION" .
 docker tag "$IMAGE_NAME:$VERSION" "$REPO_NAME/$IMAGE_NAME:$VERSION"
 
 if [ "$PUSH_IMAGE" = true ]; then
