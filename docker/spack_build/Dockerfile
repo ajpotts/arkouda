@@ -82,27 +82,37 @@ RUN git clone https://github.com/Bears-R-Us/arkouda.git
 
 WORKDIR /opt/arkouda
 
-RUN if [ "$RELEASE_VERSION" = "@2025.08.20" ]; then \
-        cd /opt/arkouda && git checkout 147a08b2f2479358cd2c4ef0a75650d082a80779 ; \
-    elif [ "$RELEASE_VERSION" = "@2025.07.03" ]; then \
-        cd /opt/arkouda && git checkout 88f2a83d9c491fd785e1e2f67a0445ed11dd2d98 ; \
-    elif [ "$RELEASE_VERSION" = "@2025.01.13" ]; then \
-        cd /opt/arkouda && git checkout a3aa4c376e4c79b3342ac3e932dd1a9761462de4 ; \
-    elif [ "$RELEASE_VERSION" = "@2024.12.06" ]; then \
-        cd /opt/arkouda && git checkout 9eba2ce562ca8435dd3e5896eb2be703e4708e47 ; \
-    elif [ "$RELEASE_VERSION" = "@2024.10.02" ]; then \
-        cd /opt/arkouda && git checkout a44dd0f4d7b77cb119ea89dd66e8773ca1815848 ; \
-    elif [ "$RELEASE_VERSION" = "@2024.06.21" ]; then \
-        cd /opt/arkouda && git checkout cf6eeacdecd82b2b61b4f0e9444a5106e4bf3754 ; \
-    else \
+#RUN if [ "$RELEASE_VERSION" = "@2025.08.20" ]; then \
+#        cd /opt/arkouda && git checkout 147a08b2f2479358cd2c4ef0a75650d082a80779 ; \
+#    elif [ "$RELEASE_VERSION" = "@2025.07.03" ]; then \
+#        cd /opt/arkouda && git checkout 88f2a83d9c491fd785e1e2f67a0445ed11dd2d98 ; \
+#    elif [ "$RELEASE_VERSION" = "@2025.01.13" ]; then \
+#        cd /opt/arkouda && git checkout a3aa4c376e4c79b3342ac3e932dd1a9761462de4 ; \
+#    elif [ "$RELEASE_VERSION" = "@2024.12.06" ]; then \
+#        cd /opt/arkouda && git checkout 9eba2ce562ca8435dd3e5896eb2be703e4708e47 ; \
+#    elif [ "$RELEASE_VERSION" = "@2024.10.02" ]; then \
+#        cd /opt/arkouda && git checkout a44dd0f4d7b77cb119ea89dd66e8773ca1815848 ; \
+#    elif [ "$RELEASE_VERSION" = "@2024.06.21" ]; then \
+#        cd /opt/arkouda && git checkout cf6eeacdecd82b2b61b4f0e9444a5106e4bf3754 ; \
+#    else \
+#        git checkout main ; \
+#    fi
+
+RUN cd /opt/arkouda && \
+    if [ "$RELEASE_VERSION" = "main" ]; then \
         git checkout main ; \
+    else \
+        git fetch --tags && \
+        git checkout $(git rev-list -n 1 "v${RELEASE_VERSION#@}") ; \
     fi
+
 
 RUN source /opt/spack-develop/share/spack/setup-env.sh && \
     spack load chapel arkouda && \
     ln -s $(spack location -i arkouda)/bin/arkouda_server arkouda_server
 
-RUN source /opt/spack-develop/share/spack/setup-env.sh && spack load chapel arkouda && \
+RUN source /opt/spack-develop/share/spack/setup-env.sh && \
+    spack load chapel arkouda && \
     python3 -m pip install .[dev] && \ 
     python3 -m pytest -c pytest.ini --size=100  #--skip_doctest="True"
 
