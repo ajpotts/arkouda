@@ -73,48 +73,35 @@ RUN source /opt/spack-develop/share/spack/setup-env.sh && spack -d -v install -j
 ###################
 #   Install the old way for testing
 ##################
-RUN dnf install -y python3.12 \
-    python3 python3-devel python3-pip 
+#RUN dnf install -y python3.11 \
+#    python3 python3-devel python3-pip 
     
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1
-RUN python3 -m ensurepip --default-pip
-RUN git clone https://github.com/Bears-R-Us/arkouda.git
+#RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+#RUN python3 -m ensurepip --default-pip
+#RUN git clone https://github.com/Bears-R-Us/arkouda.git
 
-WORKDIR /opt/arkouda
+#WORKDIR /opt/arkouda
+# after all spack installs
+#ENV PATH="/usr/bin:/bin:/usr/sbin:/sbin:${PATH}"
 
-#RUN if [ "$RELEASE_VERSION" = "@2025.08.20" ]; then \
-#        cd /opt/arkouda && git checkout 147a08b2f2479358cd2c4ef0a75650d082a80779 ; \
-#    elif [ "$RELEASE_VERSION" = "@2025.07.03" ]; then \
-#        cd /opt/arkouda && git checkout 88f2a83d9c491fd785e1e2f67a0445ed11dd2d98 ; \
-#    elif [ "$RELEASE_VERSION" = "@2025.01.13" ]; then \
-#        cd /opt/arkouda && git checkout a3aa4c376e4c79b3342ac3e932dd1a9761462de4 ; \
-#    elif [ "$RELEASE_VERSION" = "@2024.12.06" ]; then \
-#        cd /opt/arkouda && git checkout 9eba2ce562ca8435dd3e5896eb2be703e4708e47 ; \
-#    elif [ "$RELEASE_VERSION" = "@2024.10.02" ]; then \
-#        cd /opt/arkouda && git checkout a44dd0f4d7b77cb119ea89dd66e8773ca1815848 ; \
-#    elif [ "$RELEASE_VERSION" = "@2024.06.21" ]; then \
-#        cd /opt/arkouda && git checkout cf6eeacdecd82b2b61b4f0e9444a5106e4bf3754 ; \
-#    else \
+
+#RUN cd /opt/arkouda && \
+#    if [ "$RELEASE_VERSION" = "main" ]; then \
 #        git checkout main ; \
+#    else \
+#        git fetch --tags && \
+#        git checkout $(git rev-list -n 1 "v${RELEASE_VERSION#@}") ; \
 #    fi
 
-RUN cd /opt/arkouda && \
-    if [ "$RELEASE_VERSION" = "main" ]; then \
-        git checkout main ; \
-    else \
-        git fetch --tags && \
-        git checkout $(git rev-list -n 1 "v${RELEASE_VERSION#@}") ; \
-    fi
+
+#RUN source /opt/spack-develop/share/spack/setup-env.sh && \
+#    spack load arkouda chapel && \
+#    ln -s $(spack location -i arkouda)/bin/arkouda_server arkouda_server
 
 
-RUN source /opt/spack-develop/share/spack/setup-env.sh && \
-    spack load chapel arkouda && \
-    ln -s $(spack location -i arkouda)/bin/arkouda_server arkouda_server
-
-RUN source /opt/spack-develop/share/spack/setup-env.sh && \
-    spack load chapel arkouda && \
-    python3 -m pip install .[dev] && \ 
-    python3 -m pytest -c pytest.ini --size=100  #--skip_doctest="True"
+#RUN source /opt/spack-develop/share/spack/setup-env.sh && \
+#    python3 -m pip install .[dev] && \ 
+#    python3 -m pytest -c pytest.ini --size=100  #--skip_doctest="True"
 
 
 # ---------------------------
