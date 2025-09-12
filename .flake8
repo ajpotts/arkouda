@@ -10,6 +10,29 @@ extend-ignore =
 per-file-ignores =
     tests/operator_test.py: E501
     tests/symbol_table_test.py: F841
+    #   Remove below per/file ignores when the errors are resolved:
+    arkouda/numpy/strings.py: DAR101,DAR103,DAR201,DAR401,DAR402
+    arkouda/numpy/timeclass.py: DAR101,DAR201,DAR402
+    arkouda/numpy/util.py: DAR101,DAR103,DAR201,DAR402
+    arkouda/numpy/utils.py: DAR401
+    arkouda/pandas/categorical.py: DAR002,DAR101,DAR103,DAR201,DAR401,DAR402
+    arkouda/pandas/dataframe.py: DAR002,DAR101,DAR103,DAR201,DAR401,DAR402,
+    arkouda/pandas/extension/_arkouda_array.py: DAR201
+    arkouda/pandas/groupbyclass.py: DAR103,DAR402,DAR401,
+    arkouda/pandas/index.py: DAR101,DAR103,DAR201,DAR401,DAR402
+    arkouda/pandas/io.py: DAR101,DAR201,DAR401,DAR402
+    arkouda/pandas/io_util.py: DAR101,DAR402
+    arkouda/pandas/join.py: DAR101,DAR201,DAR401,DAR402
+    arkouda/pandas/match.py: DAR401,DAR402
+    arkouda/pandas/matcher.py: DAR101,DAR201,DAR401
+    arkouda/scipy/sparrayclass.py: DAR101,DAR402
+    arkouda/pandas/series.py: DAR101,DAR201,DAR401,DAR402
+    arkouda/plotting.py: DAR103,DAR401
+    arkouda/scipy/_stats_py.py: DAR401
+    arkouda/scipy/sparsematrix.py: DAR101,DAR401
+    arkouda/scipy/special/_math.py: DAR002
+    arkouda/testing/_asserters.py: DAR101,DAR002,DAR401,DAR201 
+
 exclude =
     toys
     tests/deprecated
