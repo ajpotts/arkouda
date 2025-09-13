@@ -12,8 +12,12 @@ class PyArkouda(PythonPackage):
     homepage = "https://github.com/Bears-R-Us/arkouda"
 
     # Updating the arkouda PyPI package is future work
-    url = "https://github.com/Bears-R-Us/arkouda/archive/refs/tags/v2024.10.02.tar.gz"
+    url = "https://github.com/Bears-R-Us/arkouda/archive/refs/tags/v2025.08.20.tar.gz"
+    list_url = "https://github.com/Bears-R-Us/arkouda/tags"
     git = "https://github.com/Bears-R-Us/arkouda.git"
+
+    def url_for_version(self, version):
+        return f"https://github.com/Bears-R-Us/arkouda/archive/refs/tags/v{version}.tar.gz"
 
     # See https://spdx.org/licenses/ for a list.
     license("MIT")
@@ -45,18 +49,27 @@ class PyArkouda(PythonPackage):
     depends_on("py-numpy@1", when="@:2025.07.02", type=("build", "run"))
     depends_on("py-numpy@2", when="@2025.07.03:", type=("build", "run"))
 
-    depends_on("py-pandas@1.4.0:", type=("build", "run"))
+    depends_on('py-pandas@2.2.3:', when='@2025.07.03:')
+    depends_on("py-pandas@1.4.0:", when='@:2025.01.13', type=("build", "run"))
     conflicts("^py-pandas@2.2.0", msg="arkouda client not compatible with pandas 2.2.0")
 
-    depends_on("py-pyarrow", type=("build", "run"))
+    depends_on("py-pyarrow@:19", type=("build", "run"))
+    depends_on('py-pyarrow@15:19', when='@2025.07.03:')
     depends_on("py-pyzmq@20:", type=("build", "run"))
-    depends_on("py-scipy@:1.13.1", type=("build", "run"), when="@2024.06.21:")
-    depends_on("py-tables@3.7.0: +lzo +bzip2", type=("build", "run"), when="@:2024.06.21")
-    depends_on("py-tables@3.8.0: +lzo +bzip2", type=("build", "run"), when="@2024.10.02:")
+    depends_on("py-scipy@:1.13.1", type=("build", "run"), when="@2024.06.21:2025.01.13")
+    depends_on('py-scipy@1.14:', when='@2025.07.03:')
+    #depends_on("py-tables@3.7.0: +lzo +bzip2", type=("build", "run"), when="@:2024.06.21")
+    #depends_on("py-tables@3.8.0: +lzo +bzip2", type=("build", "run"), when="@2024.10.02:")
+    #depends_on('py-tables@3.10:', when='@2025.07.03:')  # only if your Spack has 3.10+ with NumPy-2 support
+    #depends_on("py-tables@3.10:", type=("build", "run"),when="@2025.07.03: ^py-numpy@2:")
     depends_on("py-h5py@3.7.0:", type=("build", "run"))
+    depends_on('py-h5py@3.11:', when='@2025.07.03:')
+    depends_on('py-matplotlib@3.9:', when='@2025.07.03:')
     depends_on("py-matplotlib@3.3.2:", type=("build", "run"))
+    depends_on('py-contourpy@1.3:', when='@2025.07.03:')
     depends_on("py-versioneer", type=("build"))
     depends_on("py-pyfiglet", type=("build", "run"))
     depends_on("py-typeguard@2.10:2.12", type=("build", "run"))
     depends_on("py-tabulate", type=("build", "run"))
     depends_on("py-pytest@6.0:", type=("build", "run"), when="@2024.10.02")
+

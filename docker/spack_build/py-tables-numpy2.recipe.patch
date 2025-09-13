@@ -1,0 +1,36 @@
+diff --git a/var/spack/repos/builtin/packages/py-tables/package.py b/var/spack/repos/builtin/packages/py-tables/package.py
+index 1111111..2222222 100644
+--- a/var/spack/repos/builtin/packages/py-tables/package.py
++++ b/var/spack/repos/builtin/packages/py-tables/package.py
+@@ -1,6 +1,7 @@
+ from spack.package import *
+ 
+ class PyTables(PythonPackage):
++    """Local override to allow NumPy 2.x when building via py-arkouda."""
+     homepage = "https://www.pytables.org/"
+     pypi     = "tables/tables-3.8.0.tar.gz"
+ 
+@@ -20,16 +21,39 @@ class PyTables(PythonPackage):
+     # (existing versions here)
+ 
+     # Core deps (existing lines)… 
+-    depends_on('py-numpy@1.9.3:1', type=('build', 'run'))
+-    depends_on('py-numexpr@2.6.2:', type=('build', 'run'))
++    # Default (older) constraint:
++    depends_on('py-numpy@1.9.3:1', type=('build', 'run'), when='@:3.8')
++    depends_on('py-numexpr@2.6.2:', type=('build', 'run'), when='@:3.8')
+ 
+     # (other deps unchanged: hdf5, blosc, lzo, bzip2, etc.)
+ 
++    # ---- Relax constraints for newer PyTables so NumPy 2 is valid ----
++    # PyTables 3.10+ works with NumPy 2.x and needs a newer numexpr.
++    # This line makes NumPy 1.25 *through* 2.x acceptable:
++    depends_on('py-numpy@1.25:', type=('build', 'run'), when='@3.10:')
++    # numexpr 2.10.2+ advertises NumPy 2 support:
++    depends_on('py-numexpr@2.10.2:', type=('build', 'run'), when='@3.10:')
++
++    # If the package had an unconditional old constraint at class-level,
++    # the when-guards above ensure it’s only applied to older versions.
++
+     # (rest of the recipe unchanged)
+
