@@ -1,0 +1,7 @@
+spack:
+  concretizer:
+    unify: true   # share a single instance of common deps
+  specs:
+  - pkgA@1.2
+  - pkgB ^pkgA@1.2
+
