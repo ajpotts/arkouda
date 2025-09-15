@@ -75,15 +75,14 @@ class Arkouda(MakefilePackage):
     depends_on("hdf5+hl~mpi", type=("build", "link", "run", "test"))
     depends_on("libiconv", type=("build", "link", "run", "test"))
     depends_on("libidn2", type=("build", "link", "run", "test"))
-    depends_on(
-        "arrow@:19 +parquet +snappy +zlib +brotli +bz2 +lz4 +zstd",
-        type=("build", "link", "run", "test"),
-    )
-
-    variant("lz4", default=True, description="Enable Parquet LZ4 support via Arrow")
-
-    # Ensure Arrow sees a CMake-built LZ4 (fixes the lz4Alt/LZ4_LIB cmake lookup)
-    depends_on("lz4 build_system=cmake", type=("build", "link"))
+    depends_on("arrow@:19 +parquet +snappy +zlib +brotli +bz2 +lz4 +zst ^lz4 build_system=cmake", type=("build", "link", "run", "test"),)
+    #depends_on(
+    #    "arrow@:19 +parquet +shared +snappy +zlib +brotli +bz2 +lz4 +zstd",
+    #    type=("build", "link", "run", "test"),
+    #)
+    #variant("lz4", default=True, description="Enable Parquet LZ4 support via Arrow")
+    ## Ensure Arrow sees a CMake-built LZ4 (fixes the lz4Alt/LZ4_LIB cmake lookup)
+    #depends_on("lz4 build_system=cmake", type=("build", "link"))
 
     requires("^chapel comm=none", when="~distributed")
     requires("^chapel +python-bindings", when="@2024.10.02:")
