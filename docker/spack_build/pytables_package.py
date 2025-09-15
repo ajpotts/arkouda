@@ -17,7 +17,7 @@ class PyTables(PythonPackage):
 
     license("BSD-3-Clause")
 
-    version("master", branch="master")
+    version("master", branch="master", submodules=True)
     version("3.9.0", sha256="27c9ca14c359d875caf945a6a527c12690e017650402dd17d8eb8b6caf6687d5")
     version("3.8.0", sha256="34f3fa2366ce20b18f1df573a77c1d27306ce1f2a41d9f9eff621b5192ea8788")
     version("3.7.0", sha256="e92a887ad6f2a983e564a69902de4a7645c30069fc01abd353ec5da255c5e1fe")

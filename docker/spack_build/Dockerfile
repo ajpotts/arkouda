@@ -60,13 +60,13 @@ RUN export ARKOUDA_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/
 # ---------------------------
 # Install Arkouda with patched Spack package
 # ---------------------------
-RUN source /opt/spack-develop/share/spack/setup-env.sh && spack -d -v install -j $(nproc) arkouda${RELEASE_VERSION}  
+#RUN source /opt/spack-develop/share/spack/setup-env.sh && spack -d -v install -j $(nproc) arkouda${RELEASE_VERSION}  
 
 # ---------------------------
 # Update the py-arkouda spack package:
 # ---------------------------
 RUN dnf install -y vim
-ENV CACHE=9
+ENV CACHE=10
 
 COPY py_arkouda-package.py /opt/py_arkouda-package.py
 COPY pytables_package.py /opt/pytables_package.py
@@ -79,46 +79,40 @@ RUN export PY_ARKOUDA_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/rep
 # Install Py-Arkouda with patched Spack package
 # ---------------------------
 
-#RUN source /opt/spack-develop/share/spack/setup-env.sh  \
-#    && export AK_HASH=$(spack find -lv arkouda${RELEASE_VERSION} | awk 'NR==2 {print $1}')  #\     
-#    && spack install py-arkouda${RELEASE_VERSION} ^/$AK_HASH
-
 RUN export PY_TABLES_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages | grep /py_tables/package.py) \
     &&  mv /opt/pytables_package.py $PY_TABLES_PACKAGE_FILE  \
     && echo "export PY_TABLES_PACKAGE_FILE=\"${PY_TABLES_PACKAGE_FILE}\"" >> ~/.bashrc.local
-    
-   
-
-# Create a local Spack repo (once)
-#RUN source /opt/spack-develop/share/spack/setup-env.sh  \
-#    && spack repo create /root/.spack/repos/overlay overlay \
-#    && spack repo add /root/.spack/repos/overlay
-
-# Bring in the current py-tables recipe to your overlay
-#RUN source /opt/spack-develop/share/spack/setup-env.sh  \
-#    && mkdir -p /root/.spack/repos/overlay/packages/py-tables \
-#    &&  spack location -r builtin >/tmp/builtin_root \
-#    &&  cp -r "$(cat /tmp/builtin_root)/packages/py-tables/"* /root/.spack/repos/overlay/packages/py-tables/
-
-# Apply the patch to the overlay recipe
-#RUN source /opt/spack-develop/share/spack/setup-env.sh  \
-#    && cd /root/.spack/repos/overlay/packages/py-tables \
-#    && patch -p1 < /opt/py-tables-numpy2.recipe.patch
-
-
-#RUN source /opt/spack-develop/share/spack/setup-env.sh  \
-#    # clean concretizer caches
-#    && spack clean -m       \       
-#    && spack spec -Il py-arkouda@2025.07.03 \
-#    # If that now solves, proceed:
-#    && spack install -j $(nproc) py-arkouda@2025.07.03
-
-
 
 #   First check the package is solvable:
-#RUN source /opt/spack-develop/share/spack/setup-env.sh && spack spec -Il py-arkouda${RELEASE_VERSION}  
+RUN source /opt/spack-develop/share/spack/setup-env.sh && spack spec -Il py-arkouda${RELEASE_VERSION}  
 
-#RUN source /opt/spack-develop/share/spack/setup-env.sh && spack -d -v install -j $(nproc) py-arkouda${RELEASE_VERSION}  
+#RUN source /opt/spack-develop/share/spack/setup-env.sh && spack -d -v install --keep-stage  -j $(nproc) py-arkouda${RELEASE_VERSION}  
+
+#####################
+
+# 1) Create & activate an environment
+RUN source /opt/spack-develop/share/spack/setup-env.sh && spack env create ark-env \
+    &&  spack env activate -p ark-env \
+
+# 2) Tell Spack to unify deps across all roots in this env
+    &&  spack config add "concretizer:unify:true"
+
+# (optional) Pin shared versions that matter for both
+    &&  spack config add "packages:python:require:@3.11" \
+    &&  spack config add "packages:py-numpy:require:@2:" \
+    &&  spack config add "packages:py-pandas:require:@2.2:" \
+    &&  spack config add "packages:py-tables:require:@3.10:"
+
+# 3) Add BOTH roots (same release tag here as an example)
+    &&  spack add arkouda@2025.07.03 ^chapel@2.3:+hdf5+zmq \
+    &&  spack add py-arkouda@2025.07.03
+
+# 4) Check the unified solve
+    &&  spack concretize -f \
+    &&  spack spec -Il
+
+# 5) Install (one build plan, shared deps)
+    &&  spack install -j $(nproc)
 
 
 
@@ -126,20 +120,20 @@ RUN export PY_TABLES_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repo
 ###################
 #   Install the old way for testing
 ##################
-#RUN git clone https://github.com/Bears-R-Us/arkouda.git
+RUN git clone https://github.com/Bears-R-Us/arkouda.git
 
-#WORKDIR /opt/arkouda
+WORKDIR /opt/arkouda
 # after all spack installs
-#ENV PATH="/usr/bin:/bin:/usr/sbin:/sbin:${PATH}"
+ENV PATH="/usr/bin:/bin:/usr/sbin:/sbin:${PATH}"
 
 
-#RUN cd /opt/arkouda && \
-#    if [ "$RELEASE_VERSION" = "main" ]; then \
-#        git checkout main ; \
-#    else \
-#        git fetch --tags && \
-#        git checkout $(git rev-list -n 1 "v${RELEASE_VERSION#@}") ; \
-#    fi
+RUN cd /opt/arkouda && \
+    if [ "$RELEASE_VERSION" = "main" ]; then \
+        git checkout main ; \
+    else \
+        git fetch --tags && \
+        git checkout $(git rev-list -n 1 "v${RELEASE_VERSION#@}") ; \
+    fi
 
 
 #RUN source /opt/spack-develop/share/spack/setup-env.sh && \
@@ -148,10 +142,14 @@ RUN export PY_TABLES_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repo
 
 
 #RUN source /opt/spack-develop/share/spack/setup-env.sh && \
-#    spack load python chapel && \
+#    spack load python chapel py-arkouda py-pytest c-blosc2 && \
 #    python3 -m ensurepip --default-pip && \ 
+#    export LD_LIBRARY_PATH=$(spack find -p c-blosc2 | awk '/c-blosc2/{print $2}')/lib64:$LD_LIBRARY_PATH  && \
+    # Install the plugin into THAT interpreter’s site-packages
+#    python3 -m pip install --upgrade pip && \ 
+#    python3 -m pip install pytest-env pytest-subtests && \ 
 #    python --version && \
-#    python3 -m pip install .[dev] && \ 
+#    #python3 -m pip install .[dev] && \ 
 #    python3 -m pytest -c pytest.ini --size=100  --skip_doctest="True"
 
 

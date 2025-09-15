@@ -55,14 +55,18 @@ class PyArkouda(PythonPackage):
 
     depends_on("py-pyarrow@:19", type=("build", "run"))
     depends_on('py-pyarrow@15:19', when='@2025.07.03:')
-    depends_on('py-pyarrow+parquet', when='@2025.07.03:', type=('build', 'run'))
+
+    
+
     depends_on("py-pyzmq@20:", type=("build", "run"))
     depends_on("py-scipy@:1.13.1", type=("build", "run"), when="@2024.06.21:2025.01.13")
     depends_on('py-scipy@1.14:', when='@2025.07.03:')
-    #depends_on("py-tables@3.7.0: +lzo +bzip2", type=("build", "run"), when="@:2024.06.21")
-    #depends_on("py-tables@3.8.0: +lzo +bzip2", type=("build", "run"), when="@2024.10.02:")
-    #depends_on('py-tables@3.10:', when='@2025.07.03:')  # only if your Spack has 3.10+ with NumPy-2 support
-    #depends_on("py-tables@3.10:", type=("build", "run"),when="@2025.07.03: ^py-numpy@2:")
+    depends_on("py-tables@3.7: +lzo +bzip2", type=("build", "run"), when="@:2024.06.21")
+    depends_on("py-tables@3.8: +lzo +bzip2", type=("build", "run"), when="@2024.10.02:")
+    depends_on('py-tables@3.10: +lzo +bzip2', when='@2025.07.03:')  # only if your Spack has 3.10+ with NumPy-2 support
+    depends_on('py-cloudpickle@2:', when='@2025.07.03:', type=('build','run'))
+
+
     depends_on("py-h5py@3.7.0:", type=("build", "run"))
     depends_on('py-h5py@3.11:', when='@2025.07.03:')
     depends_on('py-matplotlib@3.9:', when='@2025.07.03:')
@@ -72,5 +76,5 @@ class PyArkouda(PythonPackage):
     depends_on("py-pyfiglet", type=("build", "run"))
     depends_on("py-typeguard@2.10:2.12", type=("build", "run"))
     depends_on("py-tabulate", type=("build", "run"))
-    depends_on("py-pytest@6.0:", type=("build", "run"), when="@2024.10.02")
+    depends_on("py-pytest@6.0:", type=("build", "run"), when="@2024.10.02:")
 
