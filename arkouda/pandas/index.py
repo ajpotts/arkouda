@@ -86,7 +86,6 @@ __all__ = [
 
 if TYPE_CHECKING:
     from arkouda import cast as akcast
-
     from arkouda.categorical import Categorical
     from arkouda.pandas.series import Series
 else:

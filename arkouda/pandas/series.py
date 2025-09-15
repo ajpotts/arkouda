@@ -24,9 +24,7 @@ from arkouda.numpy.pdarraycreation import arange, array, full, zeros
 from arkouda.numpy.pdarraysetops import argsort, concatenate, in1d, indexof1d
 from arkouda.numpy.strings import Strings
 from arkouda.numpy.util import get_callback, is_float
-
 import arkouda.pandas.dataframe
-
 from arkouda.pandas.groupbyclass import GroupBy, groupable_element_type
 from arkouda.pandas.index import Index, MultiIndex
 

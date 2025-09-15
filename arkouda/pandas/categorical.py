@@ -89,9 +89,8 @@ if TYPE_CHECKING:
     from arkouda.client import generic_msg
     from arkouda.numpy import cast as akcast
     from arkouda.numpy import where
-    from arkouda.numpy.sorting import SortingAlgorithm
-
     from arkouda.numpy.segarray import SegArray
+    from arkouda.numpy.sorting import SortingAlgorithm
 
 else:
     generic_msg = TypeVar("generic_msg")

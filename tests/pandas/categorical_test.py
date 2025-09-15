@@ -4,7 +4,6 @@ import tempfile
 import numpy as np
 from pandas import Categorical as pd_Categorical
 import pytest
-
 from typeguard import TypeCheckError
 
 import arkouda as ak
