@@ -2,14 +2,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack_repo.builtin.build_systems.python import PythonPackage
-
 from spack.package import *
+from spack_repo.builtin.build_systems.python import PythonPackage
 
 
 class PyTables(PythonPackage):
     """PyTables is a package for managing hierarchical datasets and designed to
-    efficiently and easily cope with extremely large amounts of data."""
+    efficiently and easily cope with extremely large amounts of data.
+    """
 
     homepage = "https://www.pytables.org/"
     pypi = "tables/tables-3.6.1.tar.gz"
@@ -50,10 +50,10 @@ class PyTables(PythonPackage):
     depends_on("py-numpy@1.19:", when="@3.8:", type=("build", "run"))
     depends_on("py-numpy@1.9.3:", type=("build", "run"))
     # https://github.com/PyTables/PyTables/issues/1083
-    depends_on("py-numpy@:1", type=("build", "run"), when='@:3.9')
-    depends_on('py-numpy@1.25:', type=('build', 'run'), when='@3.10:')
+    depends_on("py-numpy@:1", type=("build", "run"), when="@:3.9")
+    depends_on("py-numpy@1.25:", type=("build", "run"), when="@3.10:")
     depends_on("py-numexpr@2.6.2:", type=("build", "run"))
-    depends_on('py-numexpr@2.10.2:', type=('build', 'run'), when='@3.10:')
+    depends_on("py-numexpr@2.10.2:", type=("build", "run"), when="@3.10:")
     depends_on("py-packaging", when="@3.7:", type=("build", "run"))
     depends_on("py-py-cpuinfo", when="@3.8:", type=("build", "run"))
     depends_on("py-blosc2@2.2.8:", when="@3.9:", type=("build", "run"))
