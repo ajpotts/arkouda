@@ -26,8 +26,7 @@ class Arkouda(MakefilePackage):
     license("MIT")
 
     # A list of GitHub accounts to notify when the package is updated.
-    # TODO: add arkouda devs github account
-    maintainers("ajpotts", "arezaii")
+    maintainers("1RyanK", "ajpotts", "arezaii", "drculhane", "jaketrookman")
 
     version("main", branch="main")
 
@@ -36,7 +35,6 @@ class Arkouda(MakefilePackage):
     version("2025.01.13", sha256="bb53bab92fedf43a47aadd9195eeedebe5f806d85887fa508fb5c69f2a4544ea")
     version("2024.12.06", sha256="92ca11319a9fdeeb8879afbd1e0c9c1b1d14aa2496781c1481598963d3c37b46")
     version("2024.10.02", sha256="00671a89a08be57ff90a94052f69bfc6fe793f7b50cf9195dd7ee794d6d13f23")
-    version("2024.06.21", sha256="ab7f753befb3a0b8e27a3d28f3c83332d2c6ae49678877a7456f0fcfe42df51c")
 
     variant(
         "distributed",
@@ -54,11 +52,9 @@ class Arkouda(MakefilePackage):
         when="@2024.10.02:2025.01.13",
         type=("build", "link", "run", "test"),
     )
-    depends_on("chapel@2.1 +hdf5 +zmq", when="@2024.06.21", type=("build", "link", "run", "test"))
 
     depends_on("cmake@3.13.4:", type="build")
     depends_on("python@3.9:", type=("build", "link", "run", "test"))
-    depends_on("py-tables", type=("build", "run"), when="@2025.07.03:")
     depends_on("libzmq@4.2.5:", type=("build", "link", "run", "test"))
     depends_on("hdf5+hl~mpi", type=("build", "link", "run", "test"))
     depends_on("libiconv", type=("build", "link", "run", "test"))
@@ -88,7 +84,6 @@ class Arkouda(MakefilePackage):
     )
 
     # Some systems need explicit -fPIC flag when building the Arrow functions
-    patch("makefile-fpic-2024.06.21.patch", when="@2024.06.21")
     patch("makefile-fpic-2024.10.02.patch", when="@2024.10.02:")
 
     sanity_check_is_file = [join_path("bin", "arkouda_server")]
