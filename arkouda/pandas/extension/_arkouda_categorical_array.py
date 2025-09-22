@@ -52,8 +52,6 @@ class ArkoudaCategoricalArray(ArkoudaBaseArray, ExtensionArray):
             return self._data[idx]
         return ArkoudaCategoricalArray(self._data[idx])
 
-    def __len__(self):
-        return int(self._data.size)
 
     def isna(self):
         return ak.zeros(self._data.size, dtype=ak.bool)
