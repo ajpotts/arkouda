@@ -3,14 +3,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
 from spack_repo.builtin.build_systems.makefile import MakefilePackage
+
+from spack.package import *
 
 
 class Arkouda(MakefilePackage):
     """Arkouda is a NumPy-like library for distributed data with a focus on
-    large-scale data science applications.
-    """
+    large-scale data science applications."""
 
     homepage = "https://github.com/Bears-R-Us/arkouda"
 
@@ -30,11 +30,21 @@ class Arkouda(MakefilePackage):
 
     version("main", branch="main")
 
-    version("2025.08.20", sha256="3e305930905397ff3a7a28a5d8cc2c9adca4194ca7f6ee51f749f427a2dea92c")
-    version("2025.07.03", sha256="eb888fac7b0eec6b4f3bfa0bfe14e5c8f15b449286e84c45ba95c44d8cd3917a")
-    version("2025.01.13", sha256="bb53bab92fedf43a47aadd9195eeedebe5f806d85887fa508fb5c69f2a4544ea")
-    version("2024.12.06", sha256="92ca11319a9fdeeb8879afbd1e0c9c1b1d14aa2496781c1481598963d3c37b46")
-    version("2024.10.02", sha256="00671a89a08be57ff90a94052f69bfc6fe793f7b50cf9195dd7ee794d6d13f23")
+    version(
+        "2025.08.20", sha256="3e305930905397ff3a7a28a5d8cc2c9adca4194ca7f6ee51f749f427a2dea92c"
+    )
+    version(
+        "2025.07.03", sha256="eb888fac7b0eec6b4f3bfa0bfe14e5c8f15b449286e84c45ba95c44d8cd3917a"
+    )
+    version(
+        "2025.01.13", sha256="bb53bab92fedf43a47aadd9195eeedebe5f806d85887fa508fb5c69f2a4544ea"
+    )
+    version(
+        "2024.12.06", sha256="92ca11319a9fdeeb8879afbd1e0c9c1b1d14aa2496781c1481598963d3c37b46"
+    )
+    version(
+        "2024.10.02", sha256="00671a89a08be57ff90a94052f69bfc6fe793f7b50cf9195dd7ee794d6d13f23"
+    )
 
     variant(
         "distributed",
@@ -43,15 +53,16 @@ class Arkouda(MakefilePackage):
     )
 
     depends_on(
-        "chapel@2.0:2.4 +hdf5 +zmq",
+        "chapel@2.0:2.4 +hdf5 +zmq +python-bindings",
         when="@2025.07.03:2025.08.20",
         type=("build", "link", "run", "test"),
     )
     depends_on(
-        "chapel@2.0:2.2 +hdf5 +zmq",
+        "chapel@2.0:2.2 +hdf5 +zmq +python-bindings",
         when="@2024.10.02:2025.01.13",
         type=("build", "link", "run", "test"),
     )
+    conflicts('^llvm@:14', msg='arkouda requires LLVM >= 16', when="@2024.10.02:")
 
     depends_on("cmake@3.13.4:", type="build")
     depends_on("python@3.9:", type=("build", "link", "run", "test"))
@@ -59,22 +70,13 @@ class Arkouda(MakefilePackage):
     depends_on("hdf5+hl~mpi", type=("build", "link", "run", "test"))
     depends_on("libiconv", type=("build", "link", "run", "test"))
     depends_on("libidn2", type=("build", "link", "run", "test"))
-    # constrain arrow itself
     depends_on("arrow@:19+brotli+bz2+lz4+parquet+snappy+zlib+zstd", type=("build", "link", "run"))
 
     # force lz4 to use cmake (add as a direct dep to control its variant)
     depends_on("lz4 build_system=cmake", type="build")  # or ("build","link") if needed
 
-    # depends_on(
-    #    "arrow@:19 +parquet +shared +snappy +zlib +brotli +bz2 +lz4 +zstd",
-    #    type=("build", "link", "run", "test"),
-    # )
-    # variant("lz4", default=True, description="Enable Parquet LZ4 support via Arrow")
-    ## Ensure Arrow sees a CMake-built LZ4 (fixes the lz4Alt/LZ4_LIB cmake lookup)
-    # depends_on("lz4 build_system=cmake", type=("build", "link"))
-
     requires("^chapel comm=none", when="~distributed")
-    requires("^chapel +python-bindings", when="@2024.10.02:")
+    #requires("^chapel +python-bindings", when="@2024.10.02:")
     requires(
         "^chapel comm=gasnet",
         "^chapel comm=ugni",
