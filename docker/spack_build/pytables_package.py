@@ -2,14 +2,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
 from spack_repo.builtin.build_systems.python import PythonPackage
+
+from spack.package import *
 
 
 class PyTables(PythonPackage):
     """PyTables is a package for managing hierarchical datasets and designed to
-    efficiently and easily cope with extremely large amounts of data.
-    """
+    efficiently and easily cope with extremely large amounts of data."""
 
     homepage = "https://www.pytables.org/"
     pypi = "tables/tables-3.6.1.tar.gz"
@@ -18,6 +18,7 @@ class PyTables(PythonPackage):
     license("BSD-3-Clause")
 
     version("master", branch="master", submodules=True)
+    version("3.10.2", sha256="2544812a7186fadba831d6dd34eb49ccd788d6a83f4e4c2b431b835b6796c910")
     version("3.9.0", sha256="27c9ca14c359d875caf945a6a527c12690e017650402dd17d8eb8b6caf6687d5")
     version("3.8.0", sha256="34f3fa2366ce20b18f1df573a77c1d27306ce1f2a41d9f9eff621b5192ea8788")
     version("3.7.0", sha256="e92a887ad6f2a983e564a69902de4a7645c30069fc01abd353ec5da255c5e1fe")

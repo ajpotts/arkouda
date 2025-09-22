@@ -23,13 +23,15 @@ SHELL ["/bin/bash", "-c"]
 # --allowerasing helps resolve curl-minimal and other conflicts
 # ---------------------------
 RUN dnf install -y --allowerasing \
-    git gcc gcc-c++ gcc-gfortran make cmake lsof \
+    gcc gcc-c++ gcc-gfortran \
+    git  make cmake lsof \
     curl tar gzip wget which \
     findutils gawk patch file less hostname unzip \
     diffutils procps-ng libcurl-devel bzip2 \
     ca-certificates && \
     dnf clean all && \
     update-ca-trust
+
 
 # ---------------------------
 # Clone Spack and set environment
@@ -41,8 +43,8 @@ ENV SPACK_ROOT=/opt/spack-develop
 ENV PATH=$SPACK_ROOT/bin:$PATH
 ENV SSL_CERT_FILE=/etc/pki/tls/certs/ca-bundle.crt
 RUN . /opt/spack-develop/share/spack/setup-env.sh \
- && spack compiler find \
- && spack external find --not-buildable gcc binutils glibc
+ && spack compiler find 
+# && spack external find --not-buildable gcc binutils glibc
 
 
 # ---------------------------
@@ -84,35 +86,30 @@ RUN export PY_TABLES_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repo
     && echo "export PY_TABLES_PACKAGE_FILE=\"${PY_TABLES_PACKAGE_FILE}\"" >> ~/.bashrc.local
 
 #   First check the package is solvable:
-RUN source /opt/spack-develop/share/spack/setup-env.sh && spack spec -Il py-arkouda${RELEASE_VERSION}  
+#RUN source /opt/spack-develop/share/spack/setup-env.sh && spack spec -Il py-arkouda${RELEASE_VERSION}  
 
 #RUN source /opt/spack-develop/share/spack/setup-env.sh && spack -d -v install --keep-stage  -j $(nproc) py-arkouda${RELEASE_VERSION}  
 
 #####################
 
 # 1) Create & activate an environment
-RUN source /opt/spack-develop/share/spack/setup-env.sh && spack env create ark-env \
-    &&  spack env activate -p ark-env \
+#RUN source /opt/spack-develop/share/spack/setup-env.sh && spack env create ark-env \
+#    &&  spack env activate -p ark-env \
+#    # 2) Tell Spack to unify deps across all roots in this env
+#    &&  spack config add "concretizer:unify:true" \
 
-    # 2) Tell Spack to unify deps across all roots in this env
-    &&  spack config add "concretizer:unify:true" \
+    # Add a build env var just for py-numpy in THIS env
+#    &&  export NPY_DISABLE_CPU_FEATURES='AVX512F,AVX512CD,AVX512VL,AVX512BW,AVX512DQ,AVX512VNNI,AVX512IFMA,AVX512VBMI,AVX512VBMI2,AVX512BITALG,AVX512VPOPCNTDQ,AVX512FP16'
 
-# (optional) Pin shared versions that matter for both
-    &&  spack config add "packages:python:require:['@3.11']" \
-    &&  spack config add 'packages:py-numpy:require:["@2:"]' \
-    &&  spack config add 'packages:py-pandas:require:["@2.2:"]' \
-    &&  spack config add 'packages:py-tables:require:["@3.10:"]'  \
-
-# 3) Add BOTH roots (same release tag here as an example)
-    &&  spack add arkouda@2025.07.03 ^chapel@2.3:+hdf5+zmq  \
-    &&  spack add py-arkouda@2025.07.03  \
-
-# 4) Check the unified solve
-    &&  spack concretize -f  \
-    &&  spack spec -Il  \
-
-# 5) Install (one build plan, shared deps)
-    &&  spack install -j $(nproc)
+#    # 3) Add BOTH roots (same release tag here as an example)
+#    &&  spack add arkouda${RELEASE_VERSION}  \
+#    &&  spack add py-arkouda${RELEASE_VERSION}  \
+#    # 4) Check the unified solve
+#    &&  spack concretize -f  \
+#    &&  spack spec -Il  
+    #\
+    # 5) Install (one build plan, shared deps)
+    #&&  spack install -j $(nproc)
 
 
 
@@ -136,20 +133,20 @@ RUN cd /opt/arkouda && \
     fi
 
 
-RUN source /opt/spack-develop/share/spack/setup-env.sh && \
-    spack load arkouda chapel python && \
-    ln -s $(spack location -i arkouda)/bin/arkouda_server arkouda_server
+#RUN source /opt/spack-develop/share/spack/setup-env.sh && \
+#    spack load arkouda chapel python && \
+#    ln -s $(spack location -i arkouda)/bin/arkouda_server arkouda_server
 
 
-RUN source /opt/spack-develop/share/spack/setup-env.sh && \
-    spack load python chapel py-arkouda py-pytest c-blosc2 && \
-    python3 -m ensurepip --default-pip && \ 
-    export LD_LIBRARY_PATH=$(spack find -p c-blosc2 | awk '/c-blosc2/{print $2}')/lib64:$LD_LIBRARY_PATH  && \
+#RUN source /opt/spack-develop/share/spack/setup-env.sh && \
+#    spack load python chapel py-arkouda py-pytest c-blosc2 && \
+#    python3 -m ensurepip --default-pip && \ 
+#    export LD_LIBRARY_PATH=$(spack find -p c-blosc2 | awk '/c-blosc2/{print $2}')/lib64:$LD_LIBRARY_PATH  && \
     # Install the plugin into THAT interpreter’s site-packages
-    python3 -m pip install --upgrade pip && \ 
-    python3 -m pip install pytest-env pytest-subtests && \ 
-    python --version && \
-    python3 -m pytest -c pytest.ini --size=100  --skip_doctest="True"
+#    python3 -m pip install --upgrade pip && \ 
+#    python3 -m pip install pytest-env pytest-subtests && \ 
+#    python --version && \
+#    python3 -m pytest -c pytest.ini --size=100  --skip_doctest="True"
 
 
 
@@ -158,7 +155,7 @@ RUN source /opt/spack-develop/share/spack/setup-env.sh && \
 # ---------------------------
 WORKDIR /root
 
-RUN env >> ~/.bashrc.local && echo 'source ~/.bashrc.local' >> ~/.bashrc && echo 'source /opt/spack-develop/share/spack/setup-env.sh' >> ~/.bashrc.local
+RUN echo 'source ~/.bashrc.local' >> ~/.bashrc && echo 'source /opt/spack-develop/share/spack/setup-env.sh' >> ~/.bashrc.local
 
 CMD ["/bin/bash"]
 
