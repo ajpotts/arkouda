@@ -46,16 +46,6 @@ class ArkoudaArray(ArkoudaBaseArray, ExtensionArray):
             raise TypeError("Expected an Arkouda pdarray")
         self._data = data
 
-    # in _arkouda_array.py
-
-    @classmethod
-    def _from_sequence(cls, scalars, dtype=None, copy=False):
-        # If pandas passes our own EA dtype, ignore it and infer from data
-        if isinstance(dtype, ArkoudaDtype):
-            dtype = None
-        # If scalars is already a numpy array, we can preserve its dtype
-        return cls(ak_array(scalars, dtype=dtype, copy=copy))
-
     def __getitem__(self, key):
         # Convert numpy boolean mask to arkouda pdarray
         if isinstance(key, np.ndarray):
@@ -96,9 +86,6 @@ class ArkoudaArray(ArkoudaBaseArray, ExtensionArray):
             value = ak_array(value)
 
         self._data[key] = value
-
-    def __len__(self):
-        return int(self._data.size)
 
     def astype(self, dtype, copy: bool = False):
         # Always hand back a real object-dtype ndarray when object is requested
