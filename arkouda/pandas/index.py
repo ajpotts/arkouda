@@ -95,7 +95,7 @@ else:
     Categorical = TypeVar("Categorical")
 
 
-class Index:
+class Index(pd.Index):
     """
     Sequence used for indexing and alignment.
 
