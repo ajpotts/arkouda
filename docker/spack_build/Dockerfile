@@ -46,6 +46,7 @@ RUN . /opt/spack-develop/share/spack/setup-env.sh \
  && spack compiler find 
 # && spack external find --not-buildable gcc binutils glibc
 
+RUN . /opt/spack-develop/share/spack/setup-env.sh && spack find gcc@12.3.0 || spack install gcc@12.3.0
 
 # ---------------------------
 # Update the arkouda spack package:
@@ -57,6 +58,7 @@ RUN export ARKOUDA_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/
     &&  mv /opt/arkouda-package.py $ARKOUDA_PACKAGE_FILE  \
     && touch ~/.bashrc.local \
     && echo "export ARKOUDA_PACKAGE_FILE=\"${ARKOUDA_PACKAGE_FILE}\"" >> ~/.bashrc.local
+
 
 
 # ---------------------------
@@ -72,6 +74,7 @@ ENV CACHE=10
 
 COPY py_arkouda-package.py /opt/py_arkouda-package.py
 COPY pytables_package.py /opt/pytables_package.py
+COPY chapel_package.py /opt/chapel_package.py
 
 RUN export PY_ARKOUDA_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages | grep /py_arkouda/package.py) \
     &&  mv /opt/py_arkouda-package.py $PY_ARKOUDA_PACKAGE_FILE  \
@@ -84,6 +87,11 @@ RUN export PY_ARKOUDA_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/rep
 RUN export PY_TABLES_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages | grep /py_tables/package.py) \
     &&  mv /opt/pytables_package.py $PY_TABLES_PACKAGE_FILE  \
     && echo "export PY_TABLES_PACKAGE_FILE=\"${PY_TABLES_PACKAGE_FILE}\"" >> ~/.bashrc.local
+
+
+RUN export CHAPEL_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages | grep /chapel/package.py) \
+    &&  mv /opt/chapel_package.py $CHAPEL_PACKAGE_FILE  \
+    && echo "export CHAPEL_PACKAGE_FILE=\"${CHAPEL_PACKAGE_FILE}\"" >> ~/.bashrc.local
 
 #   First check the package is solvable:
 #RUN source /opt/spack-develop/share/spack/setup-env.sh && spack spec -Il py-arkouda${RELEASE_VERSION}  

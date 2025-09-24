@@ -76,7 +76,7 @@ class Arkouda(MakefilePackage):
     depends_on("lz4 build_system=cmake", type="build")  # or ("build","link") if needed
 
     requires("^chapel comm=none", when="~distributed")
-    #requires("^chapel +python-bindings", when="@2024.10.02:")
+    requires("^chapel +python-bindings", when="@2024.10.02:")
     requires(
         "^chapel comm=gasnet",
         "^chapel comm=ugni",
