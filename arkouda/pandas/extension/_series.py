@@ -83,20 +83,20 @@ class ArkoudaSeries(pd.Series):
     def _constructor(self):
         return ArkoudaSeries
 
+    def __init__(self, data=None, index=None, dtype=None, name=None, copy=False, fastpath=False):
+        # Convert Arkouda input to your ExtensionArray and carry its dtype
+        if isinstance(data, (pdarray, ArkoudaInt64Array)):
+            data = _to_ak_extarray(data)
+            dtype = data.dtype
+        super().__init__(data=data, index=index, dtype=dtype, name=name, copy=copy, fastpath=fastpath)
+
+
     @property
     def _constructor_expanddim(self):
         # If you later create an ArkoudaDataFrame subclass, return it here.
         return pd.DataFrame
 
-    def __new__(cls, data=None, index=None, dtype=None, name=None, copy=False, fastpath=False):
-        # If the user passed an Arkouda array, coerce to your ExtensionArray
-        if isinstance(data, (pdarray, ArkoudaInt64Array)):
-            data = _to_ak_extarray(data)
-            # Important: keep dtype as your ExtensionDtype
-            dtype = data.dtype
-        return super().__new__(
-            cls, data=data, index=index, dtype=dtype, name=name, copy=copy, fastpath=fastpath
-        )
+
 
     # -------- ergonomics --------
     @classmethod
