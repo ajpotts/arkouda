@@ -56,8 +56,6 @@ if TYPE_CHECKING:
     from arkouda.client import generic_msg, get_config, get_mem_used
     from arkouda.pandas.index import Index
     from arkouda.pandas.series import Series
-
-
 else:
     Index = TypeVar("Index")
     Series = TypeVar("Series")

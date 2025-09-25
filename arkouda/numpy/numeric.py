@@ -1982,7 +1982,7 @@ def _str_cat_where(
 
 @typechecked
 def where(
-    condition: Union[pdarray, List],
+    condition: pdarray,
     A: Union[str, numeric_scalars, pdarray, Strings, Categorical],  # type: ignore
     B: Union[str, numeric_scalars, pdarray, Strings, Categorical],  # type: ignore
 ) -> Union[pdarray, Strings, Categorical]:  # type: ignore
@@ -2080,8 +2080,6 @@ def where(
 
     #   The code below creates a command string for wherevv, wherevs, wheresv or wheress,
     #   based on A and B.
-
-    condition = type_cast(pdarray, condition if isinstance(condition, pdarray) else array(condition))
 
     if isinstance(A, pdarray) and isinstance(B, pdarray):
         cmdstring = f"wherevv<{condition.ndim},{A.dtype},{B.dtype}>"
