@@ -51,6 +51,7 @@ from arkouda.numpy.dtypes import bigint
 from arkouda.numpy.dtypes import bool as ak_bool
 from arkouda.numpy.dtypes import dtype as ak_dtype
 from arkouda.numpy.dtypes import float64, int64, str_, uint8, uint64
+from pandas.api.extensions import  register_extension_dtype
 
 # ---- Base dtype -------------------------------------------------------------
 
@@ -199,11 +200,8 @@ class _ArkoudaBaseDtype(ExtensionDtype):
 # ---- Concrete dtypes --------------------------------------------------------
 
 
-#   TODO: register the dtypes
-#   Registering them could override default pandas behavior,
-#   so we should wait until the extension arrays are production ready and
-#   fully tested.
-# @register_extension_dtype
+
+@register_extension_dtype
 class ArkoudaInt64Dtype(_ArkoudaBaseDtype):
     """
     Extension dtype for Arkouda-backed 64-bit integers.
@@ -263,7 +261,7 @@ class ArkoudaInt64Dtype(_ArkoudaBaseDtype):
         return ArkoudaArray
 
 
-# @register_extension_dtype
+@register_extension_dtype
 class ArkoudaUint64Dtype(_ArkoudaBaseDtype):
     """
     Arkouda-backed unsigned 64-bit integer dtype.
@@ -323,7 +321,7 @@ class ArkoudaUint64Dtype(_ArkoudaBaseDtype):
         return ArkoudaArray
 
 
-# @register_extension_dtype
+@register_extension_dtype
 class ArkoudaUint8Dtype(_ArkoudaBaseDtype):
     """
     Arkouda-backed unsigned 8-bit integer dtype.
@@ -368,7 +366,7 @@ class ArkoudaUint8Dtype(_ArkoudaBaseDtype):
         return ArkoudaArray
 
 
-# @register_extension_dtype
+@register_extension_dtype
 class ArkoudaFloat64Dtype(_ArkoudaBaseDtype):
     """
     Arkouda-backed 64-bit floating-point dtype.
@@ -406,7 +404,7 @@ class ArkoudaFloat64Dtype(_ArkoudaBaseDtype):
         return ArkoudaArray
 
 
-# @register_extension_dtype
+@register_extension_dtype
 class ArkoudaBoolDtype(_ArkoudaBaseDtype):
     """
     Arkouda-backed boolean dtype.
@@ -445,7 +443,7 @@ class ArkoudaBoolDtype(_ArkoudaBaseDtype):
         return ArkoudaArray
 
 
-# @register_extension_dtype
+@register_extension_dtype
 class ArkoudaBigintDtype(_ArkoudaBaseDtype):
     """
     Arkouda-backed arbitrary-precision integer dtype.
@@ -483,7 +481,7 @@ class ArkoudaBigintDtype(_ArkoudaBaseDtype):
         return ArkoudaArray
 
 
-# @register_extension_dtype
+@register_extension_dtype
 class ArkoudaStringDtype(_ArkoudaBaseDtype):
     """
     Arkouda-backed string dtype.
@@ -521,7 +519,7 @@ class ArkoudaStringDtype(_ArkoudaBaseDtype):
         return ArkoudaStringArray
 
 
-# @register_extension_dtype
+@register_extension_dtype
 class ArkoudaCategoricalDtype(_ArkoudaBaseDtype):
     """
     Arkouda-backed categorical dtype.
