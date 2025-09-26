@@ -5,8 +5,9 @@ from functools import reduce
 import json
 from math import ceil
 from sys import modules
-from typing import TYPE_CHECKING, List, Optional, Tuple, TypeVar, Union,  overload, Literal
+from typing import TYPE_CHECKING, List, Literal, Optional, Tuple, TypeVar, Union
 from typing import cast as type_cast
+from typing import overload
 
 import numpy as np
 from typeguard import typechecked
@@ -2494,7 +2495,7 @@ class pdarray:
         ret_list = json.loads(generic_msg(cmd=cmd, args={"array": self}))
         return list(reversed([create_pdarray(a) for a in ret_list]))
 
-    def reshape(self, *shape):
+    def reshape(self, *shape) -> pdarray:
         """
         Gives a new shape to an array without changing its data.
 
@@ -2622,7 +2623,9 @@ class pdarray:
             # convert uint pdarrays into object ndarrays and recombine
             if self.ndim > 1:
                 arrs = [n.to_ndarray().astype("O") for n in self.bigint_to_uint_arrays()]
-                return np.array(builtins.sum(n << (64 * (len(arrs) - i - 1)) for i, n in enumerate(arrs)))
+                return np.array(
+                    builtins.sum(n << (64 * (len(arrs) - i - 1)) for i, n in enumerate(arrs))
+                )
             arrs = [n.to_ndarray().astype("O") for n in self.bigint_to_uint_arrays()]
             return np.array(builtins.sum(n << (64 * (len(arrs) - i - 1)) for i, n in enumerate(arrs)))
 
@@ -2771,7 +2774,7 @@ class pdarray:
         self,
         prefix_path: str,
         dataset: str = "array",
-        mode: Literal['truncate', 'append'] = "truncate",
+        mode: Literal["truncate", "append"] = "truncate",
         compression: Optional[str] = None,
     ) -> str:
         """
@@ -2854,8 +2857,8 @@ class pdarray:
         self,
         prefix_path: str,
         dataset: str = "array",
-        mode: Literal['truncate', 'append'] = "truncate",
-        file_type: Literal['single', 'distribute'] = "distribute",
+        mode: Literal["truncate", "append"] = "truncate",
+        file_type: Literal["single", "distribute"] = "distribute",
     ) -> str:
         """
         Save the pdarray to HDF5.
@@ -3185,7 +3188,7 @@ class pdarray:
         if self.dtype == akbool:
             from arkouda.numpy import cast as ak_cast
 
-            return [type_cast(pdarray,ak_cast(self, akint64))]
+            return [type_cast(pdarray, ak_cast(self, akint64))]
         elif self.dtype in (akint64, akuint64):
             # Integral pdarrays are their own grouping keys
             return [self]
@@ -3531,7 +3534,7 @@ def _common_reduction(
         else:
             from arkouda.numpy import squeeze
 
-            return squeeze(type_cast(pdarray,result), axis)
+            return squeeze(type_cast(pdarray, result), axis)
 
 
 # helper function for var, std
@@ -3643,10 +3646,13 @@ def _common_index_reduction(
 
     if pda.ndim == 1 or axis is None:
         return parse_single_value(
-            type_cast(str,generic_msg(
-                cmd=f"{kind}All<{pda.dtype.name},{pda.ndim}>",
-                args={"x": pda},
-            ))
+            type_cast(
+                str,
+                generic_msg(
+                    cmd=f"{kind}All<{pda.dtype.name},{pda.ndim}>",
+                    args={"x": pda},
+                ),
+            )
         )
     elif isinstance(axis, int):
         result = create_pdarray(
@@ -4055,9 +4061,14 @@ def cov(x: pdarray, y: pdarray) -> np.float64:
     """
     from arkouda.client import generic_msg
 
-    return np.float64(parse_single_value(type_cast(str,
-        generic_msg(cmd=f"cov<{x.dtype},{x.ndim},{y.dtype},{y.ndim}>", args={"x": x, "y": y}))
-    ))
+    return np.float64(
+        parse_single_value(
+            type_cast(
+                str,
+                generic_msg(cmd=f"cov<{x.dtype},{x.ndim},{y.dtype},{y.ndim}>", args={"x": x, "y": y}),
+            )
+        )
+    )
 
 
 @typechecked
@@ -4106,9 +4117,14 @@ def corr(x: pdarray, y: pdarray) -> np.float64:
     """
     from arkouda.client import generic_msg
 
-    return np.float64(parse_single_value(type_cast(str,
-        generic_msg(cmd=f"corr<{x.dtype},{x.ndim},{y.dtype},{y.ndim}>", args={"x": x, "y": y})
-    )))
+    return np.float64(
+        parse_single_value(
+            type_cast(
+                str,
+                generic_msg(cmd=f"corr<{x.dtype},{x.ndim},{y.dtype},{y.ndim}>", args={"x": x, "y": y}),
+            )
+        )
+    )
 
 
 @typechecked
@@ -4179,16 +4195,16 @@ def divmod(
         return x // y, x % y  # type: ignore
     elif where is False:
         if not isinstance(x, pdarray) and isinstance(y, pdarray):
-            x = type_cast(pdarray,full(y.size, x))
+            x = type_cast(pdarray, full(y.size, x))
         return x, x  # type: ignore
     else:
         div = type_cast(pdarray, x // y)
         mod = type_cast(pdarray, x % y)
-        assert isinstance(where,pdarray)
+        assert isinstance(where, pdarray)
         assert isinstance(x, pdarray)
         return (
-            type_cast(pdarray,akwhere(where, div, type_cast(pdarray, ak_cast(x, div.dtype)))),
-            type_cast(pdarray,akwhere(where, mod, type_cast(pdarray,ak_cast(x, mod.dtype)))),
+            type_cast(pdarray, akwhere(where, div, type_cast(pdarray, ak_cast(x, div.dtype)))),
+            type_cast(pdarray, akwhere(where, mod, type_cast(pdarray, ak_cast(x, mod.dtype)))),
         )
 
 
@@ -4809,7 +4825,7 @@ def power(
         exp = pda**pwr
         assert isinstance(where, pdarray)
         casted_pda = ak_cast(pda, exp.dtype)
-        assert isinstance(casted_pda,pdarray)
+        assert isinstance(casted_pda, pdarray)
         result = akwhere(where, exp, casted_pda)
         assert isinstance(result, pdarray)
         return result

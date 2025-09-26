@@ -2,9 +2,9 @@ import warnings
 
 import numpy as np
 import pytest
+from typeguard import TypeCheckError
 
 import arkouda as ak
-from typeguard import TypeCheckError
 
 
 warnings.simplefilter("always", UserWarning)
