@@ -647,7 +647,7 @@ class TestRandom:
         with pytest.raises(ValueError, match="low >= high"):
             ak.random.randint(low=1, high=1, size=10, dtype=ak.bool_)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             ak.random.randint(0, 1, "1000")
 
         with pytest.raises(TypeCheckError):

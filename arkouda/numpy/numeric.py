@@ -1,12 +1,16 @@
+from __future__ import annotations
+
 from enum import Enum
 import json
-from typing import TYPE_CHECKING, List, Optional, Sequence, Tuple, TypeVar, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Sequence, Tuple, TypeVar, Union
 from typing import cast as type_cast
-from typing import no_type_check
+from typing import no_type_check, overload
 
 import numpy as np
 from typeguard import typechecked
+from typing_extensions import Literal, Never, TypeAlias
 
+from arkouda.dtypes import bigint, str_  # ak.str_, etc.
 from arkouda.groupbyclass import GroupBy, groupable
 from arkouda.numpy.dtypes import ARKOUDA_SUPPORTED_INTS, _datatype_check, bigint
 from arkouda.numpy.dtypes import bool_ as ak_bool
@@ -31,7 +35,22 @@ from arkouda.numpy.pdarrayclass import any as ak_any
 from arkouda.numpy.pdarraycreation import array, linspace, scalar_array
 from arkouda.numpy.sorting import sort
 from arkouda.numpy.strings import Strings
+from arkouda.pandas.categorical import Categorical  # type: ignore
 
+# ---- Arkouda types (import or forward-declare under TYPE_CHECKING) ----
+from arkouda.pdarrayclass import pdarray
+from arkouda.strings import Strings
+
+
+# ---- Helper aliases used only for typing the overloads ----
+StringsLike: TypeAlias = Union[Literal["Strings", "str"], type[Strings], type[str_]]
+CategoricalLike: TypeAlias = Union[Literal["Categorical"], type[Categorical]]
+
+# NOTE: This is a “good enough” stand-in: any dtype target that is *not*
+# a StringsLike or CategoricalLike will be treated as “numeric/bool” here.
+# If you have concrete ak dtypes (ak.int64, ak.float64, etc.), feel free
+# to union them in to make this even tighter.
+NumericLike: TypeAlias = Union[np.dtype, type, str, bigint]
 
 NUMERIC_TYPES = [ak_int64, ak_float64, ak_bool, ak_uint64]
 ALLOWED_PERQUANT_METHODS = [
@@ -138,12 +157,87 @@ def _merge_where(new_pda, where, ret):
     return new_pda
 
 
-@typechecked
+# ----------------- Overloads -----------------
+
+
+# pdarray -> Strings, if target is strings-like
+@overload
 def cast(
-    pda: Union[pdarray, Strings, Categorical],  # type: ignore
+    pda: pdarray,
+    dt: StringsLike,
+    errors: ErrorMode = ...,
+) -> Strings: ...
+
+
+# pdarray -> pdarray, otherwise
+@overload
+def cast(
+    pda: pdarray,
+    dt: NumericLike,
+    errors: ErrorMode = ...,
+) -> pdarray: ...
+
+
+# Strings -> Categorical
+@overload
+def cast(
+    pda: Strings,
+    dt: CategoricalLike,
+    errors: ErrorMode = ...,
+) -> Categorical: ...
+
+
+# Strings -> Strings
+@overload
+def cast(
+    pda: Strings,
+    dt: StringsLike,
+    errors: ErrorMode = ...,
+) -> Strings: ...
+
+
+# Strings -> pdarray (normal error handling)
+@overload
+def cast(
+    pda: Strings,
+    dt: NumericLike,
+    errors: Literal[ErrorMode.strict, ErrorMode.ignore] = ...,
+) -> pdarray: ...
+
+
+# Strings -> (pdarray, pdarray[bool]) when return_validity
+@overload
+def cast(
+    pda: Strings,
+    dt: NumericLike,
+    errors: Literal[ErrorMode.return_validity],
+) -> Tuple[pdarray, pdarray]: ...
+
+
+# Categorical -> Strings
+@overload
+def cast(
+    pda: Categorical,
+    dt: StringsLike,
+    errors: ErrorMode = ...,
+) -> Strings: ...
+
+
+# Categorical -> (anything else) — this raises at runtime, so annotate as Never
+@overload
+def cast(
+    pda: Categorical,
+    dt: NumericLike | CategoricalLike,
+    errors: ErrorMode = ...,
+) -> Never: ...
+
+
+# ----------------- Implementation -----------------
+def cast(  # type: ignore[override]
+    pda: Union[pdarray, Strings, Categorical],  # type: ignore[valid-type]
     dt: Union[np.dtype, type, str, bigint],
     errors: ErrorMode = ErrorMode.strict,
-) -> Union[Union[pdarray, Strings, Categorical], Tuple[pdarray, pdarray]]:  # type: ignore
+) -> Union[pdarray, Strings, Categorical, Tuple[pdarray, pdarray]]:
     """
     Cast an array to another dtype.
 

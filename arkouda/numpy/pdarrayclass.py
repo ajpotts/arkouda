@@ -2494,7 +2494,7 @@ class pdarray:
         ret_list = json.loads(generic_msg(cmd=cmd, args={"array": self}))
         return list(reversed([create_pdarray(a) for a in ret_list]))
 
-    def reshape(self, *shape):
+    def reshape(self, *shape) -> pdarray:
         """
         Gives a new shape to an array without changing its data.
 
