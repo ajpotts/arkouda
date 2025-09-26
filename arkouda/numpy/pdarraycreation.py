@@ -6,14 +6,17 @@ import pandas as pd
 from typeguard import typechecked
 
 from arkouda.numpy.dtypes import (
+    ARKOUDA_SUPPORTED_NUMBERS,
     NUMBER_FORMAT_STRINGS,
     DTypes,
     NumericDTypes,
     SeriesDTypes,
     bigint,
+    bool_,
     bool_scalars,
-)
-from arkouda.numpy.dtypes import (
+    float64,
+    get_byteorder,
+    get_server_byteorder,
     int_scalars,
     isSupportedInt,
     isSupportedNumber,
@@ -22,7 +25,6 @@ from arkouda.numpy.dtypes import (
     str_,
 )
 from arkouda.numpy.dtypes import dtype as akdtype
-from arkouda.numpy.dtypes import float64, get_byteorder, get_server_byteorder
 from arkouda.numpy.dtypes import int64 as akint64
 from arkouda.numpy.dtypes import uint64 as akuint64
 from arkouda.numpy.pdarrayclass import create_pdarray, pdarray
@@ -259,7 +261,8 @@ def array(
         )
 
     if isinstance(a, pdarray):
-        casted = akcast(a, dtype)  # the "dtype is None" case was covered above
+        dtype = dtype if dtype else a.dtype
+        casted = akcast(a, dtype)  # the "dtype is None" case was covered abov
         if dtype == bigint and max_bits != -1:
             casted.max_bits = max_bits
         return casted
@@ -643,7 +646,7 @@ def ones(
     size: Union[int_scalars, Tuple[int_scalars, ...], str],
     dtype: Union[np.dtype, type, str, bigint] = float64,
     max_bits: Optional[int] = None,
-) -> pdarray:
+) -> Union[pdarray, Strings]:
     """
     Create a pdarray filled with ones.
 
@@ -660,7 +663,7 @@ def ones(
 
     Returns
     -------
-    pdarray
+    pdarray or Strings
         Ones of the requested size or shape and dtype
 
     Raises
@@ -755,11 +758,14 @@ def full(
     """
     from arkouda.client import generic_msg, get_array_ranks
     from arkouda.numpy.dtypes import dtype as ak_dtype
+    from arkouda.numpy.util import _infer_shape_from_size  # placed here to avoid circ import
+
+    shape, ndim, full_size = _infer_shape_from_size(size)
 
     if isinstance(fill_value, str):
-        return _full_string(size, fill_value)
+        return _full_string(full_size, fill_value)
     elif ak_dtype(dtype) == str_ or dtype == Strings:
-        return _full_string(size, str_(fill_value))
+        return _full_string(full_size, str_(fill_value))
 
     dtype = dtype if dtype is not None else resolve_scalar_dtype(fill_value)
 
@@ -768,9 +774,6 @@ def full(
     # check dtype for error
     if dtype_name not in NumericDTypes:
         raise TypeError(f"unsupported dtype {dtype}")
-    from arkouda.numpy.util import _infer_shape_from_size  # placed here to avoid circ import
-
-    shape, ndim, full_size = _infer_shape_from_size(size)
 
     if ndim not in get_array_ranks():
         raise ValueError(f"array rank {ndim} not in compiled ranks {get_array_ranks()}")
@@ -905,7 +908,7 @@ def zeros_like(pda: pdarray) -> pdarray:
 
 
 @typechecked
-def ones_like(pda: pdarray) -> pdarray:
+def ones_like(pda: pdarray) -> Union[pdarray, Strings]:
     """
     Create a one-filled pdarray of the same size and dtype as an existing
     pdarray.
@@ -917,7 +920,7 @@ def ones_like(pda: pdarray) -> pdarray:
 
     Returns
     -------
-    pdarray
+    pdarray or Strings
         Equivalent to ak.ones(pda.size, pda.dtype)
 
     Raises
@@ -951,7 +954,7 @@ def ones_like(pda: pdarray) -> pdarray:
 
 
 @typechecked
-def full_like(pda: pdarray, fill_value: numeric_scalars) -> Union[pdarray, Strings]:
+def full_like(pda: pdarray, fill_value: Union[numeric_scalars, bool_, str_]) -> Union[pdarray, Strings]:
     """
     Create a pdarray filled with fill_value of the same size and dtype as an existing
     pdarray.
@@ -1165,7 +1168,7 @@ def logspace(
     base: numeric_scalars = 10.0,
     endpoint: Union[None, bool] = True,
     dtype: Optional[type] = float64,
-    axis: Union[None, int_scalars] = 0,
+    axis: int_scalars = 0,
 ) -> pdarray:
     """
     Create a pdarray of numbers evenly spaced on a log scale.
@@ -1339,8 +1342,8 @@ def linspace(
     if endpoint is None:
         endpoint = True
 
-    start_ = start
-    stop_ = stop
+    start_: Union[numeric_scalars, pdarray] = start
+    stop_: Union[numeric_scalars, pdarray] = stop
 
     #   First make sure everything's a float.
 
@@ -1366,11 +1369,15 @@ def linspace(
     #   If one is a scalar and other a vector, we use full_like to "promote" the scalar one.
 
     else:
-        if isinstance(start_, pdarray) and np.isscalar(stop_):
-            stop_ = full_like(start_, stop_)
+        if isinstance(start_, pdarray) and isinstance(stop_, (ARKOUDA_SUPPORTED_NUMBERS, str_, bool_)):
+            full = full_like(start_, stop_)
+            assert isinstance(full, pdarray)
+            stop_ = full
 
-        elif isinstance(stop_, pdarray) and np.isscalar(start_):
-            start_ = full_like(stop_, start_)
+        elif isinstance(stop_, pdarray) and isinstance(start_, (ARKOUDA_SUPPORTED_NUMBERS, str_, bool_)):
+            full = full_like(stop_, start_)
+            assert isinstance(full, pdarray)
+            start_ = full
 
     divisor = num - 1 if endpoint else num
 
@@ -1383,7 +1390,7 @@ def linspace(
         pad: Tuple[int, int] = (int(num), int(1))
         start_ = tile(start_, pad).reshape((num,) + start_.shape)
         stop_ = tile(stop_, pad).reshape((num,) + stop_.shape)
-        delta_ = (stop_ - start_) / divisor
+        delta_: pdarray = (stop_ - start_) / divisor
         result = start_ + arange(num)[(...,) + (newaxis,) * (delta_.ndim - 1)] * delta_
 
         # Handle the axis parameter if needed

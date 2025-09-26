@@ -12,12 +12,17 @@ from typeguard import typechecked
 from arkouda.infoclass import information, list_symbol_table
 from arkouda.logger import ArkoudaLogger, getArkoudaLogger
 import arkouda.numpy.dtypes
-from arkouda.numpy.dtypes import NUMBER_FORMAT_STRINGS, bool_scalars
+from arkouda.numpy.dtypes import (
+    NUMBER_FORMAT_STRINGS,
+    bool_scalars,
+    int_scalars,
+    numeric_scalars,
+    resolve_scalar_dtype,
+    str_scalars,
+)
 from arkouda.numpy.dtypes import int64 as akint64
-from arkouda.numpy.dtypes import int_scalars, numeric_scalars, resolve_scalar_dtype, str_scalars
-from arkouda.numpy.pdarrayclass import RegistrationError
+from arkouda.numpy.pdarrayclass import RegistrationError, create_pdarray, parse_single_value, pdarray
 from arkouda.numpy.pdarrayclass import all as akall
-from arkouda.numpy.pdarrayclass import create_pdarray, parse_single_value, pdarray
 from arkouda.pandas.match import Match, MatchType
 
 
@@ -2512,7 +2517,9 @@ class Strings:
         """
         from arkouda.numpy import cast as akcast
 
-        return akcast(self, dtype)
+        retval = akcast(self, dtype)
+        assert isinstance(retval, pdarray)
+        return retval
 
     def to_parquet(
         self,
@@ -2933,6 +2940,8 @@ class Strings:
             Raised if there's a server-side error thrown
         """
         from arkouda.numpy.util import is_registered
+
+        assert self.name, "Cannot register pdarray with name=None"
 
         if self.registered_name is None:
             return np.bool_(is_registered(self.name, as_component=True))
