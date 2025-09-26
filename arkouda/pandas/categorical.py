@@ -57,7 +57,6 @@ import numpy as np
 from pandas import Categorical as pd_Categorical
 from pandas import Index as pd_Index
 from typeguard import typechecked
-
 from arkouda.infoclass import information
 from arkouda.logger import getArkoudaLogger
 from arkouda.numpy.dtypes import bool_ as akbool
@@ -1590,11 +1589,7 @@ class Categorical:
         """Print information about all components of self in a human-readable format."""
         [p.pretty_print_info() for p in Categorical._get_components_dict(self).values()]
 
-    from arkouda.client_dtypes import IPv4
-    from arkouda.dataframe import DataFrame
-    from arkouda.index import Index
-    from arkouda.numpy.segarray import SegArray
-    from arkouda.timeclass import Datetime, Timedelta
+
 
     @staticmethod
     @typechecked

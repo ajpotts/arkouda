@@ -2500,8 +2500,8 @@ def value_counts(
 @typechecked
 def clip(
     pda: pdarray,
-    lo: Union[numeric_scalars, pdarray],
-    hi: Union[numeric_scalars, pdarray],
+    lo: Union[None, numeric_scalars, pdarray],
+    hi: Union[None, numeric_scalars, pdarray],
 ) -> pdarray:
     """
     Clip (limit) the values in an array to a given range [lo,hi].
@@ -2519,9 +2519,9 @@ def clip(
     ----------
     pda : pdarray
         the array of values to clip
-    lo : numeric_scalars or pdarray
+    lo : numeric_scalars or pdarray or None
         the lower value of the clipping range
-    hi : numeric_scalars or pdarray
+    hi : numeric_scalars or pdarray or None
         the higher value of the clipping range
         If lo or hi (or both) are pdarrays, the check is by pairwise elements.
         See examples.
