@@ -14,8 +14,9 @@ from arkouda.numpy.dtypes import (
     bigint,
     bool_,
     bool_scalars,
-)
-from arkouda.numpy.dtypes import (
+    float64,
+    get_byteorder,
+    get_server_byteorder,
     int_scalars,
     isSupportedInt,
     isSupportedNumber,
@@ -24,7 +25,6 @@ from arkouda.numpy.dtypes import (
     str_,
 )
 from arkouda.numpy.dtypes import dtype as akdtype
-from arkouda.numpy.dtypes import float64, get_byteorder, get_server_byteorder
 from arkouda.numpy.dtypes import int64 as akint64
 from arkouda.numpy.dtypes import uint64 as akuint64
 from arkouda.numpy.pdarrayclass import broadcast_to_shape, create_pdarray, pdarray

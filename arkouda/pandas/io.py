@@ -1556,7 +1556,7 @@ def to_hdf(
             mode = "append"
 
 
-def _get_hdf_filetype(filename: str) -> Literal['single', 'distribute']:
+def _get_hdf_filetype(filename: str) -> Literal["single", "distribute"]:
     from arkouda.client import generic_msg
 
     if not (filename and filename.strip()):
