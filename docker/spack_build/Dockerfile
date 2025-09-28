@@ -43,10 +43,10 @@ ENV SPACK_ROOT=/opt/spack-develop
 ENV PATH=$SPACK_ROOT/bin:$PATH
 ENV SSL_CERT_FILE=/etc/pki/tls/certs/ca-bundle.crt
 RUN . /opt/spack-develop/share/spack/setup-env.sh \
- && spack compiler find 
-# && spack external find --not-buildable gcc binutils glibc
+ && spack compiler find \
+ && spack external find --not-buildable gcc binutils glibc
 
-RUN . /opt/spack-develop/share/spack/setup-env.sh && spack find gcc@12.3.0 || spack install gcc@12.3.0
+#RUN . /opt/spack-develop/share/spack/setup-env.sh && spack find gcc@12.3.0 || spack install gcc@12.3.0
 
 # ---------------------------
 # Update the arkouda spack package:
@@ -64,7 +64,7 @@ RUN export ARKOUDA_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/
 # ---------------------------
 # Install Arkouda with patched Spack package
 # ---------------------------
-#RUN source /opt/spack-develop/share/spack/setup-env.sh && spack -d -v install -j $(nproc) arkouda${RELEASE_VERSION}  
+RUN source /opt/spack-develop/share/spack/setup-env.sh && spack -d -v install -j $(nproc) arkouda${RELEASE_VERSION}  
 
 # ---------------------------
 # Update the py-arkouda spack package:
@@ -74,7 +74,7 @@ ENV CACHE=10
 
 COPY py_arkouda-package.py /opt/py_arkouda-package.py
 COPY pytables_package.py /opt/pytables_package.py
-COPY chapel_package.py /opt/chapel_package.py
+
 
 RUN export PY_ARKOUDA_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages | grep /py_arkouda/package.py) \
     &&  mv /opt/py_arkouda-package.py $PY_ARKOUDA_PACKAGE_FILE  \
@@ -89,35 +89,25 @@ RUN export PY_TABLES_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repo
     && echo "export PY_TABLES_PACKAGE_FILE=\"${PY_TABLES_PACKAGE_FILE}\"" >> ~/.bashrc.local
 
 
-RUN export CHAPEL_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages | grep /chapel/package.py) \
-    &&  mv /opt/chapel_package.py $CHAPEL_PACKAGE_FILE  \
-    && echo "export CHAPEL_PACKAGE_FILE=\"${CHAPEL_PACKAGE_FILE}\"" >> ~/.bashrc.local
-
-#   First check the package is solvable:
-#RUN source /opt/spack-develop/share/spack/setup-env.sh && spack spec -Il py-arkouda${RELEASE_VERSION}  
-
-#RUN source /opt/spack-develop/share/spack/setup-env.sh && spack -d -v install --keep-stage  -j $(nproc) py-arkouda${RELEASE_VERSION}  
-
 #####################
 
 # 1) Create & activate an environment
-#RUN source /opt/spack-develop/share/spack/setup-env.sh && spack env create ark-env \
-#    &&  spack env activate -p ark-env \
-#    # 2) Tell Spack to unify deps across all roots in this env
-#    &&  spack config add "concretizer:unify:true" \
-
-    # Add a build env var just for py-numpy in THIS env
-#    &&  export NPY_DISABLE_CPU_FEATURES='AVX512F,AVX512CD,AVX512VL,AVX512BW,AVX512DQ,AVX512VNNI,AVX512IFMA,AVX512VBMI,AVX512VBMI2,AVX512BITALG,AVX512VPOPCNTDQ,AVX512FP16'
-
-#    # 3) Add BOTH roots (same release tag here as an example)
-#    &&  spack add arkouda${RELEASE_VERSION}  \
-#    &&  spack add py-arkouda${RELEASE_VERSION}  \
-#    # 4) Check the unified solve
-#    &&  spack concretize -f  \
-#    &&  spack spec -Il  
-    #\
-    # 5) Install (one build plan, shared deps)
-    #&&  spack install -j $(nproc)
+RUN source /opt/spack-develop/share/spack/setup-env.sh && spack env create ark-env \
+    &&  spack env activate -p ark-env \
+    # 2) Tell Spack to unify deps across all roots in this env
+    &&  spack config add "concretizer:unify:true" \
+    # 3) Add BOTH roots (same release tag here as an example)
+    &&  spack add arkouda${RELEASE_VERSION}  \
+    &&  spack add py-arkouda${RELEASE_VERSION}  \
+    # 4) Check the unified solve
+    &&  spack concretize -f  \
+    &&  spack spec -Il
+    
+    
+## 5) Install (one build plan, shared deps)
+RUN source /opt/spack-develop/share/spack/setup-env.sh \
+    &&  spack env activate -p ark-env \   
+    &&  spack -d -v  install -j $(nproc)
 
 
 
@@ -141,20 +131,27 @@ RUN cd /opt/arkouda && \
     fi
 
 
-#RUN source /opt/spack-develop/share/spack/setup-env.sh && \
-#    spack load arkouda chapel python && \
-#    ln -s $(spack location -i arkouda)/bin/arkouda_server arkouda_server
+
+# ensure bash in RUNs (optional but nice)
+SHELL ["/bin/bash", "-lc"]
+
+RUN . /opt/spack-develop/share/spack/setup-env.sh && \
+    spack -e ark-env env status >/dev/null && \
+    ln -sf "$(spack -e ark-env location -i arkouda)/bin/arkouda_server" ./arkouda_server
 
 
-#RUN source /opt/spack-develop/share/spack/setup-env.sh && \
-#    spack load python chapel py-arkouda py-pytest c-blosc2 && \
-#    python3 -m ensurepip --default-pip && \ 
-#    export LD_LIBRARY_PATH=$(spack find -p c-blosc2 | awk '/c-blosc2/{print $2}')/lib64:$LD_LIBRARY_PATH  && \
+
+RUN source /opt/spack-develop/share/spack/setup-env.sh && \
+    spack env activate -p ark-env && \
+    spack load python chapel py-arkouda c-blosc2 && \
+    spack add py-pytest && spack install py-pytest && \
+    python3 -m ensurepip --default-pip && \ 
+    export LD_LIBRARY_PATH=$(spack find -p c-blosc2 | awk '/c-blosc2/{print $2}')/lib64:$LD_LIBRARY_PATH  && \
     # Install the plugin into THAT interpreter’s site-packages
-#    python3 -m pip install --upgrade pip && \ 
-#    python3 -m pip install pytest-env pytest-subtests && \ 
-#    python --version && \
-#    python3 -m pytest -c pytest.ini --size=100  --skip_doctest="True"
+    python3 -m pip install --upgrade pip && \ 
+    python3 -m pip install pytest-env pytest-subtests && \ 
+    python --version && \
+    python3 -m pytest -c pytest.ini --size=100  --skip_doctest="True"
 
 
 
