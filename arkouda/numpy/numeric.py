@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 import json
-from typing import TYPE_CHECKING, Any, List, Optional, Sequence, Tuple, TypeVar, Union
+from typing import TYPE_CHECKING, List, Optional, Sequence, Tuple, TypeVar, Union
 from typing import cast as type_cast
 from typing import no_type_check, overload
 
@@ -10,7 +10,6 @@ import numpy as np
 from typeguard import typechecked
 from typing_extensions import Literal, Never, TypeAlias
 
-from arkouda.dtypes import bigint, str_  # ak.str_, etc.
 from arkouda.groupbyclass import GroupBy, groupable
 from arkouda.numpy.dtypes import ARKOUDA_SUPPORTED_INTS, _datatype_check, bigint
 from arkouda.numpy.dtypes import bool_ as ak_bool
@@ -26,7 +25,6 @@ from arkouda.numpy.pdarrayclass import (
     broadcast_if_needed,
     create_pdarray,
     parse_single_value,
-    pdarray,
     sum,
 )
 from arkouda.numpy.pdarrayclass import _reduces_to_single_value
@@ -34,8 +32,6 @@ from arkouda.numpy.pdarrayclass import all as ak_all
 from arkouda.numpy.pdarrayclass import any as ak_any
 from arkouda.numpy.pdarraycreation import array, linspace, scalar_array
 from arkouda.numpy.sorting import sort
-from arkouda.numpy.strings import Strings
-from arkouda.pandas.categorical import Categorical  # type: ignore
 
 # ---- Arkouda types (import or forward-declare under TYPE_CHECKING) ----
 from arkouda.pdarrayclass import pdarray
@@ -44,7 +40,7 @@ from arkouda.strings import Strings
 
 # ---- Helper aliases used only for typing the overloads ----
 StringsLike: TypeAlias = Union[Literal["Strings", "str"], type[Strings], type[str_]]
-CategoricalLike: TypeAlias = Union[Literal["Categorical"], type[Categorical]]
+CategoricalLike: TypeAlias = Union[Literal["Categorical"], type["Categorical"]]
 
 # NOTE: This is a “good enough” stand-in: any dtype target that is *not*
 # a StringsLike or CategoricalLike will be treated as “numeric/bool” here.
