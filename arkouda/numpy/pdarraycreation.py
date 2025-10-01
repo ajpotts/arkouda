@@ -1348,14 +1348,14 @@ def linspace(
 
     else:
         if isinstance(start_, pdarray) and isinstance(stop_, (ARKOUDA_SUPPORTED_NUMBERS, str_, bool_)):
-            full = full_like(start_, stop_)
-            assert isinstance(full, pdarray)
-            stop_ = full
+            full_pda = full_like(start_, stop_)
+            assert isinstance(full_pda, pdarray)
+            stop_ = full_pda
 
         elif isinstance(stop_, pdarray) and isinstance(start_, (ARKOUDA_SUPPORTED_NUMBERS, str_, bool_)):
-            full = full_like(stop_, start_)
-            assert isinstance(full, pdarray)
-            start_ = full
+            full_pda = full_like(stop_, start_)
+            assert isinstance(full_pda, pdarray)
+            start_ = full_pda
 
     divisor = num - 1 if endpoint else num
 
@@ -1384,7 +1384,7 @@ def linspace(
 
     #   Scalar case is pretty straightforward.
 
-    else:
+    elif isinstance(start_, ARKOUDA_SUPPORTED_NUMBERS):
         if axis == 0:
             delta = (stop_ - start_) / divisor
             result = full(num, start_) + arange(num).astype(float64) * delta
