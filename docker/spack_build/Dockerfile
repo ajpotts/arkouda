@@ -28,7 +28,7 @@ RUN dnf install -y --allowerasing \
     curl tar gzip wget which \
     findutils gawk patch file less hostname unzip \
     diffutils procps-ng libcurl-devel bzip2 \
-    ca-certificates && \
+    ca-certificates vim && \
     dnf clean all && \
     update-ca-trust
 
@@ -60,17 +60,9 @@ RUN export ARKOUDA_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/
     && echo "export ARKOUDA_PACKAGE_FILE=\"${ARKOUDA_PACKAGE_FILE}\"" >> ~/.bashrc.local
 
 
-
-# ---------------------------
-# Install Arkouda with patched Spack package
-# ---------------------------
-RUN source /opt/spack-develop/share/spack/setup-env.sh && spack -d -v install -j $(nproc) arkouda${RELEASE_VERSION}  
-
 # ---------------------------
 # Update the py-arkouda spack package:
 # ---------------------------
-RUN dnf install -y vim
-ENV CACHE=10
 
 COPY py_arkouda-package.py /opt/py_arkouda-package.py
 COPY pytables_package.py /opt/pytables_package.py
