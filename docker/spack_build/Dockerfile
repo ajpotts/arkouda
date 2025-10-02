@@ -65,20 +65,19 @@ RUN export ARKOUDA_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/
 # ---------------------------
 
 COPY py_arkouda-package.py /opt/py_arkouda-package.py
-COPY pytables_package.py /opt/pytables_package.py
-
 
 RUN export PY_ARKOUDA_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages | grep /py_arkouda/package.py) \
     &&  mv /opt/py_arkouda-package.py $PY_ARKOUDA_PACKAGE_FILE  \
     && echo "export PY_ARKOUDA_PACKAGE_FILE=\"${PY_ARKOUDA_PACKAGE_FILE}\"" >> ~/.bashrc.local
 
 # ---------------------------
-# Install Py-Arkouda with patched Spack package
+# Install Py-Tables with patched Spack package -- Shouldn't need this now that the package is updated
 # ---------------------------
+#COPY pytables_package.py /opt/pytables_package.py
 
-RUN export PY_TABLES_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages | grep /py_tables/package.py) \
-    &&  mv /opt/pytables_package.py $PY_TABLES_PACKAGE_FILE  \
-    && echo "export PY_TABLES_PACKAGE_FILE=\"${PY_TABLES_PACKAGE_FILE}\"" >> ~/.bashrc.local
+#RUN export PY_TABLES_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages | grep /py_tables/package.py) \
+#    &&  mv /opt/pytables_package.py $PY_TABLES_PACKAGE_FILE  \
+#    && echo "export PY_TABLES_PACKAGE_FILE=\"${PY_TABLES_PACKAGE_FILE}\"" >> ~/.bashrc.local
 
 
 #####################
@@ -96,7 +95,7 @@ RUN source /opt/spack-develop/share/spack/setup-env.sh && spack env create ark-e
     &&  spack spec -Il
     
     
-## 5) Install (one build plan, shared deps)
+# 5) Install (one build plan, shared deps)
 RUN source /opt/spack-develop/share/spack/setup-env.sh \
     &&  spack env activate -p ark-env \   
     &&  spack -d -v  install -j $(nproc)
