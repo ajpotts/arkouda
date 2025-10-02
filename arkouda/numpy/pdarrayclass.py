@@ -2494,56 +2494,58 @@ class pdarray:
         ret_list = json.loads(generic_msg(cmd=cmd, args={"array": self}))
         return list(reversed([create_pdarray(a) for a in ret_list]))
 
-    def reshape(self, *shape) -> pdarray:
+    # from __future__ import annotations
+
+    from collections.abc import Sequence
+    from operator import index as to_index
+    from typing import overload, SupportsIndex, Tuple, Union, cast
+
+    # If you already have an "int_scalars" alias in your codebase, define it as SupportsIndex for typing:
+    # int_scalars = SupportsIndex
+
+    ShapeLike = Union[int_scalars, Sequence[int_scalars], "pdarray"]
+
+
+
+    @overload
+    def reshape(self, *shape: int_scalars) -> "pdarray":
+        ...
+
+    @overload
+    def reshape(self, shape: Sequence[int_scalars]) -> "pdarray":
+        ...
+
+    @overload
+    def reshape(self, shape: "pdarray") -> "pdarray":
+        ...
+
+    def reshape(self, *shape: ShapeLike) -> "pdarray":
         """
         Gives a new shape to an array without changing its data.
-
-        Parameters
-        ----------
-        shape : int, tuple of ints, or pdarray
-            The new shape should be compatible with the original shape.
-
-        Returns
-        -------
-        pdarray
-            a pdarray with the same data, reshaped to the new shape
-
-        Examples
-        --------
-        >>> import arkouda as ak
-        >>> a = ak.array([[3,2,1],[2,3,1]])
-        >>> a.reshape((3,2))
-        array([array([3 2]) array([1 2]) array([3 1])])
-        >>> a.reshape(3,2)
-        array([array([3 2]) array([1 2]) array([3 1])])
-        >>> a.reshape((6,1))
-        array([array([3]) array([2]) array([1]) array([2]) array([3]) array([1])])
-
-        Notes
-        -----
-            only available as a method, not as a standalone function, i.e.,
-            a.reshape(compatibleShape) is valid, but ak.reshape(a,compatibleShape) is not.
         """
-        # allows the elements of the shape parameter to be passed in as separate arguments
-        # For example, a.reshape(10, 11) is equivalent to a.reshape((10, 11))
-        # the lenshape variable addresses an error that occurred when a single integer was
-        # passed
         from arkouda.client import generic_msg
+        from collections.abc import Sequence
+        shape_arg:Union[int, List[int, ...], pdarray]
 
         if len(shape) == 1:
-            shape = shape[0]
-            lenshape = 1
-        if (not isinstance(shape, int)) and (not isinstance(shape, pdarray)):
-            shape = [i for i in shape]
-            lenshape = len(shape)
+            s0 = shape[0]
+            if isinstance(s0, pdarray):
+                shape_arg = s0
+                lenshape = 1
+            elif isinstance(s0, Tuple):
+                shape_arg =[x for x in s0]
+                lenshape = len(shape_arg)
+            else:
+                shape_arg = s0
+                lenshape = 1
+        else:
+            shape_arg = [x for x in shape]
+            lenshape = len(shape_arg )
 
         return create_pdarray(
             generic_msg(
                 cmd=f"reshape<{self.dtype},{self.ndim},{lenshape}>",
-                args={
-                    "name": self.name,
-                    "shape": shape,
-                },
+                args={"name": self.name, "shape": shape_arg},
             ),
             max_bits=self.max_bits,
         )
