@@ -41,6 +41,10 @@ class ArkoudaArray(ArkoudaBaseArray, ExtensionArray):
         # If pandas passes our own EA dtype, ignore it and infer from data
         if isinstance(dtype, _ArkoudaBaseDtype):
             dtype = dtype.numpy_dtype
+
+        if dtype is not None and hasattr(dtype, "numpy_dtype"):
+            dtype = dtype.numpy_dtype  # → np.int64
+        print(dtype)
         # If scalars is already a numpy array, we can preserve its dtype
         return cls(ak_array(scalars, dtype=dtype, copy=copy))
 

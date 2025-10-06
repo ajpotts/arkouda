@@ -246,6 +246,10 @@ def array(
     if isinstance(a, pdarray) and (a.dtype == dtype or dtype is None):
         return _deepcopy(a) if copy else a
 
+    from numpy import ndarray
+    if dtype and isinstance(a, ndarray):
+        a = a.astype(dtype)
+
     if isinstance(a, Strings):
         if dtype and dtype != "str_":
             raise TypeError(f"Cannot cast Strings to dtype {dtype} in ak.array")
@@ -336,8 +340,12 @@ def array(
         strings = Strings.from_return_msg(cast(str, rep_msg))
         return strings if dtype is None else akcast(strings, dtype)
 
+    from arkouda.numpy.dtypes import dtype as ak_dtype
+    dtype = ak_dtype(dtype).name if dtype else a.dtype.name
+
+
     # If not strings, then check that dtype is supported in arkouda
-    if dtype == bigint or a.dtype.name not in DTypes:
+    if dtype == bigint or (a.dtype.name not in DTypes) and (ak_dtype(dtype).name not in DTypes):
         # 2 situations result in attempting to call `bigint_from_uint_arrays`
         # 1. user specified i.e. dtype=ak.bigint
         # 2. too big to fit into other numpy types (dtype = object)
@@ -384,9 +392,9 @@ def array(
             a = a.view(a.dtype.newbyteorder("S")).byteswap()
 
         rep_msg = generic_msg(
-            cmd=f"array<{a_.dtype.name},{ndim}>",
+            cmd=f"array<{dtype},{ndim}>",
             args={
-                "dtype": a_.dtype.name,
+                "dtype": dtype,
                 "shape": tuple(a_.shape),
                 "seg_string": False,
             },
