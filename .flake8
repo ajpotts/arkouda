@@ -5,33 +5,72 @@ extend-select = F403
 
 # E203 whitespace before ':': intentionally ignored to prevent conflicts with ruff/black
 extend-ignore =
-    E203,
-    DOC001,DOC101,DOC102,DOC103,DOC105,DOC106,DOC107,DOC109,DOC110,DOC201,DOC203,DOC301,DOC302,DOC501,DOC502,DOC503,DOC601,DOC603,
+    E203
+    #DOC001,DOC101,DOC102,DOC103,DOC105,DOC106,DOC107,DOC109,DOC110,DOC201,DOC203,DOC301,DOC302,DOC501,DOC502,DOC503,DOC601,DOC603,
 per-file-ignores =
     tests/operator_test.py: E501
     tests/symbol_table_test.py: F841
     #   Remove below per/file ignores when the errors are resolved:
-    arkouda/numpy/strings.py: DAR101,DAR103,DAR201,DAR401,DAR402
-    arkouda/numpy/timeclass.py: DAR101,DAR201,DAR402
-    arkouda/numpy/util.py: DAR101,DAR103,DAR201,DAR402
-    arkouda/numpy/utils.py: DAR401
-    arkouda/pandas/categorical.py: DAR002,DAR101,DAR103,DAR201,DAR401,DAR402
-    arkouda/pandas/dataframe.py: DAR002,DAR101,DAR103,DAR201,DAR401,DAR402,
+    arkouda/alignment.py: DAR101,DAR201,DAR401
+    arkouda/apply.py: DAR401
+    arkouda/array_api/array_object.py: DAR101,DAR201,DAR401,
+    arkouda/array_api/creation_functions.py: DAR101,DAR201,DAR401
+    arkouda/array_api/data_type_functions.py: DAR101,DAR201,DAR401
+    arkouda/array_api/elementwise_functions.py: DAR101,DAR201,DAR401,
+    arkouda/array_api/indexing_functions.py: DAR201,DAR401
+    arkouda/array_api/linalg.py: DAR101,DAR201,DAR401
+    arkouda/array_api/manipulation_functions.py: DAR103,DAR401,DAR402
+    arkouda/array_api/searching_functions.py: DAR101,DAR103,DAR201,DAR401
+    arkouda/array_api/set_functions.py: DAR101,DAR201
+    arkouda/array_api/sorting_functions.py: DAR103,DAR201,DAR401
+    arkouda/array_api/statistical_functions.py: DAR103,DAR402
+    arkouda/array_api/utility_functions.py: DAR101,DAR103,DAR201,DAR401,
+    arkouda/client.py: DAR101,DAR103,DAR201,DAR401,DAR402
+    arkouda/client_dtypes.py: DAR101,DAR201,DAR401,DAR402
+    arkouda/comm_diagnostics.py: DAR101
+    arkouda/history.py: DAR101,DAR201,DAR401
+    arkouda/infoclass.py: DAR402
+    arkouda/logger.py: DAR101,DAR103,DAR402
+    arkouda/message.py: DAR201,DAR401
+    arkouda/numpy/char.py: DAR101,DAR402
+    arkouda/numpy/dtypes.py: DAR002,DAR101,DAR201
+    arkouda/numpy/err.py: DAR101,DAR102,DAR401
+    arkouda/numpy/manipulation_functions.py: DAR401,DAR402
+    arkouda/numpy/numeric.py: DAR002,DAR101,DAR103,DAR201,DAR401,DAR402
+    arkouda/numpy/pdarrayclass.py: DAR002,DAR101,DAR103,DAR201,DAR401,DAR402
+    arkouda/numpy/pdarraycreation.py: DAR002,DAR101,DAR102,DAR103,DAR401,DAR402
+    arkouda/numpy/pdarraymanipulation.py: DAR101,DAR401
+    arkouda/numpy/pdarraysetops.py: DAR002,DAR101,DAR103,DAR201,DAR401,DAR402
+    arkouda/numpy/random/generator.py: DAR103,DAR401
+    arkouda/numpy/random/legacy.py: DAR103,DAR201,DAR401,DAR402
+    arkouda/numpy/random/generator: DAR103,DAR401
+    arkouda/numpy/random/legacy.py: DAR103,DAR401,DAR402
+    arkouda/numpy/segarray.py: DAR101,DAR103,DAR201,DAR401,DAR402
+    arkouda/numpy/sorting.py: DAR103,DAR401,DAR402,DOC105,DOC203,DOC503
+    arkouda/numpy/strings.py: DAR101,DAR103,DAR201,DAR401,DAR402,DOC101,DOC103,DOC105,DOC106,DOC107,DOC203,DOC301,DOC501,DOC502,DOC503,DOC601,DOC603
+    arkouda/numpy/timeclass.py: DAR101,DAR201,DAR402,DOC101,DOC103,DOC105,DOC106,DOC107,DOC203,DOC502,DOC503,DOC601,DOC603
+    arkouda/numpy/util.py: DAR101,DAR103,DAR201,DAR402,DOC105,DOC106,DOC107,DOC203,DOC502,
+    arkouda/numpy/utils.py: DAR401,DOC105,DOC501,DOC503,
+    arkouda/pandas/categorical.py: DAR002,DAR101,DAR103,DAR201,DAR401,DAR402,DOC101,DOC103,DOC105,DOC106,DOC107,DOC203,DOC501,DOC502,DOC503,DOC601,DOC603
+    arkouda/pandas/dataframe.py: DAR002,DAR101,DAR103,DAR201,DAR401,DAR402,DOC101,DOC103,DOC105,DOC106,DOC107,DOC109,DOC110,DOC201,DOC203,DOC501,DOC502,DOC503,DOC601,DOC603,
     arkouda/pandas/extension/_arkouda_array.py: DAR201
-    arkouda/pandas/groupbyclass.py: DAR103,DAR402,DAR401,
-    arkouda/pandas/index.py: DAR101,DAR103,DAR201,DAR401,DAR402
-    arkouda/pandas/io.py: DAR101,DAR201,DAR401,DAR402
-    arkouda/pandas/io_util.py: DAR101,DAR402
-    arkouda/pandas/join.py: DAR101,DAR201,DAR401,DAR402
-    arkouda/pandas/match.py: DAR401,DAR402
-    arkouda/pandas/matcher.py: DAR101,DAR201,DAR401
-    arkouda/scipy/sparrayclass.py: DAR101,DAR402
-    arkouda/pandas/series.py: DAR101,DAR201,DAR401,DAR402
-    arkouda/plotting.py: DAR103,DAR401
-    arkouda/scipy/_stats_py.py: DAR401
-    arkouda/scipy/sparsematrix.py: DAR101,DAR401
-    arkouda/scipy/special/_math.py: DAR002
-    arkouda/testing/_asserters.py: DAR101,DAR002,DAR401,DAR201 
+    arkouda/pandas/extension/_arkouda_base_array.py: DOC105,DOC106,DOC107,DOC203
+    arkouda/pandas/extension/_dtypes.py: DOC203,DOC601,DOC603
+    arkouda/pandas/groupbyclass.py: DAR103,DAR402,DAR401,DOC101,DOC103,DOC105,DOC106,DOC107,DOC203,DOC501,DOC502,DOC503,DOC601,DOC603
+    arkouda/pandas/index.py: DAR101,DAR103,DAR201,DAR401,DAR402,DOC001,DOC101,DOC103,DOC105,DOC106,DOC107,DOC110,DOC203,DOC501,DOC502,DOC503,DOC601,DOC603
+    arkouda/pandas/io.py: DAR101,DAR201,DAR401,DAR402,DOC101,DOC103,DOC105,DOC106,DOC107,DOC110,DOC201,DOC203,DOC501,DOC502,DOC503
+    arkouda/pandas/io_util.py: DAR101,DAR402,DOC101,DOC103,DOC203,DOC502,DOC503
+    arkouda/pandas/join.py: DAR101,DAR201,DAR401,DAR402,DOC105,DOC105,DOC106,DOC107,DOC203,DOC501,DOC503
+    arkouda/pandas/match.py: DAR401,DAR402,DOC101,DOC103,DOC105,DOC106,DOC107,DOC203,DOC501,DOC502,DOC503
+    arkouda/pandas/matcher.py: DAR101,DAR201,DAR401,DOC101,DOC103,DOC501,DOC503,DOC603
+    arkouda/scipy/sparrayclass.py: DAR101,DAR402,DOC101,DOC103,DOC107,DOC503
+    arkouda/pandas/series.py: DAR101,DAR201,DAR401,DAR402,DOC101,DOC103,DOC105,DOC106,DOC107,DOC203,DOC201,DOC501,DOC502,DOC503,DOC601,DOC603
+    arkouda/plotting.py: DAR103,DAR401,DOC105,DOC203,DOC503,DOC501
+    arkouda/scipy/_stats_py.py: DAR401,DOC105,DOC106,DOC107,DOC203,DOC501,DOC503
+    arkouda/scipy/sparsematrix.py: DAR101,DOC107,DAR401,DOC101,DOC103,DOC105,DOC501,DOC503
+    arkouda/scipy/special/_math.py: DAR002,DOC105,DOC203
+    arkouda/testing/_asserters.py: DAR101,DAR002,DAR401,DAR201,DOC101,DOC103,DOC105,DOC106,DOC107,DOC501,DOC503
+    arkouda/testing/_equivalence_asserters.py: DOC105,DOC106,DOC107,DOC203,DOC502
 
 exclude =
     toys
