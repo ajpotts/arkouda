@@ -1,30 +1,29 @@
+from typing import List, Optional, Union
+
+import pandas as pd
 from pandas import DataFrame as pd_DataFrame
 from pandas.api.extensions import register_dataframe_accessor
-import pandas as pd
+from typeguard import typechecked
 
+from arkouda.numpy.pdarrayclass import pdarray
 from arkouda.numpy.pdarraycreation import array as ak_array
+from arkouda.numpy.strings import Strings
+from arkouda.pandas.categorical import Categorical
+from arkouda.pandas.dataframe import DataFrame as ak_DataFrame
 from arkouda.pandas.extension._arkouda_base_array import ArkoudaBaseArray
 
 from ._arkouda_array import ArkoudaArray
 from ._dtypes import _ArkoudaBaseDtype
-from arkouda.pandas.dataframe import DataFrame as ak_DataFrame
-from typing import Optional, Union, List
-from typeguard import typechecked
-from arkouda.numpy.pdarrayclass import pdarray
-from arkouda.numpy.strings import Strings
-from arkouda.pandas.categorical import Categorical
+
 
 def _looks_like_ak_col(obj) -> bool:
     return isinstance(obj, (pdarray, Strings, Categorical))
 
-_AK_COL_ATTRS = (
-    "ak_array", "_ak", "ak", "akcol", "pdarray", "data", "_data", "values_ak",
-)
 
 def _extract_ak_from_ea(ea):
     # Try common attributes first
-    for attr in _AK_COL_ATTRS:
-        col = getattr(ea, attr, None)
+    if hasattr(ea, "_data"):
+        col = getattr(ea, "_data", None)
         if _looks_like_ak_col(col):
             return col
     # Then try a method hook
@@ -36,11 +35,13 @@ def _extract_ak_from_ea(ea):
                 return col
     raise TypeError("Arkouda EA does not expose an Arkouda column via a known attribute/method.")
 
+
 def _is_arkouda_series(s: pd.Series) -> bool:
     # dtype check first; fallback to EA instance name if helpful
-    if isinstance(getattr(s, "dtype", None),  _ArkoudaBaseDtype):
+    if isinstance(getattr(s, "dtype", None), _ArkoudaBaseDtype):
         return True
     return isinstance(getattr(s, "array", None), ArkoudaArray)
+
 
 def _series_to_akcol_no_copy(s: pd.Series):
     if not _is_arkouda_series(s):
@@ -97,9 +98,8 @@ def _akdf_to_pandas_no_copy(akdf: "ak.DataFrame") -> pd.DataFrame:
     return pd.DataFrame(cols)
 
 
-
 @register_dataframe_accessor("ak")
-class ArkoudaAccessor:
+class ArkoudaDataFrameAccessor:
     """
     Bare-bones Arkouda DataFrame accessor.
 
@@ -115,10 +115,6 @@ class ArkoudaAccessor:
         """
         cols = {}
         for name, col in self._obj.items():
-            # simplistic conversion; assumes numeric or string
-            # if ak.is_registered(col.name):
-            #     cols[name] = ak_attach(col.name)
-            # else:
             cols[name] = ArkoudaArray(ak_array(col.values))
         return pd_DataFrame(cols)
 
@@ -137,8 +133,6 @@ class ArkoudaAccessor:
         """
         print(f"Arkouda Accessor for DataFrame with {len(self._obj)} rows")
         print("Columns:", list(self._obj.columns))
-
-
 
     # Optional: simple sanity check
     def _assert_all_arkouda(self):
@@ -236,19 +230,18 @@ class ArkoudaAccessor:
         # Wrap back into pandas with Arkouda EAs (no NumPy)
         return _akdf_to_pandas_no_copy(out_ak)
 
-
     @typechecked
     def merge(
-            self,
-            right: pd.DataFrame,
-            on: Optional[Union[str, List[str]]] = None,
-            left_on: Optional[Union[str, List[str]]] = None,
-            right_on: Optional[Union[str, List[str]]] = None,
-            how: str = "inner",
-            left_suffix: str = "_x",
-            right_suffix: str = "_y",
-            convert_ints: bool = True,
-            sort: bool = True,
+        self,
+        right: pd.DataFrame,
+        on: Optional[Union[str, List[str]]] = None,
+        left_on: Optional[Union[str, List[str]]] = None,
+        right_on: Optional[Union[str, List[str]]] = None,
+        how: str = "inner",
+        left_suffix: str = "_x",
+        right_suffix: str = "_y",
+        convert_ints: bool = True,
+        sort: bool = True,
     ) -> pd.DataFrame:
         r"""
         Merge two pandas DataFrames (both Arkouda-backed) using Arkouda's join,
