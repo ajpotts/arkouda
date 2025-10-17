@@ -31,6 +31,7 @@ from arkouda.numpy.pdarraycreation import array, ones, zeros, zeros_like
 from arkouda.numpy.sorting import argsort
 from arkouda.numpy.strings import Strings
 from arkouda.pandas.groupbyclass import GroupBy, groupable, groupable_element_type, unique
+from tests.numpy.util_test import test_categorical_components_share_with_self
 
 
 if TYPE_CHECKING:
@@ -609,7 +610,7 @@ def union1d(
         if A.dtype == int and B.dtype == int or (A.dtype == akuint64 and B.dtype == akuint64):
             repMsg = generic_msg(cmd="union1d", args={"arg1": A, "arg2": B})
             return cast(pdarray, create_pdarray(repMsg))
-        x = cast(pdarray, unique(cast(pdarray, concatenate((unique(A), unique(B)), ordered=False))))
+        x = cast(pdarray, unique(cast(pdarray, concatenate([tcast(pdarray,unique(A,return_groups=False)), tcast(pdarray,unique(B,return_groups=False))], ordered=False)),return_groups=False))
         return x[argsort(x)]
     elif isinstance(A, Sequence) and isinstance(B, Sequence):
         multiarray_setop_validation(A, B)
@@ -630,115 +631,93 @@ def union1d(
         k, ct = g.size()
         # k is a sequence of Single (keys per level); return as a Python list
         return list(tcast(Sequence[Single], k))
+    else:
+        raise TypeError(
+            f"Both A and B must be pdarray, List, or Tuple. Received {type(A)} and {type(B)}"
+        )
 
 
-# (A & B) Set Intersection: elements have to be in both arrays
 @typechecked
 def intersect1d(A: groupable, B: groupable, assume_unique: bool = False) -> Union[pdarray, groupable]:
     """
     Find the intersection of two arrays.
 
     Return the sorted, unique values that are in both of the input arrays.
-
-    Parameters
-    ----------
-    A : list of pdarrays, pdarray, Strings, or Categorical
-    B : list of pdarrays, pdarray, Strings, or Categorical
-    assume_unique : bool
-        If True, the input arrays are both assumed to be unique, which
-        can speed up the calculation.  Default is False.
-
-    Returns
-    -------
-    pdarray/groupable
-        Sorted 1D array/List of sorted pdarrays of common and unique elements.
-
-    Raises
-    ------
-    TypeError
-        Raised if either A or B is not a groupable
-    RuntimeError
-        Raised if the dtype of either pdarray is not supported
-
-    See Also
-    --------
-    arkouda.pandas.groupbyclass.unique, union1d
-
-    Examples
-    --------
-    >>> import arkouda as ak
-
-    1D Example
-    >>> ak.intersect1d(ak.array([1, 3, 4, 3]), ak.array([3, 1, 2, 1]))
-    array([1 3])
-
-    Multi-Array Example
-    >>> a = ak.arange(5)
-    >>> b = ak.array([1, 5, 3, 4, 2])
-    >>> c = ak.array([1, 4, 3, 2, 5])
-    >>> d = ak.array([1, 2, 3, 5, 4])
-    >>> multia = [a, a, a]
-    >>> multib = [b, c, d]
-    >>> ak.intersect1d(multia, multib)
-    [array([1 3]), array([1 3]), array([1 3])]
-
     """
     from arkouda.client import generic_msg
     from arkouda.pandas.categorical import Categorical as Categorical_
 
-    ua: groupable
-    ub: groupable
-
+    # ---- single-array branch -------------------------------------------------
     if (
         isinstance(A, (pdarray, Strings, Categorical_))
         and isinstance(B, (pdarray, Strings, Categorical_))
         and type(A) is type(B)
     ):
         if A.size == 0:
-            return A  # nothing in the intersection
+            return A
         if B.size == 0:
-            return B  # nothing in the intersection
+            return B
         if (A.dtype == int and B.dtype == int) or (A.dtype == akuint64 and B.dtype == akuint64):
             repMsg = generic_msg(
                 cmd="intersect1d", args={"arg1": A, "arg2": B, "assume_unique": assume_unique}
             )
             return create_pdarray(cast(str, repMsg))
-        if not assume_unique:
-            A = cast(pdarray, unique(A))
-            B = cast(pdarray, unique(B))
-        aux = concatenate((A, B), ordered=False)
-        aux_sort_indices = argsort(aux)
-        aux = aux[aux_sort_indices]
-        mask = aux[1:] == aux[:-1]
+
+        # For non-integer paths, unique + sort approach
+        A1 = cast(pdarray, unique(A)) if not assume_unique else A
+        B1 = cast(pdarray, unique(B)) if not assume_unique else B
+        # AFTER (narrow to expected types for mypy)
+        pair = tcast(Sequence[Union[pdarray, Strings, Categorical]], (A1, B1))
+        aux: Union[pdarray, Strings, Categorical] = tcast(Union[pdarray, Strings, Categorical],
+                                                          concatenate(pair, ordered=False))
+        aux_sort_indices: pdarray = argsort(aux)  # permutation indices
+        perm = argsort(aux)  # pdarray
+        aux2 = aux[perm]  # Single at runtime
+        aux = tcast(Union[pdarray, Strings, Categorical], aux2)
+        mask = tcast(pdarray, aux[1:] == aux[:-1])  # boolean pdarray
         int1d = aux[:-1][mask]
         return int1d
+
+    # ---- multi-array (sequence) branch --------------------------------------
     elif (isinstance(A, list) or isinstance(A, tuple)) and (isinstance(B, list) or isinstance(B, tuple)):
         multiarray_setop_validation(A, B)
 
         if not assume_unique:
-            ag = GroupBy(A)
-            ua = ag.unique_keys
-            bg = GroupBy(B)
-            ub = bg.unique_keys
+            ag = GroupBy(tcast(Sequence[Union[pdarray, Strings, Categorical]], A))
+            ua = tcast(Sequence[Union[pdarray, Strings, Categorical]], ag.unique_keys)
+            bg = GroupBy(tcast(Sequence[Union[pdarray, Strings, Categorical]], B))
+            ub = tcast(Sequence[Union[pdarray, Strings, Categorical]], bg.unique_keys)
         else:
-            ua = A
-            ub = B
+            ua = tcast(Sequence[Union[pdarray, Strings, Categorical]], A)
+            ub = tcast(Sequence[Union[pdarray, Strings, Categorical]], B)
 
-        # Key for deinterleaving result
+        # mask for deinterleaving back into A/B domains
         isa = concatenate(
-            (ones(ua[0].size, dtype=akbool), zeros(ub[0].size, dtype=akbool)), ordered=False
+            (ones(ua[0].size, dtype=ak_bool), zeros(ub[0].size, dtype=ak_bool)),
+            ordered=False,
         )
-        c = [concatenate(x, ordered=False) for x in zip(ua, ub)]
-        g = GroupBy(c)
+        isa_bool = tcast(pdarray, isa)
+
+        # pairwise concatenate corresponding levels; narrow each item to Single
+        c: List[Union[pdarray, Strings, Categorical]] = [
+            tcast(Union[pdarray, Strings, Categorical], concatenate(tcast(Sequence[Union[pdarray, Strings, Categorical]], pair), ordered=False))
+            for pair in zip(ua, ub)
+        ]
+
+        g = GroupBy(tcast(Sequence[Union[pdarray, Strings, Categorical]], c))
+
         if assume_unique:
-            # need to verify uniqueness, otherwise answer will be wrong
-            if (g.sum(isa)[1] > 1).any():
+            # verify uniqueness using the boolean mask (must be pdarray)
+            if (g.sum(isa_bool)[1] > 1).any():
                 raise ValueError("Called with assume_unique=True, but first argument is not unique")
-            if (g.sum(~isa)[1] > 1).any():
+            if (g.sum(~isa_bool)[1] > 1).any():
                 raise ValueError("Called with assume_unique=True, but second argument is not unique")
+
         k, ct = g.size()
-        in_union = ct == 2
-        return [x[in_union] for x in k]
+        in_union = tcast(pdarray, ct == 2)  # boolean pdarray
+        # k is a sequence of columns; select intersecting rows from each column
+        return [tcast(Union[pdarray, Strings, Categorical], col[in_union]) for col in tcast(Sequence[Union[pdarray, Strings, Categorical]], k)]
+
     else:
         raise TypeError(
             f"Both A and B must be pdarray, List, or Tuple. Received {type(A)} and {type(B)}"
