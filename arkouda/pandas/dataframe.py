@@ -76,7 +76,7 @@ from arkouda.numpy.timeclass import Datetime, Timedelta
 from arkouda.pandas.groupbyclass import GROUPBY_REDUCTION_TYPES, GroupBy, unique
 from arkouda.pandas.join import inner_join
 from arkouda.pandas.row import Row
-
+from typing import cast as type_cast
 
 if TYPE_CHECKING:
     from arkouda.categorical import Categorical
@@ -106,6 +106,7 @@ __all__ = [
     "merge",
 ]
 
+Single = Union[pdarray,Strings,Categorical]
 
 def apply_if_callable(maybe_callable, obj, **kwargs):
     """
@@ -347,9 +348,10 @@ class DataFrameGroupBy:
 
         """
         _, indx = self.gb.head(self.df.index.values, n=n, return_indices=True)
+        indx_ = type_cast(pdarray,indx)
         if sort_index:
-            indx = aksort(indx)
-        return self.df[indx]
+            indx = aksort(indx_)
+        return self.df[indx_]
 
     def tail(
         self,
@@ -400,9 +402,10 @@ class DataFrameGroupBy:
 
         """
         _, indx = self.gb.tail(self.df.index.values, n=n, return_indices=True)
+        indx_ = type_cast(pdarray,indx)
         if sort_index:
-            indx = aksort(indx)
-        return self.df[indx]
+            indx = aksort(indx_)
+        return self.df[indx_]
 
     def sample(self, n=None, frac=None, replace=False, weights=None, random_state=None):
         """
@@ -3755,15 +3758,19 @@ class DataFrame(UserDict):
         from arkouda.pandas.series import Series
 
         if isinstance(values, pdarray):
-            # flatten the DataFrame so single in1d can be used.
-            flat_in1d = in1d(concatenate(list(self.data.values())), values)
+            # flatten the DataFrame so single in1d can be used.f
+            k = type_cast(Single,concatenate(list(self.data.values())) )
+            flat_in1d = in1d(k, values)
             segs = concatenate(
                 [
-                    array([0]),
-                    cumsum(array([self.data[col].size for col in self.columns.values])),
+                    type_cast(pdarray,array([0])),
+                    cumsum(type_cast(pdarray,array([self.data[col].size for col in self.columns.values]))),
                 ]
             )
-            df_def = {col: flat_in1d[segs[i] : segs[i + 1]] for i, col in enumerate(self.columns.values)}
+            df_def = {
+                col: flat_in1d[int(segs[i]): int(segs[i + 1])]
+                for i, col in enumerate(self.columns.values)
+            }
         elif isinstance(values, Dict):
             # key is column name, val is the list of values to check
             df_def = {
