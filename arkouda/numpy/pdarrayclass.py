@@ -2498,34 +2498,31 @@ class pdarray:
 
     from collections.abc import Sequence
     from operator import index as to_index
-    from typing import overload, SupportsIndex, Tuple, Union, cast
+    from typing import SupportsIndex, Tuple, Union, cast, overload
 
     # If you already have an "int_scalars" alias in your codebase, define it as SupportsIndex for typing:
     # int_scalars = SupportsIndex
 
     ShapeLike = Union[int_scalars, Sequence[int_scalars], "pdarray"]
 
-
+    @overload
+    def reshape(self, *shape: int_scalars) -> "pdarray": ...
 
     @overload
-    def reshape(self, *shape: int_scalars) -> "pdarray":
-        ...
+    def reshape(self, shape: Sequence[int_scalars]) -> "pdarray": ...
 
     @overload
-    def reshape(self, shape: Sequence[int_scalars]) -> "pdarray":
-        ...
-
-    @overload
-    def reshape(self, shape: "pdarray") -> "pdarray":
-        ...
+    def reshape(self, shape: "pdarray") -> "pdarray": ...
 
     def reshape(self, *shape: ShapeLike) -> "pdarray":
         """
         Gives a new shape to an array without changing its data.
         """
-        from arkouda.client import generic_msg
         from collections.abc import Sequence
-        shape_arg:Union[int, List[int, ...], pdarray]
+
+        from arkouda.client import generic_msg
+
+        shape_arg: Union[int, List[int, ...], pdarray]
 
         if len(shape) == 1:
             s0 = shape[0]
@@ -2533,14 +2530,14 @@ class pdarray:
                 shape_arg = s0
                 lenshape = 1
             elif isinstance(s0, Tuple):
-                shape_arg =[x for x in s0]
+                shape_arg = [x for x in s0]
                 lenshape = len(shape_arg)
             else:
                 shape_arg = s0
                 lenshape = 1
         else:
             shape_arg = [x for x in shape]
-            lenshape = len(shape_arg )
+            lenshape = len(shape_arg)
 
         return create_pdarray(
             generic_msg(
@@ -3242,7 +3239,7 @@ class pdarray:
 #       all values have been checked by python module and...
 #       server has created pdarray already before this is called
 @typechecked
-def create_pdarray(repMsg: Union[str, memoryview], max_bits=None) -> pdarray:
+def create_pdarray(repMsg: Union[str, memoryview], max_bits: object = None) -> pdarray:
     """
     Return a pdarray instance pointing to an array created by the arkouda server.
     The user should not call this function directly.

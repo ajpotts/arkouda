@@ -51,7 +51,7 @@ dependencies:
 
   - pip:
     # Developer dependencies
-    - typeguard==4.4.2
+    - typeguard==2.11.0
     - sphinx-autopackagesummary
     - furo # sphinx theme
     - myst-parser
