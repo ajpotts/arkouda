@@ -1,6 +1,19 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Sequence, TypeVar, Union, cast
+from typing import (
+    TYPE_CHECKING,
+    Iterable,
+    List,
+    Literal,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+    overload,
+)
+from typing import cast as tcast
+from typing import cast as type_cast
 
 import numpy as np
 from typeguard import typechecked
@@ -8,6 +21,7 @@ from typeguard import typechecked
 from arkouda.client_dtypes import BitVector
 from arkouda.logger import getArkoudaLogger
 from arkouda.numpy.dtypes import bigint
+from arkouda.numpy.dtypes import bool_ as ak_bool
 from arkouda.numpy.dtypes import bool_ as akbool
 from arkouda.numpy.dtypes import dtype as akdtype
 from arkouda.numpy.dtypes import int64 as akint64
@@ -105,13 +119,16 @@ def _in1d_single(
         if pda2.size == 0:
             return zeros(pda1.size, dtype=akbool)
     if hasattr(pda1, "categories"):
+        assert isinstance(pda2, (Strings, Categorical_))
         x = cast(Categorical_, pda1).in1d(pda2)
         return x if not invert else ~x
     elif isinstance(pda1, pdarray) and isinstance(pda2, pdarray):
         if pda1.ndim > 1 or pda2.ndim > 1:
             raise TypeError("in1d does not support multi-dim inputs")
         if pda1.dtype == bigint and pda2.dtype == bigint:
-            return in1d(pda1.bigint_to_uint_arrays(), pda2.bigint_to_uint_arrays(), invert=invert)
+            return type_cast(
+                pdarray, in1d(pda1.bigint_to_uint_arrays(), pda2.bigint_to_uint_arrays(), invert=invert)
+            )
         repMsg = generic_msg(
             cmd="in1d",
             args={
@@ -137,138 +154,130 @@ def _in1d_single(
         raise TypeError("Both pda1 and pda2 must be pdarray, Strings, or Categorical")
 
 
+Single = Union[pdarray, Strings, Categorical]
+GroupableSeq = Sequence[Single]
+
+
+@overload
+def in1d(
+    A: Single,
+    B: Single,
+    assume_unique: bool = ...,
+    *,
+    symmetric: Literal[False] = ...,
+    invert: bool = ...,
+) -> pdarray: ...
+@overload
+def in1d(
+    A: Single,
+    B: Single,
+    assume_unique: bool = ...,
+    *,
+    symmetric: Literal[True],
+    invert: bool = ...,
+) -> Tuple[pdarray, pdarray]: ...
+@overload
+def in1d(
+    A: GroupableSeq,
+    B: GroupableSeq,
+    assume_unique: bool = ...,
+    *,
+    symmetric: bool = ...,
+    invert: bool = ...,
+) -> pdarray: ...
+
+
 @typechecked
 def in1d(
     A: groupable,
     B: groupable,
     assume_unique: bool = False,
+    *,
     symmetric: bool = False,
     invert: bool = False,
-) -> groupable:
-    """
-    Test whether each element of a 1-D array is also present in a second array.
-
-    Returns a boolean array the same length as `A` that is True
-    where an element of `A` is in `B` and False otherwise.
-
-    Supports multi-level, i.e. test if rows of a are in the set of rows of b.
-    But note that multi-dimensional pdarrays are not supported.
-
-    Parameters
-    ----------
-    A : list of pdarrays, pdarray, Strings, or Categorical
-        Entries will be tested for membership in B
-    B : list of pdarrays, pdarray, Strings, or Categorical
-        The set of elements in which to test membership
-    assume_unique : bool, optional, defaults to False
-        If true, assume rows of a and b are each unique and sorted.
-        By default, sort and unique them explicitly.
-    symmetric: bool, optional, defaults to False
-        Return in1d(A, B), in1d(B, A) when A and B are single items.
-    invert : bool, optional, defaults to False
-        If True, the values in the returned array are inverted (that is,
-        False where an element of `A` is in `B` and True otherwise).
-        Default is False. ``ak.in1d(a, b, invert=True)`` is equivalent
-        to (but is faster than) ``~ak.in1d(a, b)``.
-
-    Returns
-    -------
-    groupable
-        True for each row in a that is contained in b
-
-    Raises
-    ------
-    TypeError
-        Raised if either A or B is not a pdarray, Strings, or Categorical
-        object, or if both are pdarrays and either has rank > 1,
-        or if invert is not a bool
-    RuntimeError
-        Raised if the dtype of either array is not supported
-
-    Examples
-    --------
-    >>> import arkouda as ak
-    >>> ak.in1d(ak.array([-1, 0, 1]), ak.array([-2, 0, 2]))
-    array([False True False])
-
-    >>> ak.in1d(ak.array(['one','two']),ak.array(['two', 'three','four','five']))
-    array([False True])
-
-    See Also
-    --------
-    arkouda.pandas.groupbyclass.unique, intersect1d, union1d
-
-    Notes
-    -----
-    `in1d` can be considered as an element-wise function version of the
-    python keyword `in`, for 1-D sequences. ``in1d(a, b)`` is logically
-    equivalent to ``ak.array([item in b for item in a])``, but is much
-    faster and scales to arbitrarily large ``a``.
-
-    ak.in1d is not supported for bool or float64 pdarrays
-    """
+) -> Union[pdarray, Tuple[pdarray, pdarray]]:
     from arkouda.alignment import NonUniqueError
     from arkouda.pandas.categorical import Categorical as Categorical_
 
-    ua: groupable
-    ub: groupable
-
+    # ---- Single-array cases ----
     if isinstance(A, (pdarray, Strings, Categorical_)):
         if isinstance(A, (Strings, Categorical_)) and not isinstance(B, (Strings, Categorical_)):
             raise TypeError("Arguments must have compatible types, Strings/Categorical")
-        elif isinstance(A, pdarray) and not isinstance(B, pdarray):
+        if isinstance(A, pdarray) and not isinstance(B, pdarray):
             raise TypeError("If A is pdarray, B must also be pdarray")
-        elif isinstance(B, (pdarray, Strings, Categorical_)):
+        if isinstance(B, (pdarray, Strings, Categorical_)):
             if symmetric:
-                return _in1d_single(A, B), _in1d_single(B, A, invert)
-            return _in1d_single(A, B, invert)
-        else:
-            raise TypeError(
-                "Inputs should both be Union[pdarray, Strings, Categorical] or both be "
-                "Sequence[pdarray, Strings, Categorical]."
-                "  (Do not mix and match.)"
-            )
-    atypes = np.array([ai.dtype for ai in A])
-    btypes = np.array([bi.dtype for bi in B])
+                a = tcast(pdarray, _in1d_single(A, B, invert))
+                b = tcast(pdarray, _in1d_single(B, A, invert))
+                return a, b
+            return tcast(pdarray, _in1d_single(A, B, invert))
+        raise TypeError(
+            "Inputs should both be Union[pdarray, Strings, Categorical] or both be "
+            "Sequence[pdarray, Strings, Categorical]. (Do not mix and match.)"
+        )
+
+    # ---- Multi-level (sequence) cases ----
+    # Narrow A, B to sequences of Single for mypy
+    if not (isinstance(A, Sequence) and isinstance(B, Sequence)):
+        raise TypeError(
+            "Inputs should both be Union[pdarray, Strings, Categorical] or both be "
+            "Sequence[pdarray, Strings, Categorical]."
+        )
+    ua_seq: Sequence[Single]
+    ub_seq: Sequence[Single]
+
+    if not assume_unique:
+        ag = GroupBy(tcast(Sequence[Single], A))
+        ua_seq = tcast(Sequence[Single], ag.unique_keys)
+        bg = GroupBy(tcast(Sequence[Single], B))
+        ub_seq = tcast(Sequence[Single], bg.unique_keys)
+    else:
+        ua_seq = tcast(Sequence[Single], A)
+        ub_seq = tcast(Sequence[Single], B)
+
+    # dtype check
+    atypes = np.array([ai.dtype for ai in ua_seq])
+    btypes = np.array([bi.dtype for bi in ub_seq])
     if not (atypes == btypes).all():
         raise TypeError("Array dtypes of arguments must match")
-    if not assume_unique:
-        ag = GroupBy(A)
-        ua = ag.unique_keys
-        bg = GroupBy(B)
-        ub = bg.unique_keys
-    else:
-        ua = A
-        ub = B
+
     # Key for deinterleaving result
-    isa = concatenate((ones(ua[0].size, dtype=akbool), zeros(ub[0].size, dtype=akbool)), ordered=False)
-    c = [concatenate(x, ordered=False) for x in zip(ua, ub)]
+    isa = concatenate(
+        (ones(ua_seq[0].size, dtype=ak_bool), zeros(ub_seq[0].size, dtype=ak_bool)),
+        ordered=False,
+    )
+    isa_bool = tcast(pdarray, isa)  # boolean mask
+
+    # Build concatenated columns (narrow each concatenate call to Single)
+    c: List[Single] = [tcast(Single, concatenate(x, ordered=False)) for x in zip(ua_seq, ub_seq)]
+
     g = GroupBy(c)
-    k, ct = g.size()
+    _, ct = g.size()
+
     if assume_unique:
-        # need to verify uniqueness, otherwise answer will be wrong
-        if (g.sum(isa)[1] > 1).any():
+        # verify uniqueness using the mask
+        if (g.sum(isa_bool)[1] > 1).any():
             raise NonUniqueError("Called with assume_unique=True, but first argument is not unique")
-        if (g.sum(~isa)[1] > 1).any():
+        if (g.sum(~isa_bool)[1] > 1).any():
             raise NonUniqueError("Called with assume_unique=True, but second argument is not unique")
-    # Where value appears twice, it is present in both a and b
-    # truth = answer in c domain
-    truth = g.broadcast(ct == 2, permute=True)
+
+    # presence mask in concatenated domain
+    truth = tcast(pdarray, g.broadcast(ct == 2, permute=True))
+
     if assume_unique:
-        # Deinterleave truth into a and b domains
+        a_truth = tcast(pdarray, truth[isa_bool])
         if symmetric:
-            return truth[isa], truth[~isa] if not invert else ~truth[isa], ~truth[~isa]
-        else:
-            return truth[isa] if not invert else ~truth[isa]
+            b_truth = tcast(pdarray, truth[~isa_bool])
+            return ((~a_truth) if invert else a_truth, (~b_truth) if invert else b_truth)
+        return (~a_truth) if invert else a_truth
     else:
-        # If didn't start unique, first need to deinterleave into ua domain,
-        # then broadcast to a domain
-        atruth = ag.broadcast(truth[isa], permute=True)
+        ag = GroupBy(tcast(Sequence[Single], A))
+        atruth = tcast(pdarray, ag.broadcast(tcast(pdarray, truth[isa_bool]), permute=True))
         if symmetric:
-            btruth = bg.broadcast(truth[~isa], permute=True)
-            return atruth, btruth if not invert else ~atruth, ~btruth
-        else:
-            return atruth if not invert else ~atruth
+            bg = GroupBy(tcast(Sequence[Single], B))
+            btruth = tcast(pdarray, bg.broadcast(tcast(pdarray, truth[~isa_bool]), permute=True))
+            return ((~atruth) if invert else atruth, (~btruth) if invert else btruth)
+        return (~atruth) if invert else atruth
 
 
 def in1dmulti(a, b, assume_unique=False, symmetric=False):
@@ -604,19 +613,23 @@ def union1d(
         return x[argsort(x)]
     elif isinstance(A, Sequence) and isinstance(B, Sequence):
         multiarray_setop_validation(A, B)
-        ag = GroupBy(A)
-        ua = ag.unique_keys
-        bg = GroupBy(B)
-        ub = bg.unique_keys
 
-        c = [concatenate(x, ordered=False) for x in zip(ua, ub)]
-        g = GroupBy(c)
+        ag = GroupBy(tcast(Sequence[Single], A))
+        ua = tcast(Sequence[Single], ag.unique_keys)
+
+        bg = GroupBy(tcast(Sequence[Single], B))
+        ub = tcast(Sequence[Single], bg.unique_keys)
+
+        # Pairwise concat across levels; each zip-pair is a Sequence[Single] for concatenate
+        c: List[Single] = [
+            tcast(Single, concatenate(tcast(Sequence[Single], pair), ordered=False))
+            for pair in zip(ua, ub)
+        ]
+
+        g = GroupBy(tcast(Sequence[Single], c))
         k, ct = g.size()
-        return list(k)
-    else:
-        raise TypeError(
-            f"Both A and B must be pdarray, List, or Tuple. Received {type(A)} and {type(B)}"
-        )
+        # k is a sequence of Single (keys per level); return as a Python list
+        return list(tcast(Sequence[Single], k))
 
 
 # (A & B) Set Intersection: elements have to be in both arrays

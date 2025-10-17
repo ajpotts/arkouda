@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import TYPE_CHECKING, Literal, Sequence, TypeVar, Union, cast
+from typing import cast as type_cast
 
 from typeguard import check_type, typechecked
 
@@ -196,11 +197,11 @@ def coargsort(
             if a.dtype == bigint:
                 expanded_arrays.extend(a.bigint_to_uint_arrays())
             elif a.dtype == bool:
-                expanded_arrays.append(akcast(a, "int"))
+                expanded_arrays.append(type_cast(pdarray, akcast(a, "int")))
             else:
                 expanded_arrays.append(a)
         else:
-            expanded_arrays.append(a)
+            expanded_arrays.append(type_cast(pdarray, a))
 
     for a in expanded_arrays:
         if isinstance(a, pdarray):

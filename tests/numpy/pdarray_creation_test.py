@@ -697,7 +697,7 @@ class TestPdarrayCreation:
         ones = ak.ones("5")
         assert 5 == len(ones)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             ak.ones(5, dtype=ak.uint8)
 
         with pytest.raises(TypeCheckError):

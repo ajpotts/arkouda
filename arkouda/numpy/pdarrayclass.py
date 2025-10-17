@@ -5,9 +5,19 @@ from functools import reduce
 import json
 from math import ceil
 from sys import modules
-from typing import TYPE_CHECKING, List, Literal, Optional, Tuple, TypeVar, Union
+from typing import (
+    TYPE_CHECKING,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeAlias,
+    TypeVar,
+    Union,
+    overload,
+)
 from typing import cast as type_cast
-from typing import overload
 
 import numpy as np
 from typeguard import typechecked
@@ -15,6 +25,13 @@ from typeguard import typechecked
 from arkouda.infoclass import information, pretty_print_information
 from arkouda.logger import getArkoudaLogger
 from arkouda.numpy.dtypes import (
+    NUMBER_FORMAT_STRINGS,
+    DTypes,
+    bigint,
+    bool_scalars,
+    dtype,
+    get_byteorder,
+    get_server_byteorder,
     int_scalars,
     isSupportedBool,
     isSupportedInt,
@@ -24,15 +41,14 @@ from arkouda.numpy.dtypes import (
     resolve_scalar_dtype,
     result_type,
 )
-from arkouda.numpy.dtypes import NUMBER_FORMAT_STRINGS, DTypes, bigint
 from arkouda.numpy.dtypes import bool_ as akbool
-from arkouda.numpy.dtypes import bool_scalars, dtype
 from arkouda.numpy.dtypes import float64 as akfloat64
-from arkouda.numpy.dtypes import get_byteorder, get_server_byteorder
 from arkouda.numpy.dtypes import int64 as akint64
 from arkouda.numpy.dtypes import str_ as akstr_
 from arkouda.numpy.dtypes import uint64 as akuint64
 
+
+ShapeLike: TypeAlias = Union[int_scalars, Sequence[int_scalars], "pdarray"]
 
 if TYPE_CHECKING:
     from arkouda.client import generic_msg, get_array_ranks
@@ -2494,50 +2510,62 @@ class pdarray:
         ret_list = json.loads(generic_msg(cmd=cmd, args={"array": self}))
         return list(reversed([create_pdarray(a) for a in ret_list]))
 
-    # from __future__ import annotations
-
-    from collections.abc import Sequence
-    from operator import index as to_index
-    from typing import SupportsIndex, Tuple, Union, cast, overload
-
-    # If you already have an "int_scalars" alias in your codebase, define it as SupportsIndex for typing:
-    # int_scalars = SupportsIndex
-
-    ShapeLike = Union[int_scalars, Sequence[int_scalars], "pdarray"]
-
     @overload
     def reshape(self, *shape: int_scalars) -> "pdarray": ...
 
     @overload
-    def reshape(self, shape: Sequence[int_scalars]) -> "pdarray": ...
+    def reshape(self, shape: Union[Sequence[int_scalars], "pdarray"]) -> "pdarray": ...
 
-    @overload
-    def reshape(self, shape: "pdarray") -> "pdarray": ...
-
-    def reshape(self, *shape: ShapeLike) -> "pdarray":
+    def reshape(self, *shape: object, **kw: object) -> "pdarray":
         """
         Gives a new shape to an array without changing its data.
-        """
-        from collections.abc import Sequence
 
+        Accepts either:
+          - varargs of integer scalars: reshape(m, n, k, ...)
+          - a single Sequence[int] (e.g., tuple/list): reshape((m, n, k))
+          - a single pdarray of ints: reshape(pdarray_of_ints)
+          - keyword form: reshape(shape=(...))  or reshape(shape=pdarray_of_ints)
+        """
         from arkouda.client import generic_msg
 
-        shape_arg: Union[int, List[int, ...], pdarray]
+        # Allow keyword `shape=...` to satisfy overload #2
+        if "shape" in kw:
+            if shape:
+                raise TypeError("reshape() got multiple values for argument 'shape'")
+            shape = (kw["shape"],)
+
+        # Build the kernel argument: int | list[int] | pdarray
+        shape_arg: Union[int, List[int], "pdarray"]
+        lenshape: int
+
+        def _to_int(x: object) -> int:
+            # Narrow to int-like before calling int(...)
+            if isinstance(x, bool):
+                return int(x)
+            if isinstance(x, int):
+                return x
+            if isinstance(x, np.integer):
+                return int(x)
+            # Add other int-like cases here if your int_scalars includes them.
+            raise TypeError(f"reshape() expected an integer dimension, got {type(x)}")
 
         if len(shape) == 1:
             s0 = shape[0]
             if isinstance(s0, pdarray):
                 shape_arg = s0
                 lenshape = 1
-            elif isinstance(s0, Tuple):
-                shape_arg = [x for x in s0]
-                lenshape = len(shape_arg)
+            elif isinstance(s0, Sequence) and not isinstance(s0, (str, bytes)):
+                dims: List[int] = [_to_int(x) for x in s0]
+                shape_arg = dims
+                lenshape = len(dims)
             else:
-                shape_arg = s0
+                # single integer scalar
+                shape_arg = _to_int(s0)
                 lenshape = 1
         else:
-            shape_arg = [x for x in shape]
-            lenshape = len(shape_arg)
+            dims2: List[int] = [_to_int(x) for x in shape]
+            shape_arg = dims2
+            lenshape = len(dims2)
 
         return create_pdarray(
             generic_msg(
@@ -3239,7 +3267,7 @@ class pdarray:
 #       all values have been checked by python module and...
 #       server has created pdarray already before this is called
 @typechecked
-def create_pdarray(repMsg: Union[str, memoryview], max_bits: object = None) -> pdarray:
+def create_pdarray(repMsg: Union[str, memoryview], max_bits: Union[int, None] = None) -> pdarray:
     """
     Return a pdarray instance pointing to an array created by the arkouda server.
     The user should not call this function directly.

@@ -769,10 +769,10 @@ class TestRandom:
 
         assert np.allclose(npda.tolist(), pda.tolist())
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             ak.random.standard_normal("100")
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeCheckError):
             ak.random.standard_normal(100.0)
 
         with pytest.raises(ValueError, match="The size parameter must be > 0"):

@@ -1,5 +1,6 @@
 import itertools
 from typing import TYPE_CHECKING, Any, Iterable, List, Optional, Tuple, TypeVar, Union, cast, overload
+from typing import cast as type_cast
 
 import numpy as np
 import pandas as pd
@@ -14,8 +15,9 @@ from arkouda.numpy.dtypes import (
     bigint,
     bool_,
     bool_scalars,
-)
-from arkouda.numpy.dtypes import (
+    float64,
+    get_byteorder,
+    get_server_byteorder,
     int_scalars,
     isSupportedInt,
     isSupportedNumber,
@@ -24,7 +26,6 @@ from arkouda.numpy.dtypes import (
     str_,
 )
 from arkouda.numpy.dtypes import dtype as akdtype
-from arkouda.numpy.dtypes import float64, get_byteorder, get_server_byteorder
 from arkouda.numpy.dtypes import int64 as akint64
 from arkouda.numpy.dtypes import uint64 as akuint64
 from arkouda.numpy.pdarrayclass import create_pdarray, pdarray
@@ -262,7 +263,7 @@ def array(
 
     if isinstance(a, pdarray):
         dtype = dtype if dtype else a.dtype
-        casted = akcast(a, dtype)  # the "dtype is None" case was covered abov
+        casted = type_cast(pdarray, akcast(a, dtype))  # the "dtype is None" case was covered abov
         if dtype == bigint and max_bits != -1:
             casted.max_bits = max_bits
         return casted
@@ -361,7 +362,9 @@ def array(
             send_binary=True,
         )
         strings = Strings.from_return_msg(cast(str, rep_msg))
-        return strings if dtype is None else akcast(strings, dtype)
+        result = strings if dtype is None else akcast(strings, dtype)
+        assert isinstance(result, (pdarray, Strings))
+        return result
 
     # If not strings, then check that dtype is supported in arkouda
     if dtype == bigint or a.dtype.name not in DTypes:
@@ -1136,7 +1139,7 @@ def arange(
     # This matters for several tests in tests/series_test.py
 
     if (start == stop) | ((np.sign(stop - start) * np.sign(step)) <= 0):
-        return akcast(array([], dtype=akint64), dt=aktype)
+        return type_cast(pdarray, akcast(array([], dtype=akint64), dt=aktype))
 
     if isSupportedInt(start) and isSupportedInt(stop) and isSupportedInt(step):
         arg_dtypes = [resolve_scalar_dtype(arg) for arg in (start, stop, step)]
@@ -1155,7 +1158,7 @@ def arange(
             args={"start": start, "stop": stop, "step": step},
         )
         arr = create_pdarray(repMsg, max_bits=max_bits)
-        return arr if aktype == akint64 else akcast(arr, dt=aktype)
+        return type_cast(pdarray, arr if aktype == akint64 else akcast(arr, dt=aktype))
 
     raise TypeError(f"start, stop, step must be ints; got {args!r}")
 
