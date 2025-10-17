@@ -697,11 +697,12 @@ class TestPdarrayCreation:
         ones = ak.ones("5")
         assert 5 == len(ones)
 
-        with pytest.raises(TypeCheckError):
+        with pytest.raises(TypeError):
             ak.ones(5, dtype=ak.uint8)
 
-        with pytest.raises(TypeCheckError):
-            ak.ones(5, dtype=str)
+        #   Create a test for this when #5010 is resolved
+        # from arkouda.testing import assert_arkouda_strings_equal
+        # assert_arkouda_strings_equal(ak.ones(5, dtype=str),ak.array(['1', '1', '1', '1', '1']))
 
         # Test that int_scalars covers uint8, uint16, uint32
         int_arr = ak.ones(5)

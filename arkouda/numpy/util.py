@@ -5,7 +5,9 @@ import json
 from math import prod as maprod
 import sys
 from typing import TYPE_CHECKING, List, Literal, Sequence, Tuple, TypeVar, Union, cast
+from typing import cast as type_cast
 
+from pandas.core.interchange.dataframe_protocol import DataFrame
 from typeguard import typechecked
 
 from arkouda.client_dtypes import BitVector, BitVectorizer, IPv4
@@ -281,7 +283,7 @@ def attach(name: str):
     from arkouda.pandas.series import Series
 
     rep_msg = json.loads(cast(str, generic_msg(cmd="attach", args={"name": name})))
-    rtn_obj = None
+    rtn_obj: Union[pdarray, Strings, SegArray, Categorical, Timedelta, Series, DataFrame, None] = None
     if rep_msg["objType"].lower() == pdarray.objType.lower():
         rtn_obj = create_pdarray(rep_msg["create"])
     elif rep_msg["objType"].lower() == Strings.objType.lower():
@@ -974,7 +976,8 @@ def map(
 
     keys = values
     gb = GroupBy(keys, dropna=False)
-    gb_keys = gb.unique_keys
+    gb_keys = type_cast(pdarray, gb.unique_keys)
+    # mapping: Union[DataFrame,Series]
 
     if isinstance(mapping, dict):
         mapping = Series([array(list(mapping.keys())), array(list(mapping.values()))])
@@ -992,7 +995,8 @@ def map(
                 xtra_keys = xtra_keys.to_strings()
 
             xtra_series = Series(nans, index=xtra_keys)
-            mapping = Series.concat([mapping, xtra_series])
+            tmp = Series.concat([mapping, xtra_series])
+            mapping = tmp if isinstance(tmp, Series) else tmp.data
 
         if isinstance(gb_keys, Categorical):
             mapping = mapping[gb_keys.to_strings()]

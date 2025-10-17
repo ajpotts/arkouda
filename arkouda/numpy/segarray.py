@@ -788,7 +788,7 @@ class SegArray:
             x = self.values
         return self.grouping.aggregate(x, op)
 
-    def unique(self, x=None)-> SegArray:
+    def unique(self, x=None) -> SegArray:
         """
         Return sub-arrays of unique values.
 
