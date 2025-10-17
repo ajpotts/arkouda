@@ -72,7 +72,7 @@ from arkouda.numpy.pdarraycreation import arange, full
 from arkouda.numpy.random import default_rng
 from arkouda.numpy.sorting import argsort, sort
 from arkouda.numpy.strings import Strings
-
+from typing import cast as type_cast
 
 if TYPE_CHECKING:
     from arkouda.client import generic_msg
@@ -87,6 +87,7 @@ groupable = Union[groupable_element_type, Sequence[groupable_element_type]]
 # Note: we won't be typechecking GroupBy until we can figure out a way to handle
 # the circular import with Categorical
 
+Single = Union[pdarray,Strings,Categorical]
 
 def _get_grouping_keys(pda: groupable):
     nkeys = 1
@@ -1364,23 +1365,28 @@ class GroupBy:
         k, v = self.aggregate(values, "argmax")
         return k, cast(pdarray, v)
 
-    def _nested_grouping_helper(self, values: groupable) -> groupable:
+    # If you don't already have these aliases:
+    # Single = Union[pdarray, Strings, Categorical]
+    # groupable = Union[Single, Sequence[Single]]
+
+    def _nested_grouping_helper(self, values: groupable) -> List[Single]:
         unique_key_idx = self.broadcast(arange(self.ngroups), permute=True)
-        if hasattr(values, "_get_grouping_keys"):
-            # All single-array groupable types must have a _get_grouping_keys method
+
+        togroup: List[Single] = [unique_key_idx]
+
+        # Single-array case
+        if isinstance(values, (pdarray, Strings, Categorical)):
             if isinstance(values, pdarray) and values.dtype == akfloat64:
                 raise TypeError("grouping/uniquing unsupported for float64 arrays")
-            togroup = [unique_key_idx, values]
-        else:
-            # Treat as a sequence of groupable arrays
-            for v in values:
-                if isinstance(v, pdarray) and v.dtype not in [
-                    akint64,
-                    akuint64,
-                    bigint,
-                ]:
-                    raise TypeError("grouping/uniquing unsupported for this dtype")
-            togroup = [unique_key_idx] + list(values)
+            togroup.append(values)
+            return togroup
+
+        # Sequence-of-arrays case
+        seq = type_cast(Sequence[Single], values)
+        for v in seq:
+            if isinstance(v, pdarray) and v.dtype not in [akint64, akuint64, bigint]:
+                raise TypeError("grouping/uniquing unsupported for this dtype")
+        togroup.extend(seq)
         return togroup
 
     def nunique(self, values: groupable) -> Tuple[groupable, pdarray]:
@@ -1939,6 +1945,8 @@ class GroupBy:
         from arkouda.numpy import cast as akcast
         from arkouda.numpy import round as akround
 
+        num_samples: pdarray
+
         if frac is not None and n is not None:
             raise ValueError("Please enter a value for `frac` OR `n`, not both")
         if frac is None and n is None:
@@ -1956,12 +1964,12 @@ class GroupBy:
         if n is not None:
             if not _val_isinstance_of_union(n, int_scalars):
                 raise TypeError("n must be an int scalar.")
-            num_samples = full(seg_lens.size, n, akint64)
+            num_samples = type_cast(pdarray,full(seg_lens.size, n, akint64))
 
         if frac is not None:
             if not _val_isinstance_of_union(frac, float_scalars):
                 raise TypeError("frac must be a float scalar.")
-            num_samples = akcast(akround(frac * seg_lens), dt=akint64)
+            num_samples = type_cast(pdarray,akcast(akround(frac * seg_lens), dt=akint64))
 
         if not replace and (num_samples > seg_lens).any():
             raise ValueError("Cannot take a larger sample than population when replace is False")

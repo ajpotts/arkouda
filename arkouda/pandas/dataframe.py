@@ -3767,8 +3767,14 @@ class DataFrame(UserDict):
                     cumsum(type_cast(pdarray,array([self.data[col].size for col in self.columns.values]))),
                 ]
             )
+            # ensure segs is a pdarray of integer-like values
+            segs_arr = type_cast(pdarray, segs)
+
+            # convert once to plain Python ints (mypy- and slice-safe)
+            segs_idx: List[int] = [int(x) for x in segs_arr.to_ndarray().tolist()]
+
             df_def = {
-                col: flat_in1d[int(segs[i]): int(segs[i + 1])]
+                col: flat_in1d[segs_idx[i]: segs_idx[i + 1]]
                 for i, col in enumerate(self.columns.values)
             }
         elif isinstance(values, Dict):
@@ -3905,12 +3911,12 @@ class DataFrame(UserDict):
                         count_values += ~isnan(self[col])
                 elif not numeric_only or self[col].dtype == bool:
                     if first:
-                        count_values = full(self.index.size, 1, dtype=akint64)
+                        count_values = type_cast(pdarray,full(self.index.size, 1, dtype=akint64))
                         first = False
                     else:
                         count_values += 1
                 if first:
-                    count_values = full(self.index.size, 0, dtype=akint64)
+                    count_values = type_cast(pdarray,full(self.index.size, 0, dtype=akint64))
             if self.index is not None:
                 idx = self.index[:]
                 return Series(array(count_values), index=idx)
@@ -4254,6 +4260,8 @@ class DataFrame(UserDict):
         from arkouda import array, full
         from arkouda.pandas.series import Series
 
+        mask:Union[tuple, list , pdarray , Strings, Categorical ,Series , SegArray ]
+
         if self.empty:
             if axis is None:
                 return False
@@ -4267,7 +4275,6 @@ class DataFrame(UserDict):
                 index=Index(bool_cols),
             )
         elif (isinstance(axis, int) and axis == 1) or (isinstance(axis, str) and axis == "columns"):
-            mask = None
             first = True
             for col in bool_cols:
                 if first:
@@ -4346,6 +4353,8 @@ class DataFrame(UserDict):
         from arkouda import array, full
         from arkouda.pandas.series import Series
 
+        mask:Union[tuple, list , pdarray , Strings, Categorical ,Series , SegArray ]
+
         if self.empty:
             if axis is None:
                 return True
@@ -4359,7 +4368,6 @@ class DataFrame(UserDict):
                 index=Index(bool_cols),
             )
         elif (isinstance(axis, int) and axis == 1) or (isinstance(axis, str) and axis == "columns"):
-            mask = None
             first = True
             for col in bool_cols:
                 if first:
@@ -4465,6 +4473,8 @@ class DataFrame(UserDict):
         """
         from arkouda import all as akall
         from arkouda.pandas.series import Series
+
+        mask: Union[bool,Series]
 
         if (how is not None) and (thresh is not None):
             raise TypeError("You cannot set both the how and thresh arguments at the same time.")
@@ -5462,7 +5472,7 @@ def __nulls_like(
     elif isinstance(arry, Categorical):
         return Categorical.from_codes(
             categories=arry.categories,
-            codes=full(size, len(arry.categories) - 1, dtype=akint64),
+            codes=type_cast(pdarray,full(size, len(arry.categories) - 1, dtype=akint64)),
         )
     else:
         return full(size, np.nan, arry.dtype)
