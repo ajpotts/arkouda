@@ -3,7 +3,10 @@ from __future__ import annotations
 from builtins import str as builtin_str
 import json
 import operator
-from typing import TYPE_CHECKING, List, Literal, Optional, Tuple, TypeVar, Union, cast
+from typing import TYPE_CHECKING, List, Literal, Optional, Tuple, TypeVar, Union
+from typing import cast
+from typing import cast as tcast
+from typing import cast as type_cast
 
 import numpy as np
 import pandas as pd
@@ -12,9 +15,12 @@ from typeguard import typechecked
 
 from arkouda.accessor import CachedAccessor, DatetimeAccessor, StringAccessor
 from arkouda.alignment import lookup
-from arkouda.numpy.dtypes import bool_scalars, dtype, float64, int64
+from arkouda.numpy.dtypes import ARKOUDA_SUPPORTED_NUMBERS, bool_scalars, dtype, float64, int64
 from arkouda.numpy.pdarrayclass import RegistrationError, any, argmaxk, create_pdarray, pdarray
-from arkouda.numpy.pdarraycreation import arange, array, full, zeros
+from arkouda.numpy.pdarraycreation import arange
+from arkouda.numpy.pdarraycreation import array
+from arkouda.numpy.pdarraycreation import array as ak_array
+from arkouda.numpy.pdarraycreation import full, zeros
 from arkouda.numpy.pdarraysetops import argsort, concatenate, in1d, indexof1d
 from arkouda.numpy.strings import Strings
 from arkouda.numpy.util import get_callback, is_float
@@ -27,13 +33,15 @@ if TYPE_CHECKING:
     from arkouda.categorical import Categorical
     from arkouda.numpy import cast as akcast
     from arkouda.numpy.segarray import SegArray
+    from arkouda.pandas.dataframe import DataFrame
 else:
     SegArray = TypeVar("SegArray")
     akcast = TypeVar("akcast")
     isnan = TypeVar("isnan")
     value_counts = TypeVar("value_counts")
     Categorical = TypeVar("Categorical")
-
+    DataFrame = TypeVar("DataFrame")
+Single = Union[pdarray, Strings, Categorical]
 
 # pd.set_option("display.max_colwidth", 65) is being called in DataFrame.py. This will resolve BitVector
 # truncation issues. If issues arise, that's where to look for it.
@@ -393,60 +401,58 @@ class Series:
         key: Union[pdarray, Strings, Categorical, Series, List, supported_scalars, SegArray],
         val: Union[pdarray, Strings, List, supported_scalars],
     ) -> None:
-        """
-        Set or adds entries in a Series by label.
-
-        Parameters
-        ----------
-        key : pdarray, Strings, Categorical, Series, List, supported_scalars, or SegArray
-            The key or container of keys to set entries for.
-
-        val : pdarray, Strings, List, or supported_scalars
-            The value or values to set/add to the Series.
-
-        Raises
-        ------
-        ValueError
-            Raised when setting multiple values to a Series with repeated labels
-            Raised when number of values provided does not match the number of
-            entries to set.
-
-        """
         val = self.validate_val(val)
         key = self.validate_key(key)
 
+        # Normalize key types up front
+        if isinstance(key, Series):
+            key = key.values
+        elif isinstance(key, List):
+            key = ak_array(key)  # existing path
+        elif isinstance(key, SegArray):
+            key = key.values
+
+        # If multiple keys and Series has repeat labels, block (existing rule)
         if isinstance(key, (pdarray, Strings)) and len(key) > 1 and self.has_repeat_labels():
             raise ValueError("Cannot set with multiple keys for Series with repeated labels.")
 
-        indices = None
+        indices: pdarray
         if is_supported_scalar(key):
             indices = self.index == key
+        elif isinstance(key, (pdarray, Strings, Categorical)):
+            # Membership of index *labels* in key set
+            indices = tcast(pdarray, in1d(self.index.values, key))
         else:
-            indices = in1d(self.index.values, key)
+            raise TypeError("Unsupported key type for Series.__setitem__")
+
         tf, counts = GroupBy(indices).size()
         update_count = counts[1] if len(counts) == 2 else 0
+
         if update_count == 0:
-            # adding a new entry
+            # adding a new entry — only allowed for a single scalar key
+            if not is_supported_scalar(key):
+                raise ValueError("Cannot add entries with multiple keys")
             if isinstance(val, (pdarray, Strings)):
                 raise ValueError("Cannot set. Too many values provided")
             new_index_values = concatenate([self.index.values, array([key])])
             self.index = Index.factory(new_index_values)
             self.values = concatenate([self.values, array([val])])
             return
+
+        # updates to existing labels
         if is_supported_scalar(val):
             self.values[indices] = val
             return
-        else:
-            val_array = cast(Union[pdarray, Strings], val)
-            if val_array.size == 1 and is_supported_scalar(key):
-                self.values[indices] = val_array[0]
-                return
-            if update_count != val_array.size:
-                raise ValueError(
-                    "Cannot set using a list-like indexer with a different length from the value"
-                )
-            self.values[indices] = val
+
+        val_array = tcast(Union[pdarray, Strings], val)
+        if val_array.size == 1 and is_supported_scalar(key):
+            self.values[indices] = val_array[0]
             return
+        if update_count != val_array.size:
+            raise ValueError(
+                "Cannot set using a list-like indexer with a different length from the value"
+            )
+        self.values[indices] = val_array
 
     def memory_usage(self, index: bool = True, unit: Literal["B", "KB", "MB", "GB"] = "B") -> int:
         """
@@ -687,14 +693,17 @@ class Series:
 
         return aggop
 
+    Single = Union[pdarray, Strings, Categorical]
+
     @typechecked
     def add(self, b: Series) -> Series:
         index = self.index.concat(b.index).index
 
         values = concatenate([self.values, b.values], ordered=False)
 
-        idx, vals = GroupBy(index).sum(values)
-        return Series(data=vals, index=idx)
+        idx, vals = GroupBy(index).sum(type_cast(pdarray, values))
+
+        return Series(data=vals, index=Index(type_cast(Single, idx)))
 
     @typechecked
     def topn(self, n: int = 10) -> Series:
@@ -917,7 +926,7 @@ class Series:
 
         dtype = get_callback(self.values)
         idx, vals = value_counts(self.values)
-        s = Series(index=idx, data=vals)
+        s = Series(index=Index(type_cast(Single, idx)), data=vals)
         if sort:
             s = s.sort_values(ascending=False)
         s.index.set_dtype(dtype)
@@ -962,8 +971,9 @@ class Series:
 
         """
         list_value_label = [value_label] if isinstance(value_label, str) else value_label
-
-        return Series.concat([self], axis=1, index_labels=index_labels, value_labels=list_value_label)
+        result = Series.concat([self], axis=1, index_labels=index_labels, value_labels=list_value_label)
+        assert isinstance(result, DataFrame)
+        return result
 
     @typechecked
     def register(self, user_defined_name: builtin_str):
@@ -1152,6 +1162,7 @@ class Series:
 
         data = json.loads(repMsg)
         val_comps = data["value"].split("+|+")
+        values: Union[Categorical, pdarray]
         if val_comps[0] == Categorical.objType.upper():
             values = Categorical.from_return_msg(val_comps[1])
         elif val_comps[0] == Strings.objType.upper():
@@ -1556,6 +1567,8 @@ class Series:
 
         if isinstance(value, Series):
             value = value.values
+
+        assert isinstance(value, (str, ARKOUDA_SUPPORTED_NUMBERS, pdarray, Strings, Categorical))
 
         if isinstance(self.values, pdarray) and is_float(self.values):
             return Series(where(isnan(self.values), value, self.values), index=self.index)
