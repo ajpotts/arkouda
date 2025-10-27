@@ -330,16 +330,44 @@ def can_cast(from_dt, to_dt, casting: str = "safe") -> bool:
         return False
 
     def _to_np_dtype(x):
-        # normalize a dtype-ish into np.dtype, but NEVER feed bigint to NumPy
+        """
+        Normalize a dtype-ish into np.dtype, but NEVER feed bigint to NumPy.
+
+        Accepts: np.dtype, Python/NumPy types, objects with .dtype, and plain scalars.
+        """
+        import numpy as np
+
+        # 1) already a NumPy dtype
         if isinstance(x, np.dtype):
             return x
+
+        # 2) type objects (np.float64, int, bool, etc.)
         if isinstance(x, type):
             return np.dtype(x)
+
+        # 3) plain Python / NumPy scalars (this is where 0 was failing)
+        if isinstance(x, (int, float, bool, np.number)):
+            ak_dt = dtype(x)  # uses your magnitude-aware routing
+            # If it mapped to Arkouda bigint, do NOT pass to NumPy
+            if (
+                getattr(ak_dt, "name", "").lower() == "bigint"
+                or (ak_dt is bigint)
+                or isinstance(ak_dt, bigint)
+            ):
+                return np.dtype("O")  # safest proxy for “opaque scalar”
+            return np.dtype(ak_dt)
+
+        # 4) instances with a dtype attribute (arrays, pdarray, numpy scalars)
         if hasattr(x, "dtype") and not isinstance(x, type):
             dt = getattr(x, "dtype")
             if isinstance(dt, np.dtype):
                 return dt
+            # If .dtype is bigint-like, proxy as object
+            if getattr(dt, "name", "").lower() == "bigint" or (dt is bigint) or isinstance(dt, bigint):
+                return np.dtype("O")
             return np.dtype(dt)
+
+        # 5) last resort
         return np.dtype(x)
 
     from_is_big = _is_bigint_like(from_dt)
@@ -384,16 +412,20 @@ def result_type(*args):
     """
     NumPy-like result_type with Arkouda bigint support.
 
-    Rules:
-      • If any arg is bigint-like:
-          – with any float → float64
-          – otherwise → ak.bigint()
-      • Else defer to numpy.result_type(...)
+    Rules
+    -----
+    • If any arg is bigint-like:
+        – with any float  → float64
+        – otherwise       → ak.bigint()
+    • If all are integer-like and
+        there is an unsigned dtype and at least one
+        non-negative Python int scalar → keep the unsigned dtype
+    • Otherwise defer to NumPy's result_type(...)
     """
     import numpy as np
 
+    # ---- local helpers ----
     def _is_bigint_like(x) -> bool:
-        # accept sentinel instance/class, name, scalar instance/class
         if x is bigint or isinstance(x, bigint):
             return True
         if getattr(x, "name", "").lower() == "bigint":
@@ -411,33 +443,41 @@ def result_type(*args):
     has_float = False
     np_args: list[np.dtype] = []
 
+    # --- new integer-mix tracking flags ---
+    saw_unsigned = False
+    signed_from_nonneg_scalar = False
+    all_integer = True
+
+    # ---- normalize inputs ----
     for a in args:
-        # 0) bigint-like → short-circuit, do not feed to NumPy
+        # 0) bigint-like sentinel/scalar/class
         if _is_bigint_like(a):
             has_bigint = True
             continue
 
-        # 1) explicit numpy dtype object
+        # 1) explicit NumPy dtype
         if isinstance(a, np.dtype):
             np_dt = a
 
-        # 2) type objects (np.float64, np.int64, bool, int, etc.)
+        # 2) Python / NumPy type objects
         elif isinstance(a, type):
-            # bigint-like types already caught above
             np_dt = np.dtype(a)
 
-        # 3) Python / NumPy scalar values (ints, floats, numpy numbers)
+        # 3) plain scalars
         elif isinstance(a, (int, float, bool, np.number)):
             if isinstance(a, (int, np.integer)):
-                ak_dt = dtype(a)  # uses your magnitude-aware int routing
+                ak_dt = dtype(a)  # use Arkouda’s magnitude-aware routing
                 if _is_bigint_like(ak_dt):
                     has_bigint = True
                     continue
                 np_dt = np.dtype(ak_dt)
+                # track if non-negative scalar created a signed dtype
+                if np_dt.kind == "i" and int(a) >= 0:
+                    signed_from_nonneg_scalar = True
             else:
                 np_dt = np.result_type(a)
 
-        # 4) instances with a real .dtype (arrays, pdarray, numpy scalars)
+        # 4) instances with a real .dtype (arrays, pdarray, np scalars)
         elif hasattr(a, "dtype") and not isinstance(a, type):
             dt = getattr(a, "dtype")
             if _is_bigint_like(dt):
@@ -451,12 +491,25 @@ def result_type(*args):
 
         np_dt = np.dtype(np_dt)
         np_args.append(np_dt)
+
+        # kind tracking
+        if not np.issubdtype(np_dt, np.integer):
+            all_integer = False
+        if np_dt.kind == "u":
+            saw_unsigned = True
         if np.issubdtype(np_dt, np.floating):
             has_float = True
 
+    # ---- bigint promotion ----
     if has_bigint:
         return np.dtype(np.float64) if has_float else bigint()
 
+    # ---- unsigned × non-neg Python int scalar rule ----
+    if all_integer and saw_unsigned and signed_from_nonneg_scalar:
+        unsigneds = [dt for dt in np_args if dt.kind == "u"]
+        return max(unsigneds, key=lambda d: d.itemsize)
+
+    # ---- default: use NumPy ----
     return np.result_type(*np_args)
 
 

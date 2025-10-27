@@ -20,7 +20,6 @@ from arkouda.numpy.dtypes import (
     numeric_scalars,
     numpy_scalars,
     resolve_scalar_dtype,
-    result_type,
 )
 from arkouda.numpy.dtypes import NUMBER_FORMAT_STRINGS, DTypes, bigint
 from arkouda.numpy.dtypes import bool_ as akbool
@@ -28,6 +27,7 @@ from arkouda.numpy.dtypes import bool_scalars, dtype
 from arkouda.numpy.dtypes import float64 as akfloat64
 from arkouda.numpy.dtypes import get_byteorder, get_server_byteorder
 from arkouda.numpy.dtypes import int64 as akint64
+from arkouda.numpy.dtypes import result_type as ak_result_type
 from arkouda.numpy.dtypes import str_ as akstr_
 from arkouda.numpy.dtypes import uint64 as akuint64
 
@@ -728,7 +728,7 @@ class pdarray:
             # Not sure why the import is necessary, but it appears to be necessary.
             from arkouda.numpy.dtypes import float64 as akfloat64
 
-            res_type = result_type(self, other)
+            res_type = ak_result_type(self, other)
             bit_ops = {"&", "^", "|", ">>", "<<", ">>>", ">>>"}
             if res_type == akfloat64 and op in bit_ops:
                 raise TypeError(
@@ -770,51 +770,41 @@ class pdarray:
 
     # reverse binary operators
     # pdarray binop pdarray: taken care of by binop function
-    def _r_binop(self, other: pdarray, op: str) -> pdarray:
-        """
-        Execute reverse binary operation specified by the op string.
+    # at top of file (once):
+    from arkouda.numpy.dtypes import dtype as ak_dtype
+    from arkouda.numpy.dtypes import resolve_scalar_dtype  # if available in your codebase
+    from arkouda.numpy.dtypes import result_type as ak_result_type
 
-        Parameters
-        ----------
-        other : pdarray
-            The pdarray upon which the reverse binop is to be executed
-        op : str
-            The name of the reverse binop to be executed
+    # inside class pdarray:
 
-        Returns
-        -------
-        pdarray
-            A pdarray encapsulating the reverse binop result
-
-        Raises
-        ------
-        ValueError
-            Raised if the op is not within the pdarray.BinOps set
-        TypeError
-            Raised if other is not a pdarray or the pdarray.dtype is not
-            a supported dtype
-        """
+    def _r_binop(self, other, op: str) -> "pdarray":
         from arkouda.client import generic_msg
+        from arkouda.numpy.dtypes import dtype as ak_dtype
 
         if op not in self.BinOps:
             raise ValueError(f"bad operator {op}")
-        # pdarray binop scalar
-        # If scalar cannot be safely cast, server will infer the return dtype
-        dt = resolve_scalar_dtype(other)
 
-        if dt not in DTypes:
+        # 1) scalar dtype for marshalling (token like 'uint64','int64','float64','bool','bigint')
+        scalar_dt = resolve_scalar_dtype(other)  # <-- keep this!
+        if scalar_dt not in DTypes:
             raise TypeError(f"Unhandled scalar type: {other} ({type(other)})")
 
-        from arkouda.numpy.dtypes import can_cast as ak_can_cast
+        # 2) output dtype via Arkouda promotion rules
+        out_dt = ak_result_type(ak_dtype(other), self.dtype)
 
-        if self.dtype != "bigint" and ak_can_cast(other, self.dtype):
-            dt = self.dtype.name
-
-        if isSupportedBool(other):
-            dt = "bool"
+        # 3) proceed with your existing server call, but pass both:
+        #    - scalar_dt (for encoding 'other')
+        #    - out_dt    (for the result array dtype)
+        # For example, if you have a helper:
+        # return _binary_server_call(
+        #     left=other, right=self, op=op,
+        #     scalar_dtype=scalar_dt,  # <-- use this for encoding 'other'
+        #     out_dtype=out_dt,  # <-- the result dtype
+        #     reverse=True,
+        # )
 
         repMsg = generic_msg(
-            cmd=f"binopsv<{self.dtype},{dt},{self.ndim}>",
+            cmd=f"binopsv<{scalar_dt},{out_dt},{self.ndim}>",
             args={"op": op, "a": self, "value": other},
         )
         return create_pdarray(repMsg)
