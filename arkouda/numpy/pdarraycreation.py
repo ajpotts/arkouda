@@ -169,7 +169,7 @@ def array(
     dtype: Union[np.dtype, type, str, None] = None,
     copy: bool = False,
     max_bits: int = -1,
-) -> Union[pdarray, Strings]:
+) -> Union["pdarray", Strings]:
     """
     Convert a Python, NumPy, or Arkouda array-like into a `pdarray` or `Strings` object,
     transferring data to the Arkouda server.

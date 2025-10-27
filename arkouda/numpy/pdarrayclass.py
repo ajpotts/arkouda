@@ -10,25 +10,25 @@ from typing import TYPE_CHECKING, List, Optional, Tuple, TypeVar, Union, cast, o
 import numpy as np
 from typeguard import typechecked
 
+# Small helpers local to this module
+# put these near the top of pdarrayclass.py
 from arkouda.infoclass import information, pretty_print_information
 from arkouda.logger import getArkoudaLogger
 from arkouda.numpy.dtypes import (
     int_scalars,
-    isSupportedBool,
     isSupportedInt,
     isSupportedNumber,
     numeric_scalars,
     numpy_scalars,
     resolve_scalar_dtype,
-    result_type as ak_result_type,
-    dtype as ak_dtype,
 )
-from arkouda.numpy.dtypes import NUMBER_FORMAT_STRINGS, DTypes, bigint
+from arkouda.numpy.dtypes import NUMBER_FORMAT_STRINGS, bigint
 from arkouda.numpy.dtypes import bool_ as akbool
 from arkouda.numpy.dtypes import bool_scalars, dtype
 from arkouda.numpy.dtypes import float64 as akfloat64
 from arkouda.numpy.dtypes import get_byteorder, get_server_byteorder
 from arkouda.numpy.dtypes import int64 as akint64
+from arkouda.numpy.dtypes import result_type as ak_result_type
 from arkouda.numpy.dtypes import str_ as akstr_
 from arkouda.numpy.dtypes import uint64 as akuint64
 
@@ -250,6 +250,35 @@ def _maybe_cast_result(arr, lhs_dtype, rhs, op):
 
     return arr
 
+
+def _dtype_name(dt) -> str:
+    import numpy as np
+    name = getattr(dt, "name", None)
+    if isinstance(name, str) and name.lower() == "bigint":
+        return "bigint"
+    if isinstance(dt, np.dtype):
+        return dt.name
+    if isinstance(dt, type):
+        return np.dtype(dt).name
+    if hasattr(dt, "dtype"):
+        return _dtype_name(getattr(dt, "dtype"))
+    if isinstance(dt, str):
+        return dt
+    return np.dtype(dt).name
+
+def _coerce_scalar_for_dtype(val, tgt_name: str):
+    if tgt_name == "bigint":
+        return str(int(val))     # full-precision scalar for server
+    if tgt_name in ("int64", "uint64"):
+        return int(val)
+    if tgt_name == "float64":
+        return float(val)
+    if tgt_name == "bool":
+        return bool(val)
+    return str(val)
+
+def _bitwise_ops():
+    return {"&", "^", "|", ">>", "<<", ">>>", ">>>>"}
 
 
 def _axis_parser(axis):
@@ -747,136 +776,117 @@ class pdarray:
         return np.dtype(dt).name  # last resort
 
     # --- patched binops ----------------------------------------------------------
-    def _binop(self, other: pdarray, op: str) -> pdarray:
+
+    # ------------------------------
+    # Forward binary op: self <op> other
+    # ------------------------------
+    def _binop(self, other, op: str) -> "pdarray":
         """
-        Binop with dtype promotion done on the client:
-        - Determine promotion dtype via ak.result_type
-        - Upcast LHS (and RHS if pdarray) to that dtype
-        - Call server with matching <dtype,dtype,ndim>
+        Client-side promotion + safe scalar marshalling.
+          • dtype = ak.result_type(self, other)  (pass raw scalar, not its dtype)
+          • cast operands on client to dtype
+          • only send matching <DT,DT,...> opcodes
+          • boolean XOR with Python bool stays boolean (used by logical_not)
         """
         from arkouda.client import generic_msg
-        from arkouda.numpy.dtypes import result_type as ak_result_type
-        from arkouda.numpy.dtypes import float64 as akfloat64
-
         if op not in self.BinOps:
             raise ValueError(f"bad operator {op}")
 
-        bit_ops = {"&", "^", "|", ">>", "<<", ">>>", ">>>"}
-
-        # pdarray vs pdarray
-        if isinstance(other, pdarray):
-            # promote
-            target_dt = ak_result_type(self, other)
-            # forbid bitwise on float result (matches existing behavior)
-            if not self._is_bigint_like(target_dt) and self._dtype_name(target_dt) == self._dtype_name(akfloat64) and op in bit_ops:
-                raise TypeError(
-                    f"Input types {self.dtype}, {other.dtype} result in array of type "
-                    f"{self._dtype_name(target_dt)}, which is not compatible with bitwise operation {op}"
-                )
-
-            # broadcast first (keeps shapes aligned), then upcast both sides to target
-            x1, x2, tmp1, tmp2 = broadcast_if_needed(self, other)
-
-            tgt_name = self._dtype_name(target_dt)
-            if self._dtype_name(x1.dtype) != tgt_name:
-                x1 = x1.astype(tgt_name)
-            if self._dtype_name(x2.dtype) != tgt_name:
-                x2 = x2.astype(tgt_name)
-
-            rep = generic_msg(
-                cmd=f"binopvv<{tgt_name},{tgt_name},{x1.ndim}>",
-                args={"op": op, "a": x1, "b": x2},
-            )
-
-            if tmp1:
-                del x1
-            if tmp2:
-                del x2
-            result = create_pdarray(rep)
-            return _maybe_cast_result(result, self.dtype, other, op)
-
-        # --- boolean XOR fast-path (used by logical_not via "~x") ---
+        # boolean XOR fast-path (for ~bool arrays)
         if op == "^" and isinstance(other, bool):
-            # Make sure we are doing boolean logic: cast lhs to bool if needed
-            lhs = self if str(self.dtype) == "bool" else self.astype("bool")
-            # Build a boolean-vs-scalar bool op
+            lhs = self if _dtype_name(self.dtype) == "bool" else self.astype("bool")
             rep = generic_msg(
                 cmd=f"binopvs<bool,bool,{lhs.ndim}>",
-                args={"op": op, "a": lhs, "value": other},
+                args={"op": op, "a": lhs, "value": bool(other)},
             )
             return create_pdarray(rep)
 
-        # pdarray vs scalar
-        # 1) figure out promotion
-        target_dt = ak_result_type(self, other)
-        tgt_name = self._dtype_name(target_dt)
-
-        # bitwise with float result disallowed
-        if tgt_name == "float64" and op in bit_ops:
-            raise TypeError(
-                f"Input types {self.dtype}, {type(other)} result in array of type "
-                f"{tgt_name}, which is not compatible with bitwise operation {op}"
+        # array ⨂ array
+        if isinstance(other, pdarray):
+            target_dt = ak_result_type(self, other)
+            tgt = _dtype_name(target_dt)
+            if tgt == "float64" and op in _bitwise_ops():
+                raise TypeError(
+                    f"Input types {self.dtype}, {other.dtype} promote to {tgt}, "
+                    f"which is not compatible with bitwise op {op}"
+                )
+            a = self if _dtype_name(self.dtype) == tgt else self.astype(tgt)
+            b = other if _dtype_name(other.dtype) == tgt else other.astype(tgt)
+            rep = generic_msg(
+                cmd=f"binopvv<{tgt},{tgt},{a.ndim}>",
+                args={"op": op, "a": a, "b": b},
             )
+            return create_pdarray(rep)
 
-        # 2) upcast LHS to target dtype when needed
-        lhs = self if self._dtype_name(self.dtype) == tgt_name else self.astype(tgt_name)
+        # array ⨂ scalar
+        target_dt = ak_result_type(self, other)  # IMPORTANT: raw scalar
+        tgt = _dtype_name(target_dt)
+        if tgt == "float64" and op in _bitwise_ops():
+            raise TypeError(
+                f"Input types {self.dtype}, {type(other)} promote to {tgt}, "
+                f"which is not compatible with bitwise op {op}"
+            )
+        a = self if _dtype_name(self.dtype) == tgt else self.astype(tgt)
+        val = _coerce_scalar_for_dtype(other, tgt)
 
-        # 3) send op with matching dtype on both sides
         rep = generic_msg(
-            cmd=f"binopvs<{tgt_name},{tgt_name},{lhs.ndim}>",
-            args={"op": op, "a": lhs, "value": other},
+            cmd=f"binopvs<{tgt},{tgt},{a.ndim}>",
+            args={"op": op, "a": a, "value": val},
         )
-        result = create_pdarray(rep)
-        return _maybe_cast_result(result, self.dtype, other, op)
+        return create_pdarray(rep)
 
-    # near the top if not already present
-    from arkouda.numpy.dtypes import dtype as ak_dtype, result_type as ak_result_type
-
+    # ------------------------------
+    # Reverse binary op: other <op> self
+    # ------------------------------
     def _r_binop(self, other, op: str) -> "pdarray":
         """
-        Reverse binop workaround:
-        Promote dtype on the client, create a constant-LHS array from the scalar,
-        and call a vector–vector binop. Avoids server 'reverse' semantics entirely.
+        Reverse binary op:
+          • dtype = ak.result_type(other, self)
+          • if scalar on left: build const array in target dtype and do VV
+          • else (array on left): cast both arrays and do VV
+          • boolean XOR with Python bool stays boolean
         """
         from arkouda.client import generic_msg
-        import arkouda as ak
-
+        from arkouda.numpy.pdarraycreation import full
         if op not in self.BinOps:
             raise ValueError(f"bad operator {op}")
 
-        # 1) Choose the promotion dtype using Arkouda's rules
-        target_dt = ak_result_type(ak_dtype(other), self.dtype)
-        tgt_name = self._dtype_name(target_dt)
-
-        # 2) Cast RHS to the target dtype if needed
-        rhs = self if self._dtype_name(self.dtype) == tgt_name else self.astype(tgt_name)
-
-        # 3) If LHS is a scalar (usual __r*__ case), build a constant array and do VV
-        if not isinstance(other, pdarray):
-            const = ak.full(rhs.size, other, dtype=tgt_name).reshape(rhs.shape)
-
-            # bitwise + float guard (same rule you already enforce)
-            if tgt_name == "float64" and op in {"&", "^", "|", ">>", "<<", ">>>"}:
-                raise TypeError(
-                    f"Input types {type(other)}, {self.dtype} result in array of type "
-                    f"{tgt_name}, which is not compatible with bitwise operation {op}"
-                )
-
+        # boolean XOR fast-path for symmetry
+        if op == "^" and isinstance(other, bool):
+            rhs = self if _dtype_name(self.dtype) == "bool" else self.astype("bool")
+            const = full(rhs.size, bool(other), dtype="bool").reshape(rhs.shape)
             rep = generic_msg(
-                cmd=f"binopvv<{tgt_name},{tgt_name},{rhs.ndim}>",
+                cmd=f"binopvv<bool,bool,{rhs.ndim}>",
                 args={"op": op, "a": const, "b": rhs},
             )
-            result = create_pdarray(rep)
-            return _maybe_cast_result(result, self.dtype, other, op)
+            return create_pdarray(rep)
 
-        # 4) If LHS is a pdarray (rare in reverse path), normalize both then VV
-        lhs = other if self._dtype_name(other.dtype) == tgt_name else other.astype(tgt_name)
+        target_dt = ak_result_type(other, self)  # IMPORTANT: raw scalar first if scalar
+        tgt = _dtype_name(target_dt)
+        if tgt == "float64" and op in _bitwise_ops():
+            raise TypeError(
+                f"Input types {type(other)}, {self.dtype} promote to {tgt}, "
+                f"which is not compatible with bitwise op {op}"
+            )
+
+        rhs = self if _dtype_name(self.dtype) == tgt else self.astype(tgt)
+
+        # scalar on the left → const array + VV
+        if not isinstance(other, pdarray):
+            const = full(rhs.size, other, dtype=tgt).reshape(rhs.shape)
+            rep = generic_msg(
+                cmd=f"binopvv<{tgt},{tgt},{rhs.ndim}>",
+                args={"op": op, "a": const, "b": rhs},
+            )
+            return create_pdarray(rep)
+
+        # array on the left → cast both and VV
+        lhs = other if _dtype_name(other.dtype) == tgt else other.astype(tgt)
         rep = generic_msg(
-            cmd=f"binopvv<{tgt_name},{tgt_name},{rhs.ndim}>",
+            cmd=f"binopvv<{tgt},{tgt},{rhs.ndim}>",
             args={"op": op, "a": lhs, "b": rhs},
         )
-        result = create_pdarray(rep)
-        return _maybe_cast_result(result, self.dtype, other, op)
+        return create_pdarray(rep)
 
     def transfer(self, hostname: str, port: int_scalars):
         """
