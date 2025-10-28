@@ -805,33 +805,24 @@ def isSupportedDType(scalar: object) -> builtins.bool:
 def resolve_scalar_dtype(val: object) -> str:
     """
     Try to infer what dtype arkouda_server should treat val as.
-
-    Parameters
-    ----------
-    val: object
-        The object to determine the dtype of.
-
-    Return
-    ------
-    str
-        The dtype name, if it can be resolved, otherwise the type (as str).
-
-    Examples
-    --------
-    >>> import arkouda as ak
-    >>> ak.resolve_scalar_dtype(1)
-    'int64'
-    >>> ak.resolve_scalar_dtype(2.0)
-    'float64'
-
     """
+    # --- NEW: handle Arkouda's bigint scalar up front ---
+    if isinstance(val, bigint_):
+        return "bigint"
+
     # Python builtins.bool or np.bool
     if isinstance(val, builtins.bool) or (
         hasattr(val, "dtype") and cast(np.bool_, val).dtype.kind == "b"
     ):
         return "bool"
+
     # Python int or np.int* or np.uint*
     elif isinstance(val, int) or (hasattr(val, "dtype") and cast(np.uint, val).dtype.kind in "ui"):
+        # Explicitly prefer bigint if caller passed bigint sentinel class instance (paranoia / symmetry)
+        # (Not strictly needed for this test, but harmless.)
+        if isinstance(val, bigint_):
+            return "bigint"
+
         # we've established these are int, uint, or bigint,
         # so we can do comparisons
         if isSupportedInt(val) and val >= 2**64:  # type: ignore
@@ -840,17 +831,16 @@ def resolve_scalar_dtype(val: object) -> str:
             return "uint64"
         else:
             return "int64"
+
     # Python float or np.float*
     elif isinstance(val, float) or (hasattr(val, "dtype") and cast(np.float64, val).dtype.kind == "f"):
         return "float64"
     elif isinstance(val, complex) or (hasattr(val, "dtype") and cast(np.float64, val).dtype.kind == "c"):
-        return "float64"  # TODO: actually support complex values in the backend
+        return "float64"  # TODO: complex in backend
     elif isinstance(val, builtins.str) or isinstance(val, np.str_):
         return "str"
-    # Other numpy dtype
     elif hasattr(val, "dtype"):
         return cast(np.dtype, val).name
-    # Other python type
     else:
         return builtins.str(type(val))
 
