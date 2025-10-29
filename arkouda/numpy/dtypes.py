@@ -181,9 +181,11 @@ def dtype(dtype):
     # we had to create our own bigint type since numpy
     # gives them dtype=object there's no np equivalent
     if (
-        (isinstance(dtype, str) and dtype == "bigint")
+        (isinstance(dtype, str) and dtype.lower() == "bigint")
         or isinstance(dtype, bigint)
         or (hasattr(dtype, "name") and dtype.name == "bigint")
+
+        or dtype is bigint_ or isinstance(dtype, bigint_)
     ):
         return bigint()
     if isinstance(dtype, str) and dtype in ["Strings"]:

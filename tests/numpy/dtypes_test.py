@@ -317,7 +317,7 @@ class TestDTypes:
     ):
         # ak.bigint(…) should construct a scalar if you implemented the metaclass;
         # if not yet implemented, skip gracefully.
-        maybe_scalar = ak.bigint(1)
+        maybe_scalar = ak.bigint_(1)
         if not isinstance(maybe_scalar, bigint_):
             pytest.skip("ak.bigint(…) does not construct scalar yet")
         x = maybe_scalar
