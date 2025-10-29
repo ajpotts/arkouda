@@ -79,6 +79,10 @@ class bigint(metaclass=_BigIntMeta):
     def is_variable_width(self) -> bool:
         return True
 
+    @property
+    def dtype(self):
+        # Return the bigint dtype sentinel from this module
+        return bigint()
 
 
 _IntLike = Union[int, "bigint_"]
@@ -102,25 +106,38 @@ def _mb_max(a: Optional[int], b: Optional[int]) -> Optional[int]:
         return a
     return max(a, b)
 
+# arkouda/numpy/bigint.py
+
 class bigint_(int):
-    """
-    Arkouda-aware integer scalar carrying an optional `max_bits` hint via side-car storage.
+    def __new__(cls, value=0, max_bits=None):
+        # Accept ints, numpy integer scalars, and strings with 0x/0o/0b prefixes
+        try:
+            import numpy as np  # local import to avoid early import cost/cycles
+            np_integer = np.integer
+        except Exception:  # numpy may not be loaded yet
+            np_integer = ()  # fallback
 
-    - Integer ops with ints/bigint_ → bigint_ (metadata merged).
-    - True division `/` → float (Python-consistent).
-    - No automatic wrap/truncation by `max_bits` (pure metadata for now).
-    """
+        if isinstance(value, (bytes, bytearray)):
+            value = value.decode()
 
-    # NOTE: no __slots__ — not supported for int subclasses
+        if isinstance(value, str):
+            # base=0 lets int() infer 0x (hex), 0o (oct), 0b (bin), leading +/-,
+            # ignores underscores per Python syntax.
+            iv = int(value, 0)
+        elif np_integer and isinstance(value, np_integer):
+            iv = int(value.item())
+        else:
+            iv = int(value)
 
-    def __new__(cls, value: Union[int, "bigint_"], max_bits: Optional[int] = None):
-        iv = int(value)
-        obj = super().__new__(cls, iv)
-        # inherit from rhs if not explicitly provided
-        if max_bits is None and isinstance(value, bigint_):
-            max_bits = value.max_bits
-        _set_max_bits(obj, max_bits)
-        return obj
+        # NOTE: we don't store max_bits on the scalar (int subclasses can't
+        # have per-instance attrs). max_bits applies to arrays, not scalars.
+        return int.__new__(cls, iv)
+
+    @property
+    def dtype(self):
+        from .bigint import bigint  # local to avoid cycles
+        return bigint()
+
 
     # expose metadata via property
     @property
