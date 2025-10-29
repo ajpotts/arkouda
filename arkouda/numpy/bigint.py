@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Optional, Union
 import weakref
+import builtins
 
 from numpy import bool
 
@@ -72,11 +73,11 @@ class bigint(metaclass=_BigIntMeta):
         return int(x)
 
     @property
-    def is_signed(self) -> bool:
+    def is_signed(self) -> builtins.bool:
         return True
 
     @property
-    def is_variable_width(self) -> bool:
+    def is_variable_width(self) -> builtins.bool:
         return True
 
     @property
