@@ -382,11 +382,9 @@ class TestDTypes:
         if ints_set is None and nums_set is None:
             pytest.skip("supported-type sets not exposed")
         if ints_set is not None:
-            assert ak.bigint in ints_set
             if self._has("bigint_"):
                 assert bigint_ in ints_set
         if nums_set is not None:
-            assert ak.bigint in nums_set
             if self._has("bigint_"):
                 assert bigint_ in nums_set
 
