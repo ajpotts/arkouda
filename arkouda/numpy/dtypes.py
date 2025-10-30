@@ -603,28 +603,88 @@ def result_type(*args):
                 return False
         return False
 
+    # has_bigint = False
+    # has_float = False
+    # np_args = []
+    #
+    # saw_unsigned = False
+    # #  signed_from_nonneg_scalar: signed (i.e. int) but positive (i.e. val >= 0)
+    # signed_from_nonneg_scalar = False
+    # all_integer = True
+    #
+    # for a in args:
+    #     # normalize explicit bigint signals up front
+    #     if _is_bigint_like(a):
+    #         has_bigint = True
+    #         continue
+    #
+    #     # accept numpy dtype / type / scalars / arrays
+    #     if isinstance(a, np.dtype):
+    #         np_dt = a
+    #     elif isinstance(a, type):
+    #         np_dt = np.dtype(a)
+    #     elif hasattr(a, "dtype") and not isinstance(a, type):
+    #         # arrays / numpy scalars
+    #         adt = getattr(a, "dtype")
+    #         if _is_bigint_like(adt):
+    #             has_bigint = True
+    #             continue
+    #         np_dt = np.dtype(adt)
+    #     elif isinstance(a, (builtins.bool, np.bool_)):
+    #         np_dt = np.dtype(np.bool_)
+    #     elif isinstance(a, (int, np.integer)):
+    #         # route large magnitude ints to bigint via ak.dtype
+    #         dt = ak_dtype(a)
+    #         if _is_bigint_like(dt):
+    #             has_bigint = True
+    #             continue
+    #         np_dt = np.dtype(dt)
+    #         if np_dt.kind == "i" and int(a) >= 0:
+    #             signed_from_nonneg_scalar = True
+    #     elif isinstance(a, (float, np.floating)):
+    #         np_dt = np.result_type(a)
+    #     else:
+    #         # generic fallback
+    #         try:
+    #             np_dt = np.result_type(a)
+    #         except Exception:
+    #             # if NumPy can’t interpret it and it’s not bigint-like, rethrow
+    #             raise
+    #
+    #     np_dt = np.dtype(np_dt)
+    #     np_args.append(np_dt)
     has_bigint = False
     has_float = False
     np_args = []
 
     saw_unsigned = False
-    #  signed_from_nonneg_scalar: signed (i.e. int) but positive (i.e. val >= 0)
     signed_from_nonneg_scalar = False
     all_integer = True
 
     for a in args:
-        # normalize explicit bigint signals up front
+        # --- recognize explicit bigint-y things first (unchanged) ---
         if _is_bigint_like(a):
             has_bigint = True
             continue
 
-        # accept numpy dtype / type / scalars / arrays
+        import pandas as pd
+        # --- NEW: pandas time scalars map to int64 nanoseconds ---
+        if pd is not None:
+            # pd.Timedelta scalar
+            if isinstance(a, pd.Timedelta):
+                np_args.append(np.dtype(np.int64))
+                continue
+            # pd.Timestamp scalar
+            if isinstance(a, pd.Timestamp):
+                np_args.append(np.dtype(np.int64))
+                continue
+
+        # NumPy dtype / type / arrays / scalars
         if isinstance(a, np.dtype):
             np_dt = a
         elif isinstance(a, type):
             np_dt = np.dtype(a)
         elif hasattr(a, "dtype") and not isinstance(a, type):
-            # arrays / numpy scalars
             adt = getattr(a, "dtype")
             if _is_bigint_like(adt):
                 has_bigint = True
@@ -633,7 +693,6 @@ def result_type(*args):
         elif isinstance(a, (builtins.bool, np.bool_)):
             np_dt = np.dtype(np.bool_)
         elif isinstance(a, (int, np.integer)):
-            # route large magnitude ints to bigint via ak.dtype
             dt = ak_dtype(a)
             if _is_bigint_like(dt):
                 has_bigint = True
@@ -643,17 +702,25 @@ def result_type(*args):
                 signed_from_nonneg_scalar = True
         elif isinstance(a, (float, np.floating)):
             np_dt = np.result_type(a)
+            has_float = True
         else:
-            # generic fallback
+            # Fallback: let NumPy deduce, but this used to fail for pandas scalars
             try:
                 np_dt = np.result_type(a)
             except Exception:
-                # if NumPy can’t interpret it and it’s not bigint-like, rethrow
-                raise
+                # FINAL GUARD: for objects with .value (like pandas time scalars),
+                # coerce to int64 if feasible; otherwise re-raise.
+                v = getattr(a, "value", None)
+                if isinstance(v, (int, np.integer)):
+                    np_dt = np.dtype(np.int64)
+                else:
+                    raise
 
-        np_dt = np.dtype(np_dt)
+        # bookkeeping for integer-logic notes (unchanged)
+        all_integer &= (np_dt.kind in ("i", "u"))
+        saw_unsigned |= (np_dt.kind == "u")
+        has_float |= (np_dt.kind == "f")
         np_args.append(np_dt)
-
         if not np.issubdtype(np_dt, np.integer):
             all_integer = False
         if np_dt.kind == "u":

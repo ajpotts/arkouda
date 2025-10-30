@@ -882,17 +882,9 @@ class pdarray:
                     )
                 lhs = self if self.dtype.name == tgt_name else self.astype(tgt_name)
                 rhs = other if other.dtype.name == tgt_name else other.astype(tgt_name)
-                # rep = generic_msg(
-                #     cmd=f"binopvv<{tgt_name},{tgt_name},{lhs.ndim}>",
-                #     args={"op": op, "a": lhs, "b": rhs},
-                # )
-                try:
-                    x1, x2, tmp_x1, tmp_x2 = broadcast_if_needed(self, other)
-                except ValueError:
-                    raise ValueError(f"shape mismatch {self.shape} {other.shape}")
                 rep = generic_msg(
-                    cmd=f"binopvv<{self.dtype},{other.dtype},{x1.ndim}>",
-                    args={"op": op, "a": x1, "b": x2},
+                    cmd=f"binopvv<{tgt_name},{tgt_name},{lhs.ndim}>",
+                    args={"op": op, "a": lhs, "b": rhs},
                 )
                 return create_pdarray(rep)
 
