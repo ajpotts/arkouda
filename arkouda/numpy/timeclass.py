@@ -75,6 +75,16 @@ def _as_ak_time_scalar(x):
     return x
 
 @staticmethod
+def _is_td_scalar(x):
+    # pandas/NumPy scalar timedeltas
+    import numpy as np, pandas as pd
+    return isinstance(x, (pd.Timedelta, np.timedelta64))
+
+def _as_timedelta(self, arr_or_scalar):
+    # wrap an int64 ns pdarray (or compatible) back into Timedelta
+    return Timedelta(arr_or_scalar, unit="ns")
+
+@staticmethod
 def _is_number(x):
     import numpy as np
     return isinstance(x, (int, float, np.integer, np.floating))
@@ -362,68 +372,26 @@ class _AbstractBaseTime(pdarray):
     # in class Timedelta(_AbstractBaseTime)
 
     def __mod__(self, other):
-        # Timedelta % Timedelta -> Timedelta
         if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
-            out = self._binop(other, "%")  # returns int64 ns
-            return Timedelta(out)  # wrap!
+            out = self._binop(other, "%")  # int64 ns remainder
+            return Timedelta(out)
         return NotImplemented
 
     def __rmod__(self, other):
-        # Timedelta scalar % Timedelta -> Timedelta
-        if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
-            out = self._r_binop(other, "%")  # returns int64 ns
-            return Timedelta(out)  # wrap!
+        # Datetime scalar % Timedelta -> Timedelta  (r_is_supported=True in op table)
+        if Datetime._is_datetime_scalar(other):
+            out = self._r_binop(other, "%")  # int64 ns remainder
+            return Timedelta(out)
+        # existing support (Timedelta scalar % Timedelta)
+        if self._is_timedelta_scalar(other):
+            out = self._r_binop(other, "%")
+            return Timedelta(out)
         return NotImplemented
 
     # timeclass.py :: class Datetime
 
     # in class Datetime(_AbstractBaseTime)
 
-    def __sub__(self, other):
-        # Datetime - Datetime -> Timedelta   (vector or scalar)
-        if isinstance(other, Datetime) or self._is_datetime_scalar(other):
-            out = self._binop(other, "-")  # int64 ns
-            return Timedelta(out)
-        # Datetime - Timedelta -> Datetime   (vector or scalar)
-        if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
-            out = self._binop(other, "-")
-            return Datetime(out)
-        return NotImplemented
-
-    def __rsub__(self, other):
-        # Datetime scalar/array - Datetime -> Timedelta
-        if isinstance(other, Datetime) or self._is_datetime_scalar(other):
-            out = self._r_binop(other, "-")  # int64 ns
-            return Timedelta(out)
-        # Timedelta - Datetime is intentionally not defined
-        return NotImplemented
-
-    def __mul__(self, other):
-        # Timedelta * (number | numeric array) -> Timedelta
-        if self._is_number(other) or self._is_number_array(other):
-            out = self._binop(other, "*")  # ns-int64 result
-            return Timedelta(out)  # wrap to Timedelta
-        return NotImplemented
-
-    def __rmul__(self, other):
-        # (number | numeric array) * Timedelta -> Timedelta
-        if self._is_number(other) or self._is_number_array(other):
-            out = self._r_binop(other, "*")
-            return Timedelta(out)
-        return NotImplemented
-
-    def __truediv__(self, other):
-        # Timedelta / number -> Timedelta
-        if _is_number(other) or _is_number_array(other):
-            return Timedelta(self._binop(other, "/"))
-        # Timedelta / Timedelta -> float pdarray (ratio)
-        if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
-            return self._binop(other, "/")  # raw pdarray[float64]
-        return NotImplemented
-
-    def __rtruediv__(self, other):
-        # number / Timedelta -> NOT supported in pandas; usually raise
-        return NotImplemented
 
     def _binop(self, other, op):
         # Need to do 2 things:
@@ -665,6 +633,60 @@ class Datetime(_AbstractBaseTime):
         self._is_leap_year = create_pdarray(attribute_dict["isLeapYear"])
         self._date = self.floor("d")
         self._is_populated = True
+
+    def __add__(self, other):
+        if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
+            return Datetime(self._binop(other, "+"))
+        return NotImplemented
+
+    def __radd__(self, other):
+        if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
+            return Datetime(self._r_binop(other, "+"))
+        return NotImplemented
+
+    # Datetime - Datetime -> Timedelta
+    # Datetime - Timedelta -> Datetime
+    def __sub__(self, other):
+        if isinstance(other, Datetime) or self._is_datetime_scalar(other):
+            out = self._binop(other, "-")  # int64 ns
+            return Timedelta(out)
+        if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
+            return Datetime(self._binop(other, "-"))
+        return NotImplemented
+
+    def __rsub__(self, other):
+        if self._is_datetime_scalar(other):
+            out = self._r_binop(other, "-")  # int64 ns
+            return Timedelta(out)
+        if self._is_timedelta_scalar(other):
+            return Datetime(self._r_binop(other, "-"))
+        return NotImplemented
+    def __mul__(self, other):
+        # Timedelta * (number | numeric array) -> Timedelta
+        if _is_number(other) or _is_number_array(other):
+            out = self._binop(other, "*")  # ns-int64 result
+            return Timedelta(out)  # wrap to Timedelta
+        return NotImplemented
+
+    def __rmul__(self, other):
+        # (number | numeric array) * Timedelta -> Timedelta
+        if _is_number(other) or _is_number_array(other):
+            out = self._r_binop(other, "*")
+            return Timedelta(out)
+        return NotImplemented
+
+    def __truediv__(self, other):
+        # Timedelta / number -> Timedelta
+        if _is_number(other) or _is_number_array(other):
+            return Timedelta(self._binop(other, "/"))
+        # Timedelta / Timedelta -> float pdarray (ratio)
+        if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
+            return self._binop(other, "/")  # raw pdarray[float64]
+        return NotImplemented
+
+    def __rtruediv__(self, other):
+        # number / Timedelta -> NOT supported in pandas; usually raise
+        return NotImplemented
 
     @property
     def nanosecond(self):
