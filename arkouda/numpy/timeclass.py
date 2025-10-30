@@ -74,7 +74,17 @@ def _as_ak_time_scalar(x):
                         else 'timedelta64[ns]')
     return x
 
+@staticmethod
+def _is_number(x):
+    import numpy as np
+    return isinstance(x, (int, float, np.integer, np.floating))
 
+@staticmethod
+def _is_number_array(x):
+    # adjust if your project exposes numericTypes
+    from arkouda.numpy.pdarrayclass import pdarray
+    from arkouda.numpy.dtypes import int_scalars, float_scalars
+    return isinstance(x, pdarray) and (x.dtype in intTypes or x.dtype in float_scalars)
 
 def _is_datetime_scalar(x):
     import numpy as np, datetime as dt
@@ -386,6 +396,33 @@ class _AbstractBaseTime(pdarray):
             out = self._r_binop(other, "-")  # int64 ns
             return Timedelta(out)
         # Timedelta - Datetime is intentionally not defined
+        return NotImplemented
+
+    def __mul__(self, other):
+        # Timedelta * (number | numeric array) -> Timedelta
+        if self._is_number(other) or self._is_number_array(other):
+            out = self._binop(other, "*")  # ns-int64 result
+            return Timedelta(out)  # wrap to Timedelta
+        return NotImplemented
+
+    def __rmul__(self, other):
+        # (number | numeric array) * Timedelta -> Timedelta
+        if self._is_number(other) or self._is_number_array(other):
+            out = self._r_binop(other, "*")
+            return Timedelta(out)
+        return NotImplemented
+
+    def __truediv__(self, other):
+        # Timedelta / number -> Timedelta
+        if _is_number(other) or _is_number_array(other):
+            return Timedelta(self._binop(other, "/"))
+        # Timedelta / Timedelta -> float pdarray (ratio)
+        if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
+            return self._binop(other, "/")  # raw pdarray[float64]
+        return NotImplemented
+
+    def __rtruediv__(self, other):
+        # number / Timedelta -> NOT supported in pandas; usually raise
         return NotImplemented
 
     def _binop(self, other, op):
