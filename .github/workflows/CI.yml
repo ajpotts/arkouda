@@ -486,6 +486,7 @@ jobs:
         command: |
           apt-get update && apt-get install -y --no-install-recommends build-essential python3-dev cython3 pkg-config libhdf5-dev libhdf5-serial-dev libbz2-dev liblzo2-dev libblosc-dev
           apt-get install -y libblosc-dev
+          python3 -m pip install "python-blosc2>=2,<3"
     - name: Make install-pytables
       uses: nick-fields/retry@v2
       with:

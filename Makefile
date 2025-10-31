@@ -254,7 +254,7 @@ pytables-download-source:
 
 install-pytables: pytables-download-source
 	@echo "Installing PyTables"
-	cd $(DEP_BUILD_DIR) && python3 -m pip install PyTables/
+	cd $(DEP_BUILD_DIR) && python3 -m pip install  --no-build-isolation PyTables/
 
 pytables-clean:
 	rm -rf $(DEP_BUILD_DIR)/PyTables
