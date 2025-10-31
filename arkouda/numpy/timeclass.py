@@ -646,13 +646,13 @@ class Datetime(_AbstractBaseTime):
     """
 
     __array_priority__ = 10000
+    # Datetime
     supported_with_datetime = frozenset(("==", "!=", "<", "<=", ">", ">=", "-"))
     supported_with_r_datetime = frozenset(("==", "!=", "<", "<=", ">", ">=", "-"))
-    supported_with_timedelta = frozenset(("+", "-", "/", "//", "%"))
-    supported_with_r_timedelta = frozenset(("+"))
-    supported_opeq = frozenset(("+=", "-="))
-    supported_with_pdarray = frozenset(())  # type: ignore
-    supported_with_r_pdarray = frozenset(())  # type: ignore
+    supported_with_timedelta = frozenset(("+", "-", "//", "%"))  # no "/" on Datetime
+    supported_with_r_timedelta = frozenset(("+"))  # Timestamp % Timedelta is left-scalar case
+    supported_with_pdarray = frozenset(())
+    supported_with_r_pdarray = frozenset(())
 
     special_objType = "Datetime"
 
@@ -679,26 +679,6 @@ class Datetime(_AbstractBaseTime):
         self._is_leap_year = create_pdarray(attribute_dict["isLeapYear"])
         self._date = self.floor("d")
         self._is_populated = True
-
-    def __eq__(self, other):
-        return self._cmp(other, "==")
-
-    def __ne__(self, other):
-        return self._cmp(other, "!=")
-
-    def __lt__(self, other):
-        return self._cmp(other, "<")
-
-    def __le__(self, other):
-        return self._cmp(other, "<=")
-
-    def __gt__(self, other):
-        return self._cmp(other, ">")
-
-    def __ge__(self, other):
-        return self._cmp(other, ">=")
-
-    # in class Datetime
 
     def __eq__(self, other):
         return self._binop(other, "==")
@@ -747,33 +727,6 @@ class Datetime(_AbstractBaseTime):
             return Timedelta(self._r_binop(other, "-"))
         if self._is_timedelta_scalar(other):
             return Datetime(self._r_binop(other, "-"))
-        return NotImplemented
-
-    def __mul__(self, other):
-        # Timedelta * (number | numeric array) -> Timedelta
-        if _is_number(other) or _is_number_array(other):
-            out = self._binop(other, "*")  # ns-int64 result
-            return Timedelta(out)  # wrap to Timedelta
-        return NotImplemented
-
-    def __rmul__(self, other):
-        # (number | numeric array) * Timedelta -> Timedelta
-        if _is_number(other) or _is_number_array(other):
-            out = self._r_binop(other, "*")
-            return Timedelta(out)
-        return NotImplemented
-
-    def __truediv__(self, other):
-        # Timedelta / number -> Timedelta
-        if _is_number(other) or _is_number_array(other):
-            return Timedelta(self._binop(other, "/"))
-        # Timedelta / Timedelta -> float pdarray (ratio)
-        if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
-            return self._binop(other, "/")  # raw pdarray[float64]
-        return NotImplemented
-
-    def __rtruediv__(self, other):
-        # number / Timedelta -> NOT supported in pandas; usually raise
         return NotImplemented
 
     # in Datetime
@@ -1052,13 +1005,13 @@ class Timedelta(_AbstractBaseTime):
     """
 
     __array_priority__ = 10000
-    supported_with_datetime = frozenset(("+"))
-    supported_with_r_datetime = frozenset(("+", "-", "/", "//", "%"))
+    # Timedelta
+    supported_with_datetime = frozenset(("+"))  # TD + DT -> DT
+    supported_with_r_datetime = frozenset(("+", "-", "//", "/", "%"))  # scalar Timestamp on left
     supported_with_timedelta = frozenset(("==", "!=", "<", "<=", ">", ">=", "+", "-", "/", "//", "%"))
-    supported_with_r_timedelta = frozenset(("==", "!=", "<", "<=", ">", ">=", "+", "-", "/", "//", "%"))
-    supported_opeq = frozenset(("+=", "-=", "%="))
-    supported_with_pdarray = frozenset(("*", "//"))
-    supported_with_r_pdarray = frozenset(("*"))
+    supported_with_r_timedelta = supported_with_timedelta
+    supported_with_pdarray = frozenset(("*", "//", "/"))  # allow TD / numeric array too
+    supported_with_r_pdarray = frozenset(("*"))  # numeric * TD
 
     special_objType = "Timedelta"
 
@@ -1144,6 +1097,36 @@ class Timedelta(_AbstractBaseTime):
             return Timedelta(self._r_binop(other, "%"))
         return NotImplemented
 
+    # in class Timedelta
+
+    def __mul__(self, other):
+        # Timedelta * (number | numeric array) -> Timedelta
+        if _is_number(other) or _is_number_array(other):
+            out = self._binop(other, "*")  # ns-int64 result
+            return Timedelta(out)  # wrap back to Timedelta
+        return NotImplemented
+
+    def __rmul__(self, other):
+        # (number | numeric array) * Timedelta -> Timedelta
+        if _is_number(other) or _is_number_array(other):
+            out = self._r_binop(other, "*")
+            return Timedelta(out)
+        return NotImplemented
+
+    def __truediv__(self, other):
+        # Timedelta / number -> Timedelta
+        if _is_number(other) or _is_number_array(other):
+            return Timedelta(self._binop(other, "/"))
+        # Timedelta / Timedelta -> float64 pdarray (ratio)  <-- DO NOT WRAP
+        if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
+            return self._binop(other, "/")
+        # Timedelta / Datetime -> not supported
+        return NotImplemented
+
+    def __rtruediv__(self, other):
+        # number / Timedelta -> not supported (pandas raises)
+        return NotImplemented
+
     def _ensure_components(self):
         from arkouda.client import generic_msg
 
@@ -1213,14 +1196,20 @@ class Timedelta(_AbstractBaseTime):
 
     @classmethod
     def _get_callback(cls, otherclass, op):
+        # in Timedelta._get_callback
         return {
-            ("Timedelta", "-"): cls,  # Timedelta - Timedelta -> Timedelta
-            ("Timedelta", "+"): cls,  # Timedelta + Timedelta -> Timedelta
-            ("Timedelta", "%"): cls,  # Timedelta % Timedelta -> Timedelta
-            ("Datetime", "+"): Datetime,  # Timedelta + Datetime -> Datetime
-            ("Datetime", "-"): Datetime,  # Datetime - Timedelta -> Datetime
-            ("pdarray", "//"): cls,  # Timedelta // int array -> Timedelta
-            ("pdarray", "*"): cls,  # Timedelta * int array  -> Timedelta
+            ("Timedelta", "-"): cls,
+            ("Timedelta", "+"): cls,
+            ("Timedelta", "%"): cls,
+            ("Timedelta", "//"): cls,
+            # ratios return raw pdarray (float64), so identity:
+            ("Timedelta", "/"): _identity,
+            ("Datetime", "+"): Datetime,
+            ("Datetime", "-"): Datetime,
+            ("Datetime", "/"): _identity,  # Timestamp / Timedelta (r-case) -> float
+            ("Datetime", "//"): _identity,  # Timestamp // Timedelta (r-case) -> int64 pdarray
+            ("pdarray", "//"): cls,
+            ("pdarray", "*"): cls,
         }.get((otherclass, op), _identity)
 
     def _scalar_callback(self, scalar):
@@ -1365,4 +1354,3 @@ class Timedelta(_AbstractBaseTime):
             return np.bool_(is_registered(self.values.name, as_component=True))
         else:
             return np.bool_(is_registered(self.registered_name))
-
