@@ -56,9 +56,11 @@ _unit2factor = {
     "ns": 1,
 }
 
+
 # timeclass.py (near other helpers / top of file)
 def _as_ak_time_scalar(x):
     import numpy as np
+
     try:
         import pandas as pd
     except Exception:
@@ -66,51 +68,68 @@ def _as_ak_time_scalar(x):
 
     if pd is not None:
         if isinstance(x, pd.Timestamp):
-            return np.datetime64(x.value, 'ns')   # <— scalar, not Datetime(...)
+            return np.datetime64(x.value, "ns")  # <— scalar, not Datetime(...)
         if isinstance(x, pd.Timedelta):
-            return np.timedelta64(x.value, 'ns')  # <— scalar, not Timedelta(...)
+            return np.timedelta64(x.value, "ns")  # <— scalar, not Timedelta(...)
     if isinstance(x, np.datetime64) or isinstance(x, np.timedelta64):
-        return x.astype('datetime64[ns]' if 'datetime64' in str(x.dtype)
-                        else 'timedelta64[ns]')
+        return x.astype("datetime64[ns]" if "datetime64" in str(x.dtype) else "timedelta64[ns]")
     return x
+
 
 @staticmethod
 def _is_td_scalar(x):
     # pandas/NumPy scalar timedeltas
-    import numpy as np, pandas as pd
+    import numpy as np
+    import pandas as pd
+
     return isinstance(x, (pd.Timedelta, np.timedelta64))
+
 
 def _as_timedelta(self, arr_or_scalar):
     # wrap an int64 ns pdarray (or compatible) back into Timedelta
     return Timedelta(arr_or_scalar, unit="ns")
 
+
 @staticmethod
 def _is_number(x):
     import numpy as np
+
     return isinstance(x, (int, float, np.integer, np.floating))
+
 
 @staticmethod
 def _is_number_array(x):
     # adjust if your project exposes numericTypes
+    from arkouda.numpy.dtypes import float_scalars, int_scalars
     from arkouda.numpy.pdarrayclass import pdarray
-    from arkouda.numpy.dtypes import int_scalars, float_scalars
+
     return isinstance(x, pdarray) and (x.dtype in intTypes or x.dtype in float_scalars)
 
+
 def _is_datetime_scalar(x):
-    import numpy as np, datetime as dt
+    import datetime as dt
+
+    import numpy as np
+
     try:
         import pandas as pd
+
         if isinstance(x, pd.Timestamp):
             return True
     except Exception:
         pass
     return isinstance(x, (np.datetime64, dt.datetime))
 
+
 def _to_datetime64_ns_scalar(x) -> int:
     """Normalize various datetime scalars to int64 nanoseconds since epoch."""
-    import numpy as np, datetime as dt
+    import datetime as dt
+
+    import numpy as np
+
     try:
         import pandas as pd
+
         if isinstance(x, pd.Timestamp):
             return int(x.value)  # already ns
     except Exception:
@@ -120,6 +139,7 @@ def _to_datetime64_ns_scalar(x) -> int:
     if isinstance(x, dt.datetime):
         # pandas handles timezone-naive as UTC epoch by default (match your Datetime semantics)
         import pandas as pd
+
         return int(pd.Timestamp(x).value)
     # last resort (shouldn’t happen)
     raise TypeError(f"Cannot coerce {type(x)} to datetime64[ns]")
@@ -371,83 +391,90 @@ class _AbstractBaseTime(pdarray):
 
     # in class Timedelta(_AbstractBaseTime)
 
-    def __mod__(self, other):
-        if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
-            out = self._binop(other, "%")  # int64 ns remainder
-            return Timedelta(out)
-        return NotImplemented
-
-    def __rmod__(self, other):
-        # Datetime scalar % Timedelta -> Timedelta  (r_is_supported=True in op table)
-        if Datetime._is_datetime_scalar(other):
-            out = self._r_binop(other, "%")  # int64 ns remainder
-            return Timedelta(out)
-        # existing support (Timedelta scalar % Timedelta)
-        if self._is_timedelta_scalar(other):
-            out = self._r_binop(other, "%")
-            return Timedelta(out)
-        return NotImplemented
-
-    # timeclass.py :: class Datetime
-
-    # in class Datetime(_AbstractBaseTime)
-
+    # in class _AbstractBaseTime
 
     def _binop(self, other, op):
-        # Need to do 2 things:
-        #  1) Determine return type, based on other's class
-        #  2) Get other's int64 data to combine with self's data
-        if isinstance(other, Datetime) or self._is_datetime_scalar(other):
-            if op not in self.supported_with_datetime:
-                raise TypeError(f"{op} not supported between {self.__class__.__name__} and Datetime")
-            otherclass = "Datetime"
-            if self._is_datetime_scalar(other):
-                otherdata = _Timescalar(other).value
-            else:
-                otherdata = other.values
-        elif isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
+        # same kind (array ↔ array)
+        if isinstance(other, self.__class__):
+            if op not in self.supported_with_datetime and self.__class__.__name__ == "Datetime":
+                raise TypeError(f"{op} not supported between Datetime and Datetime")
+            if op not in self.supported_with_timedelta and self.__class__.__name__ == "Timedelta":
+                raise TypeError(f"{op} not supported between Timedelta and Timedelta")
+            otherclass = self.__class__.__name__
+            otherdata = other.values
+
+        # Datetime array with Timedelta (array or scalar)
+        elif self.__class__.__name__ == "Datetime" and (
+            isinstance(other, Timedelta) or self._is_timedelta_scalar(other)
+        ):
             if op not in self.supported_with_timedelta:
-                raise TypeError(f"{op} not supported between {self.__class__.__name__} and Timedelta")
+                raise TypeError(f"{op} not supported between Datetime and Timedelta")
             otherclass = "Timedelta"
-            if self._is_timedelta_scalar(other):
-                otherdata = _Timescalar(other).value
-            else:
-                otherdata = other.values
-        elif (isinstance(other, pdarray) and other.dtype in intTypes) or isSupportedInt(other):
+            otherdata = _Timescalar(other).value if self._is_timedelta_scalar(other) else other.values
+
+        # Timedelta array with Datetime (array or scalar)
+        elif self.__class__.__name__ == "Timedelta" and (
+            isinstance(other, Datetime) or self._is_datetime_scalar(other)
+        ):
+            if op not in self.supported_with_datetime:
+                raise TypeError(f"{op} not supported between Timedelta and Datetime")
+            otherclass = "Datetime"
+            otherdata = _Timescalar(other).value if self._is_datetime_scalar(other) else other.values
+
+        # NEW: Datetime array with Datetime scalar
+        elif self.__class__.__name__ == "Datetime" and self._is_datetime_scalar(other):
+            if op not in self.supported_with_datetime:
+                raise TypeError(f"{op} not supported between Datetime and Datetime")
+            otherclass = "Datetime"
+            otherdata = _Timescalar(other).value
+
+        # NEW: Timedelta array with Timedelta scalar
+        elif self.__class__.__name__ == "Timedelta" and self._is_timedelta_scalar(other):
+            if op not in self.supported_with_timedelta:
+                raise TypeError(f"{op} not supported between Timedelta and Timedelta")
+            otherclass = "Timedelta"
+            otherdata = _Timescalar(other).value
+
+        # integer pdarray (ns) path
+        elif isinstance(other, pdarray) and (other.dtype in intTypes):
             if op not in self.supported_with_pdarray:
-                raise TypeError(f"{op} not supported between {self.__class__.__name__} and integer")
+                raise TypeError(
+                    f"{op} not supported between {self.__class__.__name__} and integer array"
+                )
             otherclass = "pdarray"
             otherdata = other
+
         else:
             return NotImplemented
-        # Determines return type (Datetime, Timedelta, or pdarray)
-        callback = self._get_callback(otherclass, op)
-        # Actual operation evaluates on the underlying int64 data
-        return callback(self.values._binop(otherdata, op))
 
-    # In class Timedelta(_AbstractBaseTime): add this method
-    # timeclass.py (inside class Datetime)
+        cb = self._get_callback(otherclass, op)
+        return cb(self.values._binop(otherdata, op))
 
     def _r_binop(self, other, op):
-        # pdarray <op> Timedelta
-        if isinstance(other, pdarray) and other.dtype in intTypes:
+        # pdarray <op> self
+        if isinstance(other, pdarray) and (other.dtype in intTypes):
             if op not in self.supported_with_r_pdarray:
-                raise TypeError(f"{op} not supported between int64 and {self.__class__.__name__}")
+                raise TypeError(
+                    f"{op} not supported between integer array and {self.__class__.__name__}"
+                )
             cb = self._get_callback("pdarray", op)
             return cb(other._binop(self.values, op))
 
-        # Datetime scalar <op> Timedelta (e.g., Timestamp + Timedelta -> Datetime)
+        # scalar datetime/timedelta <op> self
         if self._is_datetime_scalar(other):
             if op not in self.supported_with_r_datetime:
-                raise TypeError(f"{op} not supported between scalar datetime and {self.__class__.__name__}")
+                raise TypeError(
+                    f"{op} not supported between scalar datetime and {self.__class__.__name__}"
+                )
             other_ns = _Timescalar(other).value
             cb = self._get_callback("Datetime", op)
             return cb(self.values._r_binop(other_ns, op))
 
-        # Timedelta scalar <op> Timedelta (THIS fixes your case: Timedelta % Timedelta -> Timedelta)
         if self._is_timedelta_scalar(other):
             if op not in self.supported_with_r_timedelta:
-                raise TypeError(f"{op} not supported between scalar timedelta and {self.__class__.__name__}")
+                raise TypeError(
+                    f"{op} not supported between scalar timedelta and {self.__class__.__name__}"
+                )
             other_ns = _Timescalar(other).value
             cb = self._get_callback("Timedelta", op)
             return cb(self.values._r_binop(other_ns, op))
@@ -634,6 +661,33 @@ class Datetime(_AbstractBaseTime):
         self._date = self.floor("d")
         self._is_populated = True
 
+    # in class Datetime
+
+    def __eq__(self, other):
+        return self._binop(other, "==")
+
+    def __ne__(self, other):
+        return self._binop(other, "!=")
+
+    def __lt__(self, other):
+        return self._binop(other, "<")
+
+    def __le__(self, other):
+        return self._binop(other, "<=")
+
+    def __gt__(self, other):
+        return self._binop(other, ">")
+
+    def __ge__(self, other):
+        return self._binop(other, ">=")
+
+    def __mod__(self, other):
+        # Datetime % Timedelta -> Timedelta
+        if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
+            return Timedelta(self._binop(other, "%"))
+        return NotImplemented
+
+    # in Datetime
     def __add__(self, other):
         if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
             return Datetime(self._binop(other, "+"))
@@ -644,23 +698,20 @@ class Datetime(_AbstractBaseTime):
             return Datetime(self._r_binop(other, "+"))
         return NotImplemented
 
-    # Datetime - Datetime -> Timedelta
-    # Datetime - Timedelta -> Datetime
     def __sub__(self, other):
         if isinstance(other, Datetime) or self._is_datetime_scalar(other):
-            out = self._binop(other, "-")  # int64 ns
-            return Timedelta(out)
+            return Timedelta(self._binop(other, "-"))
         if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
             return Datetime(self._binop(other, "-"))
         return NotImplemented
 
     def __rsub__(self, other):
         if self._is_datetime_scalar(other):
-            out = self._r_binop(other, "-")  # int64 ns
-            return Timedelta(out)
+            return Timedelta(self._r_binop(other, "-"))
         if self._is_timedelta_scalar(other):
             return Datetime(self._r_binop(other, "-"))
         return NotImplemented
+
     def __mul__(self, other):
         # Timedelta * (number | numeric array) -> Timedelta
         if _is_number(other) or _is_number_array(other):
@@ -687,6 +738,11 @@ class Datetime(_AbstractBaseTime):
     def __rtruediv__(self, other):
         # number / Timedelta -> NOT supported in pandas; usually raise
         return NotImplemented
+
+    # in Datetime
+    @staticmethod
+    def _is_supported_scalar(scalar):
+        return Datetime._is_datetime_scalar(scalar)
 
     @property
     def nanosecond(self):
@@ -803,11 +859,6 @@ class Datetime(_AbstractBaseTime):
     def _scalar_callback(self, scalar):
         # Formats a scalar return value as pandas Timestamp
         return pdTimestamp(int(scalar), unit=_BASE_UNIT)
-
-    @staticmethod
-    def _is_supported_scalar(self, scalar):
-        # Tests whether scalar has compatible type with self's elements
-        return self.is_datetime_scalar(scalar)
 
     def to_pandas(self):
         """Convert array to a pandas DatetimeIndex. Note: if the array size
@@ -973,6 +1024,88 @@ class Timedelta(_AbstractBaseTime):
 
     special_objType = "Timedelta"
 
+    # in class Timedelta
+
+    def __eq__(self, other):
+        return self._binop(other, "==")
+
+    def __ne__(self, other):
+        return self._binop(other, "!=")
+
+    def __lt__(self, other):
+        return self._binop(other, "<")
+
+    def __le__(self, other):
+        return self._binop(other, "<=")
+
+    def __gt__(self, other):
+        return self._binop(other, ">")
+
+    def __ge__(self, other):
+        return self._binop(other, ">=")
+
+    def __add__(self, other):
+        # Timedelta + Timedelta -> Timedelta
+        # Timedelta + Datetime  -> Datetime
+        if (
+            isinstance(other, (Timedelta, Datetime))
+            or self._is_datetime_scalar(other)
+            or self._is_timedelta_scalar(other)
+        ):
+            return self._get_callback(
+                "Datetime"
+                if isinstance(other, Datetime) or self._is_datetime_scalar(other)
+                else "Timedelta",
+                "+",
+            )(self._binop(other, "+"))
+        return NotImplemented
+
+    def __radd__(self, other):
+        # Datetime + Timedelta (scalar/datetime) -> Datetime
+        if self._is_datetime_scalar(other) or isinstance(other, Datetime):
+            return Datetime(self._r_binop(other, "+"))
+        # scalar timedelta + Timedelta -> Timedelta
+        if self._is_timedelta_scalar(other):
+            return Timedelta(self._r_binop(other, "+"))
+        return NotImplemented
+
+    def __sub__(self, other):
+        # Timedelta - Timedelta -> Timedelta
+        # Timedelta - Datetime  -> Datetime (match callbacks; test table includes r-cases)
+        if (
+            isinstance(other, (Timedelta, Datetime))
+            or self._is_datetime_scalar(other)
+            or self._is_timedelta_scalar(other)
+        ):
+            return self._get_callback(
+                "Datetime"
+                if isinstance(other, Datetime) or self._is_datetime_scalar(other)
+                else "Timedelta",
+                "-",
+            )(self._binop(other, "-"))
+        return NotImplemented
+
+    def __rsub__(self, other):
+        # Datetime - Timedelta -> Datetime (scalar/datetime on left)
+        if self._is_datetime_scalar(other) or isinstance(other, Datetime):
+            return Datetime(self._r_binop(other, "-"))
+        # scalar timedelta - Timedelta -> Timedelta
+        if self._is_timedelta_scalar(other):
+            return Timedelta(self._r_binop(other, "-"))
+        return NotImplemented
+
+    def __neg__(self):
+        # Needed for: ((-self.td_vec1).abs() == self.td_vec1).all()
+        from arkouda.numpy.numeric import cast as akcast
+
+        return Timedelta(akcast((-1) * self.values, "int64"))
+
+    def __rmod__(self, other):
+        # Timestamp % Timedelta (your r_is_supported=True case) and Timedelta % Timedelta scalar
+        if self._is_datetime_scalar(other) or self._is_timedelta_scalar(other):
+            return Timedelta(self._r_binop(other, "%"))
+        return NotImplemented
+
     def _ensure_components(self):
         from arkouda.client import generic_msg
 
@@ -993,6 +1126,11 @@ class Timedelta(_AbstractBaseTime):
         self._days = self._d
         self._total_seconds = self._days * (24 * 3600) + self._seconds + (self._microseconds / 10**6)
         self._is_populated = True
+
+    # in Timedelta
+    @staticmethod
+    def _is_supported_scalar(scalar):
+        return Timedelta._is_timedelta_scalar(scalar)
 
     @property
     def nanoseconds(self):
@@ -1037,25 +1175,19 @@ class Timedelta(_AbstractBaseTime):
 
     @classmethod
     def _get_callback(cls, otherclass, op):
-        callbacks = {
+        return {
             ("Timedelta", "-"): cls,  # Timedelta - Timedelta -> Timedelta
             ("Timedelta", "+"): cls,  # Timedelta + Timedelta -> Timedelta
+            ("Timedelta", "%"): cls,  # Timedelta % Timedelta -> Timedelta
             ("Datetime", "+"): Datetime,  # Timedelta + Datetime -> Datetime
             ("Datetime", "-"): Datetime,  # Datetime - Timedelta -> Datetime
-            ("Timedelta", "%"): cls,  # Timedelta % Timedelta -> Timedelta
-            ("pdarray", "//"): cls,  # Timedelta // pdarray -> Timedelta
-            ("pdarray", "*"): cls,
-        }  # Timedelta * pdarray -> Timedelta
-        # Every other supported op returns an int64 pdarray, so callback is identity
-        return callbacks.get((otherclass, op), _identity)
+            ("pdarray", "//"): cls,  # Timedelta // int array -> Timedelta
+            ("pdarray", "*"): cls,  # Timedelta * int array  -> Timedelta
+        }.get((otherclass, op), _identity)
 
     def _scalar_callback(self, scalar):
         # Formats a returned scalar as a pandas.Timedelta
         return pdTimedelta(int(scalar), unit=_BASE_UNIT)
-
-    @staticmethod
-    def _is_supported_scalar(self, scalar):
-        return self.is_timedelta_scalar(scalar)
 
     def to_pandas(self):
         """Convert array to a pandas TimedeltaIndex. Note: if the array size
