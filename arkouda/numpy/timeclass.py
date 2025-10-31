@@ -154,26 +154,6 @@ class _AbstractBaseTime(pdarray):
         self._data = self.values
         self._is_populated = False
 
-    def _cmp(self, other, op: str):
-        """
-        Force comparison to return an Arkouda boolean pdarray for:
-        - same-class arrays
-        - pandas/NumPy scalar on RHS
-        """
-        # same class (vector ↔ vector)
-        if isinstance(other, self.__class__):
-            return self.values._binop(other.values, op)
-
-        # Datetime vec vs datetime scalar
-        if self.__class__.__name__ == "Datetime" and self._is_datetime_scalar(other):
-            return self.values._binop(_Timescalar(other).value, op)
-
-        # Timedelta vec vs timedelta scalar
-        if self.__class__.__name__ == "Timedelta" and self._is_timedelta_scalar(other):
-            return self.values._binop(_Timescalar(other).value, op)
-
-        return NotImplemented
-
     @classmethod
     def _get_callback(cls, other, op):
         # Will be overridden by all children
@@ -496,7 +476,7 @@ class Datetime(_AbstractBaseTime):
     -----
     The ``.values`` attribute is always in nanoseconds with int64 dtype.
     """
-    __array_priority__ = 10000
+
     supported_with_datetime = frozenset(("==", "!=", "<", "<=", ">", ">=", "-"))
     supported_with_r_datetime = frozenset(("==", "!=", "<", "<=", ">", ">=", "-"))
     supported_with_timedelta = frozenset(("+", "-", "/", "//", "%"))
@@ -506,14 +486,6 @@ class Datetime(_AbstractBaseTime):
     supported_with_r_pdarray = frozenset(())  # type: ignore
 
     special_objType = "Datetime"
-
-    def __eq__(self, other): return self._cmp(other, "==")
-    def __ne__(self, other): return self._cmp(other, "!=")
-    def __lt__(self, other): return self._cmp(other, "<")
-    def __le__(self, other): return self._cmp(other, "<=")
-    def __gt__(self, other): return self._cmp(other, ">")
-    def __ge__(self, other): return self._cmp(other, ">=")
-
 
     def _ensure_components(self):
         from arkouda.client import generic_msg
@@ -813,7 +785,6 @@ class Timedelta(_AbstractBaseTime):
     -----
     The ``.values`` attribute is always in nanoseconds with int64 dtype.
     """
-    __array_priority__ = 10000
 
     supported_with_datetime = frozenset(("+"))
     supported_with_r_datetime = frozenset(("+", "-", "/", "//", "%"))
@@ -824,14 +795,6 @@ class Timedelta(_AbstractBaseTime):
     supported_with_r_pdarray = frozenset(("*"))
 
     special_objType = "Timedelta"
-
-    def __eq__(self, other): return self._cmp(other, "==")
-    def __ne__(self, other): return self._cmp(other, "!=")
-    def __lt__(self, other): return self._cmp(other, "<")
-    def __le__(self, other): return self._cmp(other, "<=")
-    def __gt__(self, other): return self._cmp(other, ">")
-    def __ge__(self, other): return self._cmp(other, ">=")
-
 
     def _ensure_components(self):
         from arkouda.client import generic_msg
