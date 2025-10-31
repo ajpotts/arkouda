@@ -87,12 +87,17 @@ def _as_timedelta(self, arr_or_scalar):
     # wrap an int64 ns pdarray (or compatible) back into Timedelta
     return Timedelta(arr_or_scalar, unit="ns")
 
+import numbers
+import numpy as np
+import pandas as pd
+from datetime import datetime as _dt_datetime, timedelta as _dt_timedelta
+from numpy import datetime64 as _np_datetime64, timedelta64 as _np_timedelta64
+
 
 @staticmethod
 def _is_number(x):
-    import numpy as np
-
-    return isinstance(x, (int, float, np.integer, np.floating))
+    # numpy scalars and python numbers
+    return isinstance(x, numbers.Number) or isinstance(x, (np.integer, np.floating))
 
 
 @staticmethod
@@ -105,18 +110,7 @@ def _is_number_array(x):
 
 
 def _is_datetime_scalar(x):
-    import datetime as dt
-
-    import numpy as np
-
-    try:
-        import pandas as pd
-
-        if isinstance(x, pd.Timestamp):
-            return True
-    except Exception:
-        pass
-    return isinstance(x, (np.datetime64, dt.datetime))
+    return isinstance(x, (pd.Timestamp, _dt_datetime, _np_datetime64))
 
 
 def _to_datetime64_ns_scalar(x) -> int:
@@ -560,12 +554,8 @@ class _AbstractBaseTime(pdarray):
         )
 
     @staticmethod
-    def _is_timedelta_scalar(scalar):
-        return (
-            isinstance(scalar, pdTimedelta)
-            or (isinstance(scalar, np.timedelta64) and np.isscalar(scalar))
-            or isinstance(scalar, datetime.timedelta)
-        )
+    def _is_timedelta_scalar(x):
+        return isinstance(x, (pd.Timedelta, _dt_timedelta, _np_timedelta64))
 
     def _scalar_callback(self, key):
         # Will be overridden in all children
@@ -731,8 +721,8 @@ class Datetime(_AbstractBaseTime):
 
     # in Datetime
     @staticmethod
-    def _is_supported_scalar(scalar):
-        return Datetime._is_datetime_scalar(scalar)
+    def _is_supported_scalar(self, scalar):
+        return _is_datetime_scalar(scalar)
 
     @property
     def nanosecond(self):
@@ -1127,6 +1117,18 @@ class Timedelta(_AbstractBaseTime):
         # number / Timedelta -> not supported (pandas raises)
         return NotImplemented
 
+    def __floordiv__(self, other):
+        if isinstance(other, Timedelta):
+            # elementwise floor(# of whole 'other' units in self)
+            return ak.cast(self.values // other.values, ak.int64)
+        if _is_number(other):
+            return Timedelta(self.values // int(other), unit=self.unit)
+        raise TypeError("Unsupported // for Timedelta and {type(other)}")
+
+    def __rfloordiv__(self, other):
+        # numbers // Timedelta is undefined (don’t implement) to match pandas’ restrictiveness
+        raise TypeError("Unsupported // for {type(other)} and Timedelta")
+
     def _ensure_components(self):
         from arkouda.client import generic_msg
 
@@ -1150,8 +1152,8 @@ class Timedelta(_AbstractBaseTime):
 
     # in Timedelta
     @staticmethod
-    def _is_supported_scalar(scalar):
-        return Timedelta._is_timedelta_scalar(scalar)
+    def _is_supported_scalar(self, scalar):
+        return self._is_timedelta_scalar(scalar)
 
     @property
     def nanoseconds(self):
