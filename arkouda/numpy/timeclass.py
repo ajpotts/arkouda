@@ -242,6 +242,26 @@ class _AbstractBaseTime(pdarray):
         self._data = self.values
         self._is_populated = False
 
+    def _cmp(self, other, op: str):
+        """
+        Force comparison to return an Arkouda boolean pdarray for:
+        - same-class arrays
+        - pandas/NumPy scalar on RHS
+        """
+        # same class (vector ↔ vector)
+        if isinstance(other, self.__class__):
+            return self.values._binop(other.values, op)
+
+        # Datetime vec vs datetime scalar
+        if self.__class__.__name__ == "Datetime" and self._is_datetime_scalar(other):
+            return self.values._binop(_Timescalar(other).value, op)
+
+        # Timedelta vec vs timedelta scalar
+        if self.__class__.__name__ == "Timedelta" and self._is_timedelta_scalar(other):
+            return self.values._binop(_Timescalar(other).value, op)
+
+        return NotImplemented
+
     @classmethod
     def _get_callback(cls, other, op):
         # Will be overridden by all children
@@ -627,6 +647,7 @@ class Datetime(_AbstractBaseTime):
     The ``.values`` attribute is always in nanoseconds with int64 dtype.
     """
 
+    __array_priority__ = 10000
     supported_with_datetime = frozenset(("==", "!=", "<", "<=", ">", ">=", "-"))
     supported_with_r_datetime = frozenset(("==", "!=", "<", "<=", ">", ">=", "-"))
     supported_with_timedelta = frozenset(("+", "-", "/", "//", "%"))
@@ -660,6 +681,24 @@ class Datetime(_AbstractBaseTime):
         self._is_leap_year = create_pdarray(attribute_dict["isLeapYear"])
         self._date = self.floor("d")
         self._is_populated = True
+
+    def __eq__(self, other):
+        return self._cmp(other, "==")
+
+    def __ne__(self, other):
+        return self._cmp(other, "!=")
+
+    def __lt__(self, other):
+        return self._cmp(other, "<")
+
+    def __le__(self, other):
+        return self._cmp(other, "<=")
+
+    def __gt__(self, other):
+        return self._cmp(other, ">")
+
+    def __ge__(self, other):
+        return self._cmp(other, ">=")
 
     # in class Datetime
 
@@ -1014,6 +1053,7 @@ class Timedelta(_AbstractBaseTime):
     The ``.values`` attribute is always in nanoseconds with int64 dtype.
     """
 
+    __array_priority__ = 10000
     supported_with_datetime = frozenset(("+"))
     supported_with_r_datetime = frozenset(("+", "-", "/", "//", "%"))
     supported_with_timedelta = frozenset(("==", "!=", "<", "<=", ">", ">=", "+", "-", "/", "//", "%"))
@@ -1027,22 +1067,22 @@ class Timedelta(_AbstractBaseTime):
     # in class Timedelta
 
     def __eq__(self, other):
-        return self._binop(other, "==")
+        return self._cmp(other, "==")
 
     def __ne__(self, other):
-        return self._binop(other, "!=")
+        return self._cmp(other, "!=")
 
     def __lt__(self, other):
-        return self._binop(other, "<")
+        return self._cmp(other, "<")
 
     def __le__(self, other):
-        return self._binop(other, "<=")
+        return self._cmp(other, "<=")
 
     def __gt__(self, other):
-        return self._binop(other, ">")
+        return self._cmp(other, ">")
 
     def __ge__(self, other):
-        return self._binop(other, ">=")
+        return self._cmp(other, ">=")
 
     def __add__(self, other):
         # Timedelta + Timedelta -> Timedelta
