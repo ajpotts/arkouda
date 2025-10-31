@@ -1,10 +1,8 @@
 import datetime
 import json
-import numbers
 from typing import TYPE_CHECKING, Optional, TypeVar, Union
 
 import numpy as np
-import pandas as pd
 from pandas import Series as pdSeries
 from pandas import Timedelta as pdTimedelta
 from pandas import Timestamp as pdTimestamp
@@ -57,20 +55,6 @@ _unit2factor = {
     "us": 10**3,
     "ns": 1,
 }
-
-
-def _is_number(x) -> bool:
-    """
-    Return True if x is a scalar numeric type (int, float, np number),
-    but not a boolean, datetime, or timedelta.
-    """
-    if isinstance(x, bool):
-        return False
-    if isinstance(x, numbers.Number):
-        return True
-    if isinstance(x, (np.generic,)):  # NumPy scalar (e.g., np.int64)
-        return np.issubdtype(type(x), np.number)
-    return False
 
 
 def _get_factor(unit: str) -> int:
@@ -804,15 +788,11 @@ class Timedelta(_AbstractBaseTime):
 
     supported_with_datetime = frozenset(("+"))
     supported_with_r_datetime = frozenset(("+", "-", "/", "//", "%"))
-    supported_with_timedelta = frozenset((
-        "==", "!=", "<", "<=", ">", ">=",
-        "+", "-", "/",  "%"
-    ))
+    supported_with_timedelta = frozenset(("==", "!=", "<", "<=", ">", ">=", "+", "-", "/", "//", "%"))
     supported_with_r_timedelta = frozenset(("==", "!=", "<", "<=", ">", ">=", "+", "-", "/", "//", "%"))
     supported_opeq = frozenset(("+=", "-=", "%="))
-    supported_with_pdarray = frozenset(("*", "//", "/"))  # TD // numeric -> TD, TD / numeric -> TD
+    supported_with_pdarray = frozenset(("*", "//"))
     supported_with_r_pdarray = frozenset(("*"))
-
 
     special_objType = "Timedelta"
 
@@ -836,23 +816,6 @@ class Timedelta(_AbstractBaseTime):
         self._days = self._d
         self._total_seconds = self._days * (24 * 3600) + self._seconds + (self._microseconds / 10**6)
         self._is_populated = True
-
-    # In class Timedelta
-
-    def __floordiv__(self, other):
-        from arkouda.numpy.util import is_numeric
-
-        # Timedelta // number -> Timedelta
-        if _is_number(other) or is_numeric(other):
-            return Timedelta(self._binop(other, "//"))
-        # Timedelta // Timedelta -> int64 pdarray (ratio)
-        if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
-            return self._binop(other, "//")
-        return NotImplemented
-
-    def __rfloordiv__(self, other):
-        # number // Timedelta -> not supported (TypeError in pandas)
-        return NotImplemented
 
     @property
     def nanoseconds(self):
@@ -897,17 +860,17 @@ class Timedelta(_AbstractBaseTime):
 
     @classmethod
     def _get_callback(cls, otherclass, op):
-        # inside Timedelta._get_callback(otherclass, op)
-        return {
-            ("Timedelta", "-"): cls,
-            ("Timedelta", "+"): cls,
-            ("Timedelta", "%"): cls,
-            ("Timedelta", "//"): _identity,  # TD // TD -> int64 pdarray
-            ("Timedelta", "/"): _identity,  # TD / TD -> float64 pdarray
-            ("pdarray", "//"): cls,  # TD // number -> Timedelta
-            ("pdarray", "*"): cls,  # TD * number -> Timedelta
-            ("pdarray", "/"): cls,  # TD / number -> Timedelta
-        }.get((otherclass, op), _identity)
+        callbacks = {
+            ("Timedelta", "-"): cls,  # Timedelta - Timedelta -> Timedelta
+            ("Timedelta", "+"): cls,  # Timedelta + Timedelta -> Timedelta
+            ("Datetime", "+"): Datetime,  # Timedelta + Datetime -> Datetime
+            ("Datetime", "-"): Datetime,  # Datetime - Timedelta -> Datetime
+            ("Timedelta", "%"): cls,  # Timedelta % Timedelta -> Timedelta
+            ("pdarray", "//"): cls,  # Timedelta // pdarray -> Timedelta
+            ("pdarray", "*"): cls,
+        }  # Timedelta * pdarray -> Timedelta
+        # Every other supported op returns an int64 pdarray, so callback is identity
+        return callbacks.get((otherclass, op), _identity)
 
     def _scalar_callback(self, scalar):
         # Formats a returned scalar as a pandas.Timedelta

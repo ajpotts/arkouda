@@ -411,6 +411,91 @@ jobs:
           HDF5_DIR=$(pwd)/dep/hdf5-install/ make install-pytables DEP_BUILD_DIR=$DEP_BUILD_DIR
 
 
+  arkouda_makefile_pytables:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        chpl-version: ['2.6.0']
+    container:
+      image: ghcr.io/bears-r-us/ubuntu-with-arkouda-deps-chpl-${{ matrix.chpl-version }}:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.github_token }}
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+    - name: Set Python version to 3.13
+      run: |
+        update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.13 1
+        python3 -m ensurepip --default-pip
+    - name: Check python version
+      run: |
+        python3 --version
+    - name: Make install-zmq
+      uses: nick-fields/retry@v2
+      with:
+        timeout_seconds: 1200  # or use timeout_minutes
+        max_attempts: 2
+        retry_wait_seconds: 60
+        retry_on: error
+        command: |
+          make install-zmq  DEP_BUILD_DIR=$DEP_BUILD_DIR
+    - name: Make install-iconv
+      uses: nick-fields/retry@v2
+      with:
+        timeout_seconds: 1200  # or use timeout_minutes
+        max_attempts: 2
+        retry_wait_seconds: 60
+        retry_on: error
+        command: |
+          make install-iconv  DEP_BUILD_DIR=$DEP_BUILD_DIR
+    - name: Make install-idn2
+      uses: nick-fields/retry@v2
+      with:
+        timeout_seconds: 1200  # or use timeout_minutes
+        max_attempts: 2
+        retry_wait_seconds: 60
+        retry_on: error
+        command: |
+          make install-idn2  DEP_BUILD_DIR=$DEP_BUILD_DIR
+    - name: Make install-blosc
+      uses: nick-fields/retry@v2
+      with:
+        timeout_seconds: 1200  # or use timeout_minutes
+        max_attempts: 2
+        retry_wait_seconds: 60
+        retry_on: error
+        command: |
+          make install-blosc  DEP_BUILD_DIR=$DEP_BUILD_DIR
+    - name: Make install-hdf5
+      uses: nick-fields/retry@v2
+      with:
+        timeout_seconds: 1200  # or use timeout_minutes
+        max_attempts: 2
+        retry_wait_seconds: 60
+        retry_on: error
+        command: |
+          make install-hdf5  DEP_BUILD_DIR=$DEP_BUILD_DIR
+    - name: Install dependencies
+      uses: nick-fields/retry@v2
+      with:
+        timeout_seconds: 1200  # or use timeout_minutes
+        max_attempts: 2
+        retry_wait_seconds: 60
+        retry_on: error
+        command: |
+          apt-get update && apt-get install -y --no-install-recommends build-essential python3-dev cython3 pkg-config libhdf5-dev libhdf5-serial-dev libbz2-dev liblzo2-dev libblosc-dev
+    - name: Make install-pytables
+      uses: nick-fields/retry@v2
+      with:
+        timeout_seconds: 1200  # or use timeout_minutes
+        max_attempts: 2
+        retry_wait_seconds: 60
+        retry_on: error
+        command: |
+          HDF5_DIR=$(pwd)/dep/hdf5-install/ make install-pytables DEP_BUILD_DIR=$DEP_BUILD_DIR
+
+
   arkouda_chpl_portability:
     runs-on: ubuntu-latest
     strategy:
