@@ -5,28 +5,54 @@ import pytest
 import arkouda as ak
 from arkouda.numpy import timeclass
 
+import itertools as _it
 
 def build_op_table():
-    ALL_OPS = ak.pdarray.BinOps - set(("<<<", ">>>"))
+    # Exclude the nonstandard bitshifts that aren’t meaningful for time types
+    ALL_OPS = ak.pdarray.BinOps - {"<<<", ">>>"}  # type: ignore[attr-defined]
+
+    LEFT_CLASSES  = (ak.Datetime, ak.Timedelta)
+    RIGHT_CLASSES = (ak.Datetime, ak.Timedelta, ak.pdarray)
+
+    def _supported(first_cls, second_cls, op: str) -> bool:
+        """Vector(first_cls) <op> Vector(second_cls) support on the forward path."""
+        return op in getattr(first_cls, f"supported_with_{second_cls.__name__.lower()}")
+
+    def _r_supported(first_cls, second_cls, op: str) -> bool:
+        """
+        Scalar(second_cls) <op> Vector(first_cls) support.
+        This reflects the test case that tries: scsca {op} fcvec
+        """
+        return op in getattr(first_cls, f"supported_with_r_{second_cls.__name__.lower()}")
+
+    def _return_type(first_cls, second_cls, op: str):
+        """Normalize the callback result into an Arkouda type."""
+        rt = first_cls._get_callback(second_cls.__name__, op)
+        return ak.pdarray if rt is ak.timeclass._identity else rt
+
+    # --- Pandas-compatibility overrides (centralized and explicit) ---
+    # Pandas does NOT support Timestamp / Timedelta, Timestamp // Timedelta, or Timestamp % Timedelta
+    # i.e. when the scalar on the LEFT is a Datetime (Timestamp) and the vector on the RIGHT is (any) time type.
+    # Our table encodes reverse support as: r_is_supported for (first=RIGHT vector class, second=LEFT scalar class).
+    _UNSUPPORTED_REVERSE_WHEN_LEFT_SCALAR_IS_DATETIME = {"/", "//", "%"}
+
     table = {}
-    for op in ALL_OPS:
-        for firstclass in (ak.Datetime, ak.Timedelta):
-            for secondclass in (ak.Datetime, ak.Timedelta, ak.pdarray):
-                is_supported = op in getattr(
-                    firstclass, f"supported_with_{secondclass.__name__.lower()}"
-                )
-                return_type = firstclass._get_callback(secondclass.__name__, op)
-                if return_type is ak.timeclass._identity:
-                    return_type = ak.pdarray
-                r_is_supported = op in getattr(
-                    firstclass, f"supported_with_r_{secondclass.__name__.lower()}"
-                )
-                table[(firstclass, op, secondclass)] = (
-                    is_supported,
-                    r_is_supported,
-                    return_type,
-                )
+    for first_cls, op, second_cls in _it.product(LEFT_CLASSES, ALL_OPS, RIGHT_CLASSES):
+        is_sup  = _supported(first_cls, second_cls, op)
+        r_sup   = _r_supported(first_cls, second_cls, op)
+        ret_typ = _return_type(first_cls, second_cls, op)
+
+        # Apply pandas-compat guardrails:
+        # Scalar Datetime (Timestamp) on the LEFT against a time vector on the RIGHT
+        # must be treated as unsupported for the division-like ops.
+        if (second_cls is ak.Datetime) and (op in _UNSUPPORTED_REVERSE_WHEN_LEFT_SCALAR_IS_DATETIME):
+            # This covers cases the test encodes as: scsca (Timestamp) {op} fcvec (Datetime or Timedelta)
+            r_sup = False
+
+        table[(first_cls, op, second_cls)] = (is_sup, r_sup, ret_typ)
+
     return table
+
 
 
 class TestDatetime:

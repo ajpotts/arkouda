@@ -1085,7 +1085,36 @@ class Timedelta(_AbstractBaseTime):
         return _raise_if_not_supported(self._cmp(other, "=="), self, "==", other)
 
     def __ne__(self, other):
-        return _raise_if_not_supported(self._cmp(other, "!="), self, "!=", other)
+        """
+        Elementwise inequality comparison.
+
+        Returns
+        -------
+        ak.pdarray (bool)
+            True where elements are not equal.
+
+        Notes
+        -----
+        Supported comparisons:
+        - Timedelta vs Timedelta (vector or scalar)
+        - Timedelta vs numpy.timedelta64 / pandas.Timedelta / datetime.timedelta
+
+        Raises
+        ------
+        TypeError
+            If the operation is not supported (e.g., Timedelta vs Datetime or numeric).
+        """
+        # Allow Timedelta <-> Timedelta-like comparisons
+        if (
+                isinstance(other, Timedelta)
+                or self._is_timedelta_scalar(other)
+        ):
+            return self._cmp(other, "!=")
+
+        # Everything else is unsupported
+        raise TypeError(
+            f"Unsupported '!=' comparison between {type(self).__name__} and {type(other).__name__}"
+        )
 
     def __lt__(self, other):
         return _raise_if_not_supported(self._cmp(other, "<"),  self, "<",  other)
