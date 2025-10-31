@@ -391,7 +391,7 @@ jobs:
         retry_on: error
         command: |
           make install-hdf5  DEP_BUILD_DIR=$DEP_BUILD_DIR
-    - name: Make install-pytables
+    - name: Install dependencies
       uses: nick-fields/retry@v2
       with:
         timeout_seconds: 1200  # or use timeout_minutes
@@ -400,6 +400,14 @@ jobs:
         retry_on: error
         command: |
           apt-get update && apt-get install -y --no-install-recommends build-essential python3-dev cython3 pkg-config libhdf5-dev libhdf5-serial-dev libbz2-dev liblzo2-dev libblosc-dev
+    - name: Make install-pytables
+      uses: nick-fields/retry@v2
+      with:
+        timeout_seconds: 1200  # or use timeout_minutes
+        max_attempts: 2
+        retry_wait_seconds: 60
+        retry_on: error
+        command: |
           HDF5_DIR=$(pwd)/dep/hdf5-install/ make install-pytables DEP_BUILD_DIR=$DEP_BUILD_DIR
 
 
