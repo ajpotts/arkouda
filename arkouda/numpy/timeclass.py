@@ -2,7 +2,7 @@ import datetime
 import json
 from typing import TYPE_CHECKING, Optional, TypeVar, Union
 
-import numpy as np
+
 from pandas import Series as pdSeries
 from pandas import Timedelta as pdTimedelta
 from pandas import Timestamp as pdTimestamp
@@ -53,6 +53,14 @@ _unit2factor = {
     "us": 10**3,
     "ns": 1,
 }
+
+
+def _raise_if_not_supported(ret, left, op, other):
+    if ret is NotImplemented:
+        raise TypeError(
+            f"{left.__class__.__name__} {op} {type(other).__name__} not supported"
+        )
+    return ret
 
 
 # timeclass.py (near other helpers / top of file)
@@ -408,9 +416,6 @@ class _AbstractBaseTime(pdarray):
     def __repr__(self) -> str:
         return self.__str__()
 
-    # timeclass.py :: class Timedelta
-
-    # in class Timedelta(_AbstractBaseTime)
 
     # in class _AbstractBaseTime
 
@@ -680,22 +685,22 @@ class Datetime(_AbstractBaseTime):
         self._is_populated = True
 
     def __eq__(self, other):
-        return self._binop(other, "==")
+        return _raise_if_not_supported(self._binop(other, "=="), self, "==", other)
 
     def __ne__(self, other):
-        return self._binop(other, "!=")
+        return _raise_if_not_supported(self._binop(other, "!="), self, "!=", other)
 
     def __lt__(self, other):
-        return self._binop(other, "<")
+        return _raise_if_not_supported(self._binop(other, "<"),  self, "<",  other)
 
     def __le__(self, other):
-        return self._binop(other, "<=")
+        return _raise_if_not_supported(self._binop(other, "<="), self, "<=", other)
 
     def __gt__(self, other):
-        return self._binop(other, ">")
+        return _raise_if_not_supported(self._binop(other, ">"),  self, ">",  other)
 
     def __ge__(self, other):
-        return self._binop(other, ">=")
+        return _raise_if_not_supported(self._binop(other, ">="), self, ">=", other)
 
     def __mod__(self, other):
         # Datetime % Timedelta -> Timedelta
@@ -1017,22 +1022,22 @@ class Timedelta(_AbstractBaseTime):
     # in class Timedelta
 
     def __eq__(self, other):
-        return self._cmp(other, "==")
+        return _raise_if_not_supported(self._cmp(other, "=="), self, "==", other)
 
     def __ne__(self, other):
-        return self._cmp(other, "!=")
+        return _raise_if_not_supported(self._cmp(other, "!="), self, "!=", other)
 
     def __lt__(self, other):
-        return self._cmp(other, "<")
+        return _raise_if_not_supported(self._cmp(other, "<"),  self, "<",  other)
 
     def __le__(self, other):
-        return self._cmp(other, "<=")
+        return _raise_if_not_supported(self._cmp(other, "<="), self, "<=", other)
 
     def __gt__(self, other):
-        return self._cmp(other, ">")
+        return _raise_if_not_supported(self._cmp(other, ">"),  self, ">",  other)
 
     def __ge__(self, other):
-        return self._cmp(other, ">=")
+        return _raise_if_not_supported(self._cmp(other, ">="), self, ">=", other)
 
     def __add__(self, other):
         # Timedelta + Timedelta -> Timedelta
