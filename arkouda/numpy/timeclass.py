@@ -1198,7 +1198,6 @@ class Timedelta(_AbstractBaseTime):
 
     @classmethod
     def _get_callback(cls, otherclass, op):
-        # in Timedelta._get_callback
         return {
             ("Timedelta", "-"): cls,
             ("Timedelta", "+"): cls,
