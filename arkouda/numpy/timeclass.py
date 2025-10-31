@@ -733,6 +733,66 @@ class Datetime(_AbstractBaseTime):
             return Datetime(self._r_binop(other, "-"))
         return NotImplemented
 
+    # Block arithmetic we do NOT support
+    def __truediv__(self, other):  # Datetime / anything -> not supported
+        return NotImplemented
+
+    def __mul__(self, other):  # Datetime * anything -> not supported
+        return NotImplemented
+
+    def __pow__(self, other, modulo=None):
+        return NotImplemented
+
+    # Block bitwise and shifts completely
+    def __and__(self, other):
+        return NotImplemented
+
+    def __or__(self, other):
+        return NotImplemented
+
+    def __xor__(self, other):
+        return NotImplemented
+
+    def __lshift__(self, other):
+        return NotImplemented
+
+    def __rshift__(self, other):
+        return NotImplemented
+
+    def __floordiv__(self, other):
+        # Datetime // Timedelta -> int64 pdarray (counts of whole periods)
+        if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
+            return self._binop(other, "//")
+        return NotImplemented
+
+    # Reflected versions, also blocked
+    def __rfloordiv__(self, other):  # e.g., number // Datetime — not supported
+        return NotImplemented
+
+    def __rtruediv__(self, other):
+        return NotImplemented
+
+    def __rmul__(self, other):
+        return NotImplemented
+
+    def __rpow__(self, other, modulo=None):
+        return NotImplemented
+
+    def __rand__(self, other):
+        return NotImplemented
+
+    def __ror__(self, other):
+        return NotImplemented
+
+    def __rxor__(self, other):
+        return NotImplemented
+
+    def __rlshift__(self, other):
+        return NotImplemented
+
+    def __rrshift__(self, other):
+        return NotImplemented
+
     # in Datetime
     @staticmethod
     def _is_supported_scalar(self, scalar):
@@ -1137,6 +1197,7 @@ class Timedelta(_AbstractBaseTime):
         # number / Timedelta -> not supported (pandas raises)
         return NotImplemented
 
+
     def __rfloordiv__(self, other):
         """
         Support Datetime/Timestamp/np.datetime64 scalar on the left:
@@ -1163,6 +1224,43 @@ class Timedelta(_AbstractBaseTime):
 
         return NotImplemented
 
+    # Block bitwise and shifts (so they don’t run as int64 ops)
+    def __and__(self, other):
+        return NotImplemented
+
+    def __or__(self, other):
+        return NotImplemented
+
+    def __xor__(self, other):
+        return NotImplemented
+
+    def __lshift__(self, other):
+        return NotImplemented
+
+    def __rshift__(self, other):
+        return NotImplemented
+
+    def __rand__(self, other):
+        return NotImplemented
+
+    def __ror__(self, other):
+        return NotImplemented
+
+    def __rxor__(self, other):
+        return NotImplemented
+
+    def __rlshift__(self, other):
+        return NotImplemented
+
+    def __rrshift__(self, other):
+        return NotImplemented
+
+    # Block power across the board
+    def __pow__(self, other, modulo=None):
+        return NotImplemented
+
+    def __rpow__(self, other, modulo=None):
+        return NotImplemented
 
     def _ensure_components(self):
         from arkouda.client import generic_msg
