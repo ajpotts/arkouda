@@ -61,7 +61,7 @@ import secrets
 
 from typeguard import typechecked
 
-from arkouda.pandas import io_util
+
 
 
 __all__ = [
@@ -141,10 +141,12 @@ def get_arkouda_client_directory() -> Path:
     as the server's token directory as the file format is different.
 
     """
+    from arkouda.pandas.io_util import get_directory
     arkouda_parent_dir = os.getenv("ARKOUDA_CLIENT_DIRECTORY")
     if not arkouda_parent_dir:
         arkouda_parent_dir = get_home_directory()
-    return io_util.get_directory("{}{}.arkouda".format(arkouda_parent_dir, os.sep)).absolute()
+
+    return get_directory("{}{}.arkouda".format(arkouda_parent_dir, os.sep)).absolute()
 
 
 def get_username() -> str:

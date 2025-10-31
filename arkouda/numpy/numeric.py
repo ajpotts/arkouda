@@ -7,7 +7,6 @@ from typing import no_type_check
 import numpy as np
 from typeguard import typechecked
 
-from arkouda.groupbyclass import GroupBy, groupable
 from arkouda.numpy.dtypes import ARKOUDA_SUPPORTED_INTS, _datatype_check, bigint
 from arkouda.numpy.dtypes import bool_ as ak_bool
 from arkouda.numpy.dtypes import dtype as akdtype
@@ -54,11 +53,14 @@ if TYPE_CHECKING:
     from arkouda.client import generic_msg, get_array_ranks
     from arkouda.numpy.segarray import SegArray
     from arkouda.pandas.categorical import Categorical
+    from arkouda.pandas.groupbyclass import GroupBy, groupable
 else:
     Categorical = TypeVar("Categorical")
     SegArray = TypeVar("SegArray")
     generic_msg = TypeVar("generic_msg")
     get_array_ranks = TypeVar("get_array_ranks")
+    GroupBy = TypeVar("GroupBy")
+    groupable = TypeVar("groupable")
 
 __all__ = [
     "cast",

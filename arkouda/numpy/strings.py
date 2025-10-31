@@ -18,13 +18,15 @@ from arkouda.numpy.dtypes import int_scalars, numeric_scalars, resolve_scalar_dt
 from arkouda.numpy.pdarrayclass import RegistrationError
 from arkouda.numpy.pdarrayclass import all as akall
 from arkouda.numpy.pdarrayclass import create_pdarray, parse_single_value, pdarray
-from arkouda.pandas.match import Match, MatchType
 
 
 if TYPE_CHECKING:
     from arkouda.client import generic_msg
+    from arkouda.pandas.match import Match, MatchType
 else:
     generic_msg = TypeVar("generic_msg")
+    Match = TypeVar("Match")
+    MatchType = TypeVar("MatchType")
 
 if TYPE_CHECKING:
     from arkouda.numpy.sorting import SortingAlgorithm

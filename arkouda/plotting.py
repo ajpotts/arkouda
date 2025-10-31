@@ -70,7 +70,8 @@ from arkouda.numpy import histogram, isnan
 from arkouda.numpy.pdarrayclass import skew
 from arkouda.numpy.pdarraycreation import arange
 from arkouda.numpy.strings import Strings
-from arkouda.numpy.timeclass import Datetime, Timedelta, date_range, timedelta_range
+from arkouda.numpy.timeclass import Datetime, Timedelta
+from arkouda.pandas.time import date_range,timedelta_range
 from arkouda.pdarrayclass import pdarray
 
 

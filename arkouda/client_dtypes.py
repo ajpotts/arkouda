@@ -61,15 +61,17 @@ from arkouda.numpy.dtypes import uint64 as akuint64
 from arkouda.numpy.pdarrayclass import RegistrationError, pdarray
 from arkouda.numpy.pdarraycreation import arange, array, create_pdarray, zeros
 from arkouda.numpy.strings import Strings
-from arkouda.pandas.groupbyclass import GroupBy, broadcast
 
 
 if TYPE_CHECKING:
     from arkouda.numpy import cast as akcast
     from arkouda.numpy import where as akwhere
+    from arkouda.pandas.groupbyclass import GroupBy, broadcast
 else:
     akcast = TypeVar("akcast")
     akwhere = TypeVar("akwhere")
+    GroupBy = TypeVar("GroupBy")
+    broadcast = TypeVar("broadcast")
 
 __all__ = [
     "BitVector",

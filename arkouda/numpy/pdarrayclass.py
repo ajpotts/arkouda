@@ -281,8 +281,9 @@ def _coerce_scalar_for_dtype(val, dtype_name: str):
     object
         A clean Python scalar (int, float, bool, or str) compatible with dtype_name.
     """
-    import numpy as np
     import builtins
+
+    import numpy as np
 
     # NEW: optional pandas support (Timestamp/Timedelta)
     # pdarrayclass.py :: _coerce_scalar_for_dtype (add early)
@@ -316,8 +317,10 @@ def _coerce_scalar_for_dtype(val, dtype_name: str):
         return None
 
     # In pdarrayclass._coerce_scalar_for_dtype (int branch), before returning int(val):
+    import datetime as _dt
+
+    import numpy as np
     from pandas import Timedelta as pdTimedelta
-    import numpy as np, datetime as _dt
     if isinstance(val, (pdTimedelta, np.timedelta64, _dt.timedelta)):
         # convert to integer nanoseconds for int targets
         # pd.Timedelta(...).to_numpy().astype('timedelta64[ns]').astype('int64')
@@ -357,8 +360,9 @@ def _maybe_wrap_timedelta_result(lhs, rhs, op, result):
     """
     try:
         # Lazy import to avoid circulars
-        from arkouda.numpy.timeclass import Timedelta as ak_TimeDelta
         from pandas import Timedelta as pd_Timedelta
+
+        from arkouda.numpy.timeclass import Timedelta as ak_TimeDelta
     except Exception:
         ak_TimeDelta = None
 
@@ -850,6 +854,7 @@ class pdarray:
         """
         from arkouda.client import generic_msg
         from arkouda.numpy.dtypes import result_type as ak_result_type
+
         # `create_pdarray`, `_coerce_scalar_for_dtype`, `_bitwise_ops` are assumed to exist
         # in this module, as in the rest of the class.
 
@@ -973,6 +978,7 @@ class pdarray:
         """
         from arkouda.client import generic_msg
         from arkouda.numpy.dtypes import result_type as ak_result_type
+
         # assumes: create_pdarray, _coerce_scalar_for_dtype, _bitwise_ops are available
 
         if op not in self.BinOps:

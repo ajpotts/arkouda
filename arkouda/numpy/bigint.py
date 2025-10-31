@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import builtins
 from typing import Optional, Union
 import weakref
-import builtins
 
 from numpy import bool
 

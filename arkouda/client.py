@@ -75,7 +75,7 @@ import zmq  # for typechecking
 from arkouda import __version__, security
 from arkouda.logger import ArkoudaLogger, LogLevel, getArkoudaLogger
 from arkouda.message import MessageFormat, MessageType, ParameterObject, ReplyMessage, RequestMessage
-from arkouda.pandas import io_util
+
 
 
 __all__ = [
@@ -242,6 +242,8 @@ def get_shell_mode():
         or IPython notebook.
 
     """
+
+
     shell_mode = None
     try:
         shell_mode = ShellMode(get_ipython().__class__.__name__)
@@ -388,11 +390,13 @@ class Channel:
             If there is an error reading/writing the tokens file.
 
         """
+        from arkouda.pandas.io_util import delimited_file_to_dict,dict_to_delimited_file
+
         path = f"{security.get_arkouda_client_directory()}/tokens.txt"
         url = f"{server}:{port}"
 
         try:
-            tokens = io_util.delimited_file_to_dict(path)
+            tokens = delimited_file_to_dict(path)
         except Exception as e:
             raise IOError(e)
 
@@ -401,13 +405,13 @@ class Channel:
             if saved_token is None or saved_token != token:
                 tokens[url] = cast(str, token)
                 try:
-                    io_util.dict_to_delimited_file(values=tokens, path=path, delimiter=",")
+                    dict_to_delimited_file(values=tokens, path=path, delimiter=",")
                 except Exception as e:
                     raise IOError(e)
             self.token = token
         else:
             try:
-                tokens = io_util.delimited_file_to_dict(path)
+                tokens = delimited_file_to_dict(path)
             except Exception as e:
                 raise IOError(e)
             self.token = tokens.get(url)

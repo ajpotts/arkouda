@@ -156,7 +156,6 @@ from arkouda.numpy import (
     ctz,
     cumprod,
     cumsum,
-    date_range,
     datetime64,
     deg2rad,
     delete,
@@ -324,7 +323,6 @@ from arkouda.numpy import (
     tile,
     timeclass,
     timedelta64,
-    timedelta_range,
     transpose,
     tril,
     triu,
@@ -376,6 +374,8 @@ from arkouda.pandas import (
     ArkoudaBigintDtype,
     ArkoudaStringDtype,
     ArkoudaFloat64Dtype,
+    date_range,
+    timedelta_range,
 )
 from arkouda.client import (
     connect,

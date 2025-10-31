@@ -23,6 +23,7 @@ from arkouda.numpy.dtypes import (
 )
 from arkouda.numpy.dtypes import dtype as akdtype
 from arkouda.numpy.dtypes import float64, get_byteorder, get_server_byteorder
+from arkouda.numpy.dtypes import int64
 from arkouda.numpy.dtypes import int64 as akint64
 from arkouda.numpy.dtypes import uint64 as akuint64
 from arkouda.numpy.pdarrayclass import create_pdarray, pdarray
@@ -1244,17 +1245,10 @@ def logspace(start, stop, num=50, endpoint=True, base=10.0, dtype=None, axis=0):
 
 
 
-# arkouda/numpy/pdarraycreation.py
-
-from typing import Union
-import numpy as np
-from arkouda.numpy.dtypes import float64 as ak_float64, dtype as ak_dtype
-from arkouda.numpy.pdarrayclass import pdarray, create_pdarray
-from arkouda.numpy.pdarraycreation import array as ak_array, full as ak_full
-from arkouda.client import generic_msg
 
 
-from arkouda.numpy.dtypes import int64
+
+
 
 def _linspace_1d(start: numeric_scalars, stop: numeric_scalars, num: int, endpoint: bool, out_dt: str) -> pdarray:
     """Pure 1-D generator used internally."""

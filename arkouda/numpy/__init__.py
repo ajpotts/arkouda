@@ -284,8 +284,6 @@ from arkouda.numpy.timeclass import (
     _Timescalar,
     _get_factor,
     _identity,
-    date_range,
-    timedelta_range,
 )
 from arkouda.numpy.segarray import SegArray, _aggregator
 from arkouda.numpy.util import (

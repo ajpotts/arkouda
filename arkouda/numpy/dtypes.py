@@ -1,10 +1,10 @@
 from __future__ import annotations
-from typing import Literal
+
 import builtins
 from enum import Enum
 import sys
-from typing import TYPE_CHECKING,  Union, cast
-from .bigint import bigint_, bigint
+from typing import TYPE_CHECKING, Literal, Union, cast
+
 import numpy as np
 from numpy import (
     bool,
@@ -58,6 +58,8 @@ from numpy.dtypes import (
     UShortDType,
     VoidDType,
 )
+
+from .bigint import bigint, bigint_
 
 
 if TYPE_CHECKING:
@@ -421,6 +423,7 @@ def can_cast(
     False
     """
     import numpy as np
+
     from .bigint import bigint
 
     # ---- recognizers that NEVER call np.dtype on bigint-y things ----
@@ -578,8 +581,9 @@ def result_type(*args):
     dtype(bigint)
     """
     import numpy as np
-    from .dtypes import dtype as ak_dtype
+
     from .bigint import bigint as bigint  # dtype-class; call it to get instance
+    from .dtypes import dtype as ak_dtype
 
     def _is_bigint_like(x) -> builtins.bool:
         # accept dtype instance, dtype class, name, or arrays/scalars with bigint dtype
@@ -668,6 +672,7 @@ def result_type(*args):
             continue
 
         import pandas as pd
+
         # --- NEW: pandas time scalars map to int64 nanoseconds ---
         if pd is not None:
             # pd.Timedelta scalar
@@ -1107,7 +1112,9 @@ def resolve_scalar_dtype(val: object) -> str:
     """
 
     import builtins
+
     import numpy as np
+
     from .bigint import bigint_  # your scalar class
 
     U64 = 1 << 64

@@ -16,15 +16,20 @@ from arkouda.numpy.pdarrayclass import create_pdarray, pdarray
 from arkouda.numpy.pdarraycreation import array, ones, zeros, zeros_like
 from arkouda.numpy.sorting import argsort
 from arkouda.numpy.strings import Strings
-from arkouda.pandas.groupbyclass import GroupBy, groupable, groupable_element_type, unique
+
 
 
 if TYPE_CHECKING:
     from arkouda.client import generic_msg
     from arkouda.pandas.categorical import Categorical
+    from arkouda.pandas.groupbyclass import GroupBy, groupable, groupable_element_type, unique
 else:
     Categorical = TypeVar("Categorical")
     generic_msg = TypeVar("generic_msg")
+    GroupBy = TypeVar("GroupBy")
+    groupable = TypeVar("groupable")
+    groupable_element_type = TypeVar("groupable_element_type")
+    unique = TypeVar("unique")
 
 __all__ = ["in1d", "concatenate", "union1d", "intersect1d", "setdiff1d", "setxor1d", "indexof1d"]
 

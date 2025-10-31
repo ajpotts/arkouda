@@ -60,7 +60,7 @@ from typeguard import typechecked
 
 from arkouda.client import maxTransferBytes
 from arkouda.client_dtypes import BitVector, Fields, IPv4
-from arkouda.index import Index, MultiIndex
+from arkouda.pandas.index import Index, MultiIndex
 from arkouda.numpy.dtypes import _is_dtype_in_union, bigint
 from arkouda.numpy.dtypes import bool_ as akbool
 from arkouda.numpy.dtypes import float64 as akfloat64
