@@ -96,8 +96,17 @@ from numpy import datetime64 as _np_datetime64, timedelta64 as _np_timedelta64
 
 @staticmethod
 def _is_number(x):
-    # numpy scalars and python numbers
-    return isinstance(x, numbers.Number) or isinstance(x, (np.integer, np.floating))
+    import numpy as np
+    import pandas as pd
+    import datetime as dt
+
+    # explicitly exclude time-like scalars
+    if isinstance(x, (pd.Timedelta, np.timedelta64, dt.timedelta,
+                      pd.Timestamp, np.datetime64, dt.datetime)):
+        return False
+    # numeric?
+    return isinstance(x, (np.integer, np.floating)) or isinstance(x, numbers.Number)
+
 
 
 @staticmethod
@@ -1090,14 +1099,20 @@ class Timedelta(_AbstractBaseTime):
     # in class Timedelta
 
     def __mul__(self, other):
-        # Timedelta * (number | numeric array) -> Timedelta
+        # Timedelta * (Timedelta | Timestamp | datetime64) -> not supported
+        if isinstance(other, (Timedelta, Datetime)) or self._is_timedelta_scalar(other) or self._is_datetime_scalar(
+                other):
+            return NotImplemented
+        # Timedelta * (number | numeric pdarray) -> Timedelta
         if _is_number(other) or _is_number_array(other):
-            out = self._binop(other, "*")  # ns-int64 result
-            return Timedelta(out)  # wrap back to Timedelta
+            out = self._binop(other, "*")
+            return Timedelta(out)
         return NotImplemented
 
     def __rmul__(self, other):
-        # (number | numeric array) * Timedelta -> Timedelta
+        if isinstance(other, (Timedelta, Datetime)) or self._is_timedelta_scalar(other) or self._is_datetime_scalar(
+                other):
+            return NotImplemented
         if _is_number(other) or _is_number_array(other):
             out = self._r_binop(other, "*")
             return Timedelta(out)
@@ -1117,17 +1132,32 @@ class Timedelta(_AbstractBaseTime):
         # number / Timedelta -> not supported (pandas raises)
         return NotImplemented
 
-    def __floordiv__(self, other):
-        if isinstance(other, Timedelta):
-            # elementwise floor(# of whole 'other' units in self)
-            return ak.cast(self.values // other.values, ak.int64)
-        if _is_number(other):
-            return Timedelta(self.values // int(other), unit=self.unit)
-        raise TypeError("Unsupported // for Timedelta and {type(other)}")
-
     def __rfloordiv__(self, other):
-        # numbers // Timedelta is undefined (don’t implement) to match pandas’ restrictiveness
-        raise TypeError("Unsupported // for {type(other)} and Timedelta")
+        """
+        Support Datetime/Timestamp/np.datetime64 scalar on the left:
+          Timestamp // Timedelta(vector) -> pdarray[int64]
+        Numbers // Timedelta is intentionally unsupported (match pandas).
+        """
+        # numbers // Timedelta -> not supported
+        if _is_number(other):
+            raise TypeError(f"Unsupported // for {type(other)} and Timedelta")
+
+        # Datetime (our class) scalar
+        if isinstance(other, Datetime) and other.size == 1:
+            return other.values[0] // self.values
+
+        # pandas.Timestamp
+        import pandas as pd, numpy as np
+        if isinstance(other, pd.Timestamp):
+            return int(other.value) // self.values
+
+        # numpy.datetime64
+        if isinstance(other, np.datetime64):
+            ts_ns = int(np.int64(other.astype("datetime64[ns]").astype("int64")))
+            return ts_ns // self.values
+
+        return NotImplemented
+
 
     def _ensure_components(self):
         from arkouda.client import generic_msg
