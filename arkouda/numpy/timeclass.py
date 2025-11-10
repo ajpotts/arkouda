@@ -16,6 +16,36 @@ from arkouda.numpy.pdarraycreation import from_series
 __all__ = ["Datetime", "Timedelta"]
 
 
+# ---------- small views for accessor results ----------
+class _ListView:
+    __slots__ = ("_seq",)
+    def __init__(self, seq):
+        self._seq = list(seq)
+    def tolist(self):
+        return list(self._seq)
+
+
+class _IsoColView:
+    __slots__ = ("_series",)
+    def __init__(self, s: pd.Series):
+        self._series = s
+    def to_ndarray(self):
+        return self._series.to_numpy(copy=True)
+
+
+class _IsoCalView:
+    __slots__ = ("_iso",)
+    def __init__(self, iso_df: pd.DataFrame):
+        self._iso = iso_df
+    @property
+    def year(self): return _IsoColView(self._iso["year"])
+    @property
+    def week(self): return _IsoColView(self._iso["week"])
+    @property
+    def day(self):  return _IsoColView(self._iso["day"])
+
+
+# ---------- units ----------
 class TimeUnit(str, Enum):
     WEEKS = "w"
     DAYS = "d"
@@ -49,6 +79,7 @@ class TimeUnit(str, Enum):
         raise ValueError(f"Unsupported time unit: {u}")
 
 
+# ---------- coercion helpers ----------
 def normalize_to_ns(x: Union[pd.Timestamp, np.datetime64, _dt.datetime, int]) -> int:
     if isinstance(x, pd.Timestamp):
         return int(x.value)
@@ -81,6 +112,7 @@ def _is_timedelta_scalar(x) -> bool:
     return isinstance(x, (pd.Timedelta, np.timedelta64, _dt.timedelta))
 
 
+# ---------- base array ----------
 class _TimeArray(pdarray):
     __array_priority__ = 1000  # prefer our ops in mixed contexts
 
@@ -137,6 +169,7 @@ class _TimeArray(pdarray):
         return f"{self.__class__.__name__}({len(self)} values, dtype={self._np_dtype()})"
 
 
+# ---------- Datetime ----------
 class Datetime(_TimeArray):
     def _np_dtype(self) -> str:
         return "datetime64[ns]"
@@ -144,7 +177,10 @@ class Datetime(_TimeArray):
     def _scalar_callback(self, scalar: int) -> pd.Timestamp:
         return pd.Timestamp(int(scalar), unit="ns")
 
-    # ----- arithmetic -----
+    def _to_pandas_index(self):
+        return pd.to_datetime(self.to_ndarray())
+
+    # arithmetic
     def __add__(self, other):
         if isinstance(other, Timedelta):
             return Datetime(self.values._binop(other.values, "+"))
@@ -189,12 +225,8 @@ class Datetime(_TimeArray):
             return self.values._binop(normalize_td_to_ns(other), "//")
         raise TypeError("Datetime // unsupported operand")
 
-    # ----- rounding -----
+    # rounding (half-even like pandas)
     def round(self, freq: str):
-        """
-        Round each timestamp to the nearest multiple of `freq` using pandas' half-even rule.
-        Supported: 'ns','us','ms','s','m','h','d','w'.
-        """
         unit = TimeUnit.normalize(freq)
         factor = unit.factor
 
@@ -202,14 +234,14 @@ class Datetime(_TimeArray):
         r = self.values % factor
         half = factor // 2
 
-        # Start with floor
+        # start with floor
         candidate = q
 
-        # r > half -> round up
+        # r > half -> up
         gt_mask = r > half
         candidate = candidate._where(gt_mask, candidate + 1)
 
-        # r == half -> round to even (if odd, add 1)
+        # r == half -> to even
         eq_mask = r == half
         is_odd = (candidate % 2) != 0
         add_one = is_odd._binop(eq_mask, "&")
@@ -218,7 +250,7 @@ class Datetime(_TimeArray):
         rounded = candidate * factor
         return Datetime(rounded)
 
-    # ----- comparisons -----
+    # comparisons
     def __eq__(self, other):
         if isinstance(other, Datetime) or _is_datetime_scalar(other):
             rhs = other.values if isinstance(other, Datetime) else normalize_to_ns(other)
@@ -259,7 +291,74 @@ class Datetime(_TimeArray):
             return self.values._binop(rhs, ">=")
         raise TypeError(">= not supported between Datetime and non-datetime")
 
+    # accessors that mimic pandas Series.dt.*
+    @property
+    def date(self):
+        parent = self
+        class _DateView:
+            __slots__ = ("_p",)
+            def __init__(self, p): self._p = p
+            def to_ndarray(self):
+                return self._p._to_pandas_index().date
+        return _DateView(parent)
 
+    @property
+    def time(self):           return _ListView(self._to_pandas_index().time)
+    @property
+    def nanosecond(self):     return _ListView(self._to_pandas_index().nanosecond)
+    @property
+    def microsecond(self):    return _ListView(self._to_pandas_index().microsecond)
+    @property
+    def second(self):         return _ListView(self._to_pandas_index().second)
+    @property
+    def minute(self):         return _ListView(self._to_pandas_index().minute)
+    @property
+    def hour(self):           return _ListView(self._to_pandas_index().hour)
+    @property
+    def day(self):            return _ListView(self._to_pandas_index().day)
+    @property
+    def month(self):          return _ListView(self._to_pandas_index().month)
+    @property
+    def year(self):           return _ListView(self._to_pandas_index().year)
+    @property
+    def day_of_week(self):    return _ListView(self._to_pandas_index().dayofweek)
+    @property
+    def dayofweek(self):      return _ListView(self._to_pandas_index().dayofweek)
+    @property
+    def weekday(self):        return _ListView(self._to_pandas_index().weekday)
+    @property
+    def day_of_year(self):    return _ListView(self._to_pandas_index().dayofyear)
+    @property
+    def dayofyear(self):      return _ListView(self._to_pandas_index().dayofyear)
+    @property
+    def is_leap_year(self):   return _ListView(self._to_pandas_index().is_leap_year)
+    @property
+    def week(self):           return _ListView(self._to_pandas_index().isocalendar().week)
+    @property
+    def weekofyear(self):     return self.week
+    @property
+    def week_of_year(self):   return self.week
+    @property
+    def quarter(self):        return _ListView(self._to_pandas_index().quarter)
+    @property
+    def is_month_start(self):   return _ListView(self._to_pandas_index().is_month_start)
+    @property
+    def is_month_end(self):     return _ListView(self._to_pandas_index().is_month_end)
+    @property
+    def is_quarter_start(self): return _ListView(self._to_pandas_index().is_quarter_start)
+    @property
+    def is_quarter_end(self):   return _ListView(self._to_pandas_index().is_quarter_end)
+    @property
+    def is_year_start(self):    return _ListView(self._to_pandas_index().is_year_start)
+    @property
+    def is_year_end(self):      return _ListView(self._to_pandas_index().is_year_end)
+
+    def isocalendar(self):
+        iso = self._to_pandas_index().isocalendar()
+        return _IsoCalView(iso)
+
+
+# ---------- Timedelta ----------
 class Timedelta(_TimeArray):
     def _np_dtype(self) -> str:
         return "timedelta64[ns]"
@@ -267,7 +366,6 @@ class Timedelta(_TimeArray):
     def _scalar_callback(self, scalar: int) -> pd.Timedelta:
         return pd.Timedelta(int(scalar), unit="ns")
 
-    # ----- arithmetic -----
     def __add__(self, other):
         if isinstance(other, (Timedelta, pd.Timedelta, np.timedelta64, _dt.timedelta)):
             ns = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
@@ -343,7 +441,7 @@ class Timedelta(_TimeArray):
     def __neg__(self):
         return Timedelta((-1) * self.values)
 
-    # ----- comparisons -----
+    # comparisons
     def __eq__(self, other):
         if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
             rhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
