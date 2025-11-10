@@ -158,7 +158,19 @@ class _TimeArray(pdarray):
         if isinstance(values, pdarray):
             if values.dtype not in intTypes:
                 raise TypeError("Underlying pdarray must be int64")
-            self.values = akcast(values * TimeUnit.normalize(unit).factor, int64)
+        # unwrap if initialized from another Arkouda time array
+        if isinstance(values, _TimeArray):
+            base = values.values
+        elif isinstance(values, pdarray):
+            base = values
+        else:
+            base = None
+
+        if base is not None:
+            if base.dtype not in intTypes:
+                raise TypeError("Underlying pdarray must be int64")
+            factor = TimeUnit.normalize(unit).factor
+            self.values = akcast(base if factor == 1 else base * factor, int64)
         elif isinstance(values, pdSeries):
             self.values = from_series(values)
         elif isinstance(values, (pd.DatetimeIndex, pd.TimedeltaIndex)):
@@ -850,3 +862,185 @@ Datetime.__rmul__ = _Datetime__rmul
 Timedelta.__mul__ = _Timedelta__mul
 Timedelta.__rmul__ = _Timedelta__rmul
 # --- end patch ---
+# --- pandas-compat: reflected division for Timedelta ---
+def _Timedelta__rtruediv(self, other):
+    """
+    Support scalar/pandas Timedelta / Timedelta(vector) and
+    Arkouda Timedelta / Timedelta(vector) -> float array (ratio).
+    Disallow number / Timedelta and Timestamp / Timedelta.
+    """
+    # Left operand is "other" here (reflected op).
+    if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
+        lhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
+        # Use reflected binop on the underlying ns-int pdarray; promotes to float.
+        return self.values._r_binop(lhs, "/")
+    raise TypeError("unsupported / Timedelta")
+
+# Bind the override
+Timedelta.__rtruediv__ = _Timedelta__rtruediv
+# --- end patch ---
+# --- begin arkouda timedelta division patch ---
+import numpy as _np
+try:
+    import pandas as _pd  # optional; used only for scalar convenience
+except Exception:  # pragma: no cover
+    _pd = None
+
+def _ak_ns_from_td_scalar(x):
+    """Return ns as int for numpy/pandas timedelta scalars, else None."""
+    if isinstance(x, _np.timedelta64):
+        return int(x.astype('timedelta64[ns]').astype('int64'))
+    if _pd is not None and isinstance(x, getattr(_pd, "Timedelta", ())):
+        # pandas Timedelta stores ns in .value
+        return int(x.value)
+    return None
+
+def _Timedelta__truediv(self, other):
+    """
+    pandas-compatible:
+      - Timedelta / Timedelta -> float64 ratio
+      - Timedelta / td_scalar -> float64 ratio
+      - Timedelta / number    -> Timedelta (ns)  [true division, truncated toward zero]
+      - Timedelta / Timestamp -> TypeError
+    """
+    from arkouda.numpy import cast as akcast
+    from arkouda.numpy.dtypes import float64, int64
+
+    # vector / vector Timedelta -> float ratio
+    if isinstance(other, Timedelta):
+        return akcast(self.values, float64) / akcast(other.values, float64)
+
+    # vector / timedelta scalar -> float ratio
+    ns = _ak_ns_from_td_scalar(other)
+    if ns is not None:
+        return akcast(self.values, float64) / float(ns)
+
+    # vector / numeric -> Timedelta (keep ns resolution)
+    if isinstance(other, (int, _np.integer)):
+        return Timedelta(akcast(self.values // int(other), int64))
+    if isinstance(other, (float, _np.floating)):
+        return Timedelta(akcast(self.values / float(other), int64))
+
+    raise TypeError("unsupported Timedelta /")
+
+def _Timedelta__rtruediv(self, other):
+    """
+    pandas-compatible reflected:
+      - td_scalar / Timedelta(vector) -> float64 ratio
+      - Timedelta(vector or scalar) on left also works -> float64 ratio
+      - number / Timedelta(vector) or Timestamp / Timedelta(vector) -> TypeError
+    """
+    from arkouda.numpy import cast as akcast
+    from arkouda.numpy.dtypes import float64
+
+    # Timedelta(vector) / Timedelta(vector) handled by __truediv__; here we handle scalar-left cases
+    if isinstance(other, Timedelta):
+        return akcast(other.values, float64) / akcast(self.values, float64)
+
+    ns = _ak_ns_from_td_scalar(other)
+    if ns is not None:
+        return float(ns) / akcast(self.values, float64)
+
+    # numbers/Timestamp not supported
+    raise TypeError("unsupported / Timedelta")
+
+# Bind overrides (last-wins)
+Timedelta.__truediv__ = _Timedelta__truediv
+Timedelta.__rtruediv__ = _Timedelta__rtruediv
+# --- end arkouda timedelta division patch ---
+# --- begin arkouda timedelta modulo patch ---
+from numbers import Number as _Number
+import numpy as _np
+try:
+    import pandas as _pd
+except Exception:  # pragma: no cover
+    _pd = None
+
+def _ak_ns_from_td_scalar(x):
+    """Return ns as int for numpy/pandas timedelta scalars, else None."""
+    if isinstance(x, _np.timedelta64):
+        return int(x.astype('timedelta64[ns]').astype('int64'))
+    if _pd is not None and isinstance(x, getattr(_pd, "Timedelta", ())):
+        return int(x.value)
+    return None
+
+def _Timedelta__mod(self, other):
+    """
+    pandas-compatible:
+      - Timedelta % Timedelta -> Timedelta remainder
+      - Timedelta % td_scalar -> Timedelta remainder
+      - Timedelta % number    -> Timedelta remainder (pandas-supported)
+      - Timedelta % Timestamp -> TypeError
+    """
+    from arkouda.numpy import cast as akcast
+    from arkouda.numpy.dtypes import int64
+    import numpy as _np
+
+    if isinstance(other, Timedelta):
+        return Timedelta(akcast(self.values % other.values, int64))
+
+    ns = _ak_ns_from_td_scalar(other)
+    if ns is not None:
+        return Timedelta(akcast(self.values % int(ns), int64))
+
+    # Support numeric scalars: remainder in nanoseconds, returned as Timedelta
+    if isinstance(other, (int, _np.integer)):
+        return Timedelta(akcast(self.values % int(other), int64))
+    if isinstance(other, (float, _np.floating)):
+        return Timedelta(akcast(self.values % float(other), int64))
+
+    # numbers/Timestamp not supported otherwise
+    raise TypeError("unsupported Timedelta %")
+
+def _Timedelta__rmod(self, other):
+    """
+    pandas-compatible reflected:
+      - td_scalar % Timedelta(vector) -> Timedelta remainder
+      - Timedelta(scalar) % Timedelta(vector) -> Timedelta remainder
+      - number % Timedelta(vector) or Timestamp % Timedelta(vector) -> TypeError
+    """
+    from arkouda.numpy import cast as akcast
+    from arkouda.numpy.dtypes import int64
+
+    if isinstance(other, Timedelta):
+        return Timedelta(akcast(other.values % self.values, int64))
+
+    ns = _ak_ns_from_td_scalar(other)
+    if ns is not None:
+        # scalar ns % vector ns
+        # use reflected binop on ints to avoid python broadcasting quirks
+        return Timedelta(akcast(self.values._r_binop(int(ns), "%"), int64))
+
+    # numbers/Timestamp not supported
+    raise TypeError("unsupported % Timedelta")
+
+# Bind overrides (last-wins)
+Timedelta.__mod__ = _Timedelta__mod
+Timedelta.__rmod__ = _Timedelta__rmod
+# --- end arkouda timedelta modulo patch ---
+# --- fix: restore vector-aware Timedelta * and reflected * (needed for scalar % vector) ---
+def _AK_Timedelta__mul(self, other):
+    import numpy as _np
+    from numbers import Number as _Number
+    from arkouda.numpy.pdarrayclass import pdarray as _ak_pdarray
+    # allow scalar, NumPy ndarray (numeric), or Arkouda pdarray
+    if isinstance(other, (_Number, _np.integer, _np.floating)) \
+       or isinstance(other, _ak_pdarray) \
+       or (isinstance(other, _np.ndarray) and _np.issubdtype(other.dtype, _np.number)):
+        return Timedelta(self.values._binop(other, "*"))
+    raise TypeError("Timedelta * unsupported operand")
+
+def _AK_Timedelta__rmul(self, other):
+    import numpy as _np
+    from numbers import Number as _Number
+    from arkouda.numpy.pdarrayclass import pdarray as _ak_pdarray
+    if isinstance(other, (_Number, _np.integer, _np.floating)) \
+       or isinstance(other, _ak_pdarray) \
+       or (isinstance(other, _np.ndarray) and _np.issubdtype(other.dtype, _np.number)):
+        return Timedelta(self.values._r_binop(other, "*"))
+    raise TypeError("unsupported * Timedelta")
+
+# bind (last-wins over any earlier injected versions)
+Timedelta.__mul__ = _AK_Timedelta__mul
+Timedelta.__rmul__ = _AK_Timedelta__rmul
+# --- end fix ---

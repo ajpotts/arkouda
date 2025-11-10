@@ -335,99 +335,13 @@ def dtype_for_chapel(type_name: str):
         _dtype_for_chapel[type_name] = result
         return result
 
-def can_cast(
-    from_dt,
-    to_dt,
-    casting: Literal['no', 'equiv', 'safe', 'same_kind', 'unsafe'] | None = "safe",
-) -> builtins.bool:
-    """
-    Determine whether a value, dtype, or array can be safely cast to another dtype,
-    extended to handle Arkouda's `bigint` type.
 
-    This function mirrors `numpy.can_cast`, but adds explicit rules for Arkouda's
-    arbitrary-precision `bigint` dtype, which NumPy would normally treat as `object`.
-    It supports both scalar and dtype-like arguments and uses NumPy promotion rules
-    when no `bigint` types are involved.
-
-    Parameters
-    ----------
-    from_dt : object
-        The source data type, scalar, or array to cast from.
-        May be one of:
-          - A NumPy dtype or dtype-like object (e.g., `np.dtype('int64')`, `'float64'`).
-          - A NumPy or Python scalar (e.g., `np.int64(5)`, `3.14`).
-          - An Arkouda `bigint` dtype (`ak.bigint()` or `'bigint'`).
-          - An Arkouda or NumPy array-like object with a `.dtype` attribute.
-    to_dt : object
-        The target data type or dtype specifier to cast to.
-        Follows the same accepted forms as `from_dt`.
-    casting : {'no', 'equiv', 'safe', 'same_kind', 'unsafe'}, optional
-        The casting rule to apply. Matches NumPy semantics:
-          - `'no'` : Only identical dtypes can be cast.
-          - `'equiv'` : Allows byte-order changes only.
-          - `'safe'` : Only casts that preserve all values are allowed.
-          - `'same_kind'` : Allows safe casts within type families (int→float, etc.).
-          - `'unsafe'` : Any cast is allowed.
-        Default is `'safe'`.
-
-    Returns
-    -------
-    bool
-        True if the cast is allowed according to the specified rule; False otherwise.
-
-    Rules
-    -----
-    The following rules extend NumPy’s behavior to include Arkouda’s `bigint` type:
-
-    - `bigint → bigint` : True
-    - `bigint → float64` : True  (magnitude-preserving cast)
-    - `bigint → int64` : False   (potential truncation)
-    - `int`, `uint`, or `bool` → `bigint` : True  (widening cast)
-    - `float` → `bigint` : False under `'safe'` (lossy conversion)
-    - All other cases defer to NumPy’s `np.can_cast`.
-
-    Notes
-    -----
-    - This function avoids calling `np.dtype` directly on Arkouda `bigint` objects
-      to prevent recursion errors.
-    - When no `bigint` arguments are present, the logic is identical to NumPy’s
-      `np.can_cast`.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> import arkouda as ak
-
-    # Standard NumPy behavior
-    >>> ak.can_cast(np.int32, np.int64)
-    True
-    >>> ak.can_cast(np.float64, np.int64)
-    False
-
-    # Arkouda bigint behavior
-    >>> ak.can_cast(ak.bigint(), ak.bigint())
-    True
-    >>> ak.can_cast(ak.bigint(), np.dtype('float64'))
-    True
-    >>> ak.can_cast(ak.bigint(), np.dtype('int64'))
-    False
-    >>> ak.can_cast(np.int64, ak.bigint())
-    True
-    >>> ak.can_cast(np.float64, ak.bigint())
-    False
-
-    # Equivalent to NumPy when bigint not involved
-    >>> ak.can_cast('int32', 'float64')
-    True
-    >>> ak.can_cast('float64', 'int32', casting='safe')
-    False
-    """
+def can_cast(from_dt, to_dt, casting: Literal['no','equiv','safe','same_kind','unsafe'] | None = "safe") -> bool:
     import numpy as np
-
     from .bigint import bigint
 
-    # ---- recognizers that NEVER call np.dtype on bigint-y things ----
-    def _is_bigint_obj(x) -> builtins.bool:
+    # ----- helpers -----
+    def _is_bigint_obj(x) -> bool:
         if x is bigint or isinstance(x, bigint):
             return True
         if isinstance(x, str) and x.lower() == "bigint":
@@ -439,68 +353,91 @@ def can_cast(
             pass
         return getattr(x, "name", None) == "bigint"
 
-    # robustly map non-bigint objects (including Python/NumPy scalars) -> np.dtype
-    def _norm_non_bigint(x) -> np.dtype:
-        # already a dtype
-        if isinstance(x, np.dtype):
+    def _is_scalar_value(x) -> bool:
+        if isinstance(x, (bool, int, float, complex, np.generic)):
+            return not isinstance(x, (np.dtype, type))
+        return False
+
+    def _normalize_dtype_like(x):
+        if _is_scalar_value(x):
+            return x
+        if hasattr(x, "dtype") and not isinstance(x, np.dtype):
+            return x
+        if _is_bigint_obj(x):
+            return x
+        try:
+            return np.dtype(x)
+        except Exception:
             return x
 
-        # NumPy/Python **types** (np.int32, np.float64, bool, int, etc.)
-        if isinstance(x, type):
-            # NumPy scalar types are subclasses of np.generic; pass straight to np.dtype
+    def _value_safe_scalar_to_dtype(val, to_dtype, casting_rule: str) -> bool:
+        td = np.dtype(to_dtype)
+        rule = "safe" if casting_rule is None else casting_rule
+
+        if rule == "unsafe":
+            return True
+        if rule in ("no", "equiv"):
+            return np.array(val).dtype == td
+        if rule != "safe":
+            return bool(np.can_cast(np.array(val).dtype, td, casting=rule))
+
+        # ---- 'safe' value-aware rules ----
+        if td.kind in ("i", "u"):  # integer targets
+            if isinstance(val, (bool, int, np.integer)):
+                info = np.iinfo(td)
+                return info.min <= int(val) <= info.max
+            return False  # float/complex -> int is lossy
+
+        if td.kind == "f":  # float targets (stay conservative like NumPy dtype rules)
+            return bool(np.can_cast(np.array(val).dtype, td, casting="safe"))
+
+        if td.kind == "c":  # complex targets
+            return bool(np.can_cast(np.array(val).dtype, td, casting="safe"))
+
+        # bool, datetime, timedelta, etc.: delegate to NumPy dtype logic
+        return bool(np.can_cast(np.array(val).dtype, td, casting="safe"))
+
+    # ----- bigint short-circuits (unchanged) -----
+    from_is_big = _is_bigint_obj(from_dt)
+    to_is_big = _is_bigint_obj(to_dt)
+    if from_is_big or to_is_big:
+        if from_is_big and to_is_big:
+            return True
+        if from_is_big and not to_is_big:
+            to_norm = _normalize_dtype_like(to_dt)
             try:
-                if issubclass(x, np.generic) or x in (builtins.bool, int, float, complex):
-                    return np.dtype(x)
+                return bool(np.dtype(to_norm) == np.dtype("float64"))
             except Exception:
-                # not a numpy scalar type; fall through to generic normalization
-                pass
-
-        # NumPy/Python **instances** (np.int32(1), 3.14, True, etc.)
-        if isinstance(x, (np.generic, builtins.bool, int, float, complex)):
-            return np.result_type(x)
-
-        # Objects with a concrete .dtype (arrays, pandas objects, etc.)
-        if hasattr(x, "dtype") and not isinstance(x, type):
-            return np.dtype(getattr(x, "dtype"))
-
-        # String specifiers ("int64", "float64", ...)
-        if isinstance(x, str):
-            return np.dtype(x)
-
-        # Fallback
-        return np.dtype(x)
-
-    def _is_dt(x, target: np.dtype) -> builtins.bool:
-        return isinstance(x, np.dtype) and x == target
-
-    fb = _is_bigint_obj(from_dt)
-    tb = _is_bigint_obj(to_dt)
-
-    # ---- explicit bigint rules ----
-    if fb and tb:
-        return True
-
-    if fb and not tb:
-        t = _norm_non_bigint(to_dt)
-        if _is_dt(t, np.dtype(np.float64)):
-            return True
-        if _is_dt(t, np.dtype(np.int64)):
+                return False
+        if from_is_big and casting in (None, "safe", "equiv", "no"):
             return False
-        # default for other non-bigint targets
-        return np.can_cast(np.dtype("object"), t, casting=casting)
-
-    if tb and not fb:
-        f = _norm_non_bigint(from_dt)
-        if f.kind in ("i", "u", "b"):  # widening to bigint
+        if to_is_big and not from_is_big:
             return True
-        if f.kind == "f":              # float → bigint is lossy under "safe"
-            return False
-        return np.can_cast(f, np.dtype("object"), casting=casting)
+        if to_is_big and isinstance(from_dt, (float, np.floating)):
+            return casting == "unsafe"
+        return casting == "unsafe"
 
-    # ---- default: no bigint involved ----
-    f = _norm_non_bigint(from_dt)
-    t = _norm_non_bigint(to_dt)
-    return np.can_cast(f, t, casting=casting)
+    # ----- default path -----
+    # **Force the scalar path whenever from_dt is a scalar**
+    if _is_scalar_value(from_dt):
+        try:
+            td = np.dtype(to_dt)  # works for dtype, numpy type, string, etc.
+        except Exception:
+            # If to_dt is not dtype-like, defer to NumPy (will likely be False)
+            return bool(np.can_cast(np.array(from_dt), to_dt, casting=casting))
+        return _value_safe_scalar_to_dtype(from_dt, td, casting)
+
+    # Non-scalar path: dtype-style normalization and NumPy delegation
+    f = _normalize_dtype_like(from_dt)
+    t = _normalize_dtype_like(to_dt)
+
+    if _is_scalar_value(f):
+        f = np.array(f)
+    if _is_scalar_value(t):
+        t = np.array(t)
+
+    return bool(np.can_cast(f, t, casting=casting))
+
 
 
 
