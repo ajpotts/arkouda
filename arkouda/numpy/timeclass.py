@@ -70,13 +70,40 @@ class TimeUnit(str, Enum):
         }
         return table[self.value]
 
+    
     @classmethod
     def normalize(cls, u: str) -> "TimeUnit":
-        u = u.lower()
+        # Accept a broad set of aliases matching pandas/numpy conventions
+        if not isinstance(u, str):
+            raise ValueError(f"Unsupported time unit: {u}")
+        u = u.strip()
+        if not u:
+            raise ValueError("Unsupported time unit: ''")
+        lu = u.lower()
+
+        alias_map = {
+            "w": {"w", "week", "weeks"},
+            "d": {"d", "day", "days"},
+            "h": {"h", "hr", "hrs", "hour", "hours"},
+            "m": {"m", "min", "minute", "minutes"},
+            "ms": {"ms", "millisecond", "milliseconds", "milli", "l", "L".lower()},  # accept 'l' ('L' for millis in numpy)
+            "us": {"us", "microsecond", "microseconds", "micro", "u"},
+            "ns": {"ns", "nanosecond", "nanoseconds", "nano", "n"},
+        }
+        # Also accept single-letter uppercase shorthands like 'W','D','H'
+        upper_single = {"W": "w", "D": "d", "H": "h"}
+        if u in upper_single:
+            return cls(upper_single[u])
+
+        for key, aliases in alias_map.items():
+            if lu in aliases:
+                return cls(key)
+        # Fallback to value/name startswith behavior
         for key in cls:
-            if u.startswith(key.name.lower()) or u == key.value:
+            if lu.startswith(key.name.lower()) or lu == key.value:
                 return key
         raise ValueError(f"Unsupported time unit: {u}")
+
 
 
 # ---------- coercion helpers ----------
