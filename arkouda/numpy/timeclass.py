@@ -252,8 +252,17 @@ class Datetime(_TimeArray):
 
     # rounding (half-even like pandas)
     def round(self, freq: str):
+        from arkouda.numpy.numeric import where as ak_where
         unit = TimeUnit.normalize(freq)
         factor = unit.factor
+
+        q = self.values // factor
+        r = self.values % factor
+        half = factor // 2
+
+        # Round half up (pandas-compatible for datetimes): remainder >= half -> +1
+        candidate = ak_where(r >= half, q + 1, q)
+        return Datetime(candidate * factor)
 
         q = self.values // factor
         r = self.values % factor
@@ -289,7 +298,13 @@ class Datetime(_TimeArray):
         comp = self._to_pandas_index().components
         return _TDComponentsView(comp)
 
-    # comparisons
+        # components accessor (pandas-aligned)
+    @property
+    def components(self):
+        comp = self._to_pandas_index().components
+        return _TDComponentsView(comp)
+
+# comparisons
     def __eq__(self, other):
         if isinstance(other, Datetime) or _is_datetime_scalar(other):
             rhs = other.values if isinstance(other, Datetime) else normalize_to_ns(other)
@@ -399,6 +414,9 @@ class Datetime(_TimeArray):
 
 # ---------- Timedelta ----------
 class Timedelta(_TimeArray):
+    def _to_pandas_index(self):
+        return pd.to_timedelta(self.to_ndarray())
+
     def _to_pandas_index(self):
         return pd.to_timedelta(self.to_ndarray())
 
