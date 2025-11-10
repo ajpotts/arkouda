@@ -809,3 +809,8 @@ Datetime.__ne__ = _Datetime__ne
 Timedelta.__eq__ = _Timedelta__eq
 Timedelta.__ne__ = _Timedelta__ne
 # --- end injected pandas-compat ---
+# --- pandas-compat: Datetime floor-division should always raise ---
+def _Datetime__floordiv(self, other):
+    raise TypeError("Datetime // unsupported operand")
+Datetime.__floordiv__ = _Datetime__floordiv
+# --- end patch ---
