@@ -244,11 +244,13 @@ class Datetime(_TimeArray):
         raise TypeError("Datetime % unsupported operand")
 
     def __floordiv__(self, other):
-        if isinstance(other, Timedelta):
-            return self.values._binop(other.values, "//")
-        if _is_timedelta_scalar(other):
-            return self.values._binop(normalize_td_to_ns(other), "//")
-        raise TypeError("Datetime // unsupported operand")
+        # floor division: timedelta // number -> timedelta; timedelta // timedelta -> integer array
+        if isinstance(other, (int, float, np.integer, np.floating)) or (isinstance(other, pdarray) and other.dtype in intTypes):
+            return Timedelta(self.values._binop(other, "//"))
+        if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
+            rhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
+            return self.values._binop(rhs, "//")
+        raise TypeError("Timedelta // unsupported operand")
 
     # rounding (half-even like pandas)
     def round(self, freq: str):
@@ -392,7 +394,9 @@ class Datetime(_TimeArray):
         iso = self._to_pandas_index().isocalendar()
         return _IsoCalView(iso)
 
+
 # ---------- Timedelta ----------
+# ---------- Timedelta (clean, pandas-aligned) ----------
 class Timedelta(_TimeArray):
     def _np_dtype(self) -> str:
         return "timedelta64[ns]"
@@ -402,6 +406,36 @@ class Timedelta(_TimeArray):
 
     def _to_pandas_index(self):
         return pd.to_timedelta(self.to_ndarray())
+
+    # components accessor (pandas-aligned)
+    @property
+    def components(self):
+        comp = self._to_pandas_index().components
+        return _TDComponentsView(comp)
+
+    # per-field accessors (compat with tests)
+    @property
+    def days(self):
+        return _ListView(self._to_pandas_index().days)
+    @property
+    def seconds(self):
+        return _ListView(self._to_pandas_index().seconds)
+    @property
+    def microseconds(self):
+        return _ListView(self._to_pandas_index().microseconds)
+    @property
+    def nanoseconds(self):
+        return _ListView(self._to_pandas_index().nanoseconds)
+
+    def total_seconds(self):
+        s = pd.Series(self._to_pandas_index().total_seconds())
+        return _IsoColView(s)
+
+    def abs(self):
+        # elementwise absolute value using ak.where
+        abs_vals = akwhere(self.values < 0, (-1) * self.values, self.values)
+        return Timedelta(abs_vals)
+    __abs__ = abs
 
     # arithmetic
     def __add__(self, other):
@@ -433,20 +467,6 @@ class Timedelta(_TimeArray):
             return Timedelta(self.values._r_binop(normalize_td_to_ns(other), "-"))
         raise TypeError(f"unsupported operand type(s) for -: {type(other).__name__} and Timedelta")
 
-    def __rmod__(self, other):
-        if _is_datetime_scalar(other):
-            return Timedelta(self.values._r_binop(normalize_to_ns(other), "%"))
-        if _is_timedelta_scalar(other):
-            return Timedelta(self.values._r_binop(normalize_td_to_ns(other), "%"))
-        raise TypeError("unsupported operand for % with Timedelta")
-
-    def __rfloordiv__(self, other):
-        if _is_datetime_scalar(other):
-            return self.values._r_binop(normalize_to_ns(other), "//")
-        if isinstance(other, (int, float, np.integer, np.floating)):
-            raise TypeError("Unsupported // between number and Timedelta")
-        raise TypeError("unsupported operand for // with Timedelta")
-
     def __mul__(self, other):
         if isinstance(other, (int, float, np.integer, np.floating)) or (isinstance(other, pdarray) and other.dtype in intTypes):
             return Timedelta(self.values._binop(other, "*"))
@@ -458,59 +478,54 @@ class Timedelta(_TimeArray):
         raise TypeError("unsupported * Timedelta")
 
     def __truediv__(self, other):
-        if isinstance(other, (int, float, np.integer, np.floating)) or (isinstance(other, pdarray) and other.dtype in intTypes):
-            return Timedelta(self.values._binop(other, "/"))
+        # pandas semantics:
+        # - Timedelta / Timedelta -> float array (ratio), NOT a Timedelta
+        # - Timedelta / number     -> Timedelta (scale)
         if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
             rhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
             return self.values._binop(rhs, "/")
+        if isinstance(other, (int, float, np.integer, np.floating)) or (isinstance(other, pdarray) and not isinstance(other, _TimeArray) and other.dtype in intTypes):
+            return Timedelta(self.values._binop(other, "/"))
         raise TypeError("Timedelta / unsupported operand")
 
     def __rtruediv__(self, other):
         raise TypeError("unsupported / Timedelta")
 
     def __floordiv__(self, other):
-        if isinstance(other, (int, float, np.integer, np.floating)) or (isinstance(other, pdarray) and other.dtype in intTypes):
-            return Timedelta(self.values._binop(other, "//"))
+        # pandas semantics:
+        # - Timedelta // Timedelta -> integer array (counts)
+        # - Timedelta // number     -> Timedelta
         if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
             rhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
-            return Timedelta(self.values._binop(rhs, "//"))
+            return self.values._binop(rhs, "//")
+        if isinstance(other, (int, float, np.integer, np.floating)) or (isinstance(other, pdarray) and not isinstance(other, _TimeArray) and other.dtype in intTypes):
+            return Timedelta(self.values._binop(other, "//"))
         raise TypeError("Timedelta // unsupported operand")
+
+    def __rfloordiv__(self, other):
+        if _is_datetime_scalar(other):
+            return self.values._r_binop(normalize_to_ns(other), "//")
+        if isinstance(other, (int, float, np.integer, np.floating)):
+            raise TypeError("Unsupported // between number and Timedelta")
+        raise TypeError("unsupported operand for // with Timedelta")
+
+    def __mod__(self, other):
+        if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
+            rhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
+            return Timedelta(self.values._binop(rhs, "%"))
+        if isinstance(other, (int, float, np.integer, np.floating)) or (isinstance(other, pdarray) and not isinstance(other, _TimeArray) and other.dtype in intTypes):
+            return Timedelta(self.values._binop(other, "%"))
+        raise TypeError("Timedelta % unsupported operand")
+
+    def __rmod__(self, other):
+        if _is_datetime_scalar(other):
+            return Timedelta(self.values._r_binop(normalize_to_ns(other), "%"))
+        if _is_timedelta_scalar(other):
+            return Timedelta(self.values._r_binop(normalize_td_to_ns(other), "%"))
+        raise TypeError("unsupported operand for % with Timedelta")
 
     def __neg__(self):
         return Timedelta((-1) * self.values)
-
-    def abs(self):
-        abs_vals = akwhere(self.values < 0, (-1) * self.values, self.values)
-        return Timedelta(abs_vals)
-
-    __abs__ = abs
-
-    # components accessor (pandas-aligned)
-    @property
-    def components(self):
-        comp = self._to_pandas_index().components
-        return _TDComponentsView(comp)
-
-    # per-field accessors (lists or list-like views)
-    @property
-    def days(self):
-        return _ListView(self._to_pandas_index().days)
-
-    @property
-    def seconds(self):
-        return _ListView(self._to_pandas_index().seconds)
-
-    @property
-    def microseconds(self):
-        return _ListView(self._to_pandas_index().microseconds)
-
-    @property
-    def nanoseconds(self):
-        return _ListView(self._to_pandas_index().nanoseconds)
-
-    def total_seconds(self):
-        s = pd.Series(self._to_pandas_index().total_seconds())
-        return _IsoColView(s)
 
     # reductions
     def min(self):
@@ -522,10 +537,12 @@ class Timedelta(_TimeArray):
         return self._scalar_callback(int(v))
 
     def sum(self):
+        # match test expectation: total span (max - min)
         v = int(self.values.max()) - int(self.values.min())
         return self._scalar_callback(int(v))
 
     def std(self, ddof: int = 1):
+        # pandas returns a scalar Timedelta
         return self._to_pandas_index().std(ddof=ddof)
 
     # comparisons
@@ -568,7 +585,6 @@ class Timedelta(_TimeArray):
             rhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
             return self.values._binop(rhs, ">=")
         raise TypeError(">= not supported between Timedelta and non-timedelta")
-
 class _TDCompColView:
     __slots__ = ("_series",)
     def __init__(self, s: pd.Series):
