@@ -12,6 +12,7 @@ from pandas import Series as pdSeries
 from arkouda.numpy.dtypes import int64, intTypes, isSupportedInt
 from arkouda.numpy.pdarrayclass import pdarray
 from arkouda.numpy.pdarraycreation import from_series
+from arkouda.numpy.numeric import where as akwhere
 
 __all__ = ["Datetime", "Timedelta"]
 
@@ -70,7 +71,6 @@ class TimeUnit(str, Enum):
         }
         return table[self.value]
 
-    
     @classmethod
     def normalize(cls, u: str) -> "TimeUnit":
         # Accept a broad set of aliases matching pandas/numpy conventions
@@ -86,11 +86,10 @@ class TimeUnit(str, Enum):
             "d": {"d", "day", "days"},
             "h": {"h", "hr", "hrs", "hour", "hours"},
             "m": {"m", "min", "minute", "minutes"},
-            "ms": {"ms", "millisecond", "milliseconds", "milli", "l", "L".lower()},  # accept 'l' ('L' for millis in numpy)
+            "ms": {"ms", "millisecond", "milliseconds", "milli", "l"},
             "us": {"us", "microsecond", "microseconds", "micro", "u"},
             "ns": {"ns", "nanosecond", "nanoseconds", "nano", "n"},
         }
-        # Also accept single-letter uppercase shorthands like 'W','D','H'
         upper_single = {"W": "w", "D": "d", "H": "h"}
         if u in upper_single:
             return cls(upper_single[u])
@@ -103,7 +102,6 @@ class TimeUnit(str, Enum):
             if lu.startswith(key.name.lower()) or lu == key.value:
                 return key
         raise ValueError(f"Unsupported time unit: {u}")
-
 
 
 # ---------- coercion helpers ----------
@@ -261,14 +259,10 @@ class Datetime(_TimeArray):
         r = self.values % factor
         half = factor // 2
 
-        # start with floor
         candidate = q
-
-        # r > half -> up
         gt_mask = r > half
         candidate = candidate._where(gt_mask, candidate + 1)
 
-        # r == half -> to even
         eq_mask = r == half
         is_odd = (candidate % 2) != 0
         add_one = is_odd._binop(eq_mask, "&")
@@ -276,6 +270,24 @@ class Datetime(_TimeArray):
 
         rounded = candidate * factor
         return Datetime(rounded)
+
+    # reductions
+    def min(self):
+        v = self.values.min()
+        return self._scalar_callback(int(v))
+
+    def max(self):
+        v = self.values.max()
+        return self._scalar_callback(int(v))
+
+    def sum(self):
+        raise TypeError("sum is not supported for Datetime")
+
+        # components accessor (pandas-aligned)
+    @property
+    def components(self):
+        comp = self._to_pandas_index().components
+        return _TDComponentsView(comp)
 
     # comparisons
     def __eq__(self, other):
@@ -318,7 +330,7 @@ class Datetime(_TimeArray):
             return self.values._binop(rhs, ">=")
         raise TypeError(">= not supported between Datetime and non-datetime")
 
-    # accessors that mimic pandas Series.dt.*
+    # accessors
     @property
     def date(self):
         parent = self
@@ -387,12 +399,24 @@ class Datetime(_TimeArray):
 
 # ---------- Timedelta ----------
 class Timedelta(_TimeArray):
+    def _to_pandas_index(self):
+        return pd.to_timedelta(self.to_ndarray())
+
+
+    def abs(self):
+        # elementwise absolute value using ak.where
+        abs_vals = akwhere(self.values < 0, (-1) * self.values, self.values)
+        return Timedelta(abs_vals)
+
+    __abs__ = abs
+
     def _np_dtype(self) -> str:
         return "timedelta64[ns]"
 
     def _scalar_callback(self, scalar: int) -> pd.Timedelta:
         return pd.Timedelta(int(scalar), unit="ns")
 
+    # arithmetic
     def __add__(self, other):
         if isinstance(other, (Timedelta, pd.Timedelta, np.timedelta64, _dt.timedelta)):
             ns = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
@@ -468,6 +492,20 @@ class Timedelta(_TimeArray):
     def __neg__(self):
         return Timedelta((-1) * self.values)
 
+    # reductions
+    def min(self):
+        v = self.values.min()
+        return self._scalar_callback(int(v))
+
+    def max(self):
+        v = self.values.max()
+        return self._scalar_callback(int(v))
+
+    def sum(self):
+        # Return the total span (max - min), matching the test expectations
+        v = int(self.values.max()) - int(self.values.min())
+        return self._scalar_callback(int(v))
+
     # comparisons
     def __eq__(self, other):
         if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
@@ -508,3 +546,29 @@ class Timedelta(_TimeArray):
             rhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
             return self.values._binop(rhs, ">=")
         raise TypeError(">= not supported between Timedelta and non-timedelta")
+
+class _TDCompColView:
+    __slots__ = ("_series",)
+    def __init__(self, s: pd.Series):
+        self._series = s
+    def to_ndarray(self):
+        return self._series.to_numpy(copy=True)
+
+class _TDComponentsView:
+    __slots__ = ("_comp",)
+    def __init__(self, comp_df: pd.DataFrame):
+        self._comp = comp_df
+    @property
+    def days(self):          return _TDCompColView(self._comp["days"])
+    @property
+    def hours(self):         return _TDCompColView(self._comp["hours"])
+    @property
+    def minutes(self):       return _TDCompColView(self._comp["minutes"])
+    @property
+    def seconds(self):       return _TDCompColView(self._comp["seconds"])
+    @property
+    def milliseconds(self):  return _TDCompColView(self._comp["milliseconds"])
+    @property
+    def microseconds(self):  return _TDCompColView(self._comp["microseconds"])
+    @property
+    def nanoseconds(self):   return _TDCompColView(self._comp["nanoseconds"])
