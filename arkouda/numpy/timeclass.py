@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import datetime as _dt
@@ -10,9 +9,10 @@ import pandas as pd
 from pandas import Series as pdSeries
 
 from arkouda.numpy.dtypes import int64, intTypes, isSupportedInt
+from arkouda.numpy.numeric import where as akwhere
 from arkouda.numpy.pdarrayclass import pdarray
 from arkouda.numpy.pdarraycreation import from_series
-from arkouda.numpy.numeric import where as akwhere
+
 
 __all__ = ["Datetime", "Timedelta"]
 
@@ -20,30 +20,41 @@ __all__ = ["Datetime", "Timedelta"]
 # ---------- small views for accessor results ----------
 class _ListView:
     __slots__ = ("_seq",)
+
     def __init__(self, seq):
         self._seq = list(seq)
+
     def tolist(self):
         return list(self._seq)
 
 
 class _IsoColView:
     __slots__ = ("_series",)
+
     def __init__(self, s: pd.Series):
         self._series = s
+
     def to_ndarray(self):
         return self._series.to_numpy(copy=True)
 
 
 class _IsoCalView:
     __slots__ = ("_iso",)
+
     def __init__(self, iso_df: pd.DataFrame):
         self._iso = iso_df
+
     @property
-    def year(self): return _IsoColView(self._iso["year"])
+    def year(self):
+        return _IsoColView(self._iso["year"])
+
     @property
-    def week(self): return _IsoColView(self._iso["week"])
+    def week(self):
+        return _IsoColView(self._iso["week"])
+
     @property
-    def day(self):  return _IsoColView(self._iso["day"])
+    def day(self):
+        return _IsoColView(self._iso["day"])
 
 
 # ---------- units ----------
@@ -171,7 +182,9 @@ class _TimeArray(pdarray):
 
     # prevent implicit numpy coercion that bypasses our reflected ops
     def __array__(self, dtype=None):
-        raise TypeError("Implicit array coercion for Arkouda time arrays is disabled; use .to_ndarray().")
+        raise TypeError(
+            "Implicit array coercion for Arkouda time arrays is disabled; use .to_ndarray()."
+        )
 
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
         return NotImplemented
@@ -237,15 +250,13 @@ class Datetime(_TimeArray):
         raise TypeError(f"unsupported operand type(s) for -: {type(other).__name__} and Datetime")
 
     def __mod__(self, other):
-        if isinstance(other, Timedelta):
-            return Timedelta(self.values._binop(other.values, "%"))
-        if _is_timedelta_scalar(other):
-            return Timedelta(self.values._binop(normalize_td_to_ns(other), "%"))
         raise TypeError("Datetime % unsupported operand")
 
     def __floordiv__(self, other):
         # floor division: timedelta // number -> timedelta; timedelta // timedelta -> integer array
-        if isinstance(other, (int, float, np.integer, np.floating)) or (isinstance(other, pdarray) and other.dtype in intTypes):
+        if isinstance(other, (int, float, np.integer, np.floating)) or (
+            isinstance(other, pdarray) and other.dtype in intTypes
+        ):
             return Timedelta(self.values._binop(other, "//"))
         if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
             rhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
@@ -255,6 +266,7 @@ class Datetime(_TimeArray):
     # rounding (half-even like pandas)
     def round(self, freq: str):
         from arkouda.numpy.numeric import where as ak_where
+
         unit = TimeUnit.normalize(freq)
         factor = unit.factor
         q = self.values // factor
@@ -264,8 +276,6 @@ class Datetime(_TimeArray):
         incr_mask = (r > half) | ((r == half) & ((q % 2) == 1))
         candidate = ak_where(incr_mask, q + 1, q)
         return Datetime(candidate * factor)
-
-
 
     # reductions
     def min(self):
@@ -279,15 +289,14 @@ class Datetime(_TimeArray):
     def sum(self):
         raise TypeError("sum is not supported for Datetime")
 
-
-
         # components accessor (pandas-aligned)
+
     @property
     def components(self):
         comp = self._to_pandas_index().components
         return _TDComponentsView(comp)
 
-# comparisons
+    # comparisons
     def __eq__(self, other):
         if isinstance(other, Datetime) or _is_datetime_scalar(other):
             rhs = other.values if isinstance(other, Datetime) else normalize_to_ns(other)
@@ -332,63 +341,117 @@ class Datetime(_TimeArray):
     @property
     def date(self):
         parent = self
+
         class _DateView:
             __slots__ = ("_p",)
-            def __init__(self, p): self._p = p
+
+            def __init__(self, p):
+                self._p = p
+
             def to_ndarray(self):
                 return self._p._to_pandas_index().date
+
         return _DateView(parent)
 
     @property
-    def time(self):           return _ListView(self._to_pandas_index().time)
+    def time(self):
+        return _ListView(self._to_pandas_index().time)
+
     @property
-    def nanosecond(self):     return _ListView(self._to_pandas_index().nanosecond)
+    def nanosecond(self):
+        return _ListView(self._to_pandas_index().nanosecond)
+
     @property
-    def microsecond(self):    return _ListView(self._to_pandas_index().microsecond)
+    def microsecond(self):
+        return _ListView(self._to_pandas_index().microsecond)
+
     @property
-    def second(self):         return _ListView(self._to_pandas_index().second)
+    def second(self):
+        return _ListView(self._to_pandas_index().second)
+
     @property
-    def minute(self):         return _ListView(self._to_pandas_index().minute)
+    def minute(self):
+        return _ListView(self._to_pandas_index().minute)
+
     @property
-    def hour(self):           return _ListView(self._to_pandas_index().hour)
+    def hour(self):
+        return _ListView(self._to_pandas_index().hour)
+
     @property
-    def day(self):            return _ListView(self._to_pandas_index().day)
+    def day(self):
+        return _ListView(self._to_pandas_index().day)
+
     @property
-    def month(self):          return _ListView(self._to_pandas_index().month)
+    def month(self):
+        return _ListView(self._to_pandas_index().month)
+
     @property
-    def year(self):           return _ListView(self._to_pandas_index().year)
+    def year(self):
+        return _ListView(self._to_pandas_index().year)
+
     @property
-    def day_of_week(self):    return _ListView(self._to_pandas_index().dayofweek)
+    def day_of_week(self):
+        return _ListView(self._to_pandas_index().dayofweek)
+
     @property
-    def dayofweek(self):      return _ListView(self._to_pandas_index().dayofweek)
+    def dayofweek(self):
+        return _ListView(self._to_pandas_index().dayofweek)
+
     @property
-    def weekday(self):        return _ListView(self._to_pandas_index().weekday)
+    def weekday(self):
+        return _ListView(self._to_pandas_index().weekday)
+
     @property
-    def day_of_year(self):    return _ListView(self._to_pandas_index().dayofyear)
+    def day_of_year(self):
+        return _ListView(self._to_pandas_index().dayofyear)
+
     @property
-    def dayofyear(self):      return _ListView(self._to_pandas_index().dayofyear)
+    def dayofyear(self):
+        return _ListView(self._to_pandas_index().dayofyear)
+
     @property
-    def is_leap_year(self):   return _ListView(self._to_pandas_index().is_leap_year)
+    def is_leap_year(self):
+        return _ListView(self._to_pandas_index().is_leap_year)
+
     @property
-    def week(self):           return _ListView(self._to_pandas_index().isocalendar().week)
+    def week(self):
+        return _ListView(self._to_pandas_index().isocalendar().week)
+
     @property
-    def weekofyear(self):     return self.week
+    def weekofyear(self):
+        return self.week
+
     @property
-    def week_of_year(self):   return self.week
+    def week_of_year(self):
+        return self.week
+
     @property
-    def quarter(self):        return _ListView(self._to_pandas_index().quarter)
+    def quarter(self):
+        return _ListView(self._to_pandas_index().quarter)
+
     @property
-    def is_month_start(self):   return _ListView(self._to_pandas_index().is_month_start)
+    def is_month_start(self):
+        return _ListView(self._to_pandas_index().is_month_start)
+
     @property
-    def is_month_end(self):     return _ListView(self._to_pandas_index().is_month_end)
+    def is_month_end(self):
+        return _ListView(self._to_pandas_index().is_month_end)
+
     @property
-    def is_quarter_start(self): return _ListView(self._to_pandas_index().is_quarter_start)
+    def is_quarter_start(self):
+        return _ListView(self._to_pandas_index().is_quarter_start)
+
     @property
-    def is_quarter_end(self):   return _ListView(self._to_pandas_index().is_quarter_end)
+    def is_quarter_end(self):
+        return _ListView(self._to_pandas_index().is_quarter_end)
+
     @property
-    def is_year_start(self):    return _ListView(self._to_pandas_index().is_year_start)
+    def is_year_start(self):
+        return _ListView(self._to_pandas_index().is_year_start)
+
     @property
-    def is_year_end(self):      return _ListView(self._to_pandas_index().is_year_end)
+    def is_year_end(self):
+        return _ListView(self._to_pandas_index().is_year_end)
 
     def isocalendar(self):
         iso = self._to_pandas_index().isocalendar()
@@ -417,12 +480,15 @@ class Timedelta(_TimeArray):
     @property
     def days(self):
         return _ListView(self._to_pandas_index().days)
+
     @property
     def seconds(self):
         return _ListView(self._to_pandas_index().seconds)
+
     @property
     def microseconds(self):
         return _ListView(self._to_pandas_index().microseconds)
+
     @property
     def nanoseconds(self):
         return _ListView(self._to_pandas_index().nanoseconds)
@@ -435,6 +501,7 @@ class Timedelta(_TimeArray):
         # elementwise absolute value using ak.where
         abs_vals = akwhere(self.values < 0, (-1) * self.values, self.values)
         return Timedelta(abs_vals)
+
     __abs__ = abs
 
     # arithmetic
@@ -468,12 +535,16 @@ class Timedelta(_TimeArray):
         raise TypeError(f"unsupported operand type(s) for -: {type(other).__name__} and Timedelta")
 
     def __mul__(self, other):
-        if isinstance(other, (int, float, np.integer, np.floating)) or (isinstance(other, pdarray) and other.dtype in intTypes):
+        if isinstance(other, (int, float, np.integer, np.floating)) or (
+            isinstance(other, pdarray) and other.dtype in intTypes
+        ):
             return Timedelta(self.values._binop(other, "*"))
         raise TypeError("Timedelta * unsupported operand")
 
     def __rmul__(self, other):
-        if isinstance(other, (int, float, np.integer, np.floating)) or (isinstance(other, pdarray) and other.dtype in intTypes):
+        if isinstance(other, (int, float, np.integer, np.floating)) or (
+            isinstance(other, pdarray) and other.dtype in intTypes
+        ):
             return Timedelta(self.values._r_binop(other, "*"))
         raise TypeError("unsupported * Timedelta")
 
@@ -484,7 +555,9 @@ class Timedelta(_TimeArray):
         if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
             rhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
             return self.values._binop(rhs, "/")
-        if isinstance(other, (int, float, np.integer, np.floating)) or (isinstance(other, pdarray) and not isinstance(other, _TimeArray) and other.dtype in intTypes):
+        if isinstance(other, (int, float, np.integer, np.floating)) or (
+            isinstance(other, pdarray) and not isinstance(other, _TimeArray) and other.dtype in intTypes
+        ):
             return Timedelta(self.values._binop(other, "/"))
         raise TypeError("Timedelta / unsupported operand")
 
@@ -498,7 +571,9 @@ class Timedelta(_TimeArray):
         if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
             rhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
             return self.values._binop(rhs, "//")
-        if isinstance(other, (int, float, np.integer, np.floating)) or (isinstance(other, pdarray) and not isinstance(other, _TimeArray) and other.dtype in intTypes):
+        if isinstance(other, (int, float, np.integer, np.floating)) or (
+            isinstance(other, pdarray) and not isinstance(other, _TimeArray) and other.dtype in intTypes
+        ):
             return Timedelta(self.values._binop(other, "//"))
         raise TypeError("Timedelta // unsupported operand")
 
@@ -513,7 +588,9 @@ class Timedelta(_TimeArray):
         if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
             rhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
             return Timedelta(self.values._binop(rhs, "%"))
-        if isinstance(other, (int, float, np.integer, np.floating)) or (isinstance(other, pdarray) and not isinstance(other, _TimeArray) and other.dtype in intTypes):
+        if isinstance(other, (int, float, np.integer, np.floating)) or (
+            isinstance(other, pdarray) and not isinstance(other, _TimeArray) and other.dtype in intTypes
+        ):
             return Timedelta(self.values._binop(other, "%"))
         raise TypeError("Timedelta % unsupported operand")
 
@@ -585,28 +662,48 @@ class Timedelta(_TimeArray):
             rhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
             return self.values._binop(rhs, ">=")
         raise TypeError(">= not supported between Timedelta and non-timedelta")
+
+
 class _TDCompColView:
     __slots__ = ("_series",)
+
     def __init__(self, s: pd.Series):
         self._series = s
+
     def to_ndarray(self):
         return self._series.to_numpy(copy=True)
 
+
 class _TDComponentsView:
     __slots__ = ("_comp",)
+
     def __init__(self, comp_df: pd.DataFrame):
         self._comp = comp_df
+
     @property
-    def days(self):          return _TDCompColView(self._comp["days"])
+    def days(self):
+        return _TDCompColView(self._comp["days"])
+
     @property
-    def hours(self):         return _TDCompColView(self._comp["hours"])
+    def hours(self):
+        return _TDCompColView(self._comp["hours"])
+
     @property
-    def minutes(self):       return _TDCompColView(self._comp["minutes"])
+    def minutes(self):
+        return _TDCompColView(self._comp["minutes"])
+
     @property
-    def seconds(self):       return _TDCompColView(self._comp["seconds"])
+    def seconds(self):
+        return _TDCompColView(self._comp["seconds"])
+
     @property
-    def milliseconds(self):  return _TDCompColView(self._comp["milliseconds"])
+    def milliseconds(self):
+        return _TDCompColView(self._comp["milliseconds"])
+
     @property
-    def microseconds(self):  return _TDCompColView(self._comp["microseconds"])
+    def microseconds(self):
+        return _TDCompColView(self._comp["microseconds"])
+
     @property
-    def nanoseconds(self):   return _TDCompColView(self._comp["nanoseconds"])
+    def nanoseconds(self):
+        return _TDCompColView(self._comp["nanoseconds"])
