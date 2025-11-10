@@ -854,6 +854,9 @@ class pdarray:
         """
         from arkouda.client import generic_msg
         from arkouda.numpy.dtypes import result_type as ak_result_type
+        
+        if self._defer_to_time(other):
+            return NotImplemented
 
         # `create_pdarray`, `_coerce_scalar_for_dtype`, `_bitwise_ops` are assumed to exist
         # in this module, as in the rest of the class.
@@ -1137,18 +1140,35 @@ class pdarray:
             },
         )
 
+    def _defer_to_time(self, other) -> bool:
+        # Local import to avoid cycles
+        try:
+            from arkouda.numpy.timeclass import Datetime, Timedelta
+        except Exception:
+            # If timeclass isn't importable, don't defer
+            return False
+        return isinstance(other, (Datetime, Timedelta))
+
     # overload + for pdarray, other can be {pdarray, int, float}
     def __add__(self, other):
+        if self._defer_to_time(other):
+            return NotImplemented
         return self._binop(other, "+")
 
     def __radd__(self, other):
+        if self._defer_to_time(other):
+            return NotImplemented
         return self._r_binop(other, "+")
 
     # overload - for pdarray, other can be {pdarray, int, float}
     def __sub__(self, other):
+        if self._defer_to_time(other):
+            return NotImplemented
         return self._binop(other, "-")
 
     def __rsub__(self, other):
+        if self._defer_to_time(other):
+            return NotImplemented
         return self._r_binop(other, "-")
 
     # overload * for pdarray, other can be {pdarray, int, float}
@@ -1170,7 +1190,7 @@ class pdarray:
                 has_zero = ak_any(denom == 0)
             else:
                 has_zero = denom == 0
-
+            #
             if bool(has_zero):
                 msg = "divide by zero encountered"
                 _dispatch("divide", msg)
