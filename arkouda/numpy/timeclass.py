@@ -243,7 +243,6 @@ class Datetime(_TimeArray):
         raise TypeError(f"unsupported operand type(s) for +: {type(other).__name__} and Datetime")
 
     def __rsub__(self, other):
-
         # pandas semantics for scalar - Datetime(vector):
         # - Timestamp - Datetime -> Timedelta (broadcast)
         # - Timedelta - Datetime -> TypeError (unsupported)
@@ -256,15 +255,11 @@ class Datetime(_TimeArray):
             raise TypeError("number - Datetime unsupported")
         raise TypeError(f"unsupported operand type(s) for -: {type(other).__name__} and Datetime")
 
-
     def __mod__(self, other):
-
         # pandas does not support Datetime % anything
         raise TypeError("Datetime % unsupported operand")
 
-
     def __floordiv__(self, other):
-
         # Support Datetime // Timedelta -> integer array (counts). Others raise.
         if _is_timedelta_scalar(other) or isinstance(other, Timedelta):
             rhs = normalize_td_to_ns(other) if _is_timedelta_scalar(other) else other.values
@@ -304,55 +299,48 @@ class Datetime(_TimeArray):
         comp = self._to_pandas_index().components
         return _TDComponentsView(comp)
 
-    # comparisons
-    def __eq__(self, other):
-
-        # Only comparable to datetimes
+        # comparisons
         if isinstance(other, Datetime) or _is_datetime_scalar(other):
             rhs = other.values if isinstance(other, Datetime) else normalize_to_ns(other)
             return self.values._binop(rhs, "==")
+        if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
+            import arkouda as ak
+
+            return ak.zeros(self.values.size, dtype=ak.bool_)
+        raise TypeError("== not supported between Datetime and non-datetime")
         raise TypeError("== not supported between Datetime and non-datetime")
 
-
     def __ne__(self, other):
-
         if isinstance(other, Datetime) or _is_datetime_scalar(other):
             rhs = other.values if isinstance(other, Datetime) else normalize_to_ns(other)
             return self.values._binop(rhs, "!=")
         raise TypeError("!= not supported between Datetime and non-datetime")
 
-
     def __lt__(self, other):
-
         if isinstance(other, Datetime) or _is_datetime_scalar(other):
             rhs = other.values if isinstance(other, Datetime) else normalize_to_ns(other)
             return self.values._binop(rhs, "<")
         raise TypeError("< not supported between Datetime and non-datetime")
 
-
     def __le__(self, other):
-
         if isinstance(other, Datetime) or _is_datetime_scalar(other):
             rhs = other.values if isinstance(other, Datetime) else normalize_to_ns(other)
             return self.values._binop(rhs, "<=")
         raise TypeError("<= not supported between Datetime and non-datetime")
 
-
     def __gt__(self, other):
-
         if isinstance(other, Datetime) or _is_datetime_scalar(other):
             rhs = other.values if isinstance(other, Datetime) else normalize_to_ns(other)
             return self.values._binop(rhs, ">")
         raise TypeError("> not supported between Datetime and non-datetime")
 
-
     def __ge__(self, other):
-
         if isinstance(other, Datetime) or _is_datetime_scalar(other):
             rhs = other.values if isinstance(other, Datetime) else normalize_to_ns(other)
             return self.values._binop(rhs, ">=")
         raise TypeError(">= not supported between Datetime and non-datetime")
 
+    @property
     def date(self):
         parent = self
 
@@ -471,26 +459,34 @@ class Datetime(_TimeArray):
         iso = self._to_pandas_index().isocalendar()
         return _IsoCalView(iso)
 
-
     def __truediv__(self, other):
-
         raise TypeError("Datetime / unsupported operand")
 
     def __rtruediv__(self, other):
-
         raise TypeError("unsupported / Datetime")
 
     def __rfloordiv__(self, other):
-
         # Reflected floor-division is not supported in pandas: scalar // Datetime -> TypeError
         raise TypeError("unsupported // Datetime")
 
     def __rmod__(self, other):
-
         # Reflected modulo unsupported as well
         raise TypeError("unsupported % Datetime")
 
+
 class Timedelta(_TimeArray):
+    def __neg__(self):
+        import arkouda as ak
+
+        # return same type, elementwise negation
+        return Timedelta(-self.values)
+
+    def abs(self):
+        import arkouda as ak
+
+        # return same type, elementwise absolute value
+        return Timedelta(ak.abs(self.values))
+
     def _np_dtype(self) -> str:
         return "timedelta64[ns]"
 
@@ -579,7 +575,6 @@ class Timedelta(_TimeArray):
         raise TypeError("unsupported * Timedelta")
 
     def __truediv__(self, other):
-
         # pandas semantics:
         # - Timedelta / Timedelta -> float array (ratio)
         # - Timedelta / number    -> Timedelta (scale)
@@ -593,15 +588,11 @@ class Timedelta(_TimeArray):
             raise TypeError("Timedelta / Datetime unsupported")
         raise TypeError("Timedelta / unsupported operand")
 
-
     def __rtruediv__(self, other):
-
         # pandas does not support scalar or datetime divided by Timedelta
         raise TypeError("unsupported / Timedelta")
 
-
     def __floordiv__(self, other):
-
         # pandas semantics:
         # - Timedelta // Timedelta (or scalar timedelta) -> integer array
         # - Timedelta // number                         -> Timedelta (scaled)
@@ -611,6 +602,7 @@ class Timedelta(_TimeArray):
             return self.values._binop(rhs, "//")
         if isinstance(other, (int, float, np.integer, np.floating)):
             from arkouda.numpy import cast as akcast
+
             inv = 1.0 / float(other)
             scaled = self.values._binop(inv, "*")
             return Timedelta(akcast(scaled, int64))
@@ -618,9 +610,7 @@ class Timedelta(_TimeArray):
             raise TypeError("Timedelta // Datetime unsupported")
         raise TypeError("Timedelta // unsupported operand")
 
-
     def __rfloordiv__(self, other):
-
         # pandas reflected:
         # - timedelta scalar // Timedelta -> integer array
         # - number // Timedelta and datetime // Timedelta -> TypeError
@@ -629,9 +619,7 @@ class Timedelta(_TimeArray):
             return self.values._r_binop(lhs, "//")
         raise TypeError("unsupported // Timedelta")
 
-
     def __mod__(self, other):
-
         # pandas semantics:
         # - Timedelta % Timedelta (or scalar td) -> Timedelta (remainder)
         # - Timedelta % number                   -> Timedelta
@@ -640,22 +628,20 @@ class Timedelta(_TimeArray):
             return Timedelta(self.values._binop(rhs, "%"))
         if isinstance(other, (int, float, np.integer, np.floating)):
             from arkouda.numpy import cast as akcast
+
             modded = self.values._binop(float(other), "%")
             return Timedelta(akcast(modded, int64))
         if isinstance(other, Datetime) or _is_datetime_scalar(other):
             raise TypeError("Timedelta % Datetime unsupported")
         raise TypeError("Timedelta % unsupported operand")
 
-
     def __rmod__(self, other):
-
         # pandas reflected:
         # - timedelta scalar % Timedelta -> Timedelta (remainder)
         if _is_timedelta_scalar(other):
             lhs = normalize_td_to_ns(other)
             return Timedelta(self.values._r_binop(lhs, "%"))
         raise TypeError("unsupported % Timedelta")
-
 
     def __neg__(self):
         return Timedelta((-1) * self.values)
@@ -678,20 +664,20 @@ class Timedelta(_TimeArray):
         # pandas returns a scalar Timedelta
         return self._to_pandas_index().std(ddof=ddof)
 
-    # comparisons
-    def __eq__(self, other):
-
-        if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
-            rhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
+        # comparisons
+        if isinstance(other, Datetime) or _is_datetime_scalar(other):
+            rhs = other.values if isinstance(other, Datetime) else normalize_to_ns(other)
             return self.values._binop(rhs, "==")
-        # not comparable to datetimes
+        if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
+            import arkouda as ak
+
+            return ak.zeros(self.values.size, dtype=ak.bool_)
+        raise TypeError("== not supported between Datetime and non-datetime")
         if isinstance(other, Datetime) or _is_datetime_scalar(other):
             raise TypeError("== not supported between Timedelta and Datetime")
         raise TypeError("== not supported between Timedelta and non-timedelta")
 
-
     def __ne__(self, other):
-
         if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
             rhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
             return self.values._binop(rhs, "!=")
@@ -699,40 +685,34 @@ class Timedelta(_TimeArray):
             raise TypeError("!= not supported between Timedelta and Datetime")
         raise TypeError("!= not supported between Timedelta and non-timedelta")
 
-
     def __lt__(self, other):
-
         if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
             rhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
             return self.values._binop(rhs, "<")
         raise TypeError("< not supported between Timedelta and non-timedelta")
 
-
     def __le__(self, other):
-
         if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
             rhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
             return self.values._binop(rhs, "<=")
         raise TypeError("<= not supported between Timedelta and non-timedelta")
 
-
     def __gt__(self, other):
-
         if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
             rhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
             return self.values._binop(rhs, ">")
         raise TypeError("> not supported between Timedelta and non-timedelta")
 
-
     def __ge__(self, other):
-
         if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
             rhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
             return self.values._binop(rhs, ">=")
         raise TypeError(">= not supported between Timedelta and non-timedelta")
 
+
 class _TDCompColView:
     """Wrapper around a pandas Series-like column for timedelta components."""
+
     __slots__ = ("_series",)
 
     def __init__(self, s):
@@ -776,3 +756,56 @@ class _TDComponentsView:
     @property
     def nanoseconds(self):
         return _TDCompColView(self._comp["nanoseconds"])
+
+
+# --- pandas-compat equality/inequality (injected at module end) ---
+def _Datetime__eq(self, other):
+    if isinstance(other, Datetime) or _is_datetime_scalar(other):
+        rhs = other.values if isinstance(other, Datetime) else normalize_to_ns(other)
+        return self.values._binop(rhs, "==")
+    if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
+        import arkouda as ak
+
+        return ak.zeros(self.values.size, dtype=ak.bool_)
+    raise TypeError("== not supported between Datetime and non-datetime")
+
+
+def _Datetime__ne(self, other):
+    if isinstance(other, Datetime) or _is_datetime_scalar(other):
+        rhs = other.values if isinstance(other, Datetime) else normalize_to_ns(other)
+        return self.values._binop(rhs, "!=")
+    if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
+        import arkouda as ak
+
+        return ak.ones(self.values.size, dtype=ak.bool_)
+    raise TypeError("!= not supported between Datetime and non-datetime")
+
+
+def _Timedelta__eq(self, other):
+    if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
+        rhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
+        return self.values._binop(rhs, "==")
+    if isinstance(other, Datetime) or _is_datetime_scalar(other):
+        import arkouda as ak
+
+        return ak.zeros(self.values.size, dtype=ak.bool_)
+    raise TypeError("== not supported between Timedelta and non-timedelta")
+
+
+def _Timedelta__ne(self, other):
+    if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
+        rhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
+        return self.values._binop(rhs, "!=")
+    if isinstance(other, Datetime) or _is_datetime_scalar(other):
+        import arkouda as ak
+
+        return ak.ones(self.values.size, dtype=ak.bool_)
+    raise TypeError("!= not supported between Timedelta and non-timedelta")
+
+
+# Bind the injected methods
+Datetime.__eq__ = _Datetime__eq
+Datetime.__ne__ = _Datetime__ne
+Timedelta.__eq__ = _Timedelta__eq
+Timedelta.__ne__ = _Timedelta__ne
+# --- end injected pandas-compat ---
