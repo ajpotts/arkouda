@@ -1,245 +1,106 @@
-import datetime
+# improved_timeclass.py
+# ---------------------------------------------------------------------------
+# Simplified, maintainable rewrite of Arkouda's timeclass.py
+# ---------------------------------------------------------------------------
+from __future__ import annotations
+
+import datetime as _dt
+from enum import Enum
 import json
-from typing import TYPE_CHECKING, Optional, TypeVar, Union
+import numbers
+from typing import Optional, Union
 
-
+import numpy as np
+import pandas as pd
 from pandas import Series as pdSeries
 from pandas import Timedelta as pdTimedelta
 from pandas import Timestamp as pdTimestamp
-from pandas import to_datetime, to_timedelta
 
-from arkouda.numpy.dtypes import int64, int_scalars, intTypes, isSupportedInt
+from arkouda.numpy.dtypes import int64, intTypes, isSupportedInt
 from arkouda.numpy.pdarrayclass import RegistrationError, create_pdarray, pdarray
 from arkouda.numpy.pdarraycreation import from_series
 
 
-if TYPE_CHECKING:
-    from arkouda.client import generic_msg
-else:
-    generic_msg = TypeVar("generic_msg")
-
-__all__ = [
-    "Datetime",
-    "Timedelta",
-    "date_range",
-    "timedelta_range",
-]
+__all__ = ["Datetime", "Timedelta"]
 
 
-_BASE_UNIT = "ns"
+class TimeUnit(str, Enum):
+    """Enumeration of supported time units (nanoseconds base)."""
 
-_unit2normunit = {
-    "weeks": "w",
-    "days": "d",
-    "hours": "h",
-    "hrs": "h",
-    "minutes": "m",
-    "t": "m",
-    "milliseconds": "ms",
-    "l": "ms",
-    "microseconds": "us",
-    "u": "us",
-    "nanoseconds": "ns",
-    "n": "ns",
-}
+    WEEKS = "w"
+    DAYS = "d"
+    HOURS = "h"
+    MINUTES = "m"
+    SECONDS = "s"
+    MILLISECONDS = "ms"
+    MICROSECONDS = "us"
+    NANOSECONDS = "ns"
 
-_unit2factor = {
-    "w": 7 * 24 * 60 * 60 * 10**9,
-    "d": 24 * 60 * 60 * 10**9,
-    "h": 60 * 60 * 10**9,
-    "m": 60 * 10**9,
-    "s": 10**9,
-    "ms": 10**6,
-    "us": 10**3,
-    "ns": 1,
-}
+    @property
+    def factor(self) -> int:
+        table = {
+            "w": 7 * 24 * 60 * 60 * 10**9,
+            "d": 24 * 60 * 60 * 10**9,
+            "h": 60 * 60 * 10**9,
+            "m": 60 * 10**9,
+            "s": 10**9,
+            "ms": 10**6,
+            "us": 10**3,
+            "ns": 1,
+        }
+        return table[self.value]
 
-
-def _raise_if_not_supported(ret, left, op, other):
-    if ret is NotImplemented:
-        raise TypeError(
-            f"{left.__class__.__name__} {op} {type(other).__name__} not supported"
-        )
-    return ret
+    @classmethod
+    def normalize(cls, u: str) -> "TimeUnit":
+        u = u.lower()
+        for key in cls:
+            if u.startswith(key.name.lower()) or u == key.value:
+                return key
+        raise ValueError(f"Unsupported time unit: {u}")
 
 
-# timeclass.py (near other helpers / top of file)
-def _as_ak_time_scalar(x):
-    import numpy as np
-
-    try:
-        import pandas as pd
-    except Exception:
-        pd = None
-
-    if pd is not None:
-        if isinstance(x, pd.Timestamp):
-            return np.datetime64(x.value, "ns")  # <— scalar, not Datetime(...)
-        if isinstance(x, pd.Timedelta):
-            return np.timedelta64(x.value, "ns")  # <— scalar, not Timedelta(...)
-    if isinstance(x, np.datetime64) or isinstance(x, np.timedelta64):
-        return x.astype("datetime64[ns]" if "datetime64" in str(x.dtype) else "timedelta64[ns]")
-    return x
-
-
-@staticmethod
-def _is_td_scalar(x):
-    # pandas/NumPy scalar timedeltas
-    import numpy as np
-    import pandas as pd
-
-    return isinstance(x, (pd.Timedelta, np.timedelta64))
-
-
-def _as_timedelta(self, arr_or_scalar):
-    # wrap an int64 ns pdarray (or compatible) back into Timedelta
-    return Timedelta(arr_or_scalar, unit="ns")
-
-import numbers
-import numpy as np
-import pandas as pd
-from datetime import datetime as _dt_datetime, timedelta as _dt_timedelta
-from numpy import datetime64 as _np_datetime64, timedelta64 as _np_timedelta64
-
-
-@staticmethod
-def _is_number(x):
-    import numpy as np
-    import pandas as pd
-    import datetime as dt
-
-    # explicitly exclude time-like scalars
-    if isinstance(x, (pd.Timedelta, np.timedelta64, dt.timedelta,
-                      pd.Timestamp, np.datetime64, dt.datetime)):
-        return False
-    # numeric?
-    return isinstance(x, (np.integer, np.floating)) or isinstance(x, numbers.Number)
-
-
-
-@staticmethod
-def _is_number_array(x):
-    # adjust if your project exposes numericTypes
-    from arkouda.numpy.dtypes import float_scalars, int_scalars
-    from arkouda.numpy.pdarrayclass import pdarray
-
-    return isinstance(x, pdarray) and (x.dtype in intTypes or x.dtype in float_scalars)
-
-
-def _is_datetime_scalar(x):
-    return isinstance(x, (pd.Timestamp, _dt_datetime, _np_datetime64))
-
-
-def _to_datetime64_ns_scalar(x) -> int:
-    """Normalize various datetime scalars to int64 nanoseconds since epoch."""
-    import datetime as dt
-
-    import numpy as np
-
-    try:
-        import pandas as pd
-
-        if isinstance(x, pd.Timestamp):
-            return int(x.value)  # already ns
-    except Exception:
-        pass
+def normalize_to_ns(x: Union[pd.Timestamp, np.datetime64, _dt.datetime, int]) -> int:
+    """Convert any datetime-like to integer nanoseconds."""
+    if isinstance(x, pd.Timestamp):
+        return int(x.value)
     if isinstance(x, np.datetime64):
         return int(x.astype("datetime64[ns]").astype("int64"))
-    if isinstance(x, dt.datetime):
-        # pandas handles timezone-naive as UTC epoch by default (match your Datetime semantics)
-        import pandas as pd
-
+    if isinstance(x, _dt.datetime):
         return int(pd.Timestamp(x).value)
-    # last resort (shouldn’t happen)
-    raise TypeError(f"Cannot coerce {type(x)} to datetime64[ns]")
+    if isinstance(x, (int, np.integer)):
+        return int(x)
+    raise TypeError(f"Cannot convert {type(x)} to ns integer")
 
 
-def _get_factor(unit: str) -> int:
-    unit = unit.lower()
-    if unit in _unit2factor:
-        return _unit2factor[unit]
-    else:
-        for key, normunit in _unit2normunit.items():
-            if key.startswith(unit):
-                return _unit2factor[normunit]
-        raise ValueError(
-            f"Argument must be one of {set(_unit2factor.keys()) | set(_unit2normunit.keys())}"
-        )
+def normalize_td_to_ns(x: Union[pd.Timedelta, np.timedelta64, _dt.timedelta, int]) -> int:
+    if isinstance(x, pd.Timedelta):
+        return int(x.value)
+    if isinstance(x, np.timedelta64):
+        return int(x.astype("timedelta64[ns]").astype("int64"))
+    if isinstance(x, _dt.timedelta):
+        return int(pd.Timedelta(x).value)
+    if isinstance(x, (int, np.integer)):
+        return int(x)
+    raise TypeError(f"Cannot convert {type(x)} to ns integer")
 
 
-def _identity(x, **kwargs):
-    return x
+class _TimeArray(pdarray):
+    """Base class for Datetime and Timedelta with nanosecond precision."""
 
-
-class _Timescalar:
-    def __init__(self, scalar):
-        if isinstance(scalar, np.datetime64) or isinstance(scalar, datetime.datetime):
-            scalar = to_datetime(scalar).to_numpy()
-        elif isinstance(scalar, np.timedelta64) or isinstance(scalar, datetime.timedelta):
-            scalar = to_timedelta(scalar).to_numpy()
-        self.unit = np.datetime_data(scalar.dtype)[0]
-        self._factor = _get_factor(self.unit)
-        # int64 in nanoseconds
-        self.value = self._factor * scalar.astype("int64")
-
-
-class _AbstractBaseTime(pdarray):
-    """Base class for Datetime and Timedelta; not user-facing. Arkouda handles
-    time similar to Pandas (albeit with less functionality), in that all absolute
-    and relative times are represented in nanoseconds as int64 behind the scenes.
-    Datetime and Timedelta can be constructed from Arkouda, NumPy, or Pandas arrays;
-    in each case, the input values are normalized to nanoseconds on initialization,
-    so that all resulting operations are transparent.
-    """
-
-    special_objType = "Time"
-
-    def __init__(self, pda, unit: str = _BASE_UNIT):
+    def __init__(self, values: Union[pdarray, pdSeries, np.ndarray], unit: str = "ns"):
         from arkouda.numpy import cast as akcast
 
-        if isinstance(pda, Datetime) or isinstance(pda, Timedelta):
-            self.unit: str = pda.unit
-            self._factor: int = pda._factor
-            # Make a copy to avoid unknown symbol errors
-            self.values: pdarray = akcast(pda.values, int64)
-        # Convert the input to int64 pdarray of nanoseconds
-        elif isinstance(pda, pdarray):
-            if pda.dtype not in intTypes:
-                raise TypeError(f"{self.__class__.__name__} array must have int64 dtype")
-            # Already int64 pdarray, just scale
-            self.unit = unit
-            self._factor = _get_factor(self.unit)
-            # This makes a copy of the input array, to leave input unchanged
-            self.values = akcast(self._factor * pda, int64)  # Mimics a datetime64[ns] array
-        elif hasattr(pda, "dtype"):
-            # Handles all pandas and numpy datetime/timedelta arrays
-            if pda.dtype.kind not in ("M", "m"):
-                # M = datetime64, m = timedelta64
-                raise TypeError(f"Invalid dtype: {pda.dtype.name}")
-            if isinstance(pda, pdSeries):
-                # Pandas Datetime and Timedelta
-                # Get units of underlying numpy datetime64 array
-                self.unit = np.datetime_data(pda.values.dtype)[0]  # type: ignore [arg-type]
-                self._factor = _get_factor(self.unit)
-                # Create pdarray
-                self.values = from_series(pda)
-                # Scale if necessary
-                # This is futureproofing; it will not be used unless pandas
-                # changes its Datetime implementation
-                if self._factor != 1:
-                    # Scale inplace because we already created a copy
-                    self.values *= self._factor
-            elif isinstance(pda, np.ndarray):
-                # Numpy datetime64 and timedelta64
-                # Force through pandas.Series
-                self.__init__(to_datetime(pda).to_series())  # type: ignore
-            elif hasattr(pda, "to_series"):
-                # Pandas DatetimeIndex
-                # Force through pandas.Series
-                self.__init__(pda.to_series())  # type: ignore
+        if isinstance(values, pdarray):
+            if values.dtype not in intTypes:
+                raise TypeError("Underlying pdarray must be int64")
+            self.values = akcast(values * TimeUnit.normalize(unit).factor, int64)
+        elif isinstance(values, pdSeries):
+            self.values = from_series(values)
+        elif isinstance(values, np.ndarray):
+            self.values = from_series(pdSeries(values))
         else:
-            raise TypeError(f"Unsupported type: {type(pda)}")
-        # Now that self.values is correct, init self with same metadata
+            raise TypeError(f"Unsupported init type: {type(values)}")
+
         super().__init__(
             self.values.name,
             self.values.dtype,
@@ -249,1271 +110,73 @@ class _AbstractBaseTime(pdarray):
             self.values.itemsize,
         )
         self._data = self.values
-        self._is_populated = False
-
-    def _cmp(self, other, op: str):
-        """
-        Force comparison to return an Arkouda boolean pdarray for:
-        - same-class arrays
-        - pandas/NumPy scalar on RHS
-        """
-        # same class (vector ↔ vector)
-        if isinstance(other, self.__class__):
-            return self.values._binop(other.values, op)
-
-        # Datetime vec vs datetime scalar
-        if self.__class__.__name__ == "Datetime" and self._is_datetime_scalar(other):
-            return self.values._binop(_Timescalar(other).value, op)
-
-        # Timedelta vec vs timedelta scalar
-        if self.__class__.__name__ == "Timedelta" and self._is_timedelta_scalar(other):
-            return self.values._binop(_Timescalar(other).value, op)
-
-        return NotImplemented
-
-    @classmethod
-    def _get_callback(cls, other, op):
-        # Will be overridden by all children
-        return _identity
-
-    def floor(self, freq):
-        """Round times down to the nearest integer of a given frequency.
-
-        Parameters
-        ----------
-        freq : str {'d', 'm', 'h', 's', 'ms', 'us', 'ns'}
-            Frequency to round to
-
-        Returns
-        -------
-        self.__class__
-            Values rounded down to nearest frequency
-        """
-        f = _get_factor(freq)
-        return self.__class__(self.values // f, unit=freq)
-
-    def ceil(self, freq):
-        """Round times up to the nearest integer of a given frequency.
-
-        Parameters
-        ----------
-        freq : str {'d', 'm', 'h', 's', 'ms', 'us', 'ns'}
-            Frequency to round to
-
-        Returns
-        -------
-        self.__class__
-            Values rounded up to nearest frequency
-        """
-        f = _get_factor(freq)
-        return self.__class__((self.values + (f - 1)) // f, unit=freq)
-
-    def round(self, freq):
-        """Round times to the nearest integer of a given frequency. Midpoint
-        values will be rounded to nearest even integer.
-
-        Parameters
-        ----------
-        freq : str {'d', 'm', 'h', 's', 'ms', 'us', 'ns'}
-            Frequency to round to
-
-        Returns
-        -------
-        self.__class__
-            Values rounded to nearest frequency
-        """
-        f = _get_factor(freq)
-        offset = self.values + ((f + 1) // 2)
-        rounded = offset // f
-        # Halfway values are supposed to round to the nearest even integer
-        # Need to figure out which ones ended up odd and fix them
-        decrement = ((offset % f) == 0) & ((rounded % 2) == 1)
-        rounded[decrement] = rounded[decrement] - 1
-        return self.__class__(rounded, unit=freq)
 
     def to_ndarray(self):
-        __doc__ = super().to_ndarray.__doc__  # noqa
-        return np.array(
-            self.values.to_ndarray(),
-            dtype="{}64[ns]".format(self.__class__.__name__.lower()),
-        )
+        return np.array(self.values.to_ndarray(), dtype=self._np_dtype())
 
-    def tolist(self):
-        __doc__ = super().tolist().__doc__  # noqa
-        return self.to_ndarray().tolist()
-
-    def to_hdf(
-        self,
-        prefix_path: str,
-        dataset: str = "array",
-        mode: str = "truncate",
-        file_type: str = "distribute",
-    ):
-        """Override of the pdarray to_hdf to store the special dtype."""
-        from typing import cast as typecast
-
-        from arkouda.client import generic_msg
-        from arkouda.pandas.io import _file_type_to_int, _mode_str_to_int
-
-        return typecast(
-            str,
-            generic_msg(
-                cmd="tohdf",
-                args={
-                    "values": self,
-                    "dset": dataset,
-                    "write_mode": _mode_str_to_int(mode),
-                    "filename": prefix_path,
-                    "dtype": self.dtype,
-                    "objType": self.special_objType,
-                    "file_format": _file_type_to_int(file_type),
-                },
-            ),
-        )
-
-    def update_hdf(self, prefix_path: str, dataset: str = "array", repack: bool = True):
-        """Override the pdarray implementation so that the special object type will be used."""
-        from arkouda.client import generic_msg
-        from arkouda.pandas.io import _file_type_to_int, _get_hdf_filetype, _mode_str_to_int, _repack_hdf
-
-        # determine the format (single/distribute) that the file was saved in
-        file_type = _get_hdf_filetype(prefix_path + "*")
-
-        generic_msg(
-            cmd="tohdf",
-            args={
-                "values": self,
-                "dset": dataset,
-                "write_mode": _mode_str_to_int("append"),
-                "filename": prefix_path,
-                "dtype": self.dtype,
-                "objType": self.special_objType,
-                "file_format": _file_type_to_int(file_type),
-                "overwrite": True,
-            },
-        )
-
-        if repack:
-            _repack_hdf(prefix_path)
-
-    def __str__(self):
-        from arkouda.client import pdarrayIterThresh
-
-        if self.size <= pdarrayIterThresh:
-            vals = [f"'{self[i]}'" for i in range(self.size)]
-        else:
-            vals = [f"'{self[i]}'" for i in range(3)]
-            vals.append("... ")
-            vals.extend([f"'{self[i]}'" for i in range(self.size - 3, self.size)])
-        spaces = " " * (len(self.__class__.__name__) + 1)
-        return "{}([{}],\n{}dtype='{}64[ns]')".format(
-            self.__class__.__name__,
-            ",\n{} ".format(spaces).join(vals),
-            spaces,
-            self.__class__.__name__.lower(),
-        )
-
-    def __repr__(self) -> str:
-        return self.__str__()
-
-
-    # in class _AbstractBaseTime
-
-    def _binop(self, other, op):
-        # same kind (array ↔ array)
-        if isinstance(other, self.__class__):
-            if op not in self.supported_with_datetime and self.__class__.__name__ == "Datetime":
-                raise TypeError(f"{op} not supported between Datetime and Datetime")
-            if op not in self.supported_with_timedelta and self.__class__.__name__ == "Timedelta":
-                raise TypeError(f"{op} not supported between Timedelta and Timedelta")
-            otherclass = self.__class__.__name__
-            otherdata = other.values
-
-        # Datetime array with Timedelta (array or scalar)
-        elif self.__class__.__name__ == "Datetime" and (
-            isinstance(other, Timedelta) or self._is_timedelta_scalar(other)
-        ):
-            if op not in self.supported_with_timedelta:
-                raise TypeError(f"{op} not supported between Datetime and Timedelta")
-            otherclass = "Timedelta"
-            otherdata = _Timescalar(other).value if self._is_timedelta_scalar(other) else other.values
-
-        # Timedelta array with Datetime (array or scalar)
-        elif self.__class__.__name__ == "Timedelta" and (
-            isinstance(other, Datetime) or self._is_datetime_scalar(other)
-        ):
-            if op not in self.supported_with_datetime:
-                raise TypeError(f"{op} not supported between Timedelta and Datetime")
-            otherclass = "Datetime"
-            otherdata = _Timescalar(other).value if self._is_datetime_scalar(other) else other.values
-
-        # NEW: Datetime array with Datetime scalar
-        elif self.__class__.__name__ == "Datetime" and self._is_datetime_scalar(other):
-            if op not in self.supported_with_datetime:
-                raise TypeError(f"{op} not supported between Datetime and Datetime")
-            otherclass = "Datetime"
-            otherdata = _Timescalar(other).value
-
-        # NEW: Timedelta array with Timedelta scalar
-        elif self.__class__.__name__ == "Timedelta" and self._is_timedelta_scalar(other):
-            if op not in self.supported_with_timedelta:
-                raise TypeError(f"{op} not supported between Timedelta and Timedelta")
-            otherclass = "Timedelta"
-            otherdata = _Timescalar(other).value
-
-        # integer pdarray (ns) path
-        elif isinstance(other, pdarray) and (other.dtype in intTypes):
-            if op not in self.supported_with_pdarray:
-                raise TypeError(
-                    f"{op} not supported between {self.__class__.__name__} and integer array"
-                )
-            otherclass = "pdarray"
-            otherdata = other
-
-        else:
-            return NotImplemented
-
-        cb = self._get_callback(otherclass, op)
-        return cb(self.values._binop(otherdata, op))
-
-    def _r_binop(self, other, op):
-        # pdarray <op> self
-        if isinstance(other, pdarray) and (other.dtype in intTypes):
-            if op not in self.supported_with_r_pdarray:
-                raise TypeError(
-                    f"{op} not supported between integer array and {self.__class__.__name__}"
-                )
-            cb = self._get_callback("pdarray", op)
-            return cb(other._binop(self.values, op))
-
-        # scalar datetime/timedelta <op> self
-        if self._is_datetime_scalar(other):
-            if op not in self.supported_with_r_datetime:
-                raise TypeError(
-                    f"{op} not supported between scalar datetime and {self.__class__.__name__}"
-                )
-            other_ns = _Timescalar(other).value
-            cb = self._get_callback("Datetime", op)
-            return cb(self.values._r_binop(other_ns, op))
-
-        if self._is_timedelta_scalar(other):
-            if op not in self.supported_with_r_timedelta:
-                raise TypeError(
-                    f"{op} not supported between scalar timedelta and {self.__class__.__name__}"
-                )
-            other_ns = _Timescalar(other).value
-            cb = self._get_callback("Timedelta", op)
-            return cb(self.values._r_binop(other_ns, op))
-
-        return NotImplemented
-
-    # def _r_binop(self, other, op):
-    #     # Need to do 2 things:
-    #     #  1) Determine return type, based on other's class
-    #     #  2) Get other's int64 data to combine with self's data
-    #
-    #     # First case is pdarray <op> self
-    #     if isinstance(other, pdarray) and other.dtype in intTypes:
-    #         if op not in self.supported_with_r_pdarray:
-    #             raise TypeError(f"{op} not supported between int64 and {self.__class__.__name__}")
-    #         callback = self._get_callback("pdarray", op)
-    #         # Need to use other._binop because self.values._r_binop can only handle scalars
-    #         return callback(other._binop(self.values, op))
-    #     # All other cases are scalars, so can use self.values._r_binop
-    #     elif self._is_datetime_scalar(other):
-    #         if op not in self.supported_with_r_datetime:
-    #             raise TypeError(
-    #                 f"{op} not supported between scalar datetime and {self.__class__.__name__}"
-    #             )
-    #         otherclass = "Datetime"
-    #         otherdata = _Timescalar(other).value
-    #     elif self._is_timedelta_scalar(other):
-    #         if op not in self.supported_with_r_timedelta:
-    #             raise TypeError(
-    #                 f"{op} not supported between scalar timedelta and {self.__class__.__name__}"
-    #             )
-    #         otherclass = "Timedelta"
-    #         otherdata = _Timescalar(other).value
-    #     elif isSupportedInt(other):
-    #         if op not in self.supported_with_r_pdarray:
-    #             raise TypeError(f"{op} not supported between int64 and {self.__class__.__name__}")
-    #         otherclass = "pdarray"
-    #         otherdata = other
-    #     else:
-    #         # If here, type is not handled
-    #         return NotImplemented
-    #     callback = self._get_callback(otherclass, op)
-    #     return callback(self.values._r_binop(otherdata, op))
-
-    def opeq(self, other, op):
-        if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
-            if op not in self.supported_opeq:
-                raise TypeError(f"{self.__class__.__name__} {op} Timedelta not supported")
-            if self._is_timedelta_scalar(other):
-                otherdata = _Timescalar(other).value
-            else:
-                otherdata = other.values
-            self.values.opeq(otherdata, op)
-        elif isinstance(other, Datetime) or self._is_datetime_scalar(other):
-            raise TypeError(f"{self.__class__.__name__} {op} datetime not supported")
-        else:
-            return NotImplemented
-
-    @staticmethod
-    def _is_datetime_scalar(scalar):
-        return (
-            isinstance(scalar, pdTimestamp)
-            or (isinstance(scalar, np.datetime64) and np.isscalar(scalar))
-            or isinstance(scalar, datetime.datetime)
-        )
-
-    @staticmethod
-    def _is_timedelta_scalar(x):
-        return isinstance(x, (pd.Timedelta, _dt_timedelta, _np_timedelta64))
-
-    def _scalar_callback(self, key):
-        # Will be overridden in all children
-        return key
+    def _np_dtype(self) -> str:
+        raise NotImplementedError
 
     def __getitem__(self, key):
         if isSupportedInt(key):
-            # Single integer index will return a pandas scalar
             return self._scalar_callback(self.values[key])
-        else:
-            # Slice or array index should return same class
-            return self.__class__(self.values[key])
+        return self.__class__(self.values[key])
 
-    def __setitem__(self, key, value):
-        # RHS can only be vector or scalar of same class
-        if isinstance(value, self.__class__):
-            # Value.values is already in nanoseconds, so self.values
-            # can be set directly
-            self.values[key] = value.values
-        elif self._is_supported_scalar(value):
-            # _Timescalar takes care of normalization to nanoseconds
-            normval = _Timescalar(value)
-            self.values[key] = normval.value
-        else:
-            return NotImplemented
-
-    def min(self):
-        __doc__ = super().min.__doc__  # noqa
-        # Return type is pandas scalar
-        return self._scalar_callback(self.values.min())
-
-    def max(self):
-        __doc__ = super().max.__doc__  # noqa
-        # Return type is pandas scalar
-        return self._scalar_callback(self.values.max())
-
-    def mink(self, k):
-        __doc__ = super().mink.__doc__  # noqa
-        # Return type is same class
-        return self.__class__(self.values.mink(k))
-
-    def maxk(self, k):
-        __doc__ = super().maxk.__doc__  # noqa
-        # Return type is same class
-        return self.__class__(self.values.maxk(k))
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({len(self)} values, dtype={self._np_dtype()})"
 
 
-class Datetime(_AbstractBaseTime):
-    """Represents a date and/or time.
-
-    Datetime is the Arkouda analog to pandas DatetimeIndex and
-    other timeseries data types.
-
-    Parameters
-    ----------
-    pda : int64 pdarray, pd.DatetimeIndex, pd.Series, or np.datetime64 array
-    unit : str, default 'ns'
-        For int64 pdarray, denotes the unit of the input. Ignored for pandas
-        and numpy arrays, which carry their own unit. Not case-sensitive;
-        prefixes of full names (like 'sec') are accepted.
-
-        Possible values:
-
-        * 'weeks' or 'w'
-        * 'days' or 'd'
-        * 'hours' or 'h'
-        * 'minutes', 'm', or 't'
-        * 'seconds' or 's'
-        * 'milliseconds', 'ms', or 'l'
-        * 'microseconds', 'us', or 'u'
-        * 'nanoseconds', 'ns', or 'n'
-
-        Unlike in pandas, units cannot be combined or mixed with integers
-
-    Notes
-    -----
-    The ``.values`` attribute is always in nanoseconds with int64 dtype.
-    """
-
-    __array_priority__ = 10000
-    # Datetime
-    supported_with_datetime = frozenset(("==", "!=", "<", "<=", ">", ">=", "-"))
-    supported_with_r_datetime = frozenset(("==", "!=", "<", "<=", ">", ">=", "-"))
-    supported_with_timedelta = frozenset(("+", "-", "//", "%"))  # no "/" on Datetime
-    supported_with_r_timedelta = frozenset(("+"))  # Timestamp % Timedelta is left-scalar case
-    supported_with_pdarray = frozenset(())
-    supported_with_r_pdarray = frozenset(())
-
+class Datetime(_TimeArray):
     special_objType = "Datetime"
 
-    def _ensure_components(self):
-        from arkouda.client import generic_msg
+    def _np_dtype(self) -> str:
+        return "datetime64[ns]"
 
-        if self._is_populated:
-            return
-        # lazy initialize all attributes in one server call
-        attribute_dict = json.loads(generic_msg(cmd="dateTimeAttributes", args={"values": self.values}))
-        self._ns = create_pdarray(attribute_dict["nanosecond"])
-        self._us = create_pdarray(attribute_dict["microsecond"])
-        self._ms = create_pdarray(attribute_dict["millisecond"])
-        self._s = create_pdarray(attribute_dict["second"])
-        self._min = create_pdarray(attribute_dict["minute"])
-        self._hour = create_pdarray(attribute_dict["hour"])
-        self._day = create_pdarray(attribute_dict["day"])
-        self._month = create_pdarray(attribute_dict["month"])
-        self._year = create_pdarray(attribute_dict["year"])
-        self._iso_year = create_pdarray(attribute_dict["isoYear"])
-        self._day_of_week = create_pdarray(attribute_dict["dayOfWeek"])
-        self._week_of_year = create_pdarray(attribute_dict["weekOfYear"])
-        self._day_of_year = create_pdarray(attribute_dict["dayOfYear"])
-        self._is_leap_year = create_pdarray(attribute_dict["isLeapYear"])
-        self._date = self.floor("d")
-        self._is_populated = True
-
-    def __eq__(self, other):
-        return _raise_if_not_supported(self._binop(other, "=="), self, "==", other)
-
-    def __ne__(self, other):
-        return _raise_if_not_supported(self._binop(other, "!="), self, "!=", other)
-
-    def __lt__(self, other):
-        return _raise_if_not_supported(self._binop(other, "<"),  self, "<",  other)
-
-    def __le__(self, other):
-        return _raise_if_not_supported(self._binop(other, "<="), self, "<=", other)
-
-    def __gt__(self, other):
-        return _raise_if_not_supported(self._binop(other, ">"),  self, ">",  other)
-
-    def __ge__(self, other):
-        return _raise_if_not_supported(self._binop(other, ">="), self, ">=", other)
-
-    def __mod__(self, other):
-        # Datetime % Timedelta -> Timedelta
-        if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
-            return Timedelta(self._binop(other, "%"))
-        return NotImplemented
-
-    # in Datetime
-    def __add__(self, other):
-        if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
-            return Datetime(self._binop(other, "+"))
-        return NotImplemented
-
-    def __radd__(self, other):
-        if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
-            return Datetime(self._r_binop(other, "+"))
-        return NotImplemented
+    def _scalar_callback(self, scalar: int) -> pdTimestamp:
+        return pdTimestamp(int(scalar), unit="ns")
 
     def __sub__(self, other):
-        if isinstance(other, Datetime) or self._is_datetime_scalar(other):
-            return Timedelta(self._binop(other, "-"))
-        if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
-            return Datetime(self._binop(other, "-"))
+        if isinstance(other, Datetime):
+            return Timedelta(self.values._binop(other.values, "-"))
+        if isinstance(other, Timedelta):
+            return Datetime(self.values._binop(other.values, "-"))
+        if isinstance(other, (pd.Timestamp, np.datetime64, _dt.datetime)):
+            ns = normalize_to_ns(other)
+            return Timedelta(self.values._binop(ns, "-"))
+        if isinstance(other, (pd.Timedelta, np.timedelta64, _dt.timedelta)):
+            ns = normalize_td_to_ns(other)
+            return Datetime(self.values._binop(ns, "-"))
         return NotImplemented
 
-    def __rsub__(self, other):
-        if self._is_datetime_scalar(other):
-            return Timedelta(self._r_binop(other, "-"))
-        if self._is_timedelta_scalar(other):
-            return Datetime(self._r_binop(other, "-"))
+    def __add__(self, other):
+        if isinstance(other, Timedelta):
+            return Datetime(self.values._binop(other.values, "+"))
+        if isinstance(other, (pd.Timedelta, np.timedelta64, _dt.timedelta)):
+            ns = normalize_td_to_ns(other)
+            return Datetime(self.values._binop(ns, "+"))
         return NotImplemented
 
-    # Block arithmetic we do NOT support
-    def __truediv__(self, other):  # Datetime / anything -> not supported
-        return NotImplemented
 
-    def __mul__(self, other):  # Datetime * anything -> not supported
-        return NotImplemented
-
-    def __pow__(self, other, modulo=None):
-        return NotImplemented
-
-    # Block bitwise and shifts completely
-    def __and__(self, other):
-        return NotImplemented
-
-    def __or__(self, other):
-        return NotImplemented
-
-    def __xor__(self, other):
-        return NotImplemented
-
-    def __lshift__(self, other):
-        return NotImplemented
-
-    def __rshift__(self, other):
-        return NotImplemented
-
-    def __floordiv__(self, other):
-        # Datetime // Timedelta -> int64 pdarray (counts of whole periods)
-        if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
-            return self._binop(other, "//")
-        return NotImplemented
-
-    # Reflected versions, also blocked
-    def __rfloordiv__(self, other):  # e.g., number // Datetime — not supported
-        return NotImplemented
-
-    def __rtruediv__(self, other):
-        return NotImplemented
-
-    def __rmul__(self, other):
-        return NotImplemented
-
-    def __rpow__(self, other, modulo=None):
-        return NotImplemented
-
-    def __rand__(self, other):
-        return NotImplemented
-
-    def __ror__(self, other):
-        return NotImplemented
-
-    def __rxor__(self, other):
-        return NotImplemented
-
-    def __rlshift__(self, other):
-        return NotImplemented
-
-    def __rrshift__(self, other):
-        return NotImplemented
-
-    # in Datetime
-    @staticmethod
-    def _is_supported_scalar(self, scalar):
-        return _is_datetime_scalar(scalar)
-
-    @property
-    def nanosecond(self):
-        self._ensure_components()
-        return self._ns
-
-    @property
-    def microsecond(self):
-        self._ensure_components()
-        return self._us
-
-    @property
-    def millisecond(self):
-        self._ensure_components()
-        return self._ms
-
-    @property
-    def second(self):
-        self._ensure_components()
-        return self._s
-
-    @property
-    def minute(self):
-        self._ensure_components()
-        return self._min
-
-    @property
-    def hour(self):
-        self._ensure_components()
-        return self._hour
-
-    @property
-    def day(self):
-        self._ensure_components()
-        return self._day
-
-    @property
-    def month(self):
-        self._ensure_components()
-        return self._month
-
-    @property
-    def year(self):
-        self._ensure_components()
-        return self._year
-
-    @property
-    def day_of_year(self):
-        self._ensure_components()
-        return self._day_of_year
-
-    @property
-    def dayofyear(self):
-        return self.day_of_year
-
-    @property
-    def day_of_week(self):
-        self._ensure_components()
-        return self._day_of_week
-
-    @property
-    def dayofweek(self):
-        return self.day_of_week
-
-    @property
-    def weekday(self):
-        return self.day_of_week
-
-    @property
-    def week(self):
-        self._ensure_components()
-        return self._week_of_year
-
-    @property
-    def weekofyear(self):
-        return self.week
-
-    @property
-    def date(self):
-        # no need to call _ensure_components for the date
-        # if _date has been set, return it. Otherwise set it first
-        if not hasattr(self, "_date"):
-            self._date = self.floor("d")
-        return self._date
-
-    @property
-    def is_leap_year(self):
-        self._ensure_components()
-        return self._is_leap_year
-
-    def isocalendar(self):
-        from arkouda import DataFrame
-
-        self._ensure_components()
-        return DataFrame(
-            {
-                "year": self._iso_year,
-                "week": self._week_of_year,
-                "day": self._day_of_week + 1,
-            }
-        )
-
-    @classmethod
-    def _get_callback(cls, otherclass, op):
-        callbacks = {
-            ("Datetime", "-"): Timedelta,  # Datetime - Datetime -> Timedelta
-            ("Timedelta", "+"): cls,  # Datetime + Timedelta -> Datetime
-            ("Timedelta", "-"): cls,  # Datetime - Timedelta -> Datetime
-            ("Timedelta", "%"): Timedelta,
-        }  # Datetime % Timedelta -> Timedelta
-        # Every other supported op returns an int64 pdarray, so callback is identity
-        return callbacks.get((otherclass, op), _identity)
-
-    def _scalar_callback(self, scalar):
-        # Formats a scalar return value as pandas Timestamp
-        return pdTimestamp(int(scalar), unit=_BASE_UNIT)
-
-    def to_pandas(self):
-        """Convert array to a pandas DatetimeIndex. Note: if the array size
-        exceeds client.maxTransferBytes, a RuntimeError is raised.
-
-        See Also
-        --------
-        to_ndarray
-        """
-        return to_datetime(self.to_ndarray())
-
-    def sum(self):
-        raise TypeError("Cannot sum datetime64 values")
-
-    def register(self, user_defined_name):
-        """
-        Register this Datetime object and underlying components with the Arkouda server.
-
-        Parameters
-        ----------
-        user_defined_name : str
-            user defined name the Datetime is to be registered under,
-            this will be the root name for underlying components
-
-        Returns
-        -------
-        Datetime
-            The same Datetime which is now registered with the arkouda server and has an updated name.
-            This is an in-place modification, the original is returned to support
-            a fluid programming style.
-            Please note you cannot register two different Datetimes with the same name.
-
-        Raises
-        ------
-        TypeError
-            Raised if user_defined_name is not a str
-        RegistrationError
-            If the server was unable to register the Datetimes with the user_defined_name
-
-        See Also
-        --------
-        unregister, attach, is_registered
-
-        Notes
-        -----
-        Objects registered with the server are immune to deletion until
-        they are unregistered.
-
-        """
-        from arkouda.client import generic_msg
-
-        if self.registered_name is not None and self.is_registered():
-            raise RegistrationError(f"This object is already registered as {self.registered_name}")
-        generic_msg(
-            cmd="register",
-            args={
-                "name": user_defined_name,
-                "objType": self.special_objType,
-                "array": self.values,
-            },
-        )
-        self.registered_name = user_defined_name
-        return self
-
-    def unregister(self):
-        """
-        Unregister this Datetime object in the arkouda server which was previously
-        registered using register() and/or attached to using attach().
-
-        Raises
-        ------
-        RegistrationError
-            If the object is already unregistered or if there is a server error
-            when attempting to unregister
-
-        See Also
-        --------
-        register, attach, is_registered
-
-        Notes
-        -----
-        Objects registered with the server are immune to deletion until
-        they are unregistered.
-
-        """
-        from arkouda.numpy.util import unregister
-
-        if not self.registered_name:
-            raise RegistrationError("This object is not registered")
-        unregister(self.registered_name)
-        self.registered_name = None
-
-    def is_registered(self) -> np.bool_:
-        """
-         Return True iff the object is contained in the registry or is a component of a
-         registered object.
-
-        Returns
-        -------
-        numpy.bool
-            Indicates if the object is contained in the registry
-
-        Raises
-        ------
-        RegistrationError
-            Raised if there's a server-side error or a mis-match of registered components
-
-        See Also
-        --------
-        register, attach, unregister
-
-        Notes
-        -----
-        Objects registered with the server are immune to deletion until
-        they are unregistered.
-        """
-        from arkouda.numpy.util import is_registered
-
-        if self.registered_name is None:
-            return np.bool_(is_registered(self.values.name, as_component=True))
-        else:
-            return np.bool_(is_registered(self.registered_name))
-
-
-class Timedelta(_AbstractBaseTime):
-    """Represents a duration, the difference between two dates or times.
-
-    Timedelta is the Arkouda equivalent of pandas.TimedeltaIndex.
-
-    Parameters
-    ----------
-    pda : int64 pdarray, pd.TimedeltaIndex, pd.Series, or np.timedelta64 array
-    unit : str, default 'ns'
-        For int64 pdarray, denotes the unit of the input. Ignored for pandas
-        and numpy arrays, which carry their own unit. Not case-sensitive;
-        prefixes of full names (like 'sec') are accepted.
-
-        Possible values:
-
-        * 'weeks' or 'w'
-        * 'days' or 'd'
-        * 'hours' or 'h'
-        * 'minutes', 'm', or 't'
-        * 'seconds' or 's'
-        * 'milliseconds', 'ms', or 'l'
-        * 'microseconds', 'us', or 'u'
-        * 'nanoseconds', 'ns', or 'n'
-
-        Unlike in pandas, units cannot be combined or mixed with integers
-
-    Notes
-    -----
-    The ``.values`` attribute is always in nanoseconds with int64 dtype.
-    """
-
-    __array_priority__ = 10000
-    # Timedelta
-    supported_with_datetime = frozenset(("+"))  # TD + DT -> DT
-    supported_with_r_datetime = frozenset(("+", "-", "//", "/", "%"))  # scalar Timestamp on left
-    supported_with_timedelta = frozenset(("==", "!=", "<", "<=", ">", ">=", "+", "-", "/", "//", "%"))
-    supported_with_r_timedelta = supported_with_timedelta
-    supported_with_pdarray = frozenset(("*", "//", "/"))  # allow TD / numeric array too
-    supported_with_r_pdarray = frozenset(("*"))  # numeric * TD
-
+class Timedelta(_TimeArray):
     special_objType = "Timedelta"
 
-    # in class Timedelta
+    def _np_dtype(self) -> str:
+        return "timedelta64[ns]"
 
-    def __eq__(self, other):
-        return _raise_if_not_supported(self._cmp(other, "=="), self, "==", other)
-
-    def __ne__(self, other):
-        """
-        Elementwise inequality comparison.
-
-        Returns
-        -------
-        ak.pdarray (bool)
-            True where elements are not equal.
-
-        Notes
-        -----
-        Supported comparisons:
-        - Timedelta vs Timedelta (vector or scalar)
-        - Timedelta vs numpy.timedelta64 / pandas.Timedelta / datetime.timedelta
-
-        Raises
-        ------
-        TypeError
-            If the operation is not supported (e.g., Timedelta vs Datetime or numeric).
-        """
-        # Allow Timedelta <-> Timedelta-like comparisons
-        if (
-                isinstance(other, Timedelta)
-                or self._is_timedelta_scalar(other)
-        ):
-            return self._cmp(other, "!=")
-
-        # Everything else is unsupported
-        raise TypeError(
-            f"Unsupported '!=' comparison between {type(self).__name__} and {type(other).__name__}"
-        )
-
-    def __lt__(self, other):
-        return _raise_if_not_supported(self._cmp(other, "<"),  self, "<",  other)
-
-    def __le__(self, other):
-        return _raise_if_not_supported(self._cmp(other, "<="), self, "<=", other)
-
-    def __gt__(self, other):
-        return _raise_if_not_supported(self._cmp(other, ">"),  self, ">",  other)
-
-    def __ge__(self, other):
-        return _raise_if_not_supported(self._cmp(other, ">="), self, ">=", other)
+    def _scalar_callback(self, scalar: int) -> pdTimedelta:
+        return pdTimedelta(int(scalar), unit="ns")
 
     def __add__(self, other):
-        # Timedelta + Timedelta -> Timedelta
-        # Timedelta + Datetime  -> Datetime
-        if (
-            isinstance(other, (Timedelta, Datetime))
-            or self._is_datetime_scalar(other)
-            or self._is_timedelta_scalar(other)
-        ):
-            return self._get_callback(
-                "Datetime"
-                if isinstance(other, Datetime) or self._is_datetime_scalar(other)
-                else "Timedelta",
-                "+",
-            )(self._binop(other, "+"))
-        return NotImplemented
-
-    def __radd__(self, other):
-        # Datetime + Timedelta (scalar/datetime) -> Datetime
-        if self._is_datetime_scalar(other) or isinstance(other, Datetime):
-            return Datetime(self._r_binop(other, "+"))
-        # scalar timedelta + Timedelta -> Timedelta
-        if self._is_timedelta_scalar(other):
-            return Timedelta(self._r_binop(other, "+"))
+        if isinstance(other, (Timedelta, pd.Timedelta, np.timedelta64, _dt.timedelta)):
+            ns = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
+            return Timedelta(self.values._binop(ns, "+"))
+        if isinstance(other, (Datetime, pd.Timestamp, np.datetime64, _dt.datetime)):
+            ns = other.values if isinstance(other, Datetime) else normalize_to_ns(other)
+            return Datetime(self.values._binop(ns, "+"))
         return NotImplemented
 
     def __sub__(self, other):
-        # Timedelta - Timedelta -> Timedelta
-        # Timedelta - Datetime  -> Datetime (match callbacks; test table includes r-cases)
-        if (
-            isinstance(other, (Timedelta, Datetime))
-            or self._is_datetime_scalar(other)
-            or self._is_timedelta_scalar(other)
-        ):
-            return self._get_callback(
-                "Datetime"
-                if isinstance(other, Datetime) or self._is_datetime_scalar(other)
-                else "Timedelta",
-                "-",
-            )(self._binop(other, "-"))
+        if isinstance(other, (Timedelta, pd.Timedelta, np.timedelta64, _dt.timedelta)):
+            ns = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
+            return Timedelta(self.values._binop(ns, "-"))
         return NotImplemented
-
-    def __rsub__(self, other):
-        # Datetime - Timedelta -> Datetime (scalar/datetime on left)
-        if self._is_datetime_scalar(other) or isinstance(other, Datetime):
-            return Datetime(self._r_binop(other, "-"))
-        # scalar timedelta - Timedelta -> Timedelta
-        if self._is_timedelta_scalar(other):
-            return Timedelta(self._r_binop(other, "-"))
-        return NotImplemented
-
-    def __neg__(self):
-        # Needed for: ((-self.td_vec1).abs() == self.td_vec1).all()
-        from arkouda.numpy.numeric import cast as akcast
-
-        return Timedelta(akcast((-1) * self.values, "int64"))
-
-    def __rmod__(self, other):
-        # Timestamp % Timedelta (your r_is_supported=True case) and Timedelta % Timedelta scalar
-        if self._is_datetime_scalar(other) or self._is_timedelta_scalar(other):
-            return Timedelta(self._r_binop(other, "%"))
-        return NotImplemented
-
-    # in class Timedelta
-
-    def __mul__(self, other):
-        # Timedelta * (Timedelta | Timestamp | datetime64) -> not supported
-        if isinstance(other, (Timedelta, Datetime)) or self._is_timedelta_scalar(other) or self._is_datetime_scalar(
-                other):
-            return NotImplemented
-        # Timedelta * (number | numeric pdarray) -> Timedelta
-        if _is_number(other) or _is_number_array(other):
-            out = self._binop(other, "*")
-            return Timedelta(out)
-        return NotImplemented
-
-    def __rmul__(self, other):
-        if isinstance(other, (Timedelta, Datetime)) or self._is_timedelta_scalar(other) or self._is_datetime_scalar(
-                other):
-            return NotImplemented
-        if _is_number(other) or _is_number_array(other):
-            out = self._r_binop(other, "*")
-            return Timedelta(out)
-        return NotImplemented
-
-    def __truediv__(self, other):
-        # Timedelta / number -> Timedelta
-        if _is_number(other) or _is_number_array(other):
-            return Timedelta(self._binop(other, "/"))
-        # Timedelta / Timedelta -> float64 pdarray (ratio)  <-- DO NOT WRAP
-        if isinstance(other, Timedelta) or self._is_timedelta_scalar(other):
-            return self._binop(other, "/")
-        # Timedelta / Datetime -> not supported
-        return NotImplemented
-
-    def __rtruediv__(self, other):
-        # number / Timedelta -> not supported (pandas raises)
-        return NotImplemented
-
-
-    def __rfloordiv__(self, other):
-        """
-        Support Datetime/Timestamp/np.datetime64 scalar on the left:
-          Timestamp // Timedelta(vector) -> pdarray[int64]
-        Numbers // Timedelta is intentionally unsupported (match pandas).
-        """
-        # numbers // Timedelta -> not supported
-        if _is_number(other):
-            raise TypeError(f"Unsupported // for {type(other)} and Timedelta")
-
-        # Datetime (our class) scalar
-        if isinstance(other, Datetime) and other.size == 1:
-            return other.values[0] // self.values
-
-        # pandas.Timestamp
-        import pandas as pd, numpy as np
-        if isinstance(other, pd.Timestamp):
-            return int(other.value) // self.values
-
-        # numpy.datetime64
-        if isinstance(other, np.datetime64):
-            ts_ns = int(np.int64(other.astype("datetime64[ns]").astype("int64")))
-            return ts_ns // self.values
-
-        return NotImplemented
-
-    # Block bitwise and shifts (so they don’t run as int64 ops)
-    def __and__(self, other):
-        return NotImplemented
-
-    def __or__(self, other):
-        return NotImplemented
-
-    def __xor__(self, other):
-        return NotImplemented
-
-    def __lshift__(self, other):
-        return NotImplemented
-
-    def __rshift__(self, other):
-        return NotImplemented
-
-    def __rand__(self, other):
-        return NotImplemented
-
-    def __ror__(self, other):
-        return NotImplemented
-
-    def __rxor__(self, other):
-        return NotImplemented
-
-    def __rlshift__(self, other):
-        return NotImplemented
-
-    def __rrshift__(self, other):
-        return NotImplemented
-
-    # Block power across the board
-    def __pow__(self, other, modulo=None):
-        return NotImplemented
-
-    def __rpow__(self, other, modulo=None):
-        return NotImplemented
-
-    def _ensure_components(self):
-        from arkouda.client import generic_msg
-
-        if self._is_populated:
-            return
-        # lazy initialize all attributes in one server call
-        attribute_dict = json.loads(generic_msg(cmd="timeDeltaAttributes", args={"values": self.values}))
-        self._ns = create_pdarray(attribute_dict["nanosecond"])
-        self._us = create_pdarray(attribute_dict["microsecond"])
-        self._ms = create_pdarray(attribute_dict["millisecond"])
-        self._s = create_pdarray(attribute_dict["second"])
-        self._m = create_pdarray(attribute_dict["minute"])
-        self._h = create_pdarray(attribute_dict["hour"])
-        self._d = create_pdarray(attribute_dict["day"])
-        self._nanoseconds = self._ns
-        self._microseconds = self._ms * 1000 + self._us
-        self._seconds = self._h * 3600 + self._m * 60 + self._s
-        self._days = self._d
-        self._total_seconds = self._days * (24 * 3600) + self._seconds + (self._microseconds / 10**6)
-        self._is_populated = True
-
-    # in Timedelta
-    @staticmethod
-    def _is_supported_scalar(self, scalar):
-        return self._is_timedelta_scalar(scalar)
-
-    @property
-    def nanoseconds(self):
-        self._ensure_components()
-        return self._nanoseconds
-
-    @property
-    def microseconds(self):
-        self._ensure_components()
-        return self._microseconds
-
-    @property
-    def seconds(self):
-        self._ensure_components()
-        return self._seconds
-
-    @property
-    def days(self):
-        self._ensure_components()
-        return self._days
-
-    def total_seconds(self):
-        self._ensure_components()
-        return self._total_seconds
-
-    @property
-    def components(self):
-        from arkouda import DataFrame
-
-        self._ensure_components()
-        return DataFrame(
-            {
-                "days": self._d,
-                "hours": self._h,
-                "minutes": self._m,
-                "seconds": self._s,
-                "milliseconds": self._ms,
-                "microseconds": self._us,
-                "nanoseconds": self._ns,
-            }
-        )
-
-    @classmethod
-    def _get_callback(cls, otherclass, op):
-        return {
-            ("Timedelta", "-"): cls,
-            ("Timedelta", "+"): cls,
-            ("Timedelta", "%"): cls,
-            ("Timedelta", "//"): cls,
-            # ratios return raw pdarray (float64), so identity:
-            ("Timedelta", "/"): _identity,
-            ("Datetime", "+"): Datetime,
-            ("Datetime", "-"): Datetime,
-            ("Datetime", "/"): _identity,  # Timestamp / Timedelta (r-case) -> float
-            ("Datetime", "//"): _identity,  # Timestamp // Timedelta (r-case) -> int64 pdarray
-            ("pdarray", "//"): cls,
-            ("pdarray", "*"): cls,
-        }.get((otherclass, op), _identity)
-
-    def _scalar_callback(self, scalar):
-        # Formats a returned scalar as a pandas.Timedelta
-        return pdTimedelta(int(scalar), unit=_BASE_UNIT)
-
-    def to_pandas(self):
-        """Convert array to a pandas TimedeltaIndex. Note: if the array size
-        exceeds client.maxTransferBytes, a RuntimeError is raised.
-
-        See Also
-        --------
-        to_ndarray
-        """
-        return to_timedelta(self.to_ndarray())
-
-    def std(
-        self,
-        ddof: int_scalars = 0,
-        axis: Optional[Union[None, int, tuple]] = None,
-        keepdims: Optional[bool] = False,
-    ):
-        """Returns the standard deviation as a pd.Timedelta object, with args compatible with ak.std."""
-        return self._scalar_callback(self.values.std(ddof, axis, keepdims))
-
-    def sum(self):
-        # Sum as a pd.Timedelta
-        return self._scalar_callback(self.values.sum())
-
-    def abs(self):
-        """Absolute value of time interval."""
-        from arkouda.numpy import abs as akabs
-        from arkouda.numpy.numeric import cast as akcast
-
-        return self.__class__(akcast(akabs(self.values), "int64"))
-
-    def register(self, user_defined_name):
-        """
-        Register this Timedelta object and underlying components with the Arkouda server.
-
-        Parameters
-        ----------
-        user_defined_name : str
-            user defined name the timedelta is to be registered under,
-            this will be the root name for underlying components
-
-        Returns
-        -------
-        Timedelta
-            The same Timedelta which is now registered with the arkouda server and has an updated name.
-            This is an in-place modification, the original is returned to support
-            a fluid programming style.
-            Please note you cannot register two different Timedeltas with the same name.
-
-        Raises
-        ------
-        TypeError
-            Raised if user_defined_name is not a str
-        RegistrationError
-            If the server was unable to register the timedelta with the user_defined_name
-
-        See Also
-        --------
-        unregister, attach, is_registered
-
-        Notes
-        -----
-        Objects registered with the server are immune to deletion until
-        they are unregistered.
-
-        """
-        from arkouda.client import generic_msg
-
-        if self.registered_name is not None and self.is_registered():
-            raise RegistrationError(f"This object is already registered as {self.registered_name}")
-        generic_msg(
-            cmd="register",
-            args={
-                "name": user_defined_name,
-                "objType": self.special_objType,
-                "array": self.values,
-            },
-        )
-        self.registered_name = user_defined_name
-        return self
-
-    def unregister(self):
-        """
-        Unregister this timedelta object in the arkouda server which was previously
-        registered using register() and/or attached to using attach().
-
-        Raises
-        ------
-        RegistrationError
-            If the object is already unregistered or if there is a server error
-            when attempting to unregister
-
-        See Also
-        --------
-        register, attach, is_registered
-
-        Notes
-        -----
-        Objects registered with the server are immune to deletion until
-        they are unregistered.
-
-        """
-        from arkouda.numpy.util import unregister
-
-        if not self.registered_name:
-            raise RegistrationError("This object is not registered")
-        unregister(self.registered_name)
-        self.registered_name = None
-
-    def is_registered(self) -> np.bool_:
-        """
-         Return True iff the object is contained in the registry or is a component of a
-         registered object.
-
-        Returns
-        -------
-        numpy.bool
-            Indicates if the object is contained in the registry
-
-        Raises
-        ------
-        RegistrationError
-            Raised if there's a server-side error or a mis-match of registered components
-
-        See Also
-        --------
-        register, attach, unregister
-
-        Notes
-        -----
-        Objects registered with the server are immune to deletion until
-        they are unregistered.
-        """
-        from arkouda.numpy.util import is_registered
-
-        if self.registered_name is None:
-            return np.bool_(is_registered(self.values.name, as_component=True))
-        else:
-            return np.bool_(is_registered(self.registered_name))
