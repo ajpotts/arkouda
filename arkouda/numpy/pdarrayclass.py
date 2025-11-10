@@ -373,14 +373,9 @@ def _maybe_wrap_timedelta_result(lhs, rhs, op, result):
     lhs_is_td = isinstance(lhs, (ak_TimeDelta, pd_Timedelta))
     rhs_is_td = isinstance(rhs, (ak_TimeDelta, pd_Timedelta))
 
-    print("TEST1")
-    print(type(lhs))
-    print(type(rhs))
     if lhs_is_td and rhs_is_td:
-        print("TEST2")
         # Ops whose result is still a Timedelta (matches pandas semantics)
         if op in {"%", "-", "+", "//"}:
-            print("TEST3")
             # server returns ns as int64; wrap back to Timedelta
             # Timedelta constructor in Arkouda already expects ns-backed array
             return ak_TimeDelta(result)

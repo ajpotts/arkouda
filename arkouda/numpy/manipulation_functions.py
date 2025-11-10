@@ -80,6 +80,7 @@ def flip(
     This differs from numpy as it actually reverses the data, rather than presenting a view.
     """
     from arkouda.client import generic_msg
+    from arkouda.pandas.categorical import Categorical
 
     axisList = []
     if axis is not None:

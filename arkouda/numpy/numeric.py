@@ -2496,6 +2496,7 @@ def value_counts(
     >>> ak.value_counts(A)
     (array([0 2 4]), array([3 2 1]))
     """
+    from arkouda.pandas.groupbyclass import GroupBy
     return GroupBy(pda.flatten()).size() if pda.ndim > 1 else GroupBy(pda).size()
 
 

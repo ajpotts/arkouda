@@ -214,6 +214,7 @@ def in1d(
     """
     from arkouda.alignment import NonUniqueError
     from arkouda.pandas.categorical import Categorical as Categorical_
+    from arkouda.pandas.groupbyclass import GroupBy
 
     ua: groupable
     ub: groupable

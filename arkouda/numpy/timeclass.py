@@ -458,8 +458,14 @@ class Datetime(_TimeArray):
         return _IsoCalView(iso)
 
 
-# ---------- Timedelta ----------
-# ---------- Timedelta (clean, pandas-aligned) ----------
+    def __truediv__(self, other):
+
+        raise TypeError("Datetime / unsupported operand")
+
+    def __rtruediv__(self, other):
+
+        raise TypeError("unsupported / Datetime")
+
 class Timedelta(_TimeArray):
     def _np_dtype(self) -> str:
         return "timedelta64[ns]"
@@ -549,20 +555,37 @@ class Timedelta(_TimeArray):
         raise TypeError("unsupported * Timedelta")
 
     def __truediv__(self, other):
+
+
         # pandas semantics:
-        # - Timedelta / Timedelta -> float array (ratio), NOT a Timedelta
-        # - Timedelta / number     -> Timedelta (scale)
+        # - Timedelta / Timedelta -> float array (ratio)
+        # - Timedelta / number    -> Timedelta (scaled, ns-int)
         if isinstance(other, Timedelta) or _is_timedelta_scalar(other):
             rhs = other.values if isinstance(other, Timedelta) else normalize_td_to_ns(other)
             return self.values._binop(rhs, "/")
-        if isinstance(other, (int, float, np.integer, np.floating)) or (
-            isinstance(other, pdarray) and not isinstance(other, _TimeArray) and other.dtype in intTypes
-        ):
-            return Timedelta(self.values._binop(other, "/"))
+        if isinstance(other, (int, float, np.integer, np.floating)):
+            from arkouda.numpy import cast as akcast
+            # scale by reciprocal to avoid float dtype in constructor
+            scale = 1.0 / float(other)
+            scaled = self.values._binop(scale, "*")
+            return Timedelta(akcast(scaled, int64))
+        # datetime on the right is NOT supported
+        if isinstance(other, Datetime) or _is_datetime_scalar(other):
+            raise TypeError("Timedelta / Datetime unsupported")
         raise TypeError("Timedelta / unsupported operand")
 
+
+
     def __rtruediv__(self, other):
+        # Support pandas semantics for scalar Timedelta divided by Timedelta vector
+        #   pd.Timedelta / Timedelta -> float array (ratio)
+        if _is_timedelta_scalar(other):
+            lhs = normalize_td_to_ns(other)
+            return self.values._r_binop(lhs, "/")
+        # Everything else is unsupported in pandas (numbers or datetimes on the left)
         raise TypeError("unsupported / Timedelta")
+
+
 
     def __floordiv__(self, other):
         # pandas semantics:
