@@ -808,9 +808,45 @@ Datetime.__eq__ = _Datetime__eq
 Datetime.__ne__ = _Datetime__ne
 Timedelta.__eq__ = _Timedelta__eq
 Timedelta.__ne__ = _Timedelta__ne
+
+
 # --- end injected pandas-compat ---
 # --- pandas-compat: Datetime floor-division should always raise ---
 def _Datetime__floordiv(self, other):
     raise TypeError("Datetime // unsupported operand")
+
+
 Datetime.__floordiv__ = _Datetime__floordiv
+# --- end patch ---
+# --- pandas-compat: multiplication semantics ---
+from numbers import Number
+
+
+def _Datetime__mul(self, other):
+    raise TypeError("Datetime * unsupported")
+
+
+def _Datetime__rmul(self, other):
+    raise TypeError("Datetime * unsupported")
+
+
+def _Timedelta__mul(self, other):
+    # Timedelta * numeric scalar -> Timedelta; else raise
+    if isinstance(other, Number):
+        return Timedelta(self.values * other)
+    raise TypeError("Timedelta * only supports numeric scalars")
+
+
+def _Timedelta__rmul(self, other):
+    # numeric scalar * Timedelta -> Timedelta
+    if isinstance(other, Number):
+        return Timedelta(other * self.values)
+    raise TypeError("Timedelta * only supports numeric scalars")
+
+
+# bind
+Datetime.__mul__ = _Datetime__mul
+Datetime.__rmul__ = _Datetime__rmul
+Timedelta.__mul__ = _Timedelta__mul
+Timedelta.__rmul__ = _Timedelta__rmul
 # --- end patch ---
