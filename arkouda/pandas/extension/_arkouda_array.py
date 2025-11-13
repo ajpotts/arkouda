@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any
 
 import numpy as np
@@ -7,7 +9,6 @@ from pandas.api.extensions import ExtensionArray
 from arkouda.numpy.dtypes import dtype as ak_dtype
 from arkouda.numpy.pdarraycreation import array as ak_array
 from arkouda.numpy.pdarraycreation import full as ak_full
-from arkouda.numpy.pdarraycreation import pdarray
 
 from ._arkouda_extension_array import ArkoudaExtensionArray
 from ._dtypes import (
@@ -27,11 +28,94 @@ __all__ = ["ArkoudaArray"]
 class ArkoudaArray(ArkoudaExtensionArray, ExtensionArray):
     default_fill_value = -1
 
-    def __init__(self, data):
-        if isinstance(data, np.ndarray):
-            data = ak_array(data)
-        if not isinstance(data, pdarray):
-            raise TypeError("Expected an Arkouda pdarray")
+    def __init__(
+        self,
+        data: pdarray | np.ndarray | list | tuple | "ArkoudaArray",
+        dtype: Any = None,
+        copy: bool = False,
+    ):
+        """
+        Initialize an Arkouda-backed ExtensionArray.
+
+        This constructor wraps or converts a variety of supported input types
+        into an Arkouda `pdarray` that can be used as the backing store
+        for a pandas `ExtensionArray`. It ensures that the underlying data
+        resides on the Arkouda server and is one-dimensional.
+
+        Parameters
+        ----------
+        data : arkouda.pdarray, numpy.ndarray, list, tuple, or ArkoudaArray
+            Input data to wrap or convert.
+
+            - If `data` is an `arkouda.pdarray`, it is used directly unless
+              a `dtype` or `copy=True` is specified, in which case a new
+              Arkouda array is created via `ak.array()`.
+            - If `data` is a NumPy array, it is transferred to the Arkouda
+              server using `ak.array()`.
+            - If `data` is a Python list or tuple, it is first converted
+              to a NumPy array and then sent to the Arkouda server.
+            - If `data` is another `ArkoudaArray`, its underlying `pdarray`
+              is reused directly.
+
+        dtype : optional
+            Desired dtype to cast to. Can be a NumPy dtype, Arkouda dtype string.
+            If None, dtype is inferred from the input data.
+
+        copy : bool, default False
+            Whether to make a copy of the input data when possible.
+            If True, the underlying Arkouda array is duplicated.
+
+        Raises
+        ------
+        TypeError
+            If `data` cannot be interpreted as an Arkouda array-like object.
+        ValueError
+            If `data` is not one-dimensional.
+
+        Notes
+        -----
+        - This constructor does not perform type promotion or validation
+          beyond ensuring one-dimensionality. Downstream operations
+          (e.g., pandas arithmetic, reductions) will infer dtype semantics.
+        - For large NumPy or Python arrays, transferring data to the Arkouda
+          server can incur a serialization overhead proportional to the array size.
+        - The preferred way to create instances in the pandas ecosystem is
+          through the class method :meth:`_from_sequence`, which provides
+          additional compatibility with pandas internals.
+
+        Examples
+        --------
+        >>> import arkouda as ak
+        >>> from arkouda.pandas.extension import ArkoudaArray
+        >>> ak_arr = ak.arange(5)
+        >>> ArkoudaArray(ak_arr)
+        ArkoudaArray([0, 1, 2, 3, 4])
+
+        >>> import numpy as np
+        >>> ArkoudaArray(np.array([10, 20, 30]))
+        ArkoudaArray([10, 20, 30])
+
+        >>> ArkoudaArray([True, False, True])
+        ArkoudaArray([True, False, True])
+        """
+        if isinstance(data, ArkoudaArray):
+            data = data._data
+        elif isinstance(data, (list, tuple)):
+            data = ak_array(np.asarray(data), dtype=dtype)
+        elif isinstance(data, np.ndarray):
+            data = ak_array(data, dtype=dtype, copy=copy)
+        elif not isinstance(data, pdarray):
+            raise TypeError(
+                f"Expected arkouda.pdarray, ndarray, or ArkoudaArray, got {type(data).__name__}"
+            )
+        elif dtype is not None or copy:
+            data = ak_array(data, dtype=dtype, copy=copy)
+
+        if getattr(data, "ndim", 1) != 1:
+            raise ValueError(
+                f"ArkoudaArray must be 1-dimensional, got shape {getattr(data, 'shape', None)}"
+            )
+
         self._data = data
 
     @classmethod
