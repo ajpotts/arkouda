@@ -15,17 +15,70 @@ class ArkoudaStringArray(ArkoudaExtensionArray, ExtensionArray):
     default_fill_value = ""
 
     def __init__(self, data):
-        if isinstance(data, np.ndarray):
-            from arkouda.numpy.pdarraycreation import array as ak_array
+        """
+        Initialize an Arkouda-backed ExtensionArray for string data.
 
-            data = ak_array(data)
+        This constructor ensures that the underlying data is an Arkouda
+        `Strings` object, which represents a distributed string array
+        stored on the Arkouda server. It accepts data from compatible
+        Python or NumPy objects and converts them if needed.
 
+        Parameters
+        ----------
+        data : arkouda.Strings, numpy.ndarray, list, tuple, or ArkoudaStringArray
+            Input data to wrap or convert.
+
+            - If `data` is an `arkouda.Strings` object, it is used directly.
+            - If `data` is a NumPy array, Python list, or tuple of strings,
+              it is converted to an Arkouda `Strings` object via `ak.array()`.
+            - If `data` is another `ArkoudaStringArray`, its backing `Strings`
+              array is reused directly.
+
+        Raises
+        ------
+        TypeError
+            If the input cannot be converted to an Arkouda `Strings` object.
+
+        Notes
+        -----
+        - Arkouda `Strings` arrays are immutable, so setting `copy=True` is not
+          required for correctness but may be useful to ensure isolation from
+          shared references in derived operations.
+        - For one-dimensional string arrays, this class provides pandas
+          ExtensionArray compatibility (e.g., `.astype`, `.isna`, `.copy`,
+          `.equals`).
+
+        Examples
+        --------
+        >>> import arkouda as ak
+        >>> from arkouda.pandas.extension import ArkoudaStringArray
+        >>> s = ak.array(["apple", "banana", "cherry"])
+        >>> ArkoudaStringArray(s)
+        ArkoudaStringArray(['apple', 'banana', 'cherry'])
+
+        >>> import numpy as np
+        >>> ArkoudaStringArray(np.array(["red", "green", "blue"]))
+        ArkoudaStringArray(['red', 'green', 'blue'])
+
+        >>> ArkoudaStringArray(["x", "y", "z"])
+        ArkoudaStringArray(['x', 'y', 'z'])
+        """
+        from arkouda.numpy.pdarraycreation import array as ak_array
+
+        # Reuse backing data if another ArkoudaStringArray
         if isinstance(data, ArkoudaStringArray):
             self._data = data._data
-        elif isinstance(data, Strings):
-            self._data = data
-        else:
-            raise TypeError(f"Expected arkouda Strings. Instead received {type(data)}.")
+            return
+
+        # Convert numpy arrays, lists, or tuples of strings
+        if isinstance(data, (np.ndarray, list, tuple)):
+            data = ak_array(data, dtype="str_")
+
+        # Validate type
+        if not isinstance(data, Strings):
+            raise TypeError(f"Expected arkouda.Strings, got {type(data).__name__}")
+
+        self._data = data
 
     @property
     def dtype(self):
