@@ -82,24 +82,24 @@ class ArkoudaArray(ArkoudaExtensionArray, ExtensionArray):
         Scalar integer index returns a Python scalar:
 
         >>> arr[1]
-        1
+        np.int64(1)
 
         Slicing returns another ArkoudaArray:
 
-        >>> arr[1:4].to_ndarray()
-        array([1, 2, 3])
+        >>> arr[1:4]
+        ArkoudaArray([1 2 3])
 
         List-like integer positions:
 
-        >>> arr[[0, 2, 4]].to_ndarray()
-        array([0, 2, 4])
+        >>> arr[[0, 2, 4]]
+        ArkoudaArray([0 2 4])
 
         Boolean mask (NumPy array):
 
         >>> import numpy as np
         >>> mask = np.array([True, False, True, False, True])
-        >>> arr[mask].to_ndarray()
-        array([0, 2, 4])
+        >>> arr[mask]
+        ArkoudaArray([0 2 4])
         """
         # Normalize NumPy ndarray indexers
         if isinstance(key, np.ndarray):
@@ -168,8 +168,8 @@ class ArkoudaArray(ArkoudaExtensionArray, ExtensionArray):
         >>> data = ak.arange(5)
         >>> arr = ArkoudaArray(data)
         >>> arr[0] = 42
-        >>> arr.to_ndarray()
-        array([42,  1,  2,  3,  4])
+        >>> arr
+        ArkoudaArray([42 1 2 3 4])
 
         Using a NumPy boolean mask:
 
@@ -177,8 +177,8 @@ class ArkoudaArray(ArkoudaExtensionArray, ExtensionArray):
         >>> arr = ArkoudaArray(data)
         >>> mask = arr.to_ndarray() % 2 == 0  # even positions
         >>> arr[mask] = -1
-        >>> arr.to_ndarray()
-        array([-1,  1, -1,  3, -1])
+        >>> arr
+        ArkoudaArray([-1 1 -1 3 -1])
 
         Using a NumPy integer indexer:
 
@@ -186,8 +186,8 @@ class ArkoudaArray(ArkoudaExtensionArray, ExtensionArray):
         >>> arr = ArkoudaArray(data)
         >>> idx = np.array([1, 3], dtype=np.int64)
         >>> arr[idx] = 99
-        >>> arr.to_ndarray()
-        array([ 0, 99,  2, 99,  4])
+        >>> arr
+        ArkoudaArray([0 99 2 99 4])
 
         Assigning from another ArkoudaArray:
 
@@ -196,8 +196,8 @@ class ArkoudaArray(ArkoudaExtensionArray, ExtensionArray):
         >>> other = ArkoudaArray(ak.arange(10, 15))
         >>> idx = [1, 3, 4]
         >>> arr[idx] = other[idx]
-        >>> arr.to_ndarray()
-        array([ 0, 11,  2, 13, 14])
+        >>> arr
+        ArkoudaArray([0 11 2 13 14])
         """
         # Normalize NumPy / Python indexers into Arkouda pdarrays where needed
         if isinstance(key, np.ndarray):
