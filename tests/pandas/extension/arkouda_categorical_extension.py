@@ -1,9 +1,7 @@
 import pandas as pd
 import pytest
 
-import arkouda as ak
 
-from arkouda.pandas.extension import ArkoudaCategoricalArray
 from arkouda.testing import assert_equivalent
 
 
@@ -99,3 +97,200 @@ class TestArkoudaCategoricalExtension:
         s = pd.Series(pda.to_ndarray())
         idx1 = ak.arange(prob_size, dtype=ak.int64) // 2
         assert_equivalent(arr.take(idx1)._data.to_strings(), s.take(idx1.to_ndarray()).to_numpy())
+
+
+import numpy as np
+import pytest
+
+import arkouda as ak
+from arkouda.pandas.extension import ArkoudaCategoricalArray
+
+
+class TestArkoudaCategoricalArraySetitem:
+    def test_scalar_setitem_integer_position(self):
+        data = ak.Categorical(ak.array(["a", "b", "c"]))
+        arr = ArkoudaCategoricalArray(data)
+
+        arr[1] = "xx"
+
+        assert arr.to_ndarray().tolist() == ["a", "xx", "c"]
+
+    def test_scalar_setitem_numpy_integer_indexer(self):
+        data = ak.Categorical(ak.array(["a", "b", "c", "d"]))
+        arr = ArkoudaCategoricalArray(data)
+
+        idx = np.array([1, 3], dtype=np.int64)
+        arr[idx] = "z"
+
+        assert arr.to_ndarray().tolist() == ["a", "z", "c", "z"]
+
+    def test_scalar_setitem_numpy_boolean_mask(self):
+        data = ak.Categorical(ak.array(["a", "b", "c", "d", "e"]))
+        arr = ArkoudaCategoricalArray(data)
+
+        mask = np.array([True, False, True, False, True])
+        arr[mask] = "x"
+
+        assert arr.to_ndarray().tolist() == ["x", "b", "x", "d", "x"]
+
+    def test_setitem_with_python_list_integer_indexer(self):
+        data = ak.Categorical(ak.array(["a", "b", "c", "d"]))
+        arr = ArkoudaCategoricalArray(data)
+
+        idx = [0, 2]
+        arr[idx] = ["u", "v"]
+
+        assert arr.to_ndarray().tolist() == ["u", "b", "v", "d"]
+
+    def test_setitem_with_python_list_boolean_indexer(self):
+        data = ak.Categorical(ak.array(["a", "b", "c", "d"]))
+        arr = ArkoudaCategoricalArray(data)
+
+        mask = [False, True, False, True]
+        arr[mask] = "q"
+
+        assert arr.to_ndarray().tolist() == ["a", "q", "c", "q"]
+
+    def test_setitem_with_sequence_value(self):
+        data = ak.Categorical(ak.array(["a", "b", "c", "d"]))
+        arr = ArkoudaCategoricalArray(data)
+
+        idx = np.array([1, 3], dtype=np.int64)
+        arr[idx] = ["x", "y"]
+
+        assert arr.to_ndarray().tolist() == ["a", "x", "c", "y"]
+
+    def test_setitem_with_arkouda_categorical_array_value(self):
+        data = ak.Categorical(ak.array(["a", "b", "c", "d"]))
+        arr = ArkoudaCategoricalArray(data)
+
+        other = ArkoudaCategoricalArray(ak.Categorical(ak.array(["u", "v", "w", "x"])))
+        idx = [1, 3]
+
+        arr[idx] = other[idx]
+
+        # other[idx] has labels ["v", "x"]
+        assert arr.to_ndarray().tolist() == ["a", "v", "c", "x"]
+
+    def test_setitem_with_underlying_categorical_value(self):
+        data = ak.Categorical(ak.array(["a", "b", "c", "d"]))
+        arr = ArkoudaCategoricalArray(data)
+
+        values = ak.Categorical(ak.array(["p", "q", "r", "s"]))
+        idx = np.array([0, 2], dtype=np.int64)
+
+        # values[idx] should behave like a categorical subset with labels ["p", "r"]
+        arr[idx] = values[idx]
+
+        result = arr.to_ndarray().tolist()
+        assert result[0] == "p"
+        assert result[2] == "r"
+        assert result[1] == "b"
+        assert result[3] == "d"
+
+    def test_scalar_assignment_adds_new_category(self):
+        """
+        When assigning a label that didn't previously exist, the rebuilt
+        Categorical should include it as a category and reflect it in the
+        values.
+        """
+        data = ak.Categorical(ak.array(["a", "a", "b"]))
+        arr = ArkoudaCategoricalArray(data)
+
+        arr[0] = "new"
+
+        vals = arr.to_ndarray().tolist()
+        assert vals == ["new", "a", "b"]
+
+
+class TestArkoudaCategoricalArrayGetitem:
+    def _make_array(self):
+        data = ak.Categorical(ak.array(["a", "b", "c", "d"]))
+        return ArkoudaCategoricalArray(data)
+
+    # --- scalar indexing -------------------------------------------------
+
+    def test_getitem_scalar_returns_python_scalar(self):
+        arr = self._make_array()
+
+        result = arr[1]
+
+        assert isinstance(result, str)
+        assert result == "b"
+
+    # --- list / sequence indexers ----------------------------------------
+
+    def test_getitem_python_list_of_int_returns_categorical_array(self):
+        arr = self._make_array()
+        idx = [1, 3]
+
+        result = arr[idx]
+
+        assert isinstance(result, ArkoudaCategoricalArray)
+        # values
+        np.testing.assert_array_equal(result.to_ndarray(), np.array(["b", "d"]))
+
+    def test_getitem_empty_list_returns_empty_categorical_array(self):
+        arr = self._make_array()
+        idx: list[int] = []
+
+        result = arr[idx]
+
+        assert isinstance(result, ArkoudaCategoricalArray)
+        assert len(result) == 0
+
+    # --- numpy / arkouda indexers ----------------------------------------
+
+    def test_getitem_numpy_int_array_returns_categorical_array(self):
+        arr = self._make_array()
+        idx = np.array([0, 2], dtype=np.int64)
+
+        result = arr[idx]
+
+        assert isinstance(result, ArkoudaCategoricalArray)
+        np.testing.assert_array_equal(result.to_ndarray(), np.array(["a", "c"]))
+
+    def test_getitem_numpy_bool_mask_returns_categorical_array(self):
+        arr = self._make_array()
+        mask = np.array([True, False, True, False], dtype=bool)
+
+        result = arr[mask]
+
+        assert isinstance(result, ArkoudaCategoricalArray)
+        np.testing.assert_array_equal(result.to_ndarray(), np.array(["a", "c"]))
+
+    def test_getitem_arkouda_pdarray_int_indexer_returns_categorical_array(self):
+        arr = self._make_array()
+        idx = ak.array([0, 3])
+
+        result = arr[idx]
+
+        assert isinstance(result, ArkoudaCategoricalArray)
+        np.testing.assert_array_equal(result.to_ndarray(), np.array(["a", "d"]))
+
+    # --- slices -----------------------------------------------------------
+
+    def test_getitem_slice_returns_arkouda_categorical_array(self):
+        arr = self._make_array()
+
+        result = arr[1:3]
+
+        assert isinstance(result, ArkoudaCategoricalArray)
+        np.testing.assert_array_equal(result.to_ndarray(), np.array(["b", "c"]))
+
+    def test_getitem_full_slice_returns_shallow_copy_categorical_array(self):
+        arr = self._make_array()
+
+        result = arr[:]
+
+        assert isinstance(result, ArkoudaCategoricalArray)
+        np.testing.assert_array_equal(result.to_ndarray(), np.array(["a", "b", "c", "d"]))
+        # not required, but nice to assert we didn’t mutate original
+        np.testing.assert_array_equal(arr.to_ndarray(), np.array(["a", "b", "c", "d"]))
+
+    # --- error behavior ---------------------------------------------------
+
+    def test_getitem_raises_index_error_on_out_of_bounds_scalar(self):
+        arr = self._make_array()
+        with pytest.raises(IndexError):
+            _ = arr[10]

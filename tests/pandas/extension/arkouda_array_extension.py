@@ -266,3 +266,99 @@ class TestArkoudaArrayExtension:
         s = pd.Series(pda.to_ndarray())
         idx1 = ak.arange(prob_size, dtype=ak.int64) // 2
         assert_equivalent(arr.take(idx1)._data, s.take(idx1.to_ndarray()).to_numpy())
+
+
+class TestArkoudaArraySetitem:
+    def test_scalar_setitem_integer_position(self):
+        data = ak.arange(5)
+        arr = ArkoudaArray(data)
+
+        arr[0] = 42
+
+        assert np.array_equal(
+            arr.to_ndarray(),
+            np.array([42, 1, 2, 3, 4]),
+        )
+
+    def test_scalar_setitem_numpy_integer_indexer(self):
+        data = ak.arange(5)
+        arr = ArkoudaArray(data)
+
+        idx = np.array([1, 3], dtype=np.int64)
+        arr[idx] = 99
+
+        assert np.array_equal(
+            arr.to_ndarray(),
+            np.array([0, 99, 2, 99, 4]),
+        )
+
+    def test_scalar_setitem_numpy_boolean_mask(self):
+        data = ak.arange(5)
+        arr = ArkoudaArray(data)
+
+        mask = arr.to_ndarray() % 2 == 0  # True at positions 0, 2, 4
+        arr[mask] = -1
+
+        assert np.array_equal(
+            arr.to_ndarray(),
+            np.array([-1, 1, -1, 3, -1]),
+        )
+
+    def test_setitem_with_python_sequence_value(self):
+        data = ak.arange(5)
+        arr = ArkoudaArray(data)
+
+        idx = np.array([1, 3, 4], dtype=np.int64)
+        arr[idx] = [10, 20, 30]
+
+        assert np.array_equal(
+            arr.to_ndarray(),
+            np.array([0, 10, 2, 20, 30]),
+        )
+
+    def test_setitem_with_arkoudaarray_value(self):
+        data = ak.arange(5)
+        arr = ArkoudaArray(data)
+
+        other = ArkoudaArray(ak.arange(10, 15))
+        idx = np.array([1, 3, 4], dtype=np.int64)
+
+        arr[idx] = other[idx]
+
+        # other[idx] is [11, 13, 14]
+        assert np.array_equal(
+            arr.to_ndarray(),
+            np.array([0, 11, 2, 13, 14]),
+        )
+
+    def test_setitem_with_pdarray_value(self):
+        data = ak.arange(5)
+        arr = ArkoudaArray(data)
+
+        values = ak.arange(100, 105)  # pdarray
+        idx = np.array([0, 2, 4], dtype=np.int64)
+
+        arr[idx] = values[idx]
+
+        # values[idx] is [100, 102, 104]
+        assert np.array_equal(
+            arr.to_ndarray(),
+            np.array([100, 1, 102, 3, 104]),
+        )
+
+    def test_scalar_fast_path_does_not_wrap_pdarray(self):
+        """
+        A bit white-box: make sure scalar assignment works without requiring
+        array conversion for the value (no crash, correct result).
+        """
+        data = ak.arange(3)
+        arr = ArkoudaArray(data)
+
+        # This should go through the scalar fast path in __setitem__
+        arr[1] = 777
+
+        assert isinstance(arr._data, pdarray)
+        assert np.array_equal(
+            arr.to_ndarray(),
+            np.array([0, 777, 2]),
+        )
