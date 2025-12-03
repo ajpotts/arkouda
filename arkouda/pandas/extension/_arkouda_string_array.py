@@ -1,8 +1,12 @@
+from typing import Any, Union
+
 import numpy as np
 
+from numpy import ndarray
 from pandas.api.extensions import ExtensionArray
 
 from arkouda.numpy.pdarraycreation import array as ak_array
+from arkouda.numpy.pdarraycreation import pdarray
 from arkouda.numpy.strings import Strings
 
 from ._arkouda_extension_array import ArkoudaExtensionArray
@@ -36,13 +40,13 @@ class ArkoudaStringArray(ArkoudaExtensionArray, ExtensionArray):
     def _from_sequence(cls, scalars, dtype=None, copy=False):
         return cls(ak_array(scalars))
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Any) -> Any:
         """
         Retrieve one or more string values.
 
         Parameters
         ----------
-        key : int, slice, list, numpy.ndarray, or Arkouda indexer
+        key : Union[int, slice, list, ndarray, pdarray]
             Positional indexer. Supports:
             * scalar integer positions
             * slice objects
@@ -53,9 +57,59 @@ class ArkoudaStringArray(ArkoudaExtensionArray, ExtensionArray):
 
         Returns
         -------
-        str or ArkoudaStringArray
+        Union[str_, "ArkoudaStringArray"]
             A Python string for scalar access, or a new ArkoudaStringArray
             for non-scalar indexers.
+
+        Raises
+        ------
+        TypeError
+            If ``key`` is a NumPy array with an unsupported dtype (for example,
+            a floating point or object dtype).
+
+        Examples
+        --------
+        Basic scalar access:
+
+        >>> import arkouda as ak
+        >>> from arkouda.pandas.extension import ArkoudaStringArray
+        >>> arr = ArkoudaStringArray(ak.array(["a", "b", "c", "d"]))
+        >>> arr[1]
+        np.str_('b')
+
+        Negative indexing:
+
+        >>> arr[-1]
+        np.str_('d')
+
+        Slice indexing (returns a new ArkoudaStringArray):
+
+        >>> arr[1:3].to_ndarray()
+        array(['b', 'c'], dtype=...)
+
+        NumPy integer array indexing:
+
+        >>> idx = np.array([0, 2], dtype=np.int64)
+        >>> arr[idx].to_ndarray()
+        array(['a', 'c'], dtype=...)
+
+        NumPy boolean mask:
+
+        >>> mask = np.array([True, False, True, False])
+        >>> arr[mask].to_ndarray()
+        array(['a', 'c'], dtype=...)
+
+        Arkouda integer indexer:
+
+        >>> ak_idx = ak.array([3, 1])
+        >>> arr[ak_idx].to_ndarray()
+        array(['d', 'b'], dtype=...)
+
+        Empty indexer returns an empty ArkoudaStringArray:
+
+        >>> empty_idx = np.array([], dtype=np.int64)
+        >>> arr[empty_idx].to_ndarray()
+        array([], dtype='<U1')
         """
         # Normalize NumPy indexers to Arkouda pdarrays, mirroring ArkoudaArray.__getitem__
         if isinstance(key, np.ndarray):
@@ -92,7 +146,9 @@ class ArkoudaStringArray(ArkoudaExtensionArray, ExtensionArray):
         # materialize via ak.array and wrap again as Strings.
         return ArkoudaStringArray(ak_array(result))
 
-    def __setitem__(self, key, value) -> None:
+    def __setitem__(
+        self, key: Union[int, slice, ndarray, pdarray], value: Union[str, "ArkoudaStringArray", Strings]
+    ) -> None:
         """
         Assign one or more string values to the array.
 
@@ -103,7 +159,7 @@ class ArkoudaStringArray(ArkoudaExtensionArray, ExtensionArray):
 
         Parameters
         ----------
-        key : int, slice, array-like, or numpy.ndarray
+        key : Union[int, slice, ndarray, pdarray]
             Location(s) to assign to. Supported forms include:
 
             * scalar integer index
@@ -116,7 +172,7 @@ class ArkoudaStringArray(ArkoudaExtensionArray, ExtensionArray):
             Any Arkouda indexers are converted to NumPy via ``to_ndarray()``
             before applying the mutation.
 
-        value : str, array-like, ArkoudaStringArray, or arkouda.numpy.strings.Strings
+        value : Union[str, "ArkoudaStringArray", Strings]
             The value(s) to assign.
 
             * A scalar Python ``str`` is broadcast to the selected locations.
@@ -168,26 +224,19 @@ class ArkoudaStringArray(ArkoudaExtensionArray, ExtensionArray):
         from arkouda.numpy.pdarraycreation import array as ak_array
         from arkouda.numpy.strings import Strings
 
-        # Work on a local NumPy *object-dtype* copy of the data to avoid
-        # fixed-width Unicode truncation (e.g. '<U1').
-        base = self.to_ndarray()
-        np_data = np.array(base.tolist(), dtype=object)
+        base = ak_array(self._data)
 
-        # Normalize Arkouda indexers to NumPy, if present
-        if hasattr(key, "to_ndarray") and not isinstance(key, np.ndarray):
-            key = key.to_ndarray()
+        key = ak_array(key)
 
         # Normalize value into something NumPy can assign directly
         if isinstance(value, ArkoudaStringArray):
-            value = value.to_ndarray()
-        elif isinstance(value, Strings):
-            value = value.to_ndarray()
+            value = ak_array(value._data)
 
         # Let NumPy handle broadcasting / advanced indexing semantics
-        np_data[key] = value
+        base[key] = value
 
         # Rebuild an Arkouda Strings from the mutated NumPy array
-        self._data = ak_array(np_data)
+        self._data = base
 
     def astype(self, dtype, copy: bool = False):
         if dtype in (object, np.object_, "object", np.dtype("O")):

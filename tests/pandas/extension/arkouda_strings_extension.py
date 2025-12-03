@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -5,12 +6,6 @@ import arkouda as ak
 
 from arkouda.pandas.extension import ArkoudaStringArray
 from arkouda.testing import assert_equivalent
-
-import numpy as np
-import pytest
-
-import arkouda as ak
-from arkouda.pandas.extension import ArkoudaStringArray
 
 
 class TestArkoudaStringsExtension:

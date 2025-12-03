@@ -362,3 +362,102 @@ class TestArkoudaArraySetitem:
             arr.to_ndarray(),
             np.array([0, 777, 2]),
         )
+
+
+import numpy as np
+import pytest
+
+import arkouda as ak
+
+from arkouda.pandas.extension import ArkoudaArray
+
+
+class TestArkoudaArrayGetitem:
+    def _make_array(self):
+        # Small, simple fixture for all tests
+        data = ak.arange(5)  # array([0, 1, 2, 3, 4])
+        return ArkoudaArray(data)
+
+    def test_getitem_scalar_returns_python_scalar(self):
+        arr = self._make_array()
+
+        result = arr[2]
+        # Should be a scalar, not an ArkoudaArray
+        assert not isinstance(result, ArkoudaArray)
+        assert isinstance(result, (int, np.integer))
+        assert result == 2
+
+        # Negative index also returns scalar
+        result_neg = arr[-1]
+        assert isinstance(result_neg, (int, np.integer))
+        assert result_neg == 4
+
+    def test_getitem_slice_returns_arkouda_array(self):
+        arr = self._make_array()
+
+        result = arr[1:4]
+        assert isinstance(result, ArkoudaArray)
+
+        np.testing.assert_array_equal(result.to_ndarray(), np.array([1, 2, 3]))
+
+    def test_getitem_numpy_int_array_indexer(self):
+        arr = self._make_array()
+        idx = np.array([0, 3], dtype=np.int64)
+
+        result = arr[idx]
+        assert isinstance(result, ArkoudaArray)
+        np.testing.assert_array_equal(result.to_ndarray(), np.array([0, 3]))
+
+    def test_getitem_numpy_bool_array_indexer(self):
+        arr = self._make_array()
+        mask = np.array([True, False, True, False, True])
+
+        result = arr[mask]
+        assert isinstance(result, ArkoudaArray)
+        np.testing.assert_array_equal(result.to_ndarray(), np.array([0, 2, 4]))
+
+    def test_getitem_python_list_of_ints(self):
+        arr = self._make_array()
+
+        result = arr[[1, 4]]
+        assert isinstance(result, ArkoudaArray)
+        np.testing.assert_array_equal(result.to_ndarray(), np.array([1, 4]))
+
+    def test_getitem_python_list_of_bools(self):
+        arr = self._make_array()
+
+        result = arr[[True, False, True, False, True]]
+        assert isinstance(result, ArkoudaArray)
+        np.testing.assert_array_equal(result.to_ndarray(), np.array([0, 2, 4]))
+
+    def test_getitem_empty_list_returns_empty_array(self):
+        arr = self._make_array()
+
+        result = arr[[]]
+        assert isinstance(result, ArkoudaArray)
+        # Underlying pdarray should be empty
+        assert result._data.size == 0
+        # And round-trip to NumPy should be empty as well
+        assert result.to_ndarray().size == 0
+
+    def test_getitem_arkouda_int_indexer(self):
+        arr = self._make_array()
+        ak_idx = ak.array([4, 0, 2])
+
+        result = arr[ak_idx]
+        assert isinstance(result, ArkoudaArray)
+        np.testing.assert_array_equal(result.to_ndarray(), np.array([4, 0, 2]))
+
+    def test_getitem_rejects_unsupported_list_element_type(self):
+        arr = self._make_array()
+
+        with pytest.raises(TypeError):
+            _ = arr[["not", "ints", "or", "bools"]]
+
+    def test_getitem_numpy_unsigned_int_indexer(self):
+        arr = self._make_array()
+        idx = np.array([1, 3], dtype=np.uint64)
+
+        result = arr[idx]
+        assert isinstance(result, ArkoudaArray)
+        np.testing.assert_array_equal(result.to_ndarray(), np.array([1, 3]))
