@@ -178,3 +178,89 @@ class TestArkoudaIndexAccessor:
         assert isinstance(idx_back.array, ArkoudaExtensionArray)
         assert idx_back.name == "nums"
         _assert_index_equal_values(idx_back, [7, 8, 9])
+
+    def test_concat_simple_index_via_accessor(self):
+        # plain pandas indices
+        left = pd.Index([1, 2, 3], name="id")
+        right = pd.Index([4, 5], name="id")
+
+        # Run through the .ak accessor (no need to call to_ak() explicitly;
+        # concat should lift to legacy and back internally).
+        out = left.ak.concat(right)
+
+        # Result is a pandas Index, Arkouda-backed
+        assert isinstance(out, pd.Index)
+        assert out.ak.is_arkouda
+        assert out.name == "id"
+
+        # Values are concatenated in order
+        _assert_index_equal_values(out, [1, 2, 3, 4, 5])
+
+        # Collect should give us a plain NumPy-backed Index with same values
+        collected = out.ak.collect()
+        assert isinstance(collected, pd.Index)
+        assert not collected.ak.is_arkouda
+        assert collected.equals(pd.Index([1, 2, 3, 4, 5], name="id"))
+
+    def test_concat_multiindex_via_accessor(self):
+        arrays_left = [[1, 1, 2], ["red", "blue", "red"]]
+        arrays_right = [[3, 3], ["green", "red"]]
+
+        left = pd.MultiIndex.from_arrays(arrays_left, names=["num", "color"])
+        right = pd.MultiIndex.from_arrays(arrays_right, names=["num", "color"])
+
+        out = left.ak.concat(right)
+
+        # Result is a pandas.MultiIndex, Arkouda-backed
+        assert isinstance(out, pd.MultiIndex)
+        assert out.ak.is_arkouda
+        assert out.names == ["num", "color"]
+
+        # Order-preserving concat of the tuples
+        expected_tuples = list(left.tolist()) + list(right.tolist())
+        assert list(out.tolist()) == expected_tuples
+
+        # Collect should give a plain MultiIndex with same tuples / names
+        collected = out.ak.collect()
+        assert isinstance(collected, pd.MultiIndex)
+        assert not collected.ak.is_arkouda
+        assert list(collected.tolist()) == expected_tuples
+        assert collected.names == ["num", "color"]
+
+    def test_lookup_simple_index_scalar_and_array_via_accessor(self):
+        idx = pd.Index([10, 20, 30], name="nums")
+        ak_idx = idx.ak.to_ak()
+
+        # Scalar lookup should be handled by wrapping it into a one-element pdarray
+        mask_scalar = ak_idx.ak.lookup(20)
+        import arkouda as ak  # local import to avoid confusion with other modules
+
+        assert isinstance(mask_scalar, ak.pdarray)
+        assert mask_scalar.to_list() == [False, True, False]
+
+        # Array lookup should be passed through directly
+        keys = ak.array([5, 10, 30])
+        mask_array = ak_idx.ak.lookup(keys)
+        assert isinstance(mask_array, ak.pdarray)
+        # in1d(self.values, [5, 10, 30]) → [10, 30] are present
+        assert mask_array.to_list() == [True, False, True]
+
+    def test_lookup_multiindex_tuple_key_via_accessor(self):
+        arrays = [[1, 1, 2, 3], ["red", "blue", "red", "red"]]
+        midx = pd.MultiIndex.from_arrays(arrays, names=["num", "color"])
+        ak_midx = midx.ak.to_ak()
+
+        # Tuple key corresponds to one row in the MultiIndex
+        mask = ak_midx.ak.lookup((1, "red"))
+
+        import arkouda as ak
+
+        assert isinstance(mask, ak.pdarray)
+        # Only the first row (1, "red") should match
+        assert mask.to_list() == [True, False, False, False]
+
+        # A key that matches multiple rows
+        mask_multi = ak_midx.ak.lookup((2, "red"))
+        assert isinstance(mask_multi, ak.pdarray)
+        # Only the third row (2, "red") matches here
+        assert mask_multi.to_list() == [False, False, True, False]
