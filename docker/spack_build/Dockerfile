@@ -149,7 +149,7 @@ RUN source /opt/spack-develop/share/spack/setup-env.sh && \
 # ---------------------------
 # Finish Up
 # ---------------------------
-WORKDIR /root
+#WORKDIR /root
 
 RUN echo 'source ~/.bashrc.local' >> ~/.bashrc && echo 'source /opt/spack-develop/share/spack/setup-env.sh' >> ~/.bashrc.local
 
