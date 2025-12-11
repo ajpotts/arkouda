@@ -423,7 +423,7 @@ class GroupBy:
         self.ngroups = self.segments.size
 
     @staticmethod
-    def from_return_msg(rep_msg):
+    def _from_return_msg(rep_msg):
         """
         Reconstruct a GroupBy object from a server return message.
 
