@@ -578,20 +578,6 @@ class ArkoudaIndexAccessor:
         akidx = self.to_ak_legacy()
         return akidx.lookup(key)
 
-    def set_dtype(self, dtype) -> Union[pd.Index, pd.MultiIndex]:
-        """
-        Change the dtype of this index via the legacy ``set_dtype`` and
-        return a new Arkouda-backed pandas Index/MultiIndex.
-
-        Notes
-        -----
-        The legacy implementation may mutate and return ``self``; this
-        wrapper always re-wraps whatever object is returned.
-        """
-        akidx = self.to_ak_legacy()
-        out = akidx.set_dtype(dtype)
-        return ArkoudaIndexAccessor.from_ak_legacy(out)
-
     # --- Serialization --------------------------------------------------------
 
     def to_hdf(

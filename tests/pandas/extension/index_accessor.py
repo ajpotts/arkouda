@@ -1,19 +1,17 @@
-import arkouda as ak
+import pandas as pd
+import pytest
 
+import arkouda as ak
+import arkouda.pandas.extension._index_accessor as idx_mod
 
 from arkouda.index import Index as ak_Index
 from arkouda.index import MultiIndex as ak_MultiIndex
-from arkouda.pandas.extension import ArkoudaExtensionArray
+from arkouda.pandas.extension import ArkoudaArray, ArkoudaExtensionArray
 from arkouda.pandas.extension._index_accessor import (
     ArkoudaIndexAccessor,
     _ak_index_to_pandas_no_copy,
     _pandas_index_to_ak,
 )
-import pandas as pd
-
-import arkouda.pandas.extension._index_accessor as idx_mod
-from arkouda.pandas.extension._index_accessor import ArkoudaIndexAccessor
-from arkouda.pandas.extension import ArkoudaArray
 
 
 def _assert_index_equal_values(p_idx: pd.Index, values):
@@ -316,3 +314,53 @@ class TestArkoudaIndexAccessor:
         assert calls["msg"] == rep_msg
         # Assert: the wrapper was called with the object produced by ak_Index.from_return_msg
         assert calls["akidx"] is dummy_akidx
+
+    def test_to_dict_single_level_index(self):
+        # Create a single-level Arkouda Index
+        ak_idx = ak.Index(ak.arange(3))
+        idx = ArkoudaIndexAccessor.from_ak_legacy(ak_idx)
+
+        # 1) Default behavior: labels=None → key "idx"
+        out_default = idx.ak.to_dict()
+        assert list(out_default.keys()) == ["idx"]
+
+        default_val = out_default["idx"]
+        # ak_Index.to_dict stores the underlying data; this should be an Arkouda array
+        assert isinstance(default_val, ak.pdarray)
+        assert default_val.tolist() == [0, 1, 2]
+
+        # 2) Passing a list of labels → only the first element is used as the key
+        out_list = idx.ak.to_dict(labels=["foo", "bar"])
+        assert list(out_list.keys()) == ["foo"]
+        assert "bar" not in out_list
+
+        list_val = out_list["foo"]
+        assert isinstance(list_val, ak.pdarray)
+        assert list_val.tolist() == [0, 1, 2]
+
+    def test_to_dict_multiindex(self):
+        # Create a real MultiIndex via Arkouda
+        level0 = ak.array([1, 1, 2])
+        level1 = ak.array([10, 20, 30])
+        ak_mi = ak.MultiIndex([level0, level1])
+
+        # Convert to pandas-backed Arkouda Index
+        mi = ArkoudaIndexAccessor.from_ak_legacy(ak_mi)
+
+        labels = ["L0", "L1"]
+        out = mi.ak.to_dict(labels=labels)
+
+        # Underlying MultiIndex.to_dict uses *all* labels when a list is passed
+        assert list(out.keys()) == labels
+
+        # Each entry is an arkouda pdarray corresponding to a level
+        idx0 = out["L0"]
+        idx1 = out["L1"]
+
+        # Type checks: these are Arkouda arrays, not pandas Index objects
+        assert isinstance(idx0, ak.pdarray)
+        assert isinstance(idx1, ak.pdarray)
+
+        # Value checks: they match the original levels
+        assert idx0.tolist() == [1, 1, 2]
+        assert idx1.tolist() == [10, 20, 30]
