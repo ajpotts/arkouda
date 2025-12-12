@@ -554,35 +554,48 @@ class ArkoudaIndexAccessor:
 
     # --- Structural ops -------------------------------------------------------
 
-    def concat(self, other):
+    def concat(
+        self,
+        other: Union[pd.Index, pd.MultiIndex],
+    ) -> Union[pd.Index, pd.MultiIndex]:
         """
-        Concatenate this Index with another Index.
+        Concatenate this index with another Arkouda-backed index.
+
+        Both ``self._obj`` and ``other`` must be convertible to legacy
+        Arkouda :class:`ak_Index` / :class:`ak_MultiIndex`. The concatenation
+        is performed in Arkouda and the result is wrapped back into an
+        Arkouda-backed pandas Index or MultiIndex.
 
         Parameters
         ----------
-        other : Index
-            The Index to concatenate with this one.
+        other : Union[pd.Index, pd.MultiIndex]
+            The other index to concatenate with ``self._obj``. It must be a
+            :class:`pandas.Index` or :class:`pandas.MultiIndex`.
 
         Returns
         -------
-        Index
-            A new Index with values from both indices.
+        Union[pd.Index, pd.MultiIndex]
+            A pandas Index or MultiIndex backed by Arkouda, containing the
+            concatenated values from ``self._obj`` and ``other``.
 
         Raises
         ------
         TypeError
-            If the types of the two Index objects do not match.
+            If ``other`` is not a :class:`pandas.Index` or
+            :class:`pandas.MultiIndex`.
         """
-        self._check_types(other)
+        if not isinstance(other, (pd.Index, pd.MultiIndex)):
+            raise TypeError("`other` must be a pandas.Index or pandas.MultiIndex")
 
-        idx = generic_concat([self.values, other.values], ordered=True)
+        # Lift both sides to legacy Arkouda Index / MultiIndex
+        left_ak = self.to_ak_legacy()
+        right_ak = other.ak.to_ak_legacy()
 
-        # Preserve the name when possible (mimic pandas behavior):
-        # if both names are equal (including both None), keep it; otherwise drop.
-        other_name = getattr(other, "name", None)
-        name = self.name if self.name == other_name else None
+        # Delegate to legacy Arkouda concat
+        out_ak = left_ak.concat(right_ak)
 
-        return Index(idx, name=name)
+        # Wrap back into Arkouda-backed pandas Index/MultiIndex
+        return self.from_ak_legacy(out_ak)
 
     def lookup(self, key: object) -> pdarray:
         """

@@ -1177,7 +1177,11 @@ class Index:
         self._check_types(other)
 
         idx = generic_concat([self.values, other.values], ordered=True)
-        return Index(idx)
+
+        other_name = getattr(other, "name", None)
+        name = self.name if self.name == other_name else None
+
+        return Index(idx, name=name)
 
     def lookup(self, key):
         """
@@ -2124,7 +2128,11 @@ class MultiIndex(Index):
         """
         self._check_types(other)
         idx = [generic_concat([ix1, ix2], ordered=True) for ix1, ix2 in zip(self.index, other.index)]
-        return MultiIndex(idx)
+
+        other_names = getattr(other, "names", None)
+        names = self.names if self.names == other_names else None
+
+        return MultiIndex(idx, names=names)
 
     def lookup(self, key):
         """
