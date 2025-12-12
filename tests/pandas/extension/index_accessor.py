@@ -1,11 +1,19 @@
-import pandas as pd
-
 import arkouda as ak
+
 
 from arkouda.index import Index as ak_Index
 from arkouda.index import MultiIndex as ak_MultiIndex
 from arkouda.pandas.extension import ArkoudaExtensionArray
-from arkouda.pandas.extension._index_accessor import _ak_index_to_pandas_no_copy, _pandas_index_to_ak
+from arkouda.pandas.extension._index_accessor import (
+    ArkoudaIndexAccessor,
+    _ak_index_to_pandas_no_copy,
+    _pandas_index_to_ak,
+)
+import pandas as pd
+
+import arkouda.pandas.extension._index_accessor as idx_mod
+from arkouda.pandas.extension._index_accessor import ArkoudaIndexAccessor
+from arkouda.pandas.extension import ArkoudaArray
 
 
 def _assert_index_equal_values(p_idx: pd.Index, values):
@@ -264,3 +272,47 @@ class TestArkoudaIndexAccessor:
         assert isinstance(mask_multi, ak.pdarray)
         # Only the third row (2, "red") matches here
         assert mask_multi.tolist() == [False, False, True, False]
+
+    # We monkeypatch ak_Index.from_return_msg and ArkoudaIndexAccessor.from_ak_legacy
+    # because this test only verifies delegation logic. We don't want to invoke the
+    # real Arkouda client or start a server; we just need to confirm that the correct
+    # methods are called with the correct arguments and that their return value is
+    # passed through.
+    def test_from_return_msg_delegates_to_ak_index_and_wraps(self, monkeypatch):
+        # Arrange
+        rep_msg = "INDEX some return message"
+        dummy_akidx = object()
+        calls = {}
+
+        def fake_from_return_msg(msg):
+            calls["msg"] = msg
+            return dummy_akidx
+
+        def fake_from_ak_legacy(akidx):
+            calls["akidx"] = akidx
+            return "wrapped-index"
+
+        # ak_Index.from_return_msg is a classmethod; patch as staticmethod so it
+        # doesn't receive the class as the first argument.
+        monkeypatch.setattr(
+            idx_mod.ak_Index,
+            "from_return_msg",
+            staticmethod(fake_from_return_msg),
+        )
+
+        # ArkoudaIndexAccessor.from_ak_legacy is a staticmethod as well.
+        monkeypatch.setattr(
+            ArkoudaIndexAccessor,
+            "from_ak_legacy",
+            staticmethod(fake_from_ak_legacy),
+        )
+
+        # Act
+        result = ArkoudaIndexAccessor.from_return_msg(rep_msg)
+
+        # Assert: result is whatever from_ak_legacy returns
+        assert result == "wrapped-index"
+        # Assert: the legacy parser was called with the original message
+        assert calls["msg"] == rep_msg
+        # Assert: the wrapper was called with the object produced by ak_Index.from_return_msg
+        assert calls["akidx"] is dummy_akidx

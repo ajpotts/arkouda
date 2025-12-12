@@ -506,43 +506,6 @@ class ArkoudaIndexAccessor:
         akidx = ak_Index.from_return_msg(rep_msg)
         return ArkoudaIndexAccessor.from_ak_legacy(akidx)
 
-    # --- Registration metadata -------------------------------------------------
-
-    @property
-    def objType(self) -> str:
-        r"""Return the Arkouda objType for this index (\"Index\" or \"MultiIndex\")."""
-        akidx = self.to_ak_legacy()
-        return akidx.objType
-
-    @property
-    def registered_name(self):
-        """Name this index is registered under on the Arkouda server, or None."""
-        akidx = self.to_ak_legacy()
-        return getattr(akidx, "registered_name", None)
-
-    def is_registered(self) -> bool:
-        """Return True if this index is registered with the Arkouda server."""
-        akidx = self.to_ak_legacy()
-        return akidx.is_registered()
-
-    def register(self, name: str) -> Union[pd.Index, pd.MultiIndex]:
-        """
-        Register this index on the Arkouda server and return a new
-        Arkouda-backed pandas Index/MultiIndex reflecting the registration.
-        """
-        akidx = self.to_ak_legacy()
-        akidx.register(name)
-        return ArkoudaIndexAccessor.from_ak_legacy(akidx)
-
-    def unregister(self) -> Union[pd.Index, pd.MultiIndex]:
-        """
-        Unregister this index on the Arkouda server and return a new
-        Arkouda-backed pandas Index/MultiIndex reflecting the change.
-        """
-        akidx = self.to_ak_legacy()
-        akidx.unregister()
-        return ArkoudaIndexAccessor.from_ak_legacy(akidx)
-
     # --- Structural ops -------------------------------------------------------
 
     def concat(
@@ -685,11 +648,6 @@ class ArkoudaIndexAccessor:
 
     # --- Python/native representations ----------------------------------------
 
-    def tolist(self):
-        """Convert this index to a Python list via the legacy ``tolist`` method."""
-        akidx = self.to_ak_legacy()
-        return akidx.tolist()
-
     def to_dict(self, labels=None):
         """
         Convert this index to a dictionary representation if supported.
@@ -702,4 +660,4 @@ class ArkoudaIndexAccessor:
         akidx = self.to_ak_legacy()
         if not hasattr(akidx, "to_dict"):
             raise TypeError("to_dict is only defined for MultiIndex-backed indices")
-        return akidx.to_dict(labels=labels)
+        return akidx.to_dict(label=labels)
