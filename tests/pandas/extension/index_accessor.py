@@ -236,14 +236,14 @@ class TestArkoudaIndexAccessor:
         import arkouda as ak  # local import to avoid confusion with other modules
 
         assert isinstance(mask_scalar, ak.pdarray)
-        assert mask_scalar.to_list() == [False, True, False]
+        assert mask_scalar.tolist() == [False, True, False]
 
         # Array lookup should be passed through directly
         keys = ak.array([5, 10, 30])
         mask_array = ak_idx.ak.lookup(keys)
         assert isinstance(mask_array, ak.pdarray)
         # in1d(self.values, [5, 10, 30]) → [10, 30] are present
-        assert mask_array.to_list() == [True, False, True]
+        assert mask_array.tolist() == [True, False, True]
 
     def test_lookup_multiindex_tuple_key_via_accessor(self):
         arrays = [[1, 1, 2, 3], ["red", "blue", "red", "red"]]
