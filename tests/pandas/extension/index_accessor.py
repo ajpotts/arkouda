@@ -257,10 +257,10 @@ class TestArkoudaIndexAccessor:
 
         assert isinstance(mask, ak.pdarray)
         # Only the first row (1, "red") should match
-        assert mask.to_list() == [True, False, False, False]
+        assert mask.tolist() == [True, False, False, False]
 
         # A key that matches multiple rows
         mask_multi = ak_midx.ak.lookup((2, "red"))
         assert isinstance(mask_multi, ak.pdarray)
         # Only the third row (2, "red") matches here
-        assert mask_multi.to_list() == [False, False, True, False]
+        assert mask_multi.tolist() == [False, False, True, False]
