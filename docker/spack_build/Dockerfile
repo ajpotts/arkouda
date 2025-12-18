@@ -17,6 +17,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Use Bash as the shell for all RUN statements
 SHELL ["/bin/bash", "-c"]
 
+#   Example build
+# docker build --build-arg RELEASE_VERSION=2025.12.16 -t spack_test:2025.12.16 .
 
 # ---------------------------
 # Install system dependencies
@@ -61,6 +63,19 @@ RUN export ARKOUDA_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/
 
 
 # ---------------------------
+# Update the arkouda spack patch:
+# ---------------------------
+
+COPY makefile-fpic-2025.12.16.patch /opt/makefile-fpic-2025.12.16.patch
+
+RUN set -eux; \
+    ARKOUDA_PKG_DIR="$(dirname "$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages -path '*/arkouda/package.py' -print -quit)")"; \
+    cp /opt/makefile-fpic-2025.12.16.patch "$ARKOUDA_PKG_DIR/"; \
+    touch ~/.bashrc.local; \
+    echo "export ARKOUDA_PKG_DIR=\"$ARKOUDA_PKG_DIR\"" >> ~/.bashrc.local
+
+
+# ---------------------------
 # Update the py-arkouda spack package:
 # ---------------------------
 
@@ -70,14 +85,17 @@ RUN export PY_ARKOUDA_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/rep
     &&  mv /opt/py_arkouda-package.py $PY_ARKOUDA_PACKAGE_FILE  \
     && echo "export PY_ARKOUDA_PACKAGE_FILE=\"${PY_ARKOUDA_PACKAGE_FILE}\"" >> ~/.bashrc.local
 
-# ---------------------------
-# Install Py-Tables with patched Spack package -- Shouldn't need this now that the package is updated
-# ---------------------------
-#COPY pytables_package.py /opt/pytables_package.py
 
-#RUN export PY_TABLES_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages | grep /py_tables/package.py) \
-#    &&  mv /opt/pytables_package.py $PY_TABLES_PACKAGE_FILE  \
-#    && echo "export PY_TABLES_PACKAGE_FILE=\"${PY_TABLES_PACKAGE_FILE}\"" >> ~/.bashrc.local
+# ---------------------------
+# Update the chapel spack package:
+# ---------------------------
+
+COPY chapel-package.py /opt/chapel-package.py
+
+RUN export CHAPEL_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages | grep /chapel/package.py) \
+    &&  mv /opt/chapel-package.py $CHAPEL_PACKAGE_FILE  \
+    && echo "export CHAPEL_PACKAGE_FILE=\"${CHAPEL_PACKAGE_FILE}\"" >> ~/.bashrc.local
+
 
 
 #####################
