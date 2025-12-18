@@ -26,6 +26,7 @@ class PyArkouda(PythonPackage):
 
     version("main", branch="main")
 
+    version("2025.12.16", sha256="72638e9d8aa1889b6bafa76c6e8060e0c8aab0871be2693f8fb10f57cd4acbfa")
     version("2025.09.30", sha256="10f488a3ff3482b66f1b1e8a4235d72e91ad07acb932eca85d1e695f0f6155a2")
     version("2025.08.20", sha256="3e305930905397ff3a7a28a5d8cc2c9adca4194ca7f6ee51f749f427a2dea92c")
     version("2025.07.03", sha256="eb888fac7b0eec6b4f3bfa0bfe14e5c8f15b449286e84c45ba95c44d8cd3917a")
@@ -51,8 +52,9 @@ class PyArkouda(PythonPackage):
     depends_on("py-pandas@2.2.3:", when="@2025.07.03:")
     depends_on("py-pandas@1.4.0:", type=("build", "run"))
     conflicts("^py-pandas@2.2.0", msg="arkouda client not compatible with pandas 2.2.0")
-    depends_on("py-pyarrow@:19+brotli+bz2+lz4+parquet+snappy+zlib+zstd", type=("build", "run"))
-    depends_on("py-pyarrow@15:19+brotli+bz2+lz4+parquet+snappy+zlib+zstd", when="@2025.07.03:")
+    depends_on("py-pyarrow", type=("build", "run"), when="@2025.12.16:")
+    depends_on("py-pyarrow@:19", type=("build", "run"), when="@:2025.01.13")
+    depends_on("py-pyarrow@15:19", type=("build", "run"), when="@2025.07.03:")
     depends_on("py-pyzmq@20:", type=("build", "run"))
     depends_on("py-scipy@:1.13.1", type=("build", "run"), when="@:2025.01.13")
     depends_on("py-scipy@1.14:", when="@2025.07.03:")
