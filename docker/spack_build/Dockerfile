@@ -97,7 +97,6 @@ RUN export CHAPEL_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/s
     && echo "export CHAPEL_PACKAGE_FILE=\"${CHAPEL_PACKAGE_FILE}\"" >> ~/.bashrc.local
 
 
-
 #####################
 
 # 1) Create & activate an environment
@@ -112,6 +111,7 @@ RUN source /opt/spack-develop/share/spack/setup-env.sh && spack env create ark-e
     &&  spack concretize -f  \
     &&  spack spec -Il
     
+
     
 # 5) Install (one build plan, shared deps)
 RUN source /opt/spack-develop/share/spack/setup-env.sh \
@@ -167,7 +167,7 @@ RUN source /opt/spack-develop/share/spack/setup-env.sh && \
 # ---------------------------
 # Finish Up
 # ---------------------------
-#WORKDIR /root
+WORKDIR /root
 
 RUN echo 'source ~/.bashrc.local' >> ~/.bashrc && echo 'source /opt/spack-develop/share/spack/setup-env.sh' >> ~/.bashrc.local
 

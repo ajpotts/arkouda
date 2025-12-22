@@ -1,7 +1,7 @@
 diff --git a/make/Prologue.mk b/make/Prologue.mk
 index 13a9c4be1..099896ec9 100644
---- a/Makefile
-+++ b/Makefile
+--- a/make/Prologue.mk
++++ b/make/Prologue.mk
 @@ -236,15 +236,15 @@ compile-arrow-cpp:
 
  .PHONY: compile-arrow-write
