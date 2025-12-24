@@ -646,6 +646,49 @@ class TestDataFrame:
         assert c.index.tolist() == ["Alice", "Bob", "Carol"]
         assert c.values.tolist() == [3, 2, 1]
 
+    def test_groupby_series_key_raises_typeerror_regression(self):
+        """
+        Regression reproducer:
+        GroupBy incorrectly iterates an Arkouda Series key, yielding numpy scalars
+        and raising TypeError: <class 'numpy.*'> does not support grouping.
+        """
+        # Small input to avoid massive scalar fetch loops in CI
+        df = ak.DataFrame({"k": ak.array(np.array([1, 2, 1, 3], dtype=np.int64))})
+
+        with pytest.raises(TypeError, match=r"does not support grouping"):
+            ak.GroupBy(df["k"]).size()
+
+    #   This test verifies that the groupby does not itereate over a series
+    #   one element at a time, by monkeypatching the generic_msg to capture
+    #   the message sent to the server.
+    def test_pandas_groupby_extensionarray_no_scalar_rpc(self, monkeypatch):
+        # Setup
+        x = ak.arange(1_000_000)
+        X = pd.array(x, dtype="ak_int64")
+        df = pd.DataFrame({"X": X})
+
+        # Patch the Arkouda client message-sender to detect scalar fetch commands.
+        # The exact function name may differ slightly depending on your branch;
+        # common names are: ak.client.generic_msg, ak.client.generic_msg_cmd, etc.
+        from arkouda import client
+
+        real_generic_msg = client.generic_msg
+
+        def guard_generic_msg(cmd, args=None, **kwargs):
+            # Catch scalar element access patterns; this is what spams [int] in your logs.
+            if cmd.startswith("[int]") or cmd.startswith("[float]") or cmd.startswith("[bool]"):
+                raise AssertionError(f"Scalar RPC detected during groupby: {cmd}")
+            return real_generic_msg(cmd, args=args, **kwargs)
+
+        monkeypatch.setattr(client, "generic_msg", guard_generic_msg)
+
+        # Act: this should factorize / group without scalar element fetch loops
+        out = df.groupby("X").size()
+
+        # Basic sanity so the test isn't vacuously passing
+        assert len(out) > 0
+        assert out.sum() == len(df)
+
     @pytest.mark.parametrize("agg", ["sum", "first", "count"])
     def test_gb_aggregations(self, agg):
         df = self.build_ak_df()
