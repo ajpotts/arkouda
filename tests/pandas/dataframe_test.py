@@ -646,18 +646,6 @@ class TestDataFrame:
         assert c.index.tolist() == ["Alice", "Bob", "Carol"]
         assert c.values.tolist() == [3, 2, 1]
 
-    def test_groupby_series_key_raises_typeerror_regression(self):
-        """
-        Regression reproducer:
-        GroupBy incorrectly iterates an Arkouda Series key, yielding numpy scalars
-        and raising TypeError: <class 'numpy.*'> does not support grouping.
-        """
-        # Small input to avoid massive scalar fetch loops in CI
-        df = ak.DataFrame({"k": ak.array(np.array([1, 2, 1, 3], dtype=np.int64))})
-
-        with pytest.raises(TypeError, match=r"does not support grouping"):
-            ak.GroupBy(df["k"]).size()
-
     #   This test verifies that the groupby does not itereate over a series
     #   one element at a time, by monkeypatching the generic_msg to capture
     #   the message sent to the server.

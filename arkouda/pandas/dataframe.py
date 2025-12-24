@@ -2477,6 +2477,10 @@ class DataFrame(UserDict):
 
         """
         self.update_nrows()
+
+        if hasattr(keys, "values"):
+            keys = keys.values
+
         if isinstance(keys, str):
             cols = self.data[keys]
         elif not isinstance(keys, (list, tuple)):
