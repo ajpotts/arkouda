@@ -2,14 +2,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack_repo.builtin.build_systems.python import PythonPackage
-
 from spack.package import *
+from spack_repo.builtin.build_systems.python import PythonPackage
 
 
 class PyTables(PythonPackage):
     """PyTables is a package for managing hierarchical datasets and designed to
-    efficiently and easily cope with extremely large amounts of data."""
+    efficiently and easily cope with extremely large amounts of data.
+    """
 
     homepage = "https://www.pytables.org/"
     pypi = "tables/tables-3.6.1.tar.gz"
@@ -18,16 +18,46 @@ class PyTables(PythonPackage):
     license("BSD-3-Clause")
 
     version("master", branch="master", submodules=True)
-    version("3.10.2", sha256="2544812a7186fadba831d6dd34eb49ccd788d6a83f4e4c2b431b835b6796c910")
-    version("3.9.0", sha256="27c9ca14c359d875caf945a6a527c12690e017650402dd17d8eb8b6caf6687d5")
-    version("3.8.0", sha256="34f3fa2366ce20b18f1df573a77c1d27306ce1f2a41d9f9eff621b5192ea8788")
-    version("3.7.0", sha256="e92a887ad6f2a983e564a69902de4a7645c30069fc01abd353ec5da255c5e1fe")
-    version("3.6.1", sha256="49a972b8a7c27a8a173aeb05f67acb45fe608b64cd8e9fa667c0962a60b71b49")
-    version("3.6.0", sha256="db3488214864fb313a611fca68bf1c9019afe4e7877be54d0e61c84416603d4d")
-    version("3.5.2", sha256="b220e32262bab320aa41d33125a7851ff898be97c0de30b456247508e2cc33c2")
-    version("3.4.4", sha256="bdc5c073712af2a43babd139c4855fc99496bb2c3f3f5d1b4770a985e6f9ce29")
-    version("3.3.0", sha256="8383ccf02e041a5d55494a09fc5514140b4653055a2732c981b5fd0f7408822c")
-    version("3.2.2", sha256="3564b351a71ec1737b503b001eb7ceae1f65d5d6e3ffe1ea75aafba10f37fa84")
+    version(
+        "3.10.2",
+        sha256="2544812a7186fadba831d6dd34eb49ccd788d6a83f4e4c2b431b835b6796c910",
+    )
+    version(
+        "3.9.0",
+        sha256="27c9ca14c359d875caf945a6a527c12690e017650402dd17d8eb8b6caf6687d5",
+    )
+    version(
+        "3.8.0",
+        sha256="34f3fa2366ce20b18f1df573a77c1d27306ce1f2a41d9f9eff621b5192ea8788",
+    )
+    version(
+        "3.7.0",
+        sha256="e92a887ad6f2a983e564a69902de4a7645c30069fc01abd353ec5da255c5e1fe",
+    )
+    version(
+        "3.6.1",
+        sha256="49a972b8a7c27a8a173aeb05f67acb45fe608b64cd8e9fa667c0962a60b71b49",
+    )
+    version(
+        "3.6.0",
+        sha256="db3488214864fb313a611fca68bf1c9019afe4e7877be54d0e61c84416603d4d",
+    )
+    version(
+        "3.5.2",
+        sha256="b220e32262bab320aa41d33125a7851ff898be97c0de30b456247508e2cc33c2",
+    )
+    version(
+        "3.4.4",
+        sha256="bdc5c073712af2a43babd139c4855fc99496bb2c3f3f5d1b4770a985e6f9ce29",
+    )
+    version(
+        "3.3.0",
+        sha256="8383ccf02e041a5d55494a09fc5514140b4653055a2732c981b5fd0f7408822c",
+    )
+    version(
+        "3.2.2",
+        sha256="3564b351a71ec1737b503b001eb7ceae1f65d5d6e3ffe1ea75aafba10f37fa84",
+    )
 
     variant("zlib", default=True, description="Support for zlib compression")
     variant("bzip2", default=True, description="Support for bzip2 compression")

@@ -25,15 +25,27 @@ SHELL ["/bin/bash", "-c"]
 # --allowerasing helps resolve curl-minimal and other conflicts
 # ---------------------------
 RUN dnf install -y --allowerasing \
+    git \
     gcc gcc-c++ gcc-gfortran \
-    git  make cmake lsof \
-    curl tar gzip wget which \
-    findutils gawk patch file less hostname unzip \
-    diffutils procps-ng libcurl-devel bzip2 \
+    make \
+    patch \
+    file \
+    which \
+    findutils \
     ca-certificates vim && \
     dnf clean all && \
     update-ca-trust
 
+
+#RUN dnf install -y --allowerasing \
+#    gcc gcc-c++ gcc-gfortran \
+#    git  make cmake lsof \
+#    curl tar gzip wget which \
+#    findutils gawk patch file less hostname unzip \
+#    diffutils procps-ng libcurl-devel bzip2 \
+#    ca-certificates vim && \
+#    dnf clean all && \
+#    update-ca-trust
 
 # ---------------------------
 # Clone Spack and set environment
@@ -50,16 +62,30 @@ RUN . /opt/spack-develop/share/spack/setup-env.sh \
 
 #RUN . /opt/spack-develop/share/spack/setup-env.sh && spack find gcc@12.3.0 || spack install gcc@12.3.0
 
+
+# ---------------------------
+# Compute builtin dir:
+# ---------------------------
+
+RUN set -euo pipefail; \
+    BUILTIN_PKGS="$(find /root/.spack/package_repos -type d -path '*/repos/spack_repo/builtin/packages' -print -quit)"; \
+    test -n "$BUILTIN_PKGS"; \
+    echo "export SPACK_BUILTIN_PACKAGES=\"$BUILTIN_PKGS\"" >> ~/.bashrc.local
+
 # ---------------------------
 # Update the arkouda spack package:
 # ---------------------------
 
 COPY arkouda-package.py /opt/arkouda-package.py
 
-RUN export ARKOUDA_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages | grep /arkouda/package.py) \
-    &&  mv /opt/arkouda-package.py $ARKOUDA_PACKAGE_FILE  \
-    && touch ~/.bashrc.local \
-    && echo "export ARKOUDA_PACKAGE_FILE=\"${ARKOUDA_PACKAGE_FILE}\"" >> ~/.bashrc.local
+#RUN export ARKOUDA_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages | grep /arkouda/package.py) \
+#    &&  mv /opt/arkouda-package.py $ARKOUDA_PACKAGE_FILE  \
+#    && touch ~/.bashrc.local \
+#    && echo "export ARKOUDA_PACKAGE_FILE=\"${ARKOUDA_PACKAGE_FILE}\"" >> ~/.bashrc.local
+
+RUN set -euo pipefail; \
+    . ~/.bashrc.local; \
+    cp -f /opt/arkouda-package.py "$SPACK_BUILTIN_PACKAGES/arkouda/package.py"
 
 
 # ---------------------------
@@ -68,12 +94,16 @@ RUN export ARKOUDA_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/
 
 COPY makefile-fpic-2025.12.16.patch /opt/makefile-fpic-2025.12.16.patch
 
-RUN set -eux; \
-    ARKOUDA_PKG_DIR="$(dirname "$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages -path '*/arkouda/package.py' -print -quit)")"; \
-    cp /opt/makefile-fpic-2025.12.16.patch "$ARKOUDA_PKG_DIR/"; \
-    touch ~/.bashrc.local; \
-    echo "export ARKOUDA_PKG_DIR=\"$ARKOUDA_PKG_DIR\"" >> ~/.bashrc.local
+#RUN set -eux; \
+#    ARKOUDA_PKG_DIR="$(dirname "$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages -path '*/arkouda/package.py' -print -quit)")"; \
+#    cp /opt/makefile-fpic-2025.12.16.patch "$ARKOUDA_PKG_DIR/"; \
+#    touch ~/.bashrc.local; \
+#    echo "export ARKOUDA_PKG_DIR=\"$ARKOUDA_PKG_DIR\"" >> ~/.bashrc.local
 
+
+RUN set -euo pipefail; \
+    . ~/.bashrc.local; \
+    cp -f /opt/makefile-fpic-2025.12.16.patch "$SPACK_BUILTIN_PACKAGES/arkouda/makefile-fpic-2025.12.16.patch"
 
 # ---------------------------
 # Update the py-arkouda spack package:
@@ -81,10 +111,13 @@ RUN set -eux; \
 
 COPY py_arkouda-package.py /opt/py_arkouda-package.py
 
-RUN export PY_ARKOUDA_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages | grep /py_arkouda/package.py) \
-    &&  mv /opt/py_arkouda-package.py $PY_ARKOUDA_PACKAGE_FILE  \
-    && echo "export PY_ARKOUDA_PACKAGE_FILE=\"${PY_ARKOUDA_PACKAGE_FILE}\"" >> ~/.bashrc.local
+#RUN export PY_ARKOUDA_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages | grep /py_arkouda/package.py) \
+#    &&  mv /opt/py_arkouda-package.py $PY_ARKOUDA_PACKAGE_FILE  \
+#    && echo "export PY_ARKOUDA_PACKAGE_FILE=\"${PY_ARKOUDA_PACKAGE_FILE}\"" >> ~/.bashrc.local
 
+RUN set -euo pipefail; \
+    . ~/.bashrc.local; \
+    cp -f /opt/py_arkouda-package.py "$SPACK_BUILTIN_PACKAGES/py_arkouda/package.py"
 
 # ---------------------------
 # Update the chapel spack package:
@@ -92,10 +125,13 @@ RUN export PY_ARKOUDA_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/rep
 
 COPY chapel-package.py /opt/chapel-package.py
 
-RUN export CHAPEL_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages | grep /chapel/package.py) \
-    &&  mv /opt/chapel-package.py $CHAPEL_PACKAGE_FILE  \
-    && echo "export CHAPEL_PACKAGE_FILE=\"${CHAPEL_PACKAGE_FILE}\"" >> ~/.bashrc.local
+#RUN export CHAPEL_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages | grep /chapel/package.py) \
+#    &&  mv /opt/chapel-package.py $CHAPEL_PACKAGE_FILE  \
+#    && echo "export CHAPEL_PACKAGE_FILE=\"${CHAPEL_PACKAGE_FILE}\"" >> ~/.bashrc.local
 
+RUN set -euo pipefail; \
+    . ~/.bashrc.local; \
+    cp -f /opt/chapel-package.py "$SPACK_BUILTIN_PACKAGES/chapel/package.py"
 
 #####################
 
@@ -115,7 +151,7 @@ RUN source /opt/spack-develop/share/spack/setup-env.sh && spack env create ark-e
     
 # 5) Install (one build plan, shared deps)
 RUN source /opt/spack-develop/share/spack/setup-env.sh \
-    &&  spack env activate -p ark-env \   
+    &&  spack env activate -p ark-env \
     &&  spack -d -v  install -j $(nproc)
 
 
