@@ -1,0 +1,17 @@
+diff --git a/arkouda-package.py b/arkouda-package.py
+index 1111111..2222222 100644
+--- a/arkouda-package.py
++++ b/arkouda-package.py
+@@ -56,6 +56,14 @@
+     variant(
+         "distributed",
+         default=False,
+         description="Build Arkouda for multi-locale execution on a cluster or supercomputer",
+     )
++
++    variant(
++        "slurm-gasnet_ibv",
++        default=False,
++        description="Configure Chapel for Slurm + GASNet (ibv)",
++    )
+

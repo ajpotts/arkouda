@@ -19,6 +19,7 @@ SHELL ["/bin/bash", "-c"]
 
 #   Example build
 # docker build --build-arg RELEASE_VERSION=2025.12.16 -t spack_test:2025.12.16 .
+# docker run -it spack_test:2025.12.16
 
 # ---------------------------
 # Install system dependencies
@@ -126,7 +127,7 @@ RUN source /opt/spack-develop/share/spack/setup-env.sh && spack env create ark-e
     &&  spack config add "concretizer:unify:true" \
     # 3) Add BOTH roots (same release tag here as an example)
     &&  spack add arkouda${RELEASE_VERSION}  \
-    &&  spack add py-arkouda${RELEASE_VERSION}  \
+    &&  spack add py-arkouda${RELEASE_VERSION}+dev  \
     # 4) Check the unified solve
     &&  spack concretize -f  \
     &&  spack spec -Il
