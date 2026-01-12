@@ -86,14 +86,7 @@ def unary_operators(cls) -> type:
     return cls
 
 
-def aggregation_operators(cls) -> type:
-    for name in ["max", "min", "mean", "sum", "std", "var", "argmax", "argmin", "prod"]:
-        setattr(cls, name, cls._make_aggop(name))
-    return cls
-
-
 @unary_operators
-@aggregation_operators
 @natural_binary_operators
 class Series:
     """
@@ -698,12 +691,76 @@ class Series:
 
         return unaryop
 
-    @classmethod
-    def _make_aggop(cls, name):
-        def aggop(self) -> Series:
-            return getattr(self.values, name)()
+    # --- Reduction operations ---
 
-        return aggop
+    def sum(self) -> Series:
+        return self.values.sum()
+
+    def count(self) -> Series:
+        return self.values.count()
+
+    def prod(self) -> Series:
+        return self.values.prod()
+
+    def var(self) -> Series:
+        return self.values.var()
+
+    def std(self) -> Series:
+        return self.values.std()
+
+    def mean(self) -> Series:
+        return self.values.mean()
+
+    def median(self) -> Series:
+        return self.values.median()
+
+    def min(self) -> Series:
+        return self.values.min()
+
+    def max(self) -> Series:
+        return self.values.max()
+
+    def argmin(self) -> Series:
+        return self.values.argmin()
+
+    def argmax(self) -> Series:
+        return self.values.argmax()
+
+    def nunique(self) -> Series:
+        return self.values.nunique()
+
+    def any(self) -> Series:
+        return self.values.any()
+
+    def all(self) -> Series:
+        return self.values.all()
+
+    def first(self) -> Series:
+        return self.values.first()
+
+    def mode(self) -> Series:
+        return self.values.mode()
+
+    def unique(self) -> Series:
+        return self.values.unique()
+
+    def or_(self) -> Series:
+        return self.values.or_()
+
+    def and_(self) -> Series:
+        return self.values.and_()
+
+    def xor(self) -> Series:
+        return self.values.xor()
+
+    def or_(self) -> Series:
+        return self.values.or_()
+
+    def and_(self) -> Series:
+        return self.values.and_()
+
+    def xor(self) -> Series:
+        return self.values.xor()
 
     @typechecked
     def add(self, b: Series) -> Series:
