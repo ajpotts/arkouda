@@ -9,8 +9,7 @@ from spack.package import *
 
 class PyTables(PythonPackage):
     """PyTables is a package for managing hierarchical datasets and designed to
-    efficiently and easily cope with extremely large amounts of data.
-    """
+    efficiently and easily cope with extremely large amounts of data."""
 
     homepage = "https://www.pytables.org/"
     pypi = "tables/tables-3.6.1.tar.gz"

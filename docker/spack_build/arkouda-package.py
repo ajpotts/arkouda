@@ -10,8 +10,7 @@ from spack.package import *
 
 class Arkouda(MakefilePackage):
     """Arkouda is a NumPy-like library for distributed data with a focus on
-    large-scale data science applications.
-    """
+    large-scale data science applications."""
 
     homepage = "https://github.com/Bears-R-Us/arkouda"
 
@@ -60,7 +59,7 @@ class Arkouda(MakefilePackage):
         default=False,
         description="Build Arkouda for multi-locale execution on a cluster or supercomputer",
     )
-
+    
     variant(
         "slurm-gasnet_ibv",
         default=False,
@@ -84,13 +83,17 @@ class Arkouda(MakefilePackage):
     )
 
     depends_on("cmake@3.13.4:", type="build")
-    depends_on("python@3.9:3.12.3", type=("build", "link", "run", "test"), when="@:2025.01.13")
+    depends_on(
+        "python@3.9:3.12.3", type=("build", "link", "run", "test"), when="@:2025.01.13"
+    )
     depends_on(
         "python@3.9:3.13",
         type=("build", "link", "run", "test"),
         when="@2025.07.03:2025.08.20",
     )
-    depends_on("python@3.10:3.13", type=("build", "link", "run", "test"), when="@2025.09.30:")
+    depends_on(
+        "python@3.10:3.13", type=("build", "link", "run", "test"), when="@2025.09.30:"
+    )
     depends_on("libzmq@4.2.5:", type=("build", "link", "run", "test"))
     depends_on("hdf5+hl~mpi", type=("build", "link", "run", "test"))
     depends_on("libiconv", type=("build", "link", "run", "test"))
@@ -123,6 +126,7 @@ class Arkouda(MakefilePackage):
         policy="one_of",
         when="+distributed",
     )
+
 
     # Convenience integration: if the user selects Arkouda's slurm-gasnet_ibv,
     # force Chapel into a compatible comm/launcher configuration.

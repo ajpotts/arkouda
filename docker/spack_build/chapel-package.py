@@ -28,7 +28,13 @@ def is_CrayEX():
             return True
         elif target is None:  # but some systems lack Cray PrgEnv
             fi_info = which("fi_info")
-            if fi_info and fi_info("-l", output=str, error=str, fail_on_error=False).find("cxi") >= 0:
+            if (
+                fi_info
+                and fi_info("-l", output=str, error=str, fail_on_error=False).find(
+                    "cxi"
+                )
+                >= 0
+            ):
                 return True
     return False
 
@@ -37,8 +43,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     """Chapel is a modern programming language that is parallel, productive,
     portable, scalable and open-source. The Chapel package comes with many
     options in the form of variants, most of which can be left unset to allow
-    Chapel's built-in scripts to determine the proper values based on the environment.
-    """
+    Chapel's built-in scripts to determine the proper values based on the environment."""
 
     homepage = "https://chapel-lang.org/"
 
@@ -104,8 +109,12 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     sanity_check_is_file = [join_path("bin", "chpl")]
 
     patch("fix_spack_cc_wrapper_in_cray_prgenv.patch", when="@2.0.0:")
-    patch("fix_chpl_shared_lib_path.patch", when="@2.1.1:2.2 +python-bindings")  # PR 26388
-    patch("fix_chpl_shared_lib_path_2.3.patch", when="@2.2.1:2.3 +python-bindings")  # PR 26388
+    patch(
+        "fix_chpl_shared_lib_path.patch", when="@2.1.1:2.2 +python-bindings"
+    )  # PR 26388
+    patch(
+        "fix_chpl_shared_lib_path_2.3.patch", when="@2.2.1:2.3 +python-bindings"
+    )  # PR 26388
     patch("fix_chpl_line_length.patch", when="@:2.3.0")  # PRs 26357, 26381, 26491
     patch("fix_checkChplInstall.patch", when="@:2.3.0")  # PR 26317
     patch("fix_llvm_include_path_2.3.patch", when="@=2.3.0 llvm=bundled")  # PR 26402
@@ -258,7 +267,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     variant(
         "gasnet_segment",
         default="unset",
-        description="Build Chapel with multi-locale support using the supplied CHPL_GASNET_SEGMENT",
+        description="Build Chapel with multi-locale support using the "
+        "supplied CHPL_GASNET_SEGMENT",
         values=("everything", "fast", "large", "unset"),
         multi=False,
         when="comm=gasnet",
@@ -442,10 +452,14 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     for variant_name, dep in package_module_dict.items():
         variant(
             variant_name,
-            description="Build with support for the Chapel {0} package module".format(variant_name),
+            description="Build with support for the Chapel {0} package module".format(
+                variant_name
+            ),
             default=True,
         )
-        depends_on(dep, when="+{0}".format(variant_name), type=("build", "link", "run", "test"))
+        depends_on(
+            dep, when="+{0}".format(variant_name), type=("build", "link", "run", "test")
+        )
 
     # TODO: for CHPL_X_CC and CHPL_X_CXX, can we capture an arbitrary path, possibly
     # with arguments?
@@ -508,8 +522,12 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     )
 
     # Ensure GPU support is Sticky: never allow the concretizer to choose this
-    variant("rocm", default=False, sticky=True, description="Enable AMD ROCm GPU support")
-    variant("cuda", default=False, sticky=True, description="Enable Nvidia CUDA GPU support")
+    variant(
+        "rocm", default=False, sticky=True, description="Enable AMD ROCm GPU support"
+    )
+    variant(
+        "cuda", default=False, sticky=True, description="Enable Nvidia CUDA GPU support"
+    )
 
     conflicts(
         "+rocm",
@@ -537,12 +555,18 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     # requires bundled LLVM for that version.
     # TODO: Modify this constrant and message if/when Chapel supports an
     # additional ROCm version without that requirement.
-    requires("llvm=bundled", when="+rocm", msg="Chapel ROCm support requires llvm=bundled")
+    requires(
+        "llvm=bundled", when="+rocm", msg="Chapel ROCm support requires llvm=bundled"
+    )
 
     # Workaround for ROCmPackage forcing a dependency on llvm-amdgpu, which
     # provides %rocmcc, which we don't want to use.
     requires(
-        *("%" + comp for comp in compiler_map.keys() if comp != "rocmcc" and comp != "unset"),
+        *(
+            "%" + comp
+            for comp in compiler_map.keys()
+            if comp != "rocmcc" and comp != "unset"
+        ),
         policy="any_of",  # any to ensure %clang works
         when="+rocm",
         msg="Chapel ROCm support requires a supported host compiler other than rocmcc",
@@ -657,7 +681,9 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             env.unset(var)
 
     def build(self, spec, prefix):
-        with set_env(CHPL_MAKE_THIRD_PARTY=join_path(self.build_directory, "third-party")):
+        with set_env(
+            CHPL_MAKE_THIRD_PARTY=join_path(self.build_directory, "third-party")
+        ):
             # print all the explicitly set CHPL_* config variables to assist in debugging
             for var in self.chpl_env_vars:
                 tty.info(var + "=" + os.getenv(var, "<unset>"))
@@ -687,7 +713,9 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             )
             install_tree(
                 "examples",
-                join_path(prefix.share, "chapel", self._output_version_short, "examples"),
+                join_path(
+                    prefix.share, "chapel", self._output_version_short, "examples"
+                ),
             )
 
     def setup_chpl_platform(self, env):
@@ -770,7 +798,9 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         # variants that appear unused by Spack typically correspond directly to
         # a CHPL_<variant> variable which will be used by the Chapel build system
         for v in self.spec.variants.keys():
-            self.setup_if_not_unset(env, "CHPL_" + v.upper(), str(self.spec.variants[v].value))
+            self.setup_if_not_unset(
+                env, "CHPL_" + v.upper(), str(self.spec.variants[v].value)
+            )
         self.setup_chpl_compilers(env)
         self.setup_chpl_platform(env)
 
@@ -825,7 +855,9 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             self.prepend_cpath_include(env, self.spec["libzmq"].prefix)
             # could not compile test/library/packages/ZMQ/hello.chpl without this
             self.update_lib_path(env, self.spec["libzmq"].prefix)
-            env.prepend_path("PKG_CONFIG_PATH", self.spec["libsodium"].prefix.lib.pkgconfig)
+            env.prepend_path(
+                "PKG_CONFIG_PATH", self.spec["libsodium"].prefix.lib.pkgconfig
+            )
 
         if self.spec.satisfies("+curl"):
             self.prepend_cpath_include(env, self.spec["curl"].prefix)
@@ -971,7 +1003,9 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         """Run the hello world test"""
         with working_dir(self.test_suite.current_test_cache_dir):
             with set_env(CHPL_CHECK_HOME=self.test_suite.current_test_cache_dir):
-                with test_part(self, "test_hello_checkChplInstall", purpose="test hello world"):
+                with test_part(
+                    self, "test_hello_checkChplInstall", purpose="test hello world"
+                ):
                     if self.spec.satisfies("+cuda") or self.spec.satisfies("+rocm"):
                         with set_env(COMP_FLAGS="--no-checks --no-compiler-driver"):
                             res = self.check_chpl_install()
