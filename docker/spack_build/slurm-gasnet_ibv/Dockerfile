@@ -17,8 +17,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Use Bash as the shell for all RUN statements
 SHELL ["/bin/bash", "-c"]
 
-#   Example build
-# docker build --build-arg RELEASE_VERSION=2025.12.16 -t spack_test:2025.12.16 .
+#   Example Build: 
+#   docker build --build-arg RELEASE_VERSION=2025.12.16 -t spack_test:2025.12.16 .
+#   docker run -it spack_test:2025.12.16
 
 # ---------------------------
 # Install system dependencies
@@ -43,7 +44,8 @@ RUN dnf install -y --allowerasing \
     curl tar gzip wget which \
     findutils gawk patch file less hostname unzip \
     diffutils procps-ng libcurl-devel bzip2 \
-    ca-certificates vim && \
+    ca-certificates vim \
+    rdma-core-devel && \
     dnf clean all && \
     update-ca-trust 
 
@@ -61,7 +63,6 @@ RUN . /opt/spack-develop/share/spack/setup-env.sh \
  && spack compiler find \
  && spack external find --not-buildable gcc binutils glibc
 
-#RUN . /opt/spack-develop/share/spack/setup-env.sh && spack find gcc@12.3.0 || spack install gcc@12.3.0
 
 
 # ---------------------------
@@ -79,10 +80,6 @@ RUN set -euo pipefail; \
 
 COPY arkouda-package.py /opt/arkouda-package.py
 
-#RUN export ARKOUDA_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages | grep /arkouda/package.py) \
-#    &&  mv /opt/arkouda-package.py $ARKOUDA_PACKAGE_FILE  \
-#    && touch ~/.bashrc.local \
-#    && echo "export ARKOUDA_PACKAGE_FILE=\"${ARKOUDA_PACKAGE_FILE}\"" >> ~/.bashrc.local
 
 RUN set -euo pipefail; \
     . ~/.bashrc.local; \
@@ -95,12 +92,6 @@ RUN set -euo pipefail; \
 
 COPY makefile-fpic-2025.12.16.patch /opt/makefile-fpic-2025.12.16.patch
 
-#RUN set -eux; \
-#    ARKOUDA_PKG_DIR="$(dirname "$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages -path '*/arkouda/package.py' -print -quit)")"; \
-#    cp /opt/makefile-fpic-2025.12.16.patch "$ARKOUDA_PKG_DIR/"; \
-#    touch ~/.bashrc.local; \
-#    echo "export ARKOUDA_PKG_DIR=\"$ARKOUDA_PKG_DIR\"" >> ~/.bashrc.local
-
 
 RUN set -euo pipefail; \
     . ~/.bashrc.local; \
@@ -112,27 +103,11 @@ RUN set -euo pipefail; \
 
 COPY py_arkouda-package.py /opt/py_arkouda-package.py
 
-#RUN export PY_ARKOUDA_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages | grep /py_arkouda/package.py) \
-#    &&  mv /opt/py_arkouda-package.py $PY_ARKOUDA_PACKAGE_FILE  \
-#    && echo "export PY_ARKOUDA_PACKAGE_FILE=\"${PY_ARKOUDA_PACKAGE_FILE}\"" >> ~/.bashrc.local
 
 RUN set -euo pipefail; \
     . ~/.bashrc.local; \
     cp -f /opt/py_arkouda-package.py "$SPACK_BUILTIN_PACKAGES/py_arkouda/package.py"
 
-# ---------------------------
-# Update the chapel spack package:
-# ---------------------------
-
-COPY chapel-package.py /opt/chapel-package.py
-
-#RUN export CHAPEL_PACKAGE_FILE=$(find /root/.spack/package_repos/fncqgg4/repos/spack_repo/builtin/packages | grep /chapel/package.py) \
-#    &&  mv /opt/chapel-package.py $CHAPEL_PACKAGE_FILE  \
-#    && echo "export CHAPEL_PACKAGE_FILE=\"${CHAPEL_PACKAGE_FILE}\"" >> ~/.bashrc.local
-
-RUN set -euo pipefail; \
-    . ~/.bashrc.local; \
-    cp -f /opt/chapel-package.py "$SPACK_BUILTIN_PACKAGES/chapel/package.py"
 
 #####################
 
@@ -142,7 +117,7 @@ RUN source /opt/spack-develop/share/spack/setup-env.sh && spack env create ark-e
     # 2) Tell Spack to unify deps across all roots in this env
     &&  spack config add "concretizer:unify:true" \
     # 3) Add BOTH roots (same release tag here as an example)
-    &&  spack add arkouda${RELEASE_VERSION}  \
+    &&  spack add arkouda${RELEASE_VERSION} +distributed +slurm-gasnet_ibv  \
     &&  spack add py-arkouda${RELEASE_VERSION}  \
     # 4) Check the unified solve
     &&  spack concretize -f  \
@@ -153,7 +128,7 @@ RUN source /opt/spack-develop/share/spack/setup-env.sh && spack env create ark-e
 # 5) Install (one build plan, shared deps)
 RUN source /opt/spack-develop/share/spack/setup-env.sh \
     &&  spack env activate -p ark-env \
-    &&  spack -d -v  install -j $(nproc)
+    &&  spack -d -v install --fail-fast --show-log-on-error -j 1
 
 
 
@@ -187,17 +162,27 @@ RUN . /opt/spack-develop/share/spack/setup-env.sh && \
 
 
 
-RUN source /opt/spack-develop/share/spack/setup-env.sh && \
-    spack env activate -p ark-env && \
-    spack load python chapel py-arkouda c-blosc2 && \
-    spack add py-pytest && spack install py-pytest && \
-    python3 -m ensurepip --default-pip && \ 
-    export LD_LIBRARY_PATH=$(spack find -p c-blosc2 | awk '/c-blosc2/{print $2}')/lib64:$LD_LIBRARY_PATH  && \
-    # Install the plugin into THAT interpreter’s site-packages
-    python3 -m pip install --upgrade pip && \ 
-    python3 -m pip install pytest-env pytest-subtests && \ 
-    python --version && \
-    python3 -m pytest -c pytest.ini --size=100  --skip_doctest="True"
+#RUN source /opt/spack-develop/share/spack/setup-env.sh && \
+#    spack env activate -p ark-env && \
+#    spack load python chapel py-arkouda c-blosc2 && \
+#    spack add py-pytest && spack install py-pytest && \
+#    python3 -m ensurepip --default-pip && \ 
+#    export LD_LIBRARY_PATH=$(spack find -p c-blosc2 | awk '/c-blosc2/{print $2}')/lib64:$LD_LIBRARY_PATH  && \
+#    # Install the plugin into THAT interpreter’s site-packages
+#    python3 -m pip install --upgrade pip && \ 
+#    python3 -m pip install pytest-env pytest-subtests && \ 
+#    python --version && \
+#    python3 -m pytest -c pytest.ini --size=100  --skip_doctest="True"
+
+RUN source /opt/spack-develop/share/spack/setup-env.sh \
+    && spack env activate -p ark-env \
+    && spack spec -Il arkouda${RELEASE_VERSION} +distributed +slurm-gasnet_ibv | tee /tmp/spec.txt \
+    && grep -E '\^chapel.*comm=gasnet' /tmp/spec.txt \
+    && grep -E '\^chapel.*comm_substrate=ibv' /tmp/spec.txt \
+    && grep -E '\^chapel.*launcher=slurm-gasnetrun_ibv' /tmp/spec.txt
+
+
+RUN test -x /opt/arkouda/arkouda_server || (echo "arkouda_server missing" && exit 1)
 
 
 
