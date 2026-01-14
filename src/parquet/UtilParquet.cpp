@@ -52,6 +52,12 @@ namespace {
     return s.size() >= suf.size() && s.compare(s.size() - suf.size(), suf.size(), suf) == 0;
   }
 
+  inline bool is_parquet_file(const std::string& path) {
+    const auto lp = to_lower(path);
+    return ends_with(lp, ".parquet") || ends_with(lp, ".pq");
+  }
+
+
   arrow::Result<std::shared_ptr<ds::Dataset>> MakeDatasetFromPath(const std::string& path) {
     auto filesystem = std::make_shared<fs::LocalFileSystem>();
     std::shared_ptr<ds::FileFormat> format;
@@ -114,6 +120,11 @@ bool check_status_ok(arrow::Status status, char** errMsg) {
 
 int64_t cpp_getNumRows(const char* filename, char** errMsg) {
   try {
+    if (is_parquet_file(filename)) {
+      auto reader = parquet::ParquetFileReader::OpenFile(filename, /*memory_map=*/false);
+      return static_cast<int64_t>(reader->metadata()->num_rows());
+    }
+
     auto dataset_res = MakeDatasetFromPath(filename);
     if (!dataset_res.ok()) {
       *errMsg = strdup(dataset_res.status().ToString().c_str());
@@ -151,6 +162,19 @@ static int getSchema(const char* filename,
                       std::shared_ptr<arrow::Schema>* out,
                       char** errMsg) {
   try {
+    if (is_parquet_file(filename)) {
+      // Fast path: avoid DatasetFactory overhead for a single Parquet file.
+      std::shared_ptr<arrow::io::ReadableFile> infile;
+      PARQUET_ASSIGN_OR_THROW(infile, arrow::io::ReadableFile::Open(filename));
+
+      std::unique_ptr<parquet::arrow::FileReader> reader;
+      PARQUET_THROW_NOT_OK(
+          parquet::arrow::OpenFile(infile, arrow::default_memory_pool(), &reader));
+
+      PARQUET_THROW_NOT_OK(reader->GetSchema(out));
+      return 0;
+    }
+
     auto dataset_res = MakeDatasetFromPath(filename);
     if (!dataset_res.ok()) {
       *errMsg = strdup(dataset_res.status().ToString().c_str());
