@@ -45,7 +45,7 @@ namespace akcpp {
     int64_t _readShortIntegral();
   };
 
-  int readAllCols(const char* filename, void** chpl_arrs, int* types,
+  int readAllCols(const char* filename, void** chpl_arrs, const int* types,
                   bool* where_null_chpl, int64_t numElems, int64_t startIdx,
                   int64_t batchSize, chplEnum_t nullMode, char** errMsg);
 }
@@ -57,7 +57,7 @@ extern "C" {
   
   int cpp_readStrColumnByName(const char* filename, void* chpl_arr, const char* colname, int64_t numElems, int64_t batchSize, char** errMsg);
 
-  int c_readAllCols(const char* filename, void** chpl_arrs, int* types,
+  int c_readAllCols(const char* filename, void** chpl_arrs, const int* types,
                          bool* where_null_chpl, int64_t numElems,
                          int64_t startIdx, int64_t batchSize,
                          chplEnum_t nullMode, char** errMsg);

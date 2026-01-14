@@ -59,5 +59,6 @@ ifneq ($(instantiate_max),)
 CHPL_USER_FLAGS += --instantiate-max=$(instantiate_max)
 endif
 
-CHPL_FLAGS += -lhdf5 -lhdf5_hl -lzmq -liconv -lidn2 -lparquet -larrow
+CHPL_FLAGS += -lhdf5 -lhdf5_hl -lzmq -liconv -lidn2 -lparquet -larrow_dataset -larrow_acero -larrow
+
 

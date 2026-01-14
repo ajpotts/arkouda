@@ -57,7 +57,14 @@ namespace {
     std::shared_ptr<ds::FileFormat> format;
 
     const std::string lp = to_lower(path);
-    if (ends_with(lp, ".parquet") || ends_with(lp, ".pq")) {
+
+    // Determine whether the *basename* has an extension.
+    const auto slash = path.find_last_of("/\\");
+    const auto dot   = path.find_last_of('.');
+    const bool has_ext = (dot != std::string::npos) && (slash == std::string::npos || dot > slash);
+
+    if (ends_with(lp, ".parquet") || ends_with(lp, ".pq") || !has_ext) {
+      // Allow extensionless parquet paths (pandas output, Arkouda *_LOCALE#### shards).
       format = std::make_shared<ds::ParquetFileFormat>();
     } else if (ends_with(lp, ".csv") || ends_with(lp, ".tsv")) {
       auto csv_format = std::make_shared<ds::CsvFileFormat>();
@@ -67,7 +74,8 @@ namespace {
       }
       format = csv_format;
     } else {
-      return arrow::Status::Invalid("Unsupported file extension (expected .parquet/.pq or .csv/.tsv): ", path);
+      return arrow::Status::Invalid(
+          "Unsupported file extension (expected .parquet/.pq or .csv/.tsv): ", path);
     }
 
     ds::FileSystemFactoryOptions options;
@@ -106,11 +114,33 @@ bool check_status_ok(arrow::Status status, char** errMsg) {
 
 int64_t cpp_getNumRows(const char* filename, char** errMsg) {
   try {
-    ARROW_ASSIGN_OR_RAISE(auto dataset, MakeDatasetFromPath(filename));
-    ARROW_ASSIGN_OR_RAISE(auto scan_builder, dataset->NewScan());
-    ARROW_ASSIGN_OR_RAISE(auto scanner, scan_builder->Finish());
-    ARROW_ASSIGN_OR_RAISE(int64_t rows, scanner->CountRows());
-    return rows;
+    auto dataset_res = MakeDatasetFromPath(filename);
+    if (!dataset_res.ok()) {
+      *errMsg = strdup(dataset_res.status().ToString().c_str());
+      return ARROWERROR;
+    }
+    auto dataset = *dataset_res;
+
+    auto scan_builder_res = dataset->NewScan();
+    if (!scan_builder_res.ok()) {
+      *errMsg = strdup(scan_builder_res.status().ToString().c_str());
+      return ARROWERROR;
+    }
+    auto scan_builder = *scan_builder_res;
+
+    auto scanner_res = scan_builder->Finish();
+    if (!scanner_res.ok()) {
+      *errMsg = strdup(scanner_res.status().ToString().c_str());
+      return ARROWERROR;
+    }
+    auto scanner = *scanner_res;
+
+    auto rows_res = scanner->CountRows();
+    if (!rows_res.ok()) {
+      *errMsg = strdup(rows_res.status().ToString().c_str());
+      return ARROWERROR;
+    }
+    return *rows_res;
   } catch (const std::exception& e) {
     *errMsg = strdup(e.what());
     return ARROWERROR;
@@ -121,8 +151,12 @@ static int getSchema(const char* filename,
                       std::shared_ptr<arrow::Schema>* out,
                       char** errMsg) {
   try {
-    ARROW_ASSIGN_OR_RAISE(auto dataset, MakeDatasetFromPath(filename));
-    *out = dataset->schema();
+    auto dataset_res = MakeDatasetFromPath(filename);
+    if (!dataset_res.ok()) {
+      *errMsg = strdup(dataset_res.status().ToString().c_str());
+      return ARROWERROR;
+    }
+    *out = (*dataset_res)->schema();
     return 0;
   } catch (const std::exception& e) {
     *errMsg = strdup(e.what());
