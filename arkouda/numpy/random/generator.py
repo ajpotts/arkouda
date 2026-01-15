@@ -8,6 +8,7 @@ from arkouda.numpy.dtypes import (
     float_scalars,
     int_scalars,
     numeric_scalars,
+    uint64,
 )
 from arkouda.numpy.dtypes import dtype as akdtype
 from arkouda.numpy.dtypes import dtype as to_numpy_dtype
@@ -1057,6 +1058,40 @@ class Generator:
         )
         self._state += full_size
         return create_pdarray(rep_msg)
+
+    def _fill_with_stateless_u64_from_index(self, x, seed, stream, start_idx=0):
+        from arkouda.client import generic_msg
+
+        generic_msg(
+            cmd="fillRandU64<1>",
+            args={"A": x, "seed": seed, "stream": stream, "startIdx": start_idx},
+        )
+
+    def _stateless_u64_from_index(self, n, seed, stream, start_idx=0) -> pdarray:
+        from arkouda.numpy.pdarraycreation import zeros as ak_zeros
+
+        x = ak_zeros(n, dtype=uint64)
+        self._fill_with_stateless_u64_from_index(x, seed, stream, start_idx)
+        return x
+
+    def _fill_stateless_uniform_01_from_index(
+        self, x, seed: uint64, stream: uint64, start_idx: uint64 = 0
+    ):
+        from arkouda.client import generic_msg
+
+        generic_msg(
+            cmd="fillRandU64<1>",
+            args={"A": x, "seed": seed, "stream": stream, "startIdx": start_idx},
+        )
+
+    def _stateless_uniform_01_from_index(
+        self, n, seed: uint64, stream: uint64, start_idx: uint64 = 0
+    ) -> pdarray:
+        from arkouda.numpy.pdarraycreation import zeros as ak_zeros
+
+        x = ak_zeros(n, dtype=uint64)
+        self._fill_stateless_uniform_01_from_index(x, seed, stream, start_idx)
+        return x
 
 
 _supported_chapel_types = frozenset(("int", "int(64)", "uint", "uint(64)", "real", "real(64)", "bool"))
