@@ -1059,38 +1059,189 @@ class Generator:
         self._state += full_size
         return create_pdarray(rep_msg)
 
-    def _fill_with_stateless_u64_from_index(self, x, seed, stream, start_idx=0):
+    def _fill_with_stateless_u64_from_index(
+        self, x: pdarray, seed: int, stream: int, start_idx: int = 0
+    ):
+        """
+        Fill an existing uint64 pdarray with stateless, index-based random values.
+
+        Random values are generated as a deterministic function of
+        ``(seed, stream, global_index)`` and written in-place to ``x``.
+        No mutable RNG state is used, and results are invariant to
+        parallelism, chunking, and execution order.
+
+        Parameters
+        ----------
+        x : pdarray
+            Destination array of dtype uint64 to be filled in-place.
+        seed : int
+            Seed selecting the deterministic randomness universe. Converted
+            internally to uint64.
+        stream : int
+            Stream identifier used to generate independent random streams
+            from the same seed. Converted internally to uint64.
+        start_idx : int, optional
+            Global index offset corresponding to ``x[0]``. Converted internally
+            to uint64. Default is 0.
+
+        Notes
+        -----
+        This method is a low-level primitive intended for internal use.
+        It dispatches to a server-side kernel that generates values
+        independently for each global index.
+        """
         from arkouda.client import generic_msg
+
+        # Normalize all scalar parameters to uint64 at the API boundary
+        seed_u64 = uint64(seed)
+        stream_u64 = uint64(stream)
+        start_idx_u64 = uint64(start_idx)
 
         generic_msg(
             cmd="fillRandU64<1>",
-            args={"A": x, "seed": seed, "stream": stream, "startIdx": start_idx},
+            args={
+                "A": x,
+                "seed": seed_u64,
+                "stream": stream_u64,
+                "startIdx": start_idx_u64,
+            },
         )
 
-    def _stateless_u64_from_index(self, n, seed, stream, start_idx=0) -> pdarray:
+    def _stateless_u64_from_index(self, n: int, seed: int, stream: int, start_idx: int = 0) -> pdarray:
+        """
+        Create a uint64 pdarray of stateless, index-based random values.
+
+        The returned array satisfies::
+
+            out[i] = f(seed, stream, start_idx + i)
+
+        where ``f`` is a deterministic mixing function. Results are
+        reproducible across runs and invariant to distributed execution.
+
+        Parameters
+        ----------
+        n : int
+            Number of elements to generate.
+        seed : int
+            Seed selecting the deterministic randomness universe. Converted
+            internally to uint64.
+        stream : int
+            Stream identifier used to generate independent random streams
+            from the same seed. Converted internally to uint64.
+        start_idx : int, optional
+            Global index offset corresponding to the first element.
+            Converted internally to uint64. Default is 0.
+
+        Returns
+        -------
+        pdarray
+            A uint64 pdarray of length ``n`` containing stateless random values.
+
+        Notes
+        -----
+        This is a fundamental building block for sampling, shuffling,
+        sketching, and other randomized algorithms.
+        """
         from arkouda.numpy.pdarraycreation import zeros as ak_zeros
 
+        seed_u64 = uint64(seed)
+        stream_u64 = uint64(stream)
+        start_idx_u64 = uint64(start_idx)
+
         x = ak_zeros(n, dtype=uint64)
-        self._fill_with_stateless_u64_from_index(x, seed, stream, start_idx)
+        self._fill_with_stateless_u64_from_index(x, seed_u64, stream_u64, start_idx_u64)
         return x
 
     def _fill_stateless_uniform_01_from_index(
-        self, x, seed: uint64, stream: uint64, start_idx: uint64 = 0
+        self, x: pdarray, seed: int, stream: int, start_idx: int = 0
     ):
+        """
+        Fill an existing float64 pdarray with stateless uniform random values in [0, 1).
+
+        Each element is generated deterministically from
+        ``(seed, stream, global_index)`` and mapped to a floating-point
+        value uniformly distributed on [0, 1).
+
+        Parameters
+        ----------
+        x : pdarray
+            Destination array of dtype float64 to be filled in-place.
+        seed : int
+            Seed selecting the deterministic randomness universe. Converted
+            internally to uint64.
+        stream : int
+            Stream identifier used to generate independent random streams
+            from the same seed. Converted internally to uint64.
+        start_idx : int, optional
+            Global index offset corresponding to ``x[0]``. Converted internally
+            to uint64. Default is 0.
+
+        Notes
+        -----
+        This method performs all computation server-side and guarantees
+        reproducibility independent of locale count or execution order.
+        """
         from arkouda.client import generic_msg
 
+        seed_u64 = uint64(seed)
+        stream_u64 = uint64(stream)
+        start_idx_u64 = uint64(start_idx)
+
         generic_msg(
-            cmd="fillRandU64<1>",
-            args={"A": x, "seed": seed, "stream": stream, "startIdx": start_idx},
+            cmd="fillUniform01<1>",
+            args={
+                "A": x,
+                "seed": seed_u64,
+                "stream": stream_u64,
+                "startIdx": start_idx_u64,
+            },
         )
 
     def _stateless_uniform_01_from_index(
-        self, n, seed: uint64, stream: uint64, start_idx: uint64 = 0
+        self, n: int, seed: int, stream: int, start_idx: int = 0
     ) -> pdarray:
+        """
+        Create a float64 pdarray of stateless uniform random values in [0, 1).
+
+        Random values are a deterministic function of
+        ``(seed, stream, start_idx + i)`` for each element ``i``.
+        Results are reproducible across runs and invariant to
+        distributed execution details.
+
+        Parameters
+        ----------
+        n : int
+            Number of elements to generate.
+        seed : int
+            Seed selecting the deterministic randomness universe. Converted
+            internally to uint64.
+        stream : int
+            Stream identifier used to generate independent random streams
+            from the same seed. Converted internally to uint64.
+        start_idx : int, optional
+            Global index offset corresponding to the first element.
+            Converted internally to uint64. Default is 0.
+
+        Returns
+        -------
+        pdarray
+            A float64 pdarray of length ``n`` with values in the half-open
+            interval [0, 1).
+
+        Notes
+        -----
+        This method is equivalent to generating a stateless uint64 sequence
+        and mapping it to floating-point values, but performs the operation
+        efficiently in a single server-side pass.
+        """
         from arkouda.numpy.pdarraycreation import zeros as ak_zeros
 
-        x = ak_zeros(n, dtype=uint64)
-        self._fill_stateless_uniform_01_from_index(x, seed, stream, start_idx)
+        seed_u64 = uint64(seed)
+        stream_u64 = uint64(stream)
+        start_idx_u64 = uint64(start_idx)
+
+        x = ak_zeros(n, dtype=akfloat64)
+        self._fill_stateless_uniform_01_from_index(x, seed_u64, stream_u64, start_idx_u64)
         return x
 
 
