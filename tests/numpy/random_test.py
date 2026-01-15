@@ -12,6 +12,8 @@ from scipy import stats as sp_stats
 import arkouda as ak
 
 from arkouda.numpy import random
+from arkouda.numpy.dtypes import float64, uint64
+from arkouda.numpy.pdarraycreation import zeros as ak_zeros
 from arkouda.scipy import chisquare as akchisquare
 from arkouda.testing import assert_almost_equivalent, assert_arkouda_array_equal
 
@@ -624,22 +626,22 @@ class TestRandom:
         assert_almost_equivalent(known, given)
 
     def test_legacy_randint(self):
-        testArray = ak.random.randint(0, 10, 5)
-        assert isinstance(testArray, ak.pdarray)
-        assert 5 == len(testArray)
-        assert ak.int64 == testArray.dtype
+        test_array = ak.random.randint(0, 10, 5)
+        assert isinstance(test_array, ak.pdarray)
+        assert 5 == len(test_array)
+        assert ak.int64 == test_array.dtype
 
-        testArray = ak.random.randint(np.int64(0), np.int64(10), np.int64(5))
-        assert isinstance(testArray, ak.pdarray)
-        assert 5 == len(testArray)
-        assert ak.int64 == testArray.dtype
+        test_array = ak.random.randint(np.int64(0), np.int64(10), np.int64(5))
+        assert isinstance(test_array, ak.pdarray)
+        assert 5 == len(test_array)
+        assert ak.int64 == test_array.dtype
 
-        testArray = ak.random.randint(np.float64(0), np.float64(10), np.int64(5))
-        assert isinstance(testArray, ak.pdarray)
-        assert 5 == len(testArray)
-        assert ak.int64 == testArray.dtype
+        test_array = ak.random.randint(np.float64(0), np.float64(10), np.int64(5))
+        assert isinstance(test_array, ak.pdarray)
+        assert 5 == len(test_array)
+        assert ak.int64 == test_array.dtype
 
-        test_ndarray = testArray.to_ndarray()
+        test_ndarray = test_array.to_ndarray()
 
         for value in test_ndarray:
             assert 0 <= value <= 10
@@ -752,28 +754,30 @@ class TestRandom:
         ak.random.randint(np.uint8(1), np.uint32(5), np.uint16(10), seed=np.uint8(2))
 
     def test_legacy_uniform(self):
-        testArray = ak.random.uniform(3)
-        assert isinstance(testArray, ak.pdarray)
-        assert 3 == len(testArray)
-        assert ak.float64 == testArray.dtype
+        test_array = ak.random.uniform(3)
+        assert isinstance(test_array, ak.pdarray)
+        assert 3 == len(test_array)
+        assert ak.float64 == test_array.dtype
 
-        testArray = ak.random.uniform(np.int64(3))
-        assert isinstance(testArray, ak.pdarray)
-        assert 3 == len(testArray)
-        assert ak.float64 == testArray.dtype
+        test_array = ak.random.uniform(np.int64(3))
+        assert isinstance(test_array, ak.pdarray)
+        assert 3 == len(test_array)
+        assert ak.float64 == test_array.dtype
 
         #  The next two tests also retain the non pytest.seed, because they assert specific values.
 
-        uArray = ak.random.uniform(size=3, low=0, high=5, seed=0)
+        u_array = ak.random.uniform(size=3, low=0, high=5, seed=0)
         assert np.allclose(
             [0.30013431967121934, 0.47383036230759112, 1.0441791878997098],
-            uArray.tolist(),
+            u_array.tolist(),
         )
 
-        uArray = ak.random.uniform(size=np.int64(3), low=np.int64(0), high=np.int64(5), seed=np.int64(0))
+        u_array = ak.random.uniform(
+            size=np.int64(3), low=np.int64(0), high=np.int64(5), seed=np.int64(0)
+        )
         assert np.allclose(
             [0.30013431967121934, 0.47383036230759112, 1.0441791878997098],
-            uArray.tolist(),
+            u_array.tolist(),
         )
 
         with pytest.raises(TypeError):
@@ -858,3 +862,127 @@ class TestRandom:
 
         for pda1, pda2 in zip(pda1list, pda2list):
             assert (pda1 != pda2).any()
+
+
+class TestStatelessRNG:
+    def test_stateless_u64_same_params_reproducible(self):
+        rng = ak.random.default_rng()
+        n = 10_000
+        seed = 123
+        stream = 0
+        start_idx = 0
+
+        a = rng._stateless_u64_from_index(n, seed=seed, stream=stream, start_idx=start_idx)
+        b = rng._stateless_u64_from_index(n, seed=seed, stream=stream, start_idx=start_idx)
+
+        assert a.dtype == uint64
+        assert b.dtype == uint64
+        assert ak.all(a == b)
+
+    def test_stateless_u64_stream_changes_sequence(self):
+        rng = ak.random.default_rng()
+        n = 10_000
+        seed = 123
+        start_idx = 0
+
+        a = rng._stateless_u64_from_index(n, seed=seed, stream=0, start_idx=start_idx)
+        b = rng._stateless_u64_from_index(n, seed=seed, stream=1, start_idx=start_idx)
+
+        # They should not be identical elementwise
+        assert ak.any(a != b)
+
+    def test_stateless_u64_start_idx_matches_slice(self):
+        rng = ak.random.default_rng()
+        n_total = 20_000
+        seed = 999
+        stream = 7
+
+        full = rng._stateless_u64_from_index(n_total, seed=seed, stream=stream, start_idx=0)
+
+        start_idx = 5_000
+        n = 3_000
+        sub = rng._stateless_u64_from_index(n, seed=seed, stream=stream, start_idx=start_idx)
+
+        assert ak.all(sub == full[start_idx : start_idx + n])
+
+    def test_fill_with_stateless_u64_inplace_matches_allocate(self):
+        rng = ak.random.default_rng()
+        n = 10_000
+        seed = 42
+        stream = 3
+        start_idx = 1234
+
+        x = ak_zeros(n, dtype=uint64)
+        rng._fill_with_stateless_u64_from_index(x, seed=seed, stream=stream, start_idx=start_idx)
+
+        y = rng._stateless_u64_from_index(n, seed=seed, stream=stream, start_idx=start_idx)
+
+        assert x.dtype == uint64
+        assert y.dtype == uint64
+        assert ak.all(x == y)
+
+    def test_stateless_uniform01_dtype_and_range(self):
+        rng = ak.random.default_rng()
+        n = 50_000
+        seed = 1
+        stream = 0
+        start_idx = 0
+
+        u = rng._stateless_uniform_01_from_index(n, seed=seed, stream=stream, start_idx=start_idx)
+
+        assert u.dtype == float64
+        assert ak.all(u >= 0.0)
+        assert ak.all(u < 1.0)
+
+    def test_stateless_uniform01_same_params_reproducible(self):
+        rng = ak.random.default_rng()
+        n = 10_000
+        seed = 321
+        stream = 2
+        start_idx = 99
+
+        a = rng._stateless_uniform_01_from_index(n, seed=seed, stream=stream, start_idx=start_idx)
+        b = rng._stateless_uniform_01_from_index(n, seed=seed, stream=stream, start_idx=start_idx)
+
+        assert a.dtype == float64
+        assert ak.all(a == b)
+
+    def test_stateless_uniform01_start_idx_matches_slice(self):
+        rng = ak.random.default_rng()
+        n_total = 30_000
+        seed = 2026
+        stream = 11
+
+        full = rng._stateless_uniform_01_from_index(n_total, seed=seed, stream=stream, start_idx=0)
+
+        start_idx = 7_000
+        n = 4_000
+        sub = rng._stateless_uniform_01_from_index(n, seed=seed, stream=stream, start_idx=start_idx)
+
+        assert ak.all(sub == full[start_idx : start_idx + n])
+
+    def test_fill_uniform01_inplace_matches_allocate(self):
+        rng = ak.random.default_rng()
+        n = 10_000
+        seed = 8
+        stream = 9
+        start_idx = 10
+
+        x = ak_zeros(n, dtype=float64)
+        rng._fill_stateless_uniform_01_from_index(x, seed=seed, stream=stream, start_idx=start_idx)
+
+        y = rng._stateless_uniform_01_from_index(n, seed=seed, stream=stream, start_idx=start_idx)
+
+        assert x.dtype == float64
+        assert ak.all(x == y)
+
+    def test_stateless_uniform01_stream_changes_sequence(self):
+        rng = ak.random.default_rng()
+        n = 10_000
+        seed = 1234
+        start_idx = 0
+
+        a = rng._stateless_uniform_01_from_index(n, seed=seed, stream=0, start_idx=start_idx)
+        b = rng._stateless_uniform_01_from_index(n, seed=seed, stream=1, start_idx=start_idx)
+
+        assert ak.any(a != b)

@@ -51,6 +51,7 @@ module SplitMix64RNG {
 
   // Fill an array with uniform float64 in [0,1).
   //proc fillUniform01(ref A: [?D] real(64), seed: uint(64), stream: uint(64) = 0:uint(64), startIdx: uint(64) = 0:uint(64)) {
+  @arkouda.registerCommand
   proc fillUniform01(ref A: [?D] real, seed: uint, stream: uint = 0:uint, startIdx: uint = 0:uint) {
     const k = streamKey(seed, stream);
     forall idx in D with (ref A){      
