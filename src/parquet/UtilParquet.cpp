@@ -57,6 +57,21 @@ namespace {
     return ends_with(lp, ".parquet") || ends_with(lp, ".pq");
   }
 
+    inline bool is_parquet_file_or_extensionless(const std::string& path) {
+      const auto lp = to_lower(path);
+
+      const auto slash = path.find_last_of("/\\");
+      const auto dot   = path.find_last_of('.');
+      const bool has_ext = (dot != std::string::npos) && (slash == std::string::npos || dot > slash);
+
+      // parquet extensions
+      if (ends_with(lp, ".parquet") || ends_with(lp, ".pq")) return true;
+
+      // extensionless -> treat as parquet (LOCALE shards, pandas output)
+      if (!has_ext) return true;
+
+      return false;
+    }
 
   arrow::Result<std::shared_ptr<ds::Dataset>> MakeDatasetFromPath(const std::string& path) {
     auto filesystem = std::make_shared<fs::LocalFileSystem>();
@@ -120,7 +135,7 @@ bool check_status_ok(arrow::Status status, char** errMsg) {
 
 int64_t cpp_getNumRows(const char* filename, char** errMsg) {
   try {
-    if (is_parquet_file(filename)) {
+    if (is_parquet_file_or_extensionless(filename)) {
       auto reader = parquet::ParquetFileReader::OpenFile(filename, /*memory_map=*/false);
       return static_cast<int64_t>(reader->metadata()->num_rows());
     }
@@ -162,7 +177,7 @@ static int getSchema(const char* filename,
                       std::shared_ptr<arrow::Schema>* out,
                       char** errMsg) {
   try {
-    if (is_parquet_file(filename)) {
+    if (is_parquet_file_or_extensionless(filename)) {
       // Fast path: avoid DatasetFactory overhead for a single Parquet file.
       std::shared_ptr<arrow::io::ReadableFile> infile;
       PARQUET_ASSIGN_OR_THROW(infile, arrow::io::ReadableFile::Open(filename));
