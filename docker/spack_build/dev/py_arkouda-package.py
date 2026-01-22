@@ -1,6 +1,6 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
-# SPDX-License-Identifier: (Apache-2.0 OR MIT)s
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack_repo.builtin.build_systems.python import PythonPackage
 
@@ -54,7 +54,7 @@ class PyArkouda(PythonPackage):
         deprecated=True,
     )
 
-    variant("dev", default=False, description="Include arkouda developer extras")
+    variant("dev", default=False, description="Install developer dependencies (testing, linting, docs) from pyproject.toml")
 
     depends_on("python@3.9:3.12.3", type=("build", "run"), when="@:2025.01.13")
     depends_on("python@3.9:3.13", type=("build", "run"), when="@2025.07.03:2025.08.20")
@@ -62,25 +62,61 @@ class PyArkouda(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy@1.25:1", when="@:2025.01.13", type=("build", "run"))
     depends_on("py-numpy@2", when="@2025.07.03:", type=("build", "run"))
-    depends_on("py-pandas@2.2.3:", when="@2025.07.03:")
-    depends_on("py-pandas@1.4.0:", type=("build", "run"))
+    depends_on("py-pandas@2.2.3:", when="@2025.07.03:", type=("build", "run"))
+    depends_on("py-pandas@1.4.0:", when="@:2025.01.13", type=("build", "run"))
     conflicts("^py-pandas@2.2.0", msg="arkouda client not compatible with pandas 2.2.0")
     depends_on("py-pyarrow", type=("build", "run"), when="@2025.12.16:")
+    depends_on("py-pyarrow@15:19", type=("build", "run"), when="@2025.07.03:2025.09.30")
     depends_on("py-pyarrow@:19", type=("build", "run"), when="@:2025.01.13")
-    depends_on("py-pyarrow@15:19", type=("build", "run"), when="@2025.07.03:")
     depends_on("py-pyzmq@20:", type=("build", "run"))
-    depends_on("py-scipy@:1.13.1", type=("build", "run"), when="@:2025.01.13")
-    depends_on("py-scipy@1.14:", when="@2025.07.03:")
-    depends_on("py-tables@3.8: +lzo +bzip2", type=("build", "run"))
-    depends_on("py-tables@3.10: +lzo +bzip2", when="@2025.07.03:")
+    depends_on("py-scipy@1.14:", when="@2025.07.03:", type=("build", "run"))
+    depends_on("py-scipy@:1.13.1", when="@:2025.01.13", type=("build", "run"))
+    depends_on("py-tables@3.10: +lzo +bzip2", when="@2025.07.03:", type=("build", "run"))
+    depends_on("py-tables@3.8: +lzo +bzip2", when="@:2025.01.13", type=("build", "run"))
     depends_on("py-cloudpickle@2:", when="@2025.07.03:", type=("build", "run"))
-    depends_on("py-h5py@3.7.0:", type=("build", "run"))
-    depends_on("py-h5py@3.11:", when="@2025.07.03:")
-    depends_on("py-matplotlib@3.9:", when="@2025.07.03:")
-    depends_on("py-matplotlib@3.3.2:", type=("build", "run"))
+    depends_on("py-h5py@3.11:", when="@2025.07.03:", type=("build", "run"))
+    depends_on("py-h5py@3.7.0:", when="@:2025.01.13", type=("build", "run"))
+    depends_on("py-matplotlib@3.9:", when="@2025.07.03:", type=("build", "run"))
+    depends_on("py-matplotlib@3.3.2:", when="@:2025.01.13", type=("build", "run"))
     depends_on("py-contourpy@1.3:", when="@2025.07.03:")
     depends_on("py-versioneer", type=("build"))
     depends_on("py-pyfiglet", type=("build", "run"))
     depends_on("py-typeguard@2.10:2.12", type=("build", "run"))
     depends_on("py-tabulate", type=("build", "run"))
-    depends_on("py-pytest@6.0:", type=("build", "run"), when="@2024.10.02")
+    
+    # Developer / tooling dependencies (pyproject.toml [project.optional-dependencies].dev)
+    depends_on("py-pexpect", when="+dev", type=("build", "run"))
+    depends_on("py-pytest@6.0:", when="+dev", type="test")
+    depends_on("py-pytest-env", when="+dev", type="test")
+    depends_on("py-pytest-timeout", when="+dev", type="test")
+    depends_on("py-pytest-html", when="+dev", type="test")
+    depends_on("py-pytest-benchmark", when="+dev", type="test")
+    depends_on("py-pytest-json-report", when="+dev", type="test")
+    depends_on("py-pytest-subtests", when="+dev", type="test")
+    depends_on("py-pytest-cov", when="+dev", type="test")
+
+    depends_on("py-sphinx@5.1.1:", when="+dev", type="build")
+    depends_on("py-sphinx-argparse", when="+dev", type="build")
+    depends_on("py-sphinx-autoapi", when="+dev", type="build")
+    depends_on("py-sphinx-autodoc-typehints", when="+dev", type="build")
+    depends_on("py-sphinx-autopackagesummary", when="+dev", type="build")
+    depends_on("py-sphinx-design", when="+dev", type="build")
+    depends_on("py-furo", when="+dev", type="build")
+    depends_on("py-myst-parser", when="+dev", type="build")
+    depends_on("py-linkify-it-py", when="+dev", type="build")
+
+    depends_on("py-mypy@0.931:", when="+dev", type="test")
+    depends_on("py-black@25.1.0", when="+dev", type="test")
+    depends_on("py-ruff@0.11.2", when="+dev", type="test")
+    depends_on("py-flake8", when="+dev", type="test")
+    depends_on("py-pydoclint@0.6.10", when="+dev", type="test")
+    depends_on("py-pre-commit", when="+dev", type="test")
+
+    depends_on("py-pandas-stubs", when="+dev", type="test")
+    depends_on("py-types-python-dateutil", when="+dev", type="test")
+    depends_on("py-types-tabulate", when="+dev", type="test")
+
+    depends_on("py-ipython", when="+dev", type="test")
+    depends_on("py-numba", when="+dev", type=("build", "run"))
+    depends_on("py-coverage+toml", when="+dev", type="test")
+
