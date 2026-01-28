@@ -35,7 +35,7 @@ DTYPES = [
 
 
 def multi_dim_ranks():
-    ranks = ak.client.get_array_ranks()[:]
+    ranks = ak.core.client.get_array_ranks()[:]
     ranks.remove(1)
     return ranks
 
@@ -751,7 +751,7 @@ class TestPdarrayCreation:
     @pytest.mark.parametrize("size", pytest.prob_size)
     @pytest.mark.parametrize("dtype", [int, ak.int64, float, ak.float64, bool, ak.bool_])
     def test_full_match_numpy(self, size, dtype):
-        for rank in ak.client.get_array_ranks():
+        for rank in ak.core.client.get_array_ranks():
             if rank == 1:
                 continue
             shape, local_size = _generate_test_shape(rank, size)

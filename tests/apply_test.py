@@ -76,7 +76,7 @@ class TestApply:
     @pytest.mark.parametrize("prob_size", pytest.prob_size)
     @pytest.mark.parametrize("dtype", [ak.int64, ak.uint64])
     def test_apply_shapes(self, prob_size, dtype):
-        for r in ak.client.get_array_ranks():
+        for r in ak.core.client.get_array_ranks():
             size = int(prob_size ** (1 / r))
             shape = (size,) * r
             a = ak.randint(1, 100, shape, dtype)

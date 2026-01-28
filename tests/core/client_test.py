@@ -14,7 +14,7 @@ class TestClient:
     def test_client_docstrings(self):
         import doctest
 
-        from arkouda import client
+        from arkouda.core import client
 
         result = doctest.testmod(client, optionflags=doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE)
         assert result.failed == 0, f"Doctest failed: {result.failed} failures"
@@ -85,13 +85,13 @@ class TestClient:
 
     def test_server_note(self):
         """
-        Tests ak.client.note_for_server_log().
+        Tests ak.core.client.note_for_server_log().
 
         We could "tail" the server log, however this may give false negatives
         or crashes due to file system delays, server options, etc.
         So simply check that the method is invocable.
         """
-        ak.client.note_for_server_log("from test_server_note")
+        ak.core.client.note_for_server_log("from test_server_note")
 
     def test_client_get_config(self):
         """
@@ -227,7 +227,7 @@ class TestClient:
             assert cmd in cmds
 
     def test_get_array_ranks(self):
-        availableRanks = ak.client.get_array_ranks()
+        availableRanks = ak.core.client.get_array_ranks()
         assert isinstance(availableRanks, list)
         assert len(availableRanks) >= 1
         assert 1 in availableRanks

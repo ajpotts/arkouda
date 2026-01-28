@@ -72,8 +72,8 @@ from pandas import Categorical as pd_Categorical
 from pandas import Index as pd_Index
 from typeguard import typechecked
 
+from arkouda.core.logger import get_arkouda_logger
 from arkouda.infoclass import information
-from arkouda.logger import get_arkouda_logger
 from arkouda.numpy.dtypes import bool_ as akbool
 from arkouda.numpy.dtypes import bool_scalars, int_scalars, resolve_scalar_dtype, str_, str_scalars
 from arkouda.numpy.dtypes import dtype as akdtype
@@ -653,7 +653,7 @@ class Categorical:
 
         """
         # limit scope of import to pick up changes to global variable
-        from arkouda.client import pdarrayIterThresh
+        from arkouda.core.client import pdarrayIterThresh
 
         if self.size <= pdarrayIterThresh:
             vals = [f"'{self[i]}'" for i in range(self.size)]
@@ -1081,7 +1081,7 @@ class Categorical:
         values is negligible.
 
         """
-        from arkouda.client import generic_msg
+        from arkouda.core.client import generic_msg
 
         rep_msg = generic_msg(
             cmd="categoricalHash",
@@ -1298,7 +1298,7 @@ class Categorical:
         load
 
         """
-        from arkouda.client import generic_msg
+        from arkouda.core.client import generic_msg
         from arkouda.pandas.io import _file_type_to_int, _mode_str_to_int
 
         args = {
@@ -1353,7 +1353,7 @@ class Categorical:
           automatic creation of a file without the inaccessible data.
 
         """
-        from arkouda.client import generic_msg
+        from arkouda.core.client import generic_msg
         from arkouda.pandas.io import (
             _file_type_to_int,
             _get_hdf_filetype,
@@ -1511,7 +1511,7 @@ class Categorical:
         they are unregistered.
 
         """
-        from arkouda.client import generic_msg
+        from arkouda.core.client import generic_msg
 
         if self.registered_name is not None and self.is_registered():
             raise RegistrationError(f"This object is already registered as {self.registered_name}")
@@ -1760,7 +1760,7 @@ class Categorical:
             a supported dtype
 
         """
-        from arkouda.client import generic_msg
+        from arkouda.core.client import generic_msg
 
         # hostname is the hostname to send to
         args = {
