@@ -44,9 +44,9 @@ def bench_ak_flatten_2d(benchmark, dtype, shape_type):
         return arr2d.flatten()
 
     benchmark.pedantic(flatten_op, rounds=pytest.trials)
-    num_bytes = calc_num_bytes(data)
+    num_bytes = calc_num_bytes(arr2d)
 
-    benchmark.extra_info["description"] = f"Measures ak.flatten (np-style) on dtype={dtype}"
+    benchmark.extra_info["description"] = f"Measures ak.flatten on 2D {shape_type} array, dtype={dtype}"
     benchmark.extra_info["problem_size"] = N
     benchmark.extra_info["backend"] = "Arkouda"
     benchmark.extra_info["num_bytes"] = num_bytes
