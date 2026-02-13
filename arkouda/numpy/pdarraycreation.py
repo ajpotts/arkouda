@@ -329,7 +329,7 @@ def array(
     # If a is not already a numpy.ndarray, convert it
     if not isinstance(a, np.ndarray):
         try:
-            if dtype is not None and dtype != bigint:
+            if dtype is not None and dtype not in (bigint, "bigint"):
                 # if the user specified dtype, use that dtype
                 a = np.array(a, dtype=dtype)
             elif (
