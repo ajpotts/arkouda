@@ -32,14 +32,15 @@ All operations avoid materializing to NumPy unless explicitly requested.
 
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any, Callable, Optional, Union
 
+import numpy as np
 import pandas as pd
 
 from pandas import Index as pd_Index
 from pandas.api.extensions import register_series_accessor
 
-from arkouda.pandas.extension import ArkoudaExtensionArray, ArkoudaIndexAccessor
+from arkouda.pandas.extension import ArkoudaArray, ArkoudaExtensionArray, ArkoudaIndexAccessor
 from arkouda.pandas.groupbyclass import GroupBy
 from arkouda.pandas.series import Series as ak_Series
 
@@ -502,3 +503,135 @@ class ArkoudaSeriesAccessor:
             raise TypeError("Arkouda-backed Series array does not expose '_data'")
 
         return GroupBy(akcol)
+
+    def apply(
+        self,
+        func: Union[Callable[[Any], Any], str],
+        result_dtype: Optional[Union[np.dtype, str]] = None,
+    ) -> pd.Series:
+        """
+        Apply a Python function element-wise to this Arkouda-backed Series.
+
+        This delegates to :func:`arkouda.apply.apply`, executing the function
+        on the Arkouda server without materializing to NumPy.
+
+        Parameters
+        ----------
+        func : Union[Callable[[Any], Any], str]
+            A Python callable or a specially formatted lambda string
+            (e.g. ``"lambda x,: x+1"``).
+        result_dtype : Optional[Union[np.dtype, str]]
+            The dtype of the resulting array. Required if the function changes dtype.
+            Must be compatible with :func:`arkouda.apply.apply`.
+            Default is None.
+
+        Returns
+        -------
+        pd.Series
+            A new Arkouda-backed Series containing the transformed values.
+
+        Raises
+        ------
+        TypeError
+            If the Series is not Arkouda-backed or if its values are not
+            a numeric pdarray.
+        """
+        if not self.is_arkouda:
+            raise TypeError("Series must be Arkouda-backed. Call .ak.to_ak() first.")
+
+        from arkouda.apply import apply as ak_apply
+        from arkouda.numpy.pdarrayclass import pdarray
+
+        arr = self._obj.array
+        akcol = getattr(arr, "_data", None)
+
+        if akcol is None:
+            raise TypeError("Arkouda-backed Series array does not expose '_data'")
+
+        # 🔒 Explicitly require pdarray (apply currently only supports pdarray)
+        if not isinstance(akcol, pdarray):
+            raise TypeError(
+                "Series.ak.apply currently only supports numeric pdarray-backed Series. "
+                f"Got {type(akcol).__name__}."
+            )
+
+        out = ak_apply(akcol, func, result_dtype=result_dtype)
+
+        return _ak_array_to_pandas_series(
+            out,
+            name=str(self._obj.name),
+            index=self._obj.index,
+        )
+
+    def argsort(
+        self,
+        *,
+        ascending: bool = True,
+        **kwargs: object,
+    ) -> ArkoudaArray:
+        """
+        Return the indices that would sort the Series values as an ArkoudaArray.
+
+        This accessor method computes a distributed permutation (on the Arkouda
+        server) that would sort the underlying Series values, and returns that
+        permutation wrapped as an :class:`~arkouda.pandas.extension.ArkoudaArray`.
+
+        Parameters
+        ----------
+        ascending : bool
+            If True, sort in ascending order. If False, sort in descending order.
+            Default is True.
+        **kwargs : object
+            Additional keyword arguments. Supported keyword:
+
+            * ``na_position`` : {"first", "last"}, default "last"
+              Where to place ``NaN`` values in the sorted result. This option is
+              currently only applied for floating-point ``pdarray`` data; for
+              ``Strings`` and ``Categorical`` data it has no effect.
+
+        Returns
+        -------
+        ArkoudaArray
+            A 1D ArkoudaArray of permutation indices (distributed) that would sort
+            the Series values.
+
+        Raises
+        ------
+        TypeError
+            If the Series is not Arkouda-backed or the underlying data type does not
+            support sorting.
+        ValueError
+            If ``na_position`` is not "first" or "last".
+        """
+        from arkouda.numpy import argsort as ak_argsort
+        from arkouda.numpy.numeric import isnan as ak_isnan
+        from arkouda.numpy.pdarrayclass import pdarray
+        from arkouda.numpy.pdarraysetops import concatenate
+        from arkouda.numpy.strings import Strings
+        from arkouda.numpy.util import is_float
+        from arkouda.pandas.categorical import Categorical
+
+        if not self.is_arkouda:
+            raise TypeError("argsort() requires an Arkouda-backed Series.")
+
+        na_position = kwargs.pop("na_position", "last")
+        if na_position not in {"first", "last"}:
+            raise ValueError("na_position must be 'first' or 'last'.")
+
+        # Extract underlying Arkouda data without NumPy materialization.
+        akcol = _pandas_series_to_ak_array(self._obj)
+
+        if not isinstance(akcol, (pdarray, Strings, Categorical)):
+            raise TypeError(f"Unsupported argsort dtype: {type(akcol)}")
+
+        perm = ak_argsort(akcol, ascending=ascending)
+
+        # NaN placement for float pdarray-like data.
+        if is_float(akcol):
+            is_nan = ak_isnan(akcol)[perm]
+            if na_position == "last":
+                perm = concatenate([perm[~is_nan], perm[is_nan]])
+            else:
+                perm = concatenate([perm[is_nan], perm[~is_nan]])
+
+        return ArkoudaArray(perm)
