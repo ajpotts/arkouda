@@ -568,40 +568,17 @@ class ArkoudaSeriesAccessor:
         *,
         ascending: bool = True,
         **kwargs: object,
-    ) -> ArkoudaArray:
+    ) -> pd.Series:
         """
-        Return the indices that would sort the Series values as an ArkoudaArray.
+        Return the integer indices that would sort the Series values.
 
-        This accessor method computes a distributed permutation (on the Arkouda
-        server) that would sort the underlying Series values, and returns that
-        permutation wrapped as an :class:`~arkouda.pandas.extension.ArkoudaArray`.
-
-        Parameters
-        ----------
-        ascending : bool
-            If True, sort in ascending order. If False, sort in descending order.
-            Default is True.
-        **kwargs : object
-            Additional keyword arguments. Supported keyword:
-
-            * ``na_position`` : {"first", "last"}, default "last"
-              Where to place ``NaN`` values in the sorted result. This option is
-              currently only applied for floating-point ``pdarray`` data; for
-              ``Strings`` and ``Categorical`` data it has no effect.
+        This mirrors pandas.Series.argsort, but the returned Series is
+        Arkouda-backed (distributed) rather than NumPy-backed.
 
         Returns
         -------
-        ArkoudaArray
-            A 1D ArkoudaArray of permutation indices (distributed) that would sort
-            the Series values.
-
-        Raises
-        ------
-        TypeError
-            If the Series is not Arkouda-backed or the underlying data type does not
-            support sorting.
-        ValueError
-            If ``na_position`` is not "first" or "last".
+        pd.Series
+            An Arkouda-backed Series of integer permutation indices.
         """
         from arkouda.numpy import argsort as ak_argsort
         from arkouda.numpy.numeric import isnan as ak_isnan
@@ -618,7 +595,6 @@ class ArkoudaSeriesAccessor:
         if na_position not in {"first", "last"}:
             raise ValueError("na_position must be 'first' or 'last'.")
 
-        # Extract underlying Arkouda data without NumPy materialization.
         akcol = _pandas_series_to_ak_array(self._obj)
 
         if not isinstance(akcol, (pdarray, Strings, Categorical)):
@@ -626,7 +602,6 @@ class ArkoudaSeriesAccessor:
 
         perm = ak_argsort(akcol, ascending=ascending)
 
-        # NaN placement for float pdarray-like data.
         if is_float(akcol):
             is_nan = ak_isnan(akcol)[perm]
             if na_position == "last":
@@ -634,4 +609,8 @@ class ArkoudaSeriesAccessor:
             else:
                 perm = concatenate([perm[is_nan], perm[~is_nan]])
 
-        return ArkoudaArray(perm)
+        return _ak_array_to_pandas_series(
+            perm,
+            name=self._obj.name,
+            index=self._obj.index,
+        )
