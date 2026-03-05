@@ -31,7 +31,7 @@ to increase the efficiency of the merge step.
     type eltType;
     var size: int;
     var dom = {0..#size};
-    var numEmpty: int = size-2;
+    var numEmpty: int = size-1;
     var isSorted: bool = false;
     var isMinReduction=true;
     var data: [dom] (eltType, int) = if isMinReduction then (max(eltType), -1) else (min(eltType), -1);
@@ -53,16 +53,16 @@ to increase the efficiency of the merge step.
       // identity values, so we can ignore it.
       if isSorted {
         const identity = if isMinReduction then (max(eltType), -1) else (min(eltType), -1);
-        assert(val == identity);
+        assert(val(0) == identity(0) && val(1) == identity(1));
         return;
       }
 
       const shouldAdd = if isMinReduction then val(0)<data[0](0) else val(0)>data[0](0);
-      const shouldAddEmpty = (numEmpty>0) && if isMinReduction then
+      const shouldAddEmpty = (numEmpty>=0) && if isMinReduction then
         data[0](0)==max(eltType) else data[0](0)==min(eltType);
 
       if shouldAddEmpty {
-        data[numEmpty+1] = val;
+        data[numEmpty] = val;
         numEmpty-=1;
       } else if shouldAdd {
         data[0] = val;
